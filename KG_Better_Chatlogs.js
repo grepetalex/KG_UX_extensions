@@ -21,9 +21,12 @@
     }
   }
 
+  // Function to add styling to the chatlogs page
   function setChatlogsStyles() {
     const chatLogsUrl = window.location.protocol + "//klavogonki.ru/chatlogs";
+    // Colorize nicknames on chatlogs page
     function colorizeNicknames() {
+      // Check if user is on the chatlogs page
       if (window.location.href.startsWith(chatLogsUrl)) {
         // Set the font size for the entire page
         document.body.style.fontSize = '22px';
@@ -41,6 +44,7 @@
           fontTags[i].setAttribute("style", "color: " + colors[text] + " !important");
         }
 
+        // Get random color for the nickname
         function getRandomColor() {
           let h = Math.floor(Math.random() * 360); // random hue
           let s = Math.floor(Math.random() * 20) + 80; // saturation between 80% and 100%
@@ -50,6 +54,7 @@
       }
     }
 
+    // Beautify navigation on the chatlogs page
     function beautifyNavigation() {
       const chatlogsLogdate = document.querySelector('.logdate .w3c');
 
@@ -62,9 +67,11 @@
       chatlogsLogdate.style.display = 'flex';
       chatlogsLogdate.style.flexDirection = 'column';
 
+      // Remove the second button on the chatlogs page
       const navigationButtons = chatlogsLogdate.querySelectorAll('.w3c a.nav');
       navigationButtons[1].parentNode.removeChild(navigationButtons[1]);
 
+      // Style each navigation button
       navigationButtons.forEach(button => {
         button.style.display = 'flex';
         button.style.justifyContent = 'center';
@@ -75,7 +82,7 @@
         button.style.transition = 'background-color 0.3s ease';
         button.style.setProperty('color', '#1b1b1b', 'important');
 
-        // Set hover styles
+        // Change navigation button background color on hover 
         button.addEventListener('mouseenter', () => {
           button.style.backgroundColor = '#a9a9a9';
         });
@@ -91,7 +98,7 @@
       previousChatlogsPage.style.setProperty('border-radius', '4px 4px 0 0', 'important');
       forwardChatlogsPage.style.setProperty('border-radius', '0 0 4px 4px', 'important');
 
-      // Replace default font arrows with better svg arrows
+      // Style each svg arrow and set their HTML content
       const arrowUpSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-up">
       <line x1="12" y1="19" x2="12" y2="5"></line>
       <polyline points="5 12 12 5 19 12"></polyline>
@@ -102,12 +109,13 @@
       <polyline points="19 12 12 19 5 12"></polyline>
       </svg>`;
 
+      // Assign svg arrows instead default font ugly arrows
       previousChatlogsPage.innerHTML = arrowUpSvg;
       forwardChatlogsPage.innerHTML = arrowDownSvg;
     }
 
-    colorizeNicknames();
-    beautifyNavigation();
+    colorizeNicknames(); // Applies random colors to all usernames on the page
+    beautifyNavigation(); // Styles navigation buttons with custom CSS
 
   }
 
@@ -131,8 +139,8 @@
     }
   }
 
-  switchToHttps();
-  setChatlogsStyles();
-  setChatlogsLink();
+  switchToHttps(); // Switch from http to https protocol
+  setChatlogsStyles(); // Restyle chatlogs page
+  setChatlogsLink(); // Add additional link to chatlogs in the main menu for the fastest accessibility
 
 })();

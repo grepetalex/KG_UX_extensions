@@ -10,18 +10,22 @@
 
 (function () {
 
-  // Define the function to randomize the color with exposed lightness parameter
+  // Define the function to randomize te color with exposed lightness parameter
   function randomHSLColor(lightness) {
+    // Set default value for lightness
+    if (typeof lightness === 'undefined') {
+      lightness = 15;
+    }
     var hue = Math.floor(Math.random() * 360);
     var saturation = 20;
-    var color = "hsl(" + hue + "," + saturation + "%," + lightness + "%)";
+    var color = `hsl(${hue},${saturation}%,${lightness}%)`;
     return color;
   }
 
   // Reference for the existing popup
   let previousPopup = null;
 
-  function showUserAction(user, action, isEntering) {
+  function showUserAction(user, action, presence) {
     const userPopup = document.createElement('div');
     userPopup.classList.add('userPopup');
     userPopup.innerText = `${user} ${action}`;
@@ -31,9 +35,9 @@
     userPopup.style.right = '-100%';
     userPopup.style.transform = 'translateY(-50%)';
     userPopup.style.opacity = '0';
-    userPopup.style.color = isEntering ? '#83cf40' : '#f66b6b'; // green and red
-    userPopup.style.backgroundColor = randomHSLColor(15);
-    userPopup.style.border = `1px solid ${randomHSLColor(35)}`;
+    userPopup.style.color = presence ? '#83cf40' : '#f66b6b'; // green and red
+    userPopup.style.backgroundColor = randomHSLColor(15); // lightness 15%
+    userPopup.style.border = `1px solid ${randomHSLColor(35)}`; // lightness 35%
     userPopup.style.setProperty('border-radius', '4px 0 0 4px', 'important');
     userPopup.style.padding = '8px 16px';
     userPopup.style.display = 'flex';

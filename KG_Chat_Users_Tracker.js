@@ -132,12 +132,12 @@
         if (hasObservedChanges) {
           newUsers.forEach((newUser) => {
             if (!previousUsers.includes(newUser)) {
-              console.log(`%cNew user entered: ${newUser}`, 'color: green;');
+              // console.log(`%cNew user entered: ${newUser}`, 'color: green;');
               showUserAction(newUser, 'entered the chat', true);
             }
           });
           leftUsers.forEach((leftUser) => {
-            console.log(`%cUser left: ${leftUser}`, 'color: red;');
+            // console.log(`%cUser left: ${leftUser}`, 'color: red;');
             showUserAction(leftUser, 'left the chat', false);
           });
         } else {
@@ -153,7 +153,7 @@
         if (currentTextContent.length === 0 && newUserList.length > 0 && !isAnimating) {
           isAnimating = true;
           const actualUserCount = newUserList.length;
-          const speed = 50; // Change the speed here (in milliseconds)
+          const speed = 20; // Change the speed here (in milliseconds)
           let count = 0;
           const userCountIncrement = () => {
             if (count <= actualUserCount) {

@@ -96,7 +96,7 @@
 
 
   // POPUPS
-  // Define the function to randomize te color with exposed lightness parameter
+  // Define the function to generate HSL color with user parameters for hue, saturation, lightness 
   function getHSLColor(hue, saturation, lightness) {
     // Set default value for hue
     if (typeof hue === 'undefined') {

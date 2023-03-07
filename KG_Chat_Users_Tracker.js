@@ -200,7 +200,8 @@
     'певец', // Тараторка
     'ВеликийИнка', // Зачинщик
     'madinko', // Ябеда
-    'Переборыч' // Полковник
+    'Переборыч', // Полковник
+    'Advisor' // Бизнесмен
   ];
 
   // Mutation observer to track all the users with only graphical popup notification

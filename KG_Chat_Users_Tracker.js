@@ -244,20 +244,24 @@
               userCount.classList.add('pulse');
               setTimeout(() => {
                 userCount.classList.remove('pulse');
+                isAnimating = false; // set isAnimating to false after the animation
               }, 1000);
             }
           };
           setTimeout(userCountIncrement, speed);
         } // Animation END
 
-        // Check if the user count has changed and add pulse animation
-        if (userCountValue !== prevUserCountValue) {
-          userCount.classList.add('pulse');
-          // Updating the counter element value 
-          userCount.innerHTML = userCountValue;
-          setTimeout(() => {
-            userCount.classList.remove('pulse');
-          }, 1000);
+        // Check only after the animation is end
+        if (!isAnimating) {
+          // Check if the user count has changed and add pulse animation
+          if (userCountValue !== prevUserCountValue) {
+            userCount.classList.add('pulse');
+            // Updating the counter element value 
+            userCount.innerHTML = userCountValue;
+            setTimeout(() => {
+              userCount.classList.remove('pulse');
+            }, 1000);
+          }
         }
 
         // Log new and left users

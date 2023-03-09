@@ -217,8 +217,9 @@
         const newUsers = newUserList.filter(user => !currentUsers.includes(user));
         const leftUsers = currentUsers.filter(user => !newUserList.includes(user));
 
-        // Update the user count
+        // Retrieve fresh user count length
         const userCountValue = newUserList.length;
+        // Retrieve the counter element
         const userCount = document.querySelector('.user-count');
 
         // Update grayscale filter
@@ -252,6 +253,8 @@
         // Check if the user count has changed and add pulse animation
         if (userCountValue !== prevUserCountValue) {
           userCount.classList.add('pulse');
+          // Updating the counter element value 
+          userCount.innerHTML = userCountValue;
           setTimeout(() => {
             userCount.classList.remove('pulse');
           }, 1000);

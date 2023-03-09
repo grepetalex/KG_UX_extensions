@@ -77,10 +77,32 @@
     speechSynthesis.speak(utterance);
   }
 
+  // Define the users to track and notify with popup and audio
+  const usersToTrack = [
+    { name: 'Даниэль', gender: 'male' },
+    { name: 'певец', gender: 'male' },
+    { name: 'ВеликийИнка', gender: 'male' },
+    { name: 'madinko', gender: 'female' },
+    { name: 'Переборыч', gender: 'male' },
+    { name: 'Advisor', gender: 'male' }
+  ];
+
+  const verbs = {
+    male: { enter: 'зашёл', leave: 'вышел' },
+    female: { enter: 'зашла', leave: 'вышла' }
+  };
+
+  function getUserGender(userName) {
+    const user = usersToTrack.find((user) => user.name === userName);
+    return user ? user.gender : null;
+  }
+
   // Functions to play beep for user entering and leaving
   function userEntered(user) {
     playBeep(majorNotes, volumeEntered);
-    const message = `${user} зашёл`
+    const userGender = getUserGender(user);
+    const action = verbs[userGender].enter;
+    const message = `${user} ${action}`;
     setTimeout(() => {
       textToSpeech(message);
     }, 300);
@@ -88,12 +110,13 @@
 
   function userLeft(user) {
     playBeep(minorNotes, volumeLeft);
-    const message = `${user} вышел`
+    const userGender = getUserGender(user);
+    const action = verbs[userGender].leave;
+    const message = `${user} ${action}`;
     setTimeout(() => {
       textToSpeech(message);
     }, 300);
   }
-
 
   // POPUPS
   // Define the function to generate HSL color with user parameters for hue, saturation, lightness 
@@ -194,16 +217,6 @@
   let currentTextContent = [];
   let isAnimating = false;
 
-  // Define the users to track and notify with popup and audio
-  const usersToTrack = [
-    'Даниэль', // Покупатель
-    'певец', // Тараторка
-    'ВеликийИнка', // Зачинщик
-    'madinko', // Ябеда
-    'Переборыч', // Полковник
-    'Advisor' // Бизнесмен
-  ];
-
   // Mutation observer to track all the users with only graphical popup notification
   // Also play notification sound "Left" or "Entered" if the one of them is identical from "usersToTrack" array
   // Create a mutation observer to detect when the user list is modified
@@ -268,16 +281,21 @@
         if (hasObservedChanges) {
           newUsers.forEach((newUser) => {
             if (!previousUsers.includes(newUser)) {
-              showUserAction(newUser, 'зашёл', true);
-              if (usersToTrack.includes(newUser)) {
-                userEntered(newUser);
+              const userGender = getUserGender(newUser) || 'male'; // use 'male' as default
+              const action = verbs[userGender].enter;
+              showUserAction(newUser, action, true);
+              if (usersToTrack.some(user => user.name === newUser)) {
+                userEntered(newUser, userGender);
               }
             }
           });
+
           leftUsers.forEach((leftUser) => {
-            showUserAction(leftUser, 'вышел', false);
-            if (usersToTrack.includes(leftUser)) {
-              userLeft(leftUser);
+            const userGender = getUserGender(leftUser) || 'male'; // use 'male' as default
+            const action = verbs[userGender].leave;
+            showUserAction(leftUser, action, false);
+            if (usersToTrack.some(user => user.name === leftUser)) {
+              userLeft(leftUser, userGender);
             }
           });
         } else {

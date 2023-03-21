@@ -18,8 +18,11 @@
   const gameList = 'https://klavogonki.ru/gamelist/';
 
   function handleKeyDown(event) {
-    if (event.key === "Escape") {
-      window.location.replace(gameList);
+    if (event.ctrlKey && event.key === "Enter") {
+      setTimeout(() => {
+        window.location.href = replay;
+      }, 100);
+    } else if (event.key === "Escape") {
       setTimeout(() => {
         window.location.href = gameList;
       }, 100);
@@ -44,7 +47,15 @@
     const racingTime = document.querySelector('#racing_time');
     const finished = document.querySelector('#finished');
 
-    if (racing.style.display !== 'none' && finished.style.display == 'none') {
+    // first check for the race end
+    if (racing.style.display !== 'none' && finished.style.display !== 'none') {
+      // wait for a delay after the game ends before replaying
+      setTimeout(() => {
+        alert('Game over. Moving next race.');
+        window.location.href = replay;
+      }, timerDelay);
+    }
+    else if (racing.style.display !== 'none' && finished.style.display == 'none') {
       const [minutes, seconds] = racingTime.textContent.split(':').map(parseFloat);
       const totalSeconds = minutes * 60 + seconds;
 
@@ -53,17 +64,14 @@
         if (autoCheckCount < maxSkipCount) {
           autoCheckCount++;
           localStorage.setItem('autoCheckCount', autoCheckCount);
+          alert('You was inactive after race started. Moving next race.');
           window.location.href = replay;
         } else {
           localStorage.setItem('autoCheckCount', 0);
+          alert('You are out of maximum skip count. Moving on game list page.');
           window.location.href = gameList;
         }
       }
-    } else if (racing.style.display !== 'none' && finished.style.display !== 'none') {
-      // wait for a delay before replaying
-      setTimeout(() => {
-        window.location.href = replay;
-      }, timerDelay);
     }
   }
 
@@ -73,6 +81,7 @@
     autoCheckCount = 0;
     localStorage.setItem('autoCheckCount', autoCheckCount);
     timerId = setTimeout(() => {
+      alert('You stopped typing. Activating automatic checker to skip the race.');
       automaticChecker = true;
     }, timerDelay);
   }
@@ -88,11 +97,13 @@
 
     if (statusInner && racing && racingTime && paused && finished) {
       // All elements are present, so do something with them
-      console.log('All elements present');
+      alert('All elements present');
       startGame();
 
       const statusObserver = new MutationObserver(() => {
-        automaticChecking();
+        setTimeout(() => {
+          automaticChecking();
+        }, 300);
       });
 
       statusObserver.observe(statusInner, { childList: true, subtree: true });
@@ -108,20 +119,22 @@
         mutations.forEach((mutation) => {
           mutation.addedNodes.forEach((node) => {
             if (node === statusInner || node === racing || node === racingTime || node === paused || node === finished) {
-              console.log(`${node.id} present`);
+              alert(`${node.id} present`);
             }
           });
         });
         // Check if all elements are now present
         if (statusInner && racing && racingTime && paused && finished) {
           // All elements are present, so do something with them
-          console.log('All elements present');
+          alert('All elements present');
           // Add your code here to do something with the elements
           observer.disconnect(); // Stop observing once all elements are present
           startGame();
 
           const statusObserver = new MutationObserver(() => {
-            automaticChecking();
+            setTimeout(() => {
+              automaticChecking();
+            }, 300);
           });
 
           statusObserver.observe(statusInner, { childList: true, subtree: true });

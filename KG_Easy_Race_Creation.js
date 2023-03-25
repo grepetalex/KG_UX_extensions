@@ -47,32 +47,37 @@
     const racingTime = document.querySelector('#racing_time');
     const finished = document.querySelector('#finished');
 
-    // first check for the race end
-    if (racing.style.display !== 'none' && finished.style.display !== 'none') {
-      // wait for a delay after the game ends before replaying
-      setTimeout(() => {
-        alert('Game over. Moving next race.');
-        window.location.href = replay;
-      }, timerDelay);
-    }
-    else if (racing.style.display !== 'none' && finished.style.display == 'none') {
-      const [minutes, seconds] = racingTime.textContent.split(':').map(parseFloat);
-      const totalSeconds = minutes * 60 + seconds;
+    // Small delay before checking the elements display state
+    setTimeout(() => {
 
-      if (totalSeconds >= startFromTimer && automaticChecker && replayOnce) {
-        replayOnce = false;
-        if (autoCheckCount < maxSkipCount) {
-          autoCheckCount++;
-          localStorage.setItem('autoCheckCount', autoCheckCount);
-          alert('You was inactive after race started. Moving next race.');
+      // first check for the race end
+      if (racing.style.display !== 'none' && finished.style.display !== 'none') {
+        // wait for a delay after the game ends before replaying
+        setTimeout(() => {
+          console.log('Game over. Creating new race.');
           window.location.href = replay;
-        } else {
-          localStorage.setItem('autoCheckCount', 0);
-          alert('You are out of maximum skip count. Moving on game list page.');
-          window.location.href = gameList;
+        }, timerDelay);
+      }
+      else if (racing.style.display !== 'none' && finished.style.display == 'none') {
+        const [minutes, seconds] = racingTime.textContent.split(':').map(parseFloat);
+        const totalSeconds = minutes * 60 + seconds;
+
+        if (totalSeconds >= startFromTimer && automaticChecker && replayOnce) {
+          replayOnce = false;
+          if (autoCheckCount < maxSkipCount) {
+            autoCheckCount++;
+            localStorage.setItem('autoCheckCount', autoCheckCount);
+            console.log('You was inactive after race started. Moving next race.');
+            window.location.href = replay;
+          } else {
+            localStorage.setItem('autoCheckCount', 0);
+            console.log('You are out of maximum skip count. Moving on game list page.');
+            window.location.href = gameList;
+          }
         }
       }
-    }
+
+    }, 300);
   }
 
   function checkingAfterKeydown() {
@@ -81,11 +86,11 @@
     autoCheckCount = 0;
     localStorage.setItem('autoCheckCount', autoCheckCount);
     timerId = setTimeout(() => {
-      alert('You stopped typing. Activating automatic checker to skip the race.');
+      console.log('You stopped keydown action after triggering one. Activating automatic checker.');
       automaticChecker = true;
+      automaticChecking();
     }, timerDelay);
   }
-
 
   const waitForElements = () => {
     // Define the target elements
@@ -97,13 +102,11 @@
 
     if (statusInner && racing && racingTime && paused && finished) {
       // All elements are present, so do something with them
-      alert('All elements present');
+      console.log('All necessary elements present. Starting the game.');
       startGame();
 
       const statusObserver = new MutationObserver(() => {
-        setTimeout(() => {
-          automaticChecking();
-        }, 300);
+        automaticChecking();
       });
 
       statusObserver.observe(statusInner, { childList: true, subtree: true });
@@ -119,22 +122,20 @@
         mutations.forEach((mutation) => {
           mutation.addedNodes.forEach((node) => {
             if (node === statusInner || node === racing || node === racingTime || node === paused || node === finished) {
-              alert(`${node.id} present`);
+              console.log(`${node.id} present`);
             }
           });
         });
         // Check if all elements are now present
         if (statusInner && racing && racingTime && paused && finished) {
           // All elements are present, so do something with them
-          alert('All elements present');
+          console.log('All necessary elements present. Starting the game.');
           // Add your code here to do something with the elements
           observer.disconnect(); // Stop observing once all elements are present
           startGame();
 
           const statusObserver = new MutationObserver(() => {
-            setTimeout(() => {
-              automaticChecking();
-            }, 300);
+            automaticChecking();
           });
 
           statusObserver.observe(statusInner, { childList: true, subtree: true });

@@ -91,9 +91,12 @@
     restoreCursorFocus();
   }
 
-  const maxSkipCount = 1;
-  const startFromTimer = 2;
-  const timerDelay = 1500;
+  // How much skipped races allowed except for the first race created manually
+  const maxSkipCount = 1; // sec
+  // Create next race after (N) seconds is out referencing the racing timer (not timeout)
+  const startFromTimer = 2; // sec
+  // Time in (N) milliseconds after the automatically skip will be triggered due to inactivity
+  const timerDelay = 1500; // ms
 
   let autoCheckCount = localStorage.getItem('autoCheckCount') ? parseInt(localStorage.getItem('autoCheckCount')) : 0;
 

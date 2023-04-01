@@ -70,7 +70,10 @@
 
   // Text to speech
   function textToSpeech(text) {
-    const utterance = new SpeechSynthesisUtterance(text);
+    // Replace underscores with spaces and match only letters
+    const lettersOnly = text.replace(/_/g, ' ').replace(/[^a-zA-Zа-яА-Я ]/g, '');
+
+    const utterance = new SpeechSynthesisUtterance(lettersOnly);
     utterance.lang = 'ru-RU';
     utterance.voice = speechSynthesis.getVoices().find((voice) => voice.name === 'Microsoft Pavel - Russian (Russia)');
 
@@ -85,7 +88,8 @@
     { name: 'madinko', gender: 'female' },
     { name: 'Переборыч', gender: 'male' },
     { name: 'Advisor', gender: 'male' },
-    { name: 'Хеопс', gender: 'male' }
+    { name: 'Хеопс', gender: 'male' },
+    { name: 'Анна_Банановна', gender: 'female' }
   ];
 
   const verbs = {

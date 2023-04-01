@@ -105,7 +105,7 @@
   // Create next race after (N) seconds is out referencing the racing timer (not timeout)
   const startFromTimer = 2; // sec
   // Time in (N) milliseconds after the automatically skip will be triggered due to inactivity
-  const timerDelay = 10000; // best default value 1500 ms
+  const timerDelay = 1500; // best default value 1500 ms
 
   let autoCheckCount = localStorage.getItem('autoCheckCount') ? parseInt(localStorage.getItem('autoCheckCount')) : 0;
 

@@ -9,7 +9,6 @@
 // ==/UserScript==
 
 (function () {
-
   // Deal with lost cursor focus on the fly
   // Automatically clear the input if error to avoid backspace pressing
   function restoreCursorFocus() {
@@ -32,16 +31,26 @@
     });
     cursorObserver.observe(inputElement, { attributes: true, attributeFilter: ['value'] });
 
+    let errorObserverEnabled = true; // Enable or disable error autocorrelation
+    let inputBackup = ''; // String accumulator of the correct word until mistype will happen 
+
     // Observe mutations to input class for error handling
     const errorObserver = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
         if (mutation.attributeName === 'class' && inputElement.classList.contains('error')) {
-          inputElement.value = '';
-          lastCursorPosition = 0;
+          inputElement.value = inputBackup; // set the value to the backup
+          lastCursorPosition = inputBackup.length; // update the cursor position
+        } else {
+          inputBackup = inputElement.value; // backup the value of the input element
         }
       });
     });
-    errorObserver.observe(inputElement, { attributes: true, attributeFilter: ['class'] });
+
+    if (errorObserverEnabled) {
+      errorObserver.observe(inputElement, { attributes: true, attributeFilter: ['class'] });
+    } else if (!errorObserverEnabled) {
+      errorObserver.disconnect();
+    }
 
     // Reset lastCursorPosition on input focus
     inputElement.addEventListener('focus', () => lastCursorPosition = inputElement.value.length);
@@ -96,7 +105,7 @@
   // Create next race after (N) seconds is out referencing the racing timer (not timeout)
   const startFromTimer = 2; // sec
   // Time in (N) milliseconds after the automatically skip will be triggered due to inactivity
-  const timerDelay = 1500; // ms
+  const timerDelay = 10000; // best default value 1500 ms
 
   let autoCheckCount = localStorage.getItem('autoCheckCount') ? parseInt(localStorage.getItem('autoCheckCount')) : 0;
 

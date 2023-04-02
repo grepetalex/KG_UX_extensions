@@ -88,8 +88,7 @@
     { name: 'madinko', gender: 'female' },
     { name: 'Переборыч', gender: 'male' },
     { name: 'Advisor', gender: 'male' },
-    { name: 'Хеопс', gender: 'male' },
-    { name: 'Анна_Банановна', gender: 'female' }
+    { name: 'Хеопс', gender: 'male' }
   ];
 
   const verbs = {

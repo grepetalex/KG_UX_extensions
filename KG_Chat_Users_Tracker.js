@@ -4,7 +4,7 @@
 // @version      0.1
 // @description  Count how much users are in chat and notify who entered and left the chat
 // @author       Patcher
-// @match        *://klavogonki.ru/gamelist/
+// @match        *://klavogonki.ru/g*
 // @grant        none
 // ==/UserScript==
 

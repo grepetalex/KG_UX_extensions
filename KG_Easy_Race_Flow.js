@@ -12,6 +12,7 @@
   // Deal with lost cursor focus on the fly
   // Automatically clear the input if error to avoid backspace pressing
   function restoreCursorFocus() {
+    // Input type text where the user types letter by letter
     const inputElement = document.querySelector('#typeblock #inputtext');
 
     // Check if input element exists and is a text input
@@ -68,6 +69,7 @@
         else lastCursorPosition = selectionEnd;
       } else {
         inputElement.focus();
+        inputElement.style.outline = 'none'; // Clear outline after focus restored
         inputElement.setSelectionRange(inputElement.value.length, inputElement.value.length);
       }
     });
@@ -75,24 +77,52 @@
 
   let replayOnce = true;
   let automaticChecker = true;
+  let checkerInterrupted = false;
   let timerId;
 
   const replay = `https://klavogonki.ru/g/${new URLSearchParams(window.location.search).get('gmid')}.replay`;
   const gameList = 'https://klavogonki.ru/gamelist/';
 
-  function handleKeyDown(event) {
-    if (event.ctrlKey && event.key === "Enter") {
+
+  const handleKeyDown = (event) => {
+    if (event.ctrlKey && event.key === 'Enter') {
+      console.log('Ctrl + Enter was pressed. Creating next race.');
       setTimeout(() => {
         window.location.href = replay;
       }, 100);
-    } else if (event.key === "Escape") {
+    } else if (event.key === 'Escape') {
+      console.log('Esc was pressed. Moving on gamelist page.');
       setTimeout(() => {
         window.location.href = gameList;
       }, 100);
-    }
-  }
+    } else if (event.shiftKey && event.code === 'Enter') {
 
-  // Add keydown event listener for "Escape" key
+      // Input type text where the user types letter by letter
+      const inputElement = document.querySelector('#typeblock #inputtext');
+      inputElement.style.transition = 'background 0.3s';
+
+      if (!checkerInterrupted) {
+        console.log("Changing checkerInterrupted flag to true to prevent automaticChecker.");
+        checkerInterrupted = true;
+        inputElement.style.setProperty('background', 'hsla(60, 100%, 50%, 0.95)', 'important'); // yellow with opacity 0.95
+        setTimeout(() => {
+          inputElement.style.setProperty('background', 'hsla(60, 100%, 50%, 0.1)', 'important'); // yellow with opacity 0.05
+        }, 500);
+      }
+
+      else if (checkerInterrupted) {
+        console.log("Restoring checkerInterrupted flag to false to turn on automaticChecker.");
+        checkerInterrupted = false;
+        inputElement.style.setProperty('background', 'hsla(140, 100%, 50%, 0.95)', 'important'); // green with opacity 0.95
+        setTimeout(() => {
+          inputElement.style.setProperty('background', 'hsla(140, 100%, 50%, 0.1)', 'important'); // green with opacity 0.05
+        }, 500);
+      }
+
+    }
+  };
+
+  // Add keydown event listener for "Escape", "Enter" with "Ctrl" and "Space" keys
   window.addEventListener("keydown", handleKeyDown);
 
   function startGame() {
@@ -147,16 +177,22 @@
     }, 300);
   }
 
+  // Run the function only when "doubleSpacePressed" flag is set to "false"
   function checkingAfterKeydown() {
+
     clearTimeout(timerId);
     automaticChecker = false;
     autoCheckCount = 0;
     localStorage.setItem('autoCheckCount', autoCheckCount);
-    timerId = setTimeout(() => {
-      console.log('You stopped keydown action after triggering one. Activating automatic checker.');
-      automaticChecker = true;
-      automaticChecking();
-    }, timerDelay);
+
+    if (!checkerInterrupted) {
+      timerId = setTimeout(() => {
+        console.log('You stopped keydown action after triggering one. Activating automatic checker.');
+        automaticChecker = true;
+        automaticChecking();
+      }, timerDelay);
+    }
+
   }
 
   const waitForElements = () => {
@@ -178,7 +214,7 @@
 
       statusObserver.observe(statusInner, { childList: true, subtree: true });
 
-      // add keydown event listener
+      // add keydown event listener to trigger "checkingAfterKeydown" function
       window.addEventListener('keydown', () => {
         automaticChecker = false;
         checkingAfterKeydown();
@@ -207,7 +243,7 @@
 
           statusObserver.observe(statusInner, { childList: true, subtree: true });
 
-          // add keydown event listener
+          // add keydown event listener to trigger "checkingAfterKeydown" function
           window.addEventListener('keydown', () => {
             automaticChecker = false;
             checkingAfterKeydown();

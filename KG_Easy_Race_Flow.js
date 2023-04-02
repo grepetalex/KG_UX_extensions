@@ -122,7 +122,7 @@
     }
   };
 
-  // Add keydown event listener for "Escape", "Enter" with "Ctrl" and "Space" keys
+  // Add keydown event listener for "Escape", "Enter" with "Ctrl" and "Enter" with "Shift"
   window.addEventListener("keydown", handleKeyDown);
 
   function startGame() {
@@ -177,7 +177,7 @@
     }, 300);
   }
 
-  // Run the function only when "doubleSpacePressed" flag is set to "false"
+  // Run the function only when "checkerInterrupted" flag is set to "false"
   function checkingAfterKeydown() {
 
     clearTimeout(timerId);

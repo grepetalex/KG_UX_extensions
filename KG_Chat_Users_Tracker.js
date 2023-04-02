@@ -22,12 +22,14 @@
   // List of major and minor notes to play
   const majorNotes = [48, 60]; // C4, C5
   const minorNotes = [60, 48]; // C5, C4
+  const newMessage = [40, 50, 60];
 
   // Volume and duration settings
   const volumeEntered = 0.35;
   const volumeLeft = 0.35;
-  const duration = 120;
-  const fadeTime = 50;
+  const volumeNewMessage = 0.35;
+  const duration = 80;
+  const fadeTime = 30;
 
   // Function to play a beep given a list of notes and a volume
   async function playBeep(notes, volume) {
@@ -363,5 +365,62 @@
   const styleElement = document.createElement('style');
   styleElement.textContent = styles;
   document.head.appendChild(styleElement);
+
+  // EVERY NEW MESSAGE READER
+  // Avoid reading on load page to read the messages normally on stable presence
+  let isInitialized = false;
+  // False - Read | True - Silence
+  let mutedNewMessage = false;
+
+  // create a mutation observer to watch for new messages being added
+  const newMessagesObserver = new MutationObserver(mutations => {
+    for (let mutation of mutations) {
+      if (mutation.type === 'childList') {
+        for (let node of mutation.addedNodes) {
+          if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'P') {
+            // read the text content of the new message and speak it
+            const latestMessageTextContent = localStorage.getItem('latestMessageTextContent');
+            const newMessageTextContent = getLatestMessageTextContent();
+
+            if (!mutedNewMessage && isInitialized && newMessageTextContent && newMessageTextContent !== latestMessageTextContent) {
+              const utterance = new SpeechSynthesisUtterance(newMessageTextContent);
+              utterance.lang = 'ru-RU';
+              utterance.voice = speechSynthesis.getVoices().find(voice => voice.name === 'Microsoft Pavel - Russian (Russia)');
+              speechSynthesis.speak(utterance);
+              localStorage.setItem('latestMessageTextContent', newMessageTextContent);
+            }
+
+            if (!isInitialized) {
+              localStorage.setItem('latestMessageTextContent', newMessageTextContent);
+              isInitialized = true;
+            }
+
+            if (mutedNewMessage) {
+              playBeep(newMessage, volumeNewMessage);
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // function to get the cleaned text content of the latest message
+  function getLatestMessageTextContent() {
+    const message = document.querySelector('.messages-content div p:last-child');
+    if (!message) {
+      return null;
+    }
+    const textNodes = [...message.childNodes].filter(node => node.nodeType === Node.TEXT_NODE);
+    const text = textNodes.map(node => node.textContent).join('').trim();
+    const time = message.querySelector('.time');
+    const username = message.querySelector('.username');
+    const timeText = time ? time.textContent : '';
+    const usernameText = username ? username.textContent : '';
+    return text.replace(timeText, '').replace(usernameText, '').trim();
+  }
+
+  // observe changes to the messages container element
+  const messagesContainer = document.querySelector('.messages-content div');
+  newMessagesObserver.observe(messagesContainer, { childList: true, subtree: true });
 
 })();

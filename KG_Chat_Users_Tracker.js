@@ -29,7 +29,7 @@
   const volumeLeft = 0.35;
   const volumeNewMessage = 0.35;
   const duration = 80;
-  const fadeTime = 30;
+  const fadeTime = 10;
 
   // Function to play a beep given a list of notes and a volume
   async function playBeep(notes, volume) {
@@ -98,7 +98,8 @@
     { name: 'madinko', gender: 'female' },
     { name: 'Переборыч', gender: 'male' },
     { name: 'Advisor', gender: 'male' },
-    { name: 'Хеопс', gender: 'male' }
+    { name: 'Хеопс', gender: 'male' },
+    { name: 'Рустамко', gender: 'male' }
   ];
 
   const verbs = {
@@ -213,6 +214,43 @@
   }
 
   // FUNCTIONALITY
+  // Function to highlight users from 'usersToTrack' array in the userlist
+  // Also order online users at the top of the list
+  // And offline users at the bottom of the list
+  function highlightTrackingUsers() {
+    // Select all ins elements from the userlist
+    const insElements = document.querySelectorAll('.userlist-content ins');
+
+    // Iterate over the ins elements and check if they contain an anchor element
+    for (const ins of insElements) {
+      const anchor = ins.querySelector('a');
+      if (anchor) {
+        // Retrieve the username from the anchor textContent
+        const name = anchor.textContent.trim();
+        // Find the user in 'usersToTrack' array by their name
+        const userToTrack = usersToTrack.find(user => user.name === name);
+        // If the user is found and not revoked, set their anchor text color to green
+        if (userToTrack && !ins.classList.contains('revoked')) {
+          anchor.style.setProperty('color', '#83cf40', 'important');
+          anchor.style.setProperty('text-shadow', '0 0 1px #83cf40', 'important');
+          // If the tracked user is not already at the beginning of the list, move them there
+          if (ins.parentNode.firstChild !== ins) {
+            ins.parentNode.insertBefore(ins, ins.parentNode.firstChild);
+          }
+        }
+        // If the user is found and is revoked, set their anchor text color to a red
+        else if (userToTrack && ins.classList.contains('revoked')) {
+          anchor.style.setProperty('color', '#ff8080', 'important');
+          anchor.style.setProperty('text-shadow', '0 0 1px #ff8080', 'important');
+          // If the tracked user is not already at the end of the list, move them there
+          if (ins.parentNode.lastChild !== ins) {
+            ins.parentNode.insertBefore(ins, null);
+          }
+        }
+      }
+    }
+  }
+
   // Define references to retrieve and create
   const userList = document.querySelector('.userlist-content');
   const userCount = document.createElement('div');
@@ -312,6 +350,10 @@
               userLeft(leftUser, userGender);
             }
           });
+
+          // Highlight tracking users in chat user list what are registered as tracked
+          highlightTrackingUsers();
+
         } else {
           hasObservedChanges = true;
         }

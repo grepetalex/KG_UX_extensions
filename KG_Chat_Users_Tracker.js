@@ -399,9 +399,10 @@
               isInitialized = true;
             }
 
-            // If it's muted, play the beep sound for the new message
-            if (isMuted) {
+            // If is muted, play the beep sound for the new message
+            if (isMuted && isInitialized && newMessageTextContent && newMessageTextContent !== latestMessageTextContent) {
               playBeep(newMessageNotes, volumeNewMessage);
+              localStorage.setItem('latestMessageTextContent', newMessageTextContent);
             }
           }
         }
@@ -429,6 +430,18 @@
   newMessagesObserver.observe(messagesContainer, { childList: true, subtree: true });
 
   // SOUND GRAPHICAL SWITCHER
+  // Button SVG icons muted and unmuted representation
+  const iconSoundMuted = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+  stroke-linecap="round" stroke-linejoin="round" class="feather feather-volume-1">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+      <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+      </svg>`;
+
+  const iconSoundUnmuted = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+  stroke-linecap="round" stroke-linejoin="round" class="feather feather-volume-2">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+      </svg>`;
   // New message sound notification graphical switcher as a button
   const chatButtonsPanel = document.querySelector('.chat .messages table td:nth-child(3)');
   // Avoid panel squeezing
@@ -453,17 +466,18 @@
 
   const soundIcon = document.createElement('span');
   soundIcon.classList.add('sound-icon');
-  soundIcon.textContent = newMessageIsMuted ? '🔉' : '🔊';
-
+  // iconSoundMuted > 🔉 iconSoundUnmuted > 🔊
+  soundIcon.textContent = newMessageIsMuted ? iconSoundMuted : iconSoundUnmuted;
+  // Append button and icon inside the button
   soundSwitcher.appendChild(soundIcon);
   chatButtonsPanel.appendChild(soundSwitcher);
 
   function updateSoundIcon() {
     const soundIcon = soundSwitcher.querySelector('.sound-icon');
     if (soundSwitcher.id === 'muted') {
-      soundIcon.textContent = '🔉';
+      soundIcon.textContent = iconSoundMuted; // 🔉
     } else {
-      soundIcon.textContent = '🔊';
+      soundIcon.textContent = iconSoundUnmuted; // 🔊
     }
   }
 

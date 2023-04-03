@@ -22,7 +22,7 @@
   // List of notes to play for "User Left" && "User Entered" && "New Messages"
   const userEnteredNotes = [48, 60]; // C4, C5
   const userLeftNotes = [60, 48]; // C5, C4
-  const newMessageNotes = [40, 50, 60];
+  const newMessageNotes = [65];
 
   // Volume and duration settings
   const volumeEntered = 0.35;
@@ -369,8 +369,6 @@
   // EVERY NEW MESSAGE READER
   // Avoid reading on load page to read the messages normally on stable presence
   let isInitialized = false;
-  // False - Read | True - Silence
-  let mutedNewMessage = false;
 
   // create a mutation observer to watch for new messages being added
   const newMessagesObserver = new MutationObserver(mutations => {
@@ -382,7 +380,12 @@
             const latestMessageTextContent = localStorage.getItem('latestMessageTextContent');
             const newMessageTextContent = getLatestMessageTextContent();
 
-            if (!mutedNewMessage && isInitialized && newMessageTextContent && newMessageTextContent !== latestMessageTextContent) {
+            // Get the sound switcher element and check if it's muted or not
+            const soundSwitcher = document.querySelector('#unmuted, #muted');
+            const isMuted = soundSwitcher && soundSwitcher.id === 'muted';
+
+            // If not muted, speak the new message and update the latest message content in local storage
+            if (!isMuted && isInitialized && newMessageTextContent && newMessageTextContent !== latestMessageTextContent) {
               const utterance = new SpeechSynthesisUtterance(newMessageTextContent);
               utterance.lang = 'ru-RU';
               utterance.voice = speechSynthesis.getVoices().find(voice => voice.name === 'Microsoft Pavel - Russian (Russia)');
@@ -390,12 +393,14 @@
               localStorage.setItem('latestMessageTextContent', newMessageTextContent);
             }
 
+            // If it's the first time, update the latest message content in local storage and set isInitialized to true
             if (!isInitialized) {
               localStorage.setItem('latestMessageTextContent', newMessageTextContent);
               isInitialized = true;
             }
 
-            if (mutedNewMessage) {
+            // If it's muted, play the beep sound for the new message
+            if (isMuted) {
               playBeep(newMessageNotes, volumeNewMessage);
             }
           }
@@ -422,5 +427,44 @@
   // observe changes to the messages container element
   const messagesContainer = document.querySelector('.messages-content div');
   newMessagesObserver.observe(messagesContainer, { childList: true, subtree: true });
+
+  // SOUND GRAPHICAL SWITCHER
+  // New message sound notification graphical switcher as a button
+  const chatButtonsPanel = document.querySelector('.chat .messages table td:nth-child(3)');
+  // Avoid panel squeezing
+  chatButtonsPanel.style.minWidth = '75px';
+  const soundSwitcher = document.createElement('div');
+
+  // Check if the user has previously muted the sound
+  const newMessageIsMuted = localStorage.getItem('newMessageIsMuted') === 'true';
+
+  soundSwitcher.classList.add('chat-opt-btn');
+  soundSwitcher.id = newMessageIsMuted ? 'muted' : 'unmuted';
+  soundSwitcher.addEventListener('click', function () {
+    if (this.id === 'unmuted') {
+      this.id = 'muted';
+      localStorage.setItem('newMessageIsMuted', 'true');
+    } else {
+      this.id = 'unmuted';
+      localStorage.setItem('newMessageIsMuted', 'false');
+    }
+    updateSoundIcon();
+  });
+
+  const soundIcon = document.createElement('span');
+  soundIcon.classList.add('sound-icon');
+  soundIcon.textContent = newMessageIsMuted ? '🔉' : '🔊';
+
+  soundSwitcher.appendChild(soundIcon);
+  chatButtonsPanel.appendChild(soundSwitcher);
+
+  function updateSoundIcon() {
+    const soundIcon = soundSwitcher.querySelector('.sound-icon');
+    if (soundSwitcher.id === 'muted') {
+      soundIcon.textContent = '🔉';
+    } else {
+      soundIcon.textContent = '🔊';
+    }
+  }
 
 })();

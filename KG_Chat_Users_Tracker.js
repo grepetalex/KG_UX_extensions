@@ -70,15 +70,23 @@
     }
   }
 
-  // Text to speech
+  // define the voice for text to speech
+  const voice = speechSynthesis.getVoices().find((voice) => voice.name === 'Microsoft Pavel - Russian (Russia)');
+
+  // define the utterance object
+  const utterance = new SpeechSynthesisUtterance();
+  utterance.lang = 'ru-RU';
+  utterance.voice = voice;
+
+  // Text to speech function
   function textToSpeech(text) {
     // Replace underscores with spaces and match only letters
     const lettersOnly = text.replace(/_/g, ' ').replace(/[^a-zA-Zа-яА-Я ]/g, '');
 
-    const utterance = new SpeechSynthesisUtterance(lettersOnly);
-    utterance.lang = 'ru-RU';
-    utterance.voice = speechSynthesis.getVoices().find((voice) => voice.name === 'Microsoft Pavel - Russian (Russia)');
+    // set the text content of the utterance
+    utterance.text = lettersOnly;
 
+    // speak the utterance
     speechSynthesis.speak(utterance);
   }
 
@@ -386,10 +394,7 @@
 
             // If not muted, speak the new message and update the latest message content in local storage
             if (!isMuted && isInitialized && newMessageTextContent && newMessageTextContent !== latestMessageTextContent) {
-              const utterance = new SpeechSynthesisUtterance(newMessageTextContent);
-              utterance.lang = 'ru-RU';
-              utterance.voice = speechSynthesis.getVoices().find(voice => voice.name === 'Microsoft Pavel - Russian (Russia)');
-              speechSynthesis.speak(utterance);
+              textToSpeech(newMessageTextContent);
               localStorage.setItem('latestMessageTextContent', newMessageTextContent);
             }
 

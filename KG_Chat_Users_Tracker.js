@@ -19,10 +19,10 @@
     notesToFrequency[i] = frequency;
   }
 
-  // List of major and minor notes to play
-  const majorNotes = [48, 60]; // C4, C5
-  const minorNotes = [60, 48]; // C5, C4
-  const newMessage = [40, 50, 60];
+  // List of notes to play for "User Left" && "User Entered" && "New Messages"
+  const userEnteredNotes = [48, 60]; // C4, C5
+  const userLeftNotes = [60, 48]; // C5, C4
+  const newMessageNotes = [40, 50, 60];
 
   // Volume and duration settings
   const volumeEntered = 0.35;
@@ -105,7 +105,7 @@
 
   // Functions to play beep for user entering and leaving
   function userEntered(user) {
-    playBeep(majorNotes, volumeEntered);
+    playBeep(userEnteredNotes, volumeEntered);
     const userGender = getUserGender(user);
     const action = verbs[userGender].enter;
     const message = `${user} ${action}`;
@@ -115,7 +115,7 @@
   }
 
   function userLeft(user) {
-    playBeep(minorNotes, volumeLeft);
+    playBeep(userLeftNotes, volumeLeft);
     const userGender = getUserGender(user);
     const action = verbs[userGender].leave;
     const message = `${user} ${action}`;
@@ -396,7 +396,7 @@
             }
 
             if (mutedNewMessage) {
-              playBeep(newMessage, volumeNewMessage);
+              playBeep(newMessageNotes, volumeNewMessage);
             }
           }
         }

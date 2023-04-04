@@ -9,7 +9,9 @@
 // ==/UserScript==
 
 (function () {
+
   // SOUND NOTIFICATION
+
   // Note values and their corresponding frequencies
   // C0 to B8
   const notesToFrequency = {};
@@ -133,7 +135,9 @@
     }, 300);
   }
 
+
   // POPUPS
+
   // Define the function to generate HSL color with user parameters for hue, saturation, lightness 
   function getHSLColor(hue, saturation, lightness) {
     // Set default value for hue
@@ -213,14 +217,15 @@
     }, 5000);
   }
 
+
   // FUNCTIONALITY
 
   /**
-   * Converts links to images in chat messages by creating a thumbnail and a big image on click.
-   * Looks for links that end with ".jpg" or ".jpeg" or "png" or ".gif" and creates a thumbnail with the image.
-   * If a thumbnail already exists, it skips the link and looks for the next one.
-   * When a thumbnail is clicked, it creates a dimming layer and a big image that can be closed by clicking on the dimming layer or the big image itself.
-   */
+     * Converts links to images in chat messages by creating a thumbnail and a big image on click.
+     * Looks for links that end with ".jpg" or ".jpeg" or "png" or ".gif" and creates a thumbnail with the image.
+     * If a thumbnail already exists, it skips the link and looks for the next one.
+     * When a thumbnail is clicked, it creates a dimming layer and a big image that can be closed by clicking on the dimming layer or the big image itself.
+     */
   function convertLinkToImage() {
     // get the container for all chat messages
     const messagesContainer = document.querySelector('.messages-content div');
@@ -232,6 +237,14 @@
       const link = links[i];
       // check if link ends with ".jpg" | ".jpeg" | ".png" | ".gif"
       if (link.href.endsWith('.jpg') || link.href.endsWith('.jpeg') || link.href.endsWith('.png') || link.href.endsWith('.gif')) {
+        // Change the text content of the link to image.extension
+        const imageExtension = link.href.split('.').pop().toLowerCase();
+        const imageTextContent = 'image.' + imageExtension;
+        link.textContent = imageTextContent;
+
+        // Assign the href value as the title
+        link.title = link.href;
+
         // check if thumbnail already exists
         const thumbnail = link.nextSibling;
         if (!thumbnail || !thumbnail.classList || !thumbnail.classList.contains('thumbnail')) {
@@ -240,6 +253,7 @@
             const bigImage = document.createElement('img');
             bigImage.src = src;
             bigImage.classList.add('scaled-thumbnail');
+            bigImage.style.maxHeight = '90vh';
 
             document.body.appendChild(bigImage);
 
@@ -295,15 +309,36 @@
             bigImage.style.position = 'fixed';
             bigImage.style.zIndex = '999';
 
+            // Attach a click event listener to the dimming element
             dimming.addEventListener('click', function () {
-              document.body.removeChild(dimming);
-              document.body.removeChild(bigImage);
+              removeDimmingContainer();
             });
+
+            // Attach a keydown event listener to the document object
+            document.addEventListener('keydown', function (event) {
+              // Check if the key pressed was the "Escape" key
+              if (event.key === 'Escape') {
+                // Call the removeDimmingContainer function to remove the dimming and bigImage elements
+                removeDimmingContainer();
+              }
+            });
+
+            // Define the removeDimmingContainer function
+            function removeDimmingContainer() {
+              // Check if the dimming and bigImage elements are present in the document body
+              if (document.body.contains(dimming) && document.body.contains(bigImage)) {
+                // Remove the dimming and bigImage elements from the document body
+                document.body.removeChild(dimming);
+                document.body.removeChild(bigImage);
+              }
+            }
+
           });
 
           // add styling to the thumbnail
-          thumbnail.style.setProperty('border-radius', '20px', 'important');
           thumbnail.style.backgroundColor = 'transparent';
+          thumbnail.style.padding = '2px';
+          thumbnail.style.margin = '6px';
           // add mouseover and mouseout event listeners to the thumbnail
           thumbnail.addEventListener('mouseover', function () {
             img.style.opacity = 0.7;
@@ -319,15 +354,13 @@
   }
 
   // Function to highlight users from 'usersToTrack' array in the userlist
-  // Also order online users at the top of the list
-  // And offline users at the bottom of the list
   function highlightTrackingUsers() {
     // Select all ins elements from the userlist
     const insElements = document.querySelectorAll('.userlist-content ins');
 
     // Iterate over the ins elements and check if they contain an anchor element
     for (const ins of insElements) {
-      const anchor = ins.querySelector('a');
+      const anchor = ins.querySelector('a.name');
       if (anchor) {
         // Retrieve the username from the anchor textContent
         const name = anchor.textContent.trim();
@@ -337,19 +370,11 @@
         if (userToTrack && !ins.classList.contains('revoked')) {
           anchor.style.setProperty('color', '#83cf40', 'important');
           anchor.style.setProperty('text-shadow', '0 0 1px #83cf40', 'important');
-          // If the tracked user is not already at the beginning of the list, move them there
-          if (ins.parentNode.firstChild !== ins) {
-            ins.parentNode.insertBefore(ins, ins.parentNode.firstChild);
-          }
         }
         // If the user is found and is revoked, set their anchor text color to a red
         else if (userToTrack && ins.classList.contains('revoked')) {
           anchor.style.setProperty('color', '#ff8080', 'important');
           anchor.style.setProperty('text-shadow', '0 0 1px #ff8080', 'important');
-          // If the tracked user is not already at the end of the list, move them there
-          if (ins.parentNode.lastChild !== ins) {
-            ins.parentNode.insertBefore(ins, null);
-          }
         }
       }
     }
@@ -373,10 +398,24 @@
   let currentTextContent = [];
   let isAnimating = false;
 
+  // Define a constant to set the debounce delay
+  const debounceTimeout = 300;
+
+  // Define a debounce function to limit the rate at which the mutation observer callback is called
+  const debounce = (func, delay) => {
+    let timeoutId;
+    return (...args) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        func.apply(this, args);
+      }, delay);
+    };
+  };
+
   // Mutation observer to track all the users with only graphical popup notification
   // Also play notification sound "Left" or "Entered" if the one of them is identical from "usersToTrack" array
   // Create a mutation observer to detect when the user list is modified
-  const chatUsersObserver = new MutationObserver((mutations) => {
+  const chatUsersObserver = new MutationObserver(debounce((mutations) => {
     mutations.forEach((mutation) => {
       if (mutation.type === 'childList') {
         // Retrieve all users textContent from userList ins elements
@@ -455,9 +494,6 @@
             }
           });
 
-          // Highlight tracking users in chat user list what are registered as tracked
-          highlightTrackingUsers();
-
         } else {
           hasObservedChanges = true;
         }
@@ -469,14 +505,23 @@
 
       }
     });
+  }, debounceTimeout));
+
+  // Start observing the chat user list for changes to notify about them
+  chatUsersObserver.observe(userList, { childList: true });
+
+  // Create a separate MutationObserver to watch for changes to the tracking user list
+  const trackingUsersObserver = new MutationObserver(() => {
+    // Whenever the tracking user list changes, call the highlightTrackingUsers function
+    highlightTrackingUsers();
   });
 
-  // Start observing users
-  const config = { childList: true };
-  chatUsersObserver.observe(userList, config);
+  // Start observing the tracking user list for changes to highlight them
+  trackingUsersObserver.observe(userList, { childList: true });
 
 
   // STYLIZATION
+
   const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Orbitron&display=swap');
 
@@ -520,7 +565,9 @@
   styleElement.textContent = styles;
   document.head.appendChild(styleElement);
 
+
   // EVERY NEW MESSAGE READER
+
   // Avoid reading on load page to read the messages normally on stable presence
   let isInitialized = false;
 
@@ -586,7 +633,9 @@
   const messagesContainer = document.querySelector('.messages-content div');
   newMessagesObserver.observe(messagesContainer, { childList: true, subtree: true });
 
+
   // SOUND GRAPHICAL SWITCHER
+
   // Button SVG icons muted and unmuted representation
   const iconSoundMuted = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="hsl(355, 80%, 65%)" stroke-width="1.4"
       stroke-linecap="round" stroke-linejoin="round" class="feather feather-volume-x">
@@ -639,3 +688,8 @@
   }
 
 })();
+
+/* ---
+"Now we can also close the full-size view of an image from the chat by pressing the 'Esc' button."
+"We fixed an issue caused by a false positive indicating that a user had left the chat when they only disappeared from the chat list for a brief period in milliseconds."
+--- */

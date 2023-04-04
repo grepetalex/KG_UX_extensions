@@ -214,6 +214,110 @@
   }
 
   // FUNCTIONALITY
+
+  /**
+   * Converts links to images in chat messages by creating a thumbnail and a big image on click.
+   * Looks for links that end with ".jpg" or ".png" and creates a thumbnail with the image.
+   * If a thumbnail already exists, it skips the link and looks for the next one.
+   * When a thumbnail is clicked, it creates a dimming layer and a big image that can be closed by clicking on the dimming layer or the big image itself.
+   */
+  function convertLinkToImage() {
+    // get the container for all chat messages
+    const messagesContainer = document.querySelector('.messages-content div');
+    // get all links inside the messages container
+    const links = messagesContainer.querySelectorAll('p a');
+
+    // loop through all links
+    for (let i = 0; i < links.length; i++) {
+      const link = links[i];
+      // check if link ends with ".jpg" | ".jpeg" | ".png" | ".gif"
+      if (link.href.endsWith('.jpg') || link.href.endsWith('.jpeg') || link.href.endsWith('.png') || link.href.endsWith('.gif')) {
+        // check if thumbnail already exists
+        const thumbnail = link.nextSibling;
+        if (!thumbnail || !thumbnail.classList || !thumbnail.classList.contains('thumbnail')) {
+          // function to create a big image with a dimming layer
+          const createBigImage = function (src, dimming) {
+            const bigImage = document.createElement('img');
+            bigImage.src = src;
+            bigImage.classList.add('scaled-thumbnail');
+
+            document.body.appendChild(bigImage);
+
+            bigImage.addEventListener('click', function () {
+              document.body.removeChild(bigImage);
+              document.body.removeChild(dimming);
+            });
+
+            return bigImage;
+          }
+
+          // create a new thumbnail
+          const thumbnail = document.createElement('div');
+          thumbnail.classList.add('thumbnail');
+          thumbnail.style.width = '6vw'; // set the initial thumbnail size
+          thumbnail.style.height = 'auto';
+          thumbnail.style.cursor = 'pointer';
+
+          // create an image inside the thumbnail
+          const img = document.createElement('img');
+          img.src = link.href;
+          img.style.maxHeight = '100%';
+          img.style.maxWidth = '100%';
+          img.style.backgroundColor = 'transparent';
+
+          thumbnail.appendChild(img);
+
+          // insert the thumbnail after the link
+          link.parentNode.insertBefore(thumbnail, link.nextSibling);
+
+          // add click event to thumbnail to create big image and dimming layer
+          thumbnail.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const dimming = document.createElement('div');
+            dimming.style.background = 'black';
+            dimming.style.top = '0';
+            dimming.style.left = '0';
+            dimming.style.right = '0';
+            dimming.style.bottom = '0';
+            dimming.style.position = 'fixed';
+            dimming.style.opacity = '0.5';
+            dimming.style.zIndex = '998';
+
+            document.body.appendChild(dimming);
+
+            const bigImage = createBigImage(img.src, dimming);
+
+            bigImage.style.top = '50%';
+            bigImage.style.left = '50%';
+            bigImage.style.transform = 'translate(-50%, -50%)';
+            bigImage.style.position = 'fixed';
+            bigImage.style.zIndex = '999';
+
+            dimming.addEventListener('click', function () {
+              document.body.removeChild(dimming);
+              document.body.removeChild(bigImage);
+            });
+          });
+
+          // add styling to the thumbnail
+          thumbnail.style.setProperty('border-radius', '20px', 'important');
+          thumbnail.style.backgroundColor = 'transparent';
+          // add mouseover and mouseout event listeners to the thumbnail
+          thumbnail.addEventListener('mouseover', function () {
+            img.style.opacity = 0.7;
+            img.style.transition = 'opacity 0.3s';
+          });
+
+          thumbnail.addEventListener('mouseout', function () {
+            img.style.opacity = 1;
+          });
+        }
+      }
+    }
+  }
+
   // Function to highlight users from 'usersToTrack' array in the userlist
   // Also order online users at the top of the list
   // And offline users at the bottom of the list
@@ -272,7 +376,7 @@
   // Mutation observer to track all the users with only graphical popup notification
   // Also play notification sound "Left" or "Entered" if the one of them is identical from "usersToTrack" array
   // Create a mutation observer to detect when the user list is modified
-  const observeUsers = new MutationObserver((mutations) => {
+  const chatUsersObserver = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
       if (mutation.type === 'childList') {
         // Retrieve all users textContent from userList ins elements
@@ -369,7 +473,7 @@
 
   // Start observing users
   const config = { childList: true };
-  observeUsers.observe(userList, config);
+  chatUsersObserver.observe(userList, config);
 
 
   // STYLIZATION
@@ -433,6 +537,12 @@
             // Get the sound switcher element and check if it's muted or not
             const soundSwitcher = document.querySelector('#unmuted, #muted');
             const isMuted = soundSwitcher && soundSwitcher.id === 'muted';
+
+            // Check if the new message contains a link with an image before calling the convertLinkToImage function
+            const linkWithImage = node.querySelector('a[href$=".jpg"], a[href$=".jpeg"], a[href$=".png"], a[href$=".gif"]');
+            if (linkWithImage) {
+              convertLinkToImage(linkWithImage);
+            }
 
             // If not muted, speak the new message and update the latest message content in local storage
             if (!isMuted && isInitialized && newMessageTextContent && newMessageTextContent !== latestMessageTextContent) {

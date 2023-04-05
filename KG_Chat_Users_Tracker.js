@@ -781,19 +781,28 @@
   soundSwitcher.classList.add('chat-opt-btn');
   // Initial button id if the localStorage key isn't created
   soundSwitcher.id = messageNotificationState;
+  // Retrieve the value from localStorage key "messageNotificationTitle"
+  const messageNotificationTitle = localStorage.getItem('messageNotificationTitle');
+  soundSwitcher.title = messageNotificationTitle ? messageNotificationTitle : 'Do not disturb';
   soundSwitcher.addEventListener('click', function () {
     switch (this.id) {
       case 'silence':
         this.id = 'beep';
+        this.title = 'Notify with beep signal';
         localStorage.setItem('messageNotificationState', 'beep');
+        localStorage.setItem('messageNotificationTitle', 'Notify with beep signal');
         break;
       case 'beep':
         this.id = 'voice';
+        this.title = 'Notify with voice API';
         localStorage.setItem('messageNotificationState', 'voice');
+        localStorage.setItem('messageNotificationTitle', 'Notify with voice API');
         break;
       case 'voice':
         this.id = 'silence';
+        this.title = 'Do not disturb';
         localStorage.setItem('messageNotificationState', 'silence');
+        localStorage.setItem('messageNotificationTitle', 'Do not disturb');
         break;
     }
     updateSoundIcon();

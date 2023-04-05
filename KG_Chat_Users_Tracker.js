@@ -10,6 +10,21 @@
 
 (function () {
 
+  // USERS DEFINITION
+
+  // Define the users to track and notify with popup and audio
+  const usersToTrack = [
+    { name: 'Даниэль', gender: 'male' },
+    { name: 'певец', gender: 'male' },
+    { name: 'ВеликийИнка', gender: 'male' },
+    { name: 'madinko', gender: 'female' },
+    { name: 'Переборыч', gender: 'male' },
+    { name: 'Advisor', gender: 'male' },
+    { name: 'Хеопс', gender: 'male' },
+    { name: 'Рустамко', gender: 'male' }
+  ];
+
+
   // SOUND NOTIFICATION
 
   // Note values and their corresponding frequencies
@@ -92,18 +107,6 @@
     speechSynthesis.speak(utterance);
   }
 
-  // Define the users to track and notify with popup and audio
-  const usersToTrack = [
-    { name: 'Даниэль', gender: 'male' },
-    { name: 'певец', gender: 'male' },
-    { name: 'ВеликийИнка', gender: 'male' },
-    { name: 'madinko', gender: 'female' },
-    { name: 'Переборыч', gender: 'male' },
-    { name: 'Advisor', gender: 'male' },
-    { name: 'Хеопс', gender: 'male' },
-    { name: 'Рустамко', gender: 'male' }
-  ];
-
   const verbs = {
     male: { enter: 'зашёл', leave: 'вышел' },
     female: { enter: 'зашла', leave: 'вышла' }
@@ -138,7 +141,7 @@
 
   // POPUPS
 
-  // Define the function to generate HSL color with user parameters for hue, saturation, lightness 
+  // Define the function to generate HSL color with user parameters for hue, saturation, lightness
   function getHSLColor(hue, saturation, lightness) {
     // Set default value for hue
     if (typeof hue === 'undefined') {
@@ -169,8 +172,8 @@
     userPopup.style.right = '-100%';
     userPopup.style.transform = 'translateY(-50%)';
     userPopup.style.opacity = '0';
-    userPopup.style.color = presence ? getHSLColor(100, 50, 50) : getHSLColor(0, 50, 70); // fontColor green && red 
-    userPopup.style.backgroundColor = presence ? getHSLColor(100, 50, 10) : getHSLColor(0, 50, 15); // backgroundColor green && red 
+    userPopup.style.color = presence ? getHSLColor(100, 50, 50) : getHSLColor(0, 50, 70); // fontColor green && red
+    userPopup.style.backgroundColor = presence ? getHSLColor(100, 50, 10) : getHSLColor(0, 50, 15); // backgroundColor green && red
     userPopup.style.border = presence ? `1px solid ${getHSLColor(100, 50, 25)}` : `1px solid ${getHSLColor(0, 50, 40)}`; // borderColor green && red
     userPopup.style.setProperty('border-radius', '4px 0 0 4px', 'important');
     userPopup.style.padding = '8px 16px';
@@ -353,6 +356,34 @@
     }
   }
 
+  function convertYoutubeLinkToIframe() {
+    // get the container for all chat messages
+    const messagesContainer = document.querySelector('.messages-content div');
+    // get all links inside the messages container
+    const links = messagesContainer.querySelectorAll('p a');
+
+    // loop through all links
+    for (let i = 0; i < links.length; i++) {
+      const link = links[i];
+      // check if link contains "youtube.com" or "youtu.be"
+      if (link.href.includes('youtube.com') || link.href.includes('youtu.be')) {
+        // create a new iframe
+        const iframe = document.createElement('iframe');
+        iframe.width = '280';
+        iframe.height = '157.5';
+        // replace youtu.be with www.youtube.com/embed in the src
+        iframe.src = link.href.replace('youtu.be', 'www.youtube.com/embed');
+        iframe.allowFullscreen = true;
+        iframe.style.display = 'flex';
+        iframe.style.margin = '6px';
+        iframe.style.border = 'none';
+
+        // replace the link with the iframe
+        link.parentNode.replaceChild(iframe, link);
+      }
+    }
+  }
+
   // Function to highlight users from 'usersToTrack' array in the userlist
   function highlightTrackingUsers() {
     // Select all ins elements from the userlist
@@ -391,6 +422,8 @@
   // Initialize variables to keep track of the current and previous users
   let currentUsers = [];
   let previousUsers = [];
+  // Set flag to false to prevent initialization of the notifications
+  // About entered and left users on the page load after refreshing the page
   let hasObservedChanges = false;
   let prevUserCountValue = 0;
 
@@ -418,6 +451,8 @@
   const chatUsersObserver = new MutationObserver(debounce((mutations) => {
     mutations.forEach((mutation) => {
       if (mutation.type === 'childList') {
+        // Check if the chat is closed or opened
+        const chatHidden = document.querySelector('#chat-wrapper.chat-hidden');
         // Retrieve all users textContent from userList ins elements
         const newUserList = Array.from(userList.children).map(child => child.textContent);
 
@@ -433,8 +468,8 @@
         // Update grayscale filter
         userCount.style.filter = userCountValue > 0 ? 'none' : 'grayscale(100%)';
 
-        // Check if the user count animation needs to be started
-        if (currentTextContent.length === 0 && newUserList.length > 0 && !isAnimating) {
+        // Check if the user count animation needs to be started only when the chat is not closed
+        if (!chatHidden && currentTextContent.length === 0 && newUserList.length > 0 && !isAnimating) {
           isAnimating = true;
           const actualUserCount = newUserList.length;
           const speed = 20; // Change the speed here (in milliseconds)
@@ -459,12 +494,12 @@
           setTimeout(userCountIncrement, speed);
         } // Animation END
 
-        // Check only after the animation is end
-        if (!isAnimating) {
+        // Check if chat is not closed and animation completed
+        if (!chatHidden && !isAnimating) {
           // Check if the user count has changed and add pulse animation
           if (userCountValue !== prevUserCountValue) {
             userCount.classList.add('pulse');
-            // Updating the counter element value 
+            // Updating the counter element value
             userCount.innerHTML = userCountValue;
             setTimeout(() => {
               userCount.classList.remove('pulse');
@@ -472,8 +507,8 @@
           }
         }
 
-        // Log new and left users
-        if (hasObservedChanges) {
+        // Log new and left users if any changes are observed and chat is not hidden
+        if (!chatHidden && hasObservedChanges) {
           newUsers.forEach((newUser) => {
             if (!previousUsers.includes(newUser)) {
               const userGender = getUserGender(newUser) || 'male'; // use 'male' as default
@@ -495,6 +530,10 @@
           });
 
         } else {
+          // Indicator should look deactivated after the chat is closed
+          userCount.style.filter = "grayscale(1)";
+          userCount.innerHTML = "0";
+          // Set flag to true to initialize notifications about entered and left users
           hasObservedChanges = true;
         }
 
@@ -518,6 +557,18 @@
 
   // Start observing the tracking user list for changes to highlight them
   trackingUsersObserver.observe(userList, { childList: true });
+
+  // Button to close the chat
+  const chatCloseButton = document.querySelector('.mostright');
+
+  // Event listener for keydown event
+  document.addEventListener('keydown', (event) => {
+    // Check if Ctrl key and Space key are pressed simultaneously
+    if (event.ctrlKey && event.key === ' ') {
+      // Trigger click event on chatCloseButton
+      chatCloseButton.click();
+    }
+  });
 
 
   // STYLIZATION
@@ -589,6 +640,12 @@
             const linkWithImage = node.querySelector('a[href$=".jpg"], a[href$=".jpeg"], a[href$=".png"], a[href$=".gif"]');
             if (linkWithImage) {
               convertLinkToImage(linkWithImage);
+            }
+
+            // Check if the new message contains a link with a YouTube video before calling the convertYoutubeLinkToIframe function
+            const linkWithYoutubeVideo = node.querySelector('a[href*="youtube.com"], a[href*="youtu.be"]');
+            if (linkWithYoutubeVideo) {
+              convertYoutubeLinkToIframe(linkWithYoutubeVideo);
             }
 
             // If not muted, speak the new message and update the latest message content in local storage
@@ -688,8 +745,3 @@
   }
 
 })();
-
-/* ---
-"Now we can also close the full-size view of an image from the chat by pressing the 'Esc' button."
-"We fixed an issue caused by a false positive indicating that a user had left the chat when they only disappeared from the chat list for a brief period in milliseconds."
---- */

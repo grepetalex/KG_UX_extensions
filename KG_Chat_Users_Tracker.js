@@ -238,8 +238,16 @@
     // loop through all links
     for (let i = 0; i < links.length; i++) {
       const link = links[i];
-      // check if link ends with ".jpg" | ".jpeg" | ".png" | ".gif"
-      if (link.href.endsWith('.jpg') || link.href.endsWith('.jpeg') || link.href.endsWith('.png') || link.href.endsWith('.gif')) {
+
+      // References for the images that end with listed extensions
+      let jpg = link.href.endsWith(".jpg");
+      let jpeg = link.href.endsWith(".jpeg");
+      let png = link.href.endsWith(".png");
+      let gif = link.href.endsWith(".gif");
+      let webp = link.href.endsWith(".webp");
+
+      // check if link ends with ".jpg" | ".jpeg" | ".png" | ".gif" | ".webp"
+      if (jpg || jpeg || png || gif || webp) {
         // Change the text content of the link to image.extension
         const imageExtension = link.href.split('.').pop().toLowerCase();
         const imageTextContent = 'image.' + imageExtension;
@@ -652,8 +660,15 @@
             const soundSwitcher = document.querySelector('#unmuted, #muted');
             const isMuted = soundSwitcher && soundSwitcher.id === 'muted';
 
+            // References for the images extensions
+            let jpg = 'a[href$=".jpg"]';
+            let jpeg = 'a[href$=".jpeg"]';
+            let png = 'a[href$=".png"]';
+            let gif = 'a[href$=".gif"]';
+            let webp = 'a[href$=".webp"]';
+
             // Check if the new message contains a link with an image before calling the convertLinkToImage function
-            const linkWithImage = node.querySelector('a[href$=".jpg"], a[href$=".jpeg"], a[href$=".png"], a[href$=".gif"]');
+            const linkWithImage = node.querySelector(`${jpg}, ${jpeg}, ${png}, ${gif}, ${webp}`);
             if (linkWithImage) {
               convertLinkToImage(linkWithImage);
             }

@@ -225,11 +225,11 @@
 
   /**
      * Converts links to images in chat messages by creating a thumbnail and a big image on click.
-     * Looks for links that end with ".jpg" or ".jpeg" or "png" or ".gif" and creates a thumbnail with the image.
+     * Looks for links that contains ".jpg" or ".jpeg" or "png" or ".gif" and creates a thumbnail with the image.
      * If a thumbnail already exists, it skips the link and looks for the next one.
      * When a thumbnail is clicked, it creates a dimming layer and a big image that can be closed by clicking on the dimming layer or the big image itself.
      */
-  function convertLinkToImage() {
+  function convertImageLinkToImage() {
     // get the container for all chat messages
     const messagesContainer = document.querySelector('.messages-content div');
     // get all links inside the messages container
@@ -239,12 +239,12 @@
     for (let i = 0; i < links.length; i++) {
       const link = links[i];
 
-      // References for the images that end with listed extensions
-      let jpg = link.href.endsWith(".jpg");
-      let jpeg = link.href.endsWith(".jpeg");
-      let png = link.href.endsWith(".png");
-      let gif = link.href.endsWith(".gif");
-      let webp = link.href.endsWith(".webp");
+      // References for the images that contains extensions of the images
+      let jpg = link.href.includes(".jpg");
+      let jpeg = link.href.includes(".jpeg");
+      let png = link.href.includes(".png");
+      let gif = link.href.includes(".gif");
+      let webp = link.href.includes(".webp");
 
       // check if link ends with ".jpg" | ".jpeg" | ".png" | ".gif" | ".webp"
       if (jpg || jpeg || png || gif || webp) {
@@ -307,10 +307,21 @@
             dimming.style.right = '0';
             dimming.style.bottom = '0';
             dimming.style.position = 'fixed';
-            dimming.style.opacity = '0.5';
+            dimming.style.opacity = '0';
             dimming.style.zIndex = '998';
 
             document.body.appendChild(dimming);
+
+            // Gradually increase the opacity of the dimming background
+            let opacity = 0;
+            const interval = setInterval(() => {
+              opacity += 0.05;
+              dimming.style.opacity = opacity.toString();
+
+              if (opacity >= 0.5) {
+                clearInterval(interval);
+              }
+            }, 10);
 
             const bigImage = createBigImage(img.src, dimming);
 
@@ -338,13 +349,24 @@
             function removeDimmingContainer() {
               // Check if the dimming and bigImage elements are present in the document body
               if (document.body.contains(dimming) && document.body.contains(bigImage)) {
-                // Remove the dimming and bigImage elements from the document body
-                document.body.removeChild(dimming);
-                document.body.removeChild(bigImage);
+
+                // Gradually decrease the opacity of the dimming and bigImage elements
+                let opacity = 0.5;
+                const interval = setInterval(() => {
+                  opacity -= 0.1;
+                  dimming.style.opacity = opacity;
+                  bigImage.style.opacity = opacity;
+                  if (opacity <= 0) {
+                    clearInterval(interval);
+                    // Remove the dimming and bigImage elements from the document body
+                    document.body.removeChild(dimming);
+                    document.body.removeChild(bigImage);
+                  }
+                }, 10);
               }
             }
 
-          });
+          }); // thumbnail event end
 
           // add styling to the thumbnail
           thumbnail.style.backgroundColor = 'transparent';
@@ -377,8 +399,8 @@
     // loop through all links
     for (let i = 0; i < links.length; i++) {
       const link = links[i];
-      // check if link contains "youtube.com" or "youtu.be"
-      if (link.href.includes('youtube.com') || link.href.includes('youtu.be')) {
+      // Check if youtube link contains full or shortened "youtube" link
+      if (link.href.includes('youtube.com/watch?v=') || link.href.includes('youtu.be')) {
         // create a new iframe
         const iframe = document.createElement('iframe');
         iframe.width = '280';
@@ -656,31 +678,37 @@
             const latestMessageTextContent = localStorage.getItem('latestMessageTextContent');
             const newMessageTextContent = getLatestMessageTextContent();
 
-            // Get the sound switcher element and check if it's muted or not
-            const soundSwitcher = document.querySelector('#unmuted, #muted');
-            const isMuted = soundSwitcher && soundSwitcher.id === 'muted';
+            // Get the sound switcher element and check which option is selected
+            const soundSwitcher = document.querySelector('#voice, #beep, #silence');
+            const isVoice = soundSwitcher && soundSwitcher.id === 'voice';
+            const isBeep = soundSwitcher && soundSwitcher.id === 'beep';
+            const isSilence = soundSwitcher && soundSwitcher.id === 'silence';
+
+            // Get the value of the sound switcher from local storage
+            // If no value, set as default voice to speak every new message 
+            const soundSwitcherValue = localStorage.getItem('soundSwitcher') || 'voice';
 
             // References for the images extensions
-            let jpg = 'a[href$=".jpg"]';
-            let jpeg = 'a[href$=".jpeg"]';
-            let png = 'a[href$=".png"]';
-            let gif = 'a[href$=".gif"]';
-            let webp = 'a[href$=".webp"]';
+            let jpg = 'a[href*=".jpg"]';
+            let jpeg = 'a[href*=".jpeg"]';
+            let png = 'a[href*=".png"]';
+            let gif = 'a[href*=".gif"]';
+            let webp = 'a[href*=".webp"]';
 
-            // Check if the new message contains a link with an image before calling the convertLinkToImage function
+            // Check if the new message contains a link with an image before calling the convertImageLinkToImage function
             const linkWithImage = node.querySelector(`${jpg}, ${jpeg}, ${png}, ${gif}, ${webp}`);
             if (linkWithImage) {
-              convertLinkToImage(linkWithImage);
+              convertImageLinkToImage(linkWithImage);
             }
 
-            // Check if the new message contains a link with a YouTube video before calling the convertYoutubeLinkToIframe function
-            const linkWithYoutubeVideo = node.querySelector('a[href*="youtube.com"], a[href*="youtu.be"]');
+            // Check if the new message contains a valid link with a YouTube video before calling the convertYoutubeLinkToIframe function
+            const linkWithYoutubeVideo = node.querySelector('a[href*="youtube.com/watch?v="], a[href*="youtu.be"]');
             if (linkWithYoutubeVideo) {
               convertYoutubeLinkToIframe(linkWithYoutubeVideo);
             }
 
-            // If not muted, speak the new message and update the latest message content in local storage
-            if (!isMuted && isInitialized && newMessageTextContent && newMessageTextContent !== latestMessageTextContent) {
+            // If mode is voice, speak the new message and update the latest message content in local storage
+            if (isVoice && isInitialized && newMessageTextContent && newMessageTextContent !== latestMessageTextContent) {
               textToSpeech(newMessageTextContent);
               localStorage.setItem('latestMessageTextContent', newMessageTextContent);
             }
@@ -691,8 +719,8 @@
               isInitialized = true;
             }
 
-            // If is muted, play the beep sound for the new message
-            if (isMuted && isInitialized && newMessageTextContent && newMessageTextContent !== latestMessageTextContent) {
+            // If mode is beep, play the beep sound for the new message
+            if (isBeep && isInitialized && newMessageTextContent && newMessageTextContent !== latestMessageTextContent) {
               playBeep(newMessageNotes, volumeNewMessage);
               localStorage.setItem('latestMessageTextContent', newMessageTextContent);
             }
@@ -721,58 +749,77 @@
   const messagesContainer = document.querySelector('.messages-content div');
   newMessagesObserver.observe(messagesContainer, { childList: true, subtree: true });
 
-
   // SOUND GRAPHICAL SWITCHER
 
   // Button SVG icons muted and unmuted representation
-  const iconSoundMuted = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="hsl(355, 80%, 65%)" stroke-width="1.4"
+  const iconSoundSilence = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="hsl(355, 80%, 65%)" stroke-width="1.4"
       stroke-linecap="round" stroke-linejoin="round" class="feather feather-volume-x">
       <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
       <line x1="23" y1="9" x2="17" y2="15"></line>
       <line x1="17" y1="9" x2="23" y2="15"></line>
       </svg>`;
-  const iconSoundUnmuted = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="hsl(80, 80%, 40%)" stroke-width="1.4"
+  const iconSoundBeep = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="hsl(55, 80%, 65%)" stroke-width="1.4"
+      stroke-linecap="round" stroke-linejoin="round" class="feather feather-volume-1">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+      <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+      </svg>`;
+  const iconSoundVoice = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="hsl(80, 80%, 40%)" stroke-width="1.4"
   stroke-linecap="round" stroke-linejoin="round" class="feather feather-volume-2">
       <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
       <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
       </svg>`;
+
   // New message sound notification graphical switcher as a button
   const chatButtonsPanel = document.querySelector('.chat .messages table td:nth-child(3)');
   // Avoid panel squeezing
   chatButtonsPanel.style.minWidth = '105px';
   const soundSwitcher = document.createElement('div');
 
-  // Check if the user has previously muted the sound
-  const newMessageIsMuted = localStorage.getItem('newMessageIsMuted') === 'true';
+  // Retrieve the value from localStorage key "messageNotificationState"
+  const messageNotificationState = localStorage.getItem('messageNotificationState') || 'silence';
 
   soundSwitcher.classList.add('chat-opt-btn');
-  soundSwitcher.id = newMessageIsMuted ? 'muted' : 'unmuted';
+  // Initial button id if the localStorage key isn't created
+  soundSwitcher.id = messageNotificationState;
   soundSwitcher.addEventListener('click', function () {
-    if (this.id === 'unmuted') {
-      this.id = 'muted';
-      localStorage.setItem('newMessageIsMuted', 'true');
-    } else {
-      this.id = 'unmuted';
-      localStorage.setItem('newMessageIsMuted', 'false');
+    switch (this.id) {
+      case 'silence':
+        this.id = 'beep';
+        localStorage.setItem('messageNotificationState', 'beep');
+        break;
+      case 'beep':
+        this.id = 'voice';
+        localStorage.setItem('messageNotificationState', 'voice');
+        break;
+      case 'voice':
+        this.id = 'silence';
+        localStorage.setItem('messageNotificationState', 'silence');
+        break;
     }
     updateSoundIcon();
   });
 
   const soundIcon = document.createElement('span');
   soundIcon.classList.add('sound-icon');
-  // iconSoundMuted > 🔉 iconSoundUnmuted > 🔊
-  soundIcon.innerHTML = newMessageIsMuted ? iconSoundMuted : iconSoundUnmuted;
-  // Append button and icon inside the button
-  soundSwitcher.appendChild(soundIcon);
-  chatButtonsPanel.appendChild(soundSwitcher);
 
   function updateSoundIcon() {
-    const soundIcon = soundSwitcher.querySelector('.sound-icon');
-    if (soundSwitcher.id === 'muted') {
-      soundIcon.innerHTML = iconSoundMuted; // 🔉
-    } else {
-      soundIcon.innerHTML = iconSoundUnmuted; // 🔊
+    switch (soundSwitcher.id) {
+      case 'silence':
+        soundIcon.innerHTML = iconSoundSilence;
+        break;
+      case 'beep':
+        soundIcon.innerHTML = iconSoundBeep;
+        break;
+      case 'voice':
+        soundIcon.innerHTML = iconSoundVoice;
+        break;
     }
   }
+
+  // Initially update icon on every page load
+  updateSoundIcon();
+
+  soundSwitcher.appendChild(soundIcon);
+  chatButtonsPanel.appendChild(soundSwitcher);
 
 })();

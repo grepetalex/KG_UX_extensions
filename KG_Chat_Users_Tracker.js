@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         KG_Chat_Users_Tracker
+// @name         KG_Chat_Empowerment
 // @namespace    http://tampermonkey.net/
 // @version      0.1
-// @description  Count how much users are in chat and notify who entered and left the chat
+// @description  Enhance the chat abilities
 // @author       Patcher
 // @match        *://klavogonki.ru/g*
 // @grant        none

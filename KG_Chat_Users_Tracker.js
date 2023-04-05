@@ -356,6 +356,10 @@
     }
   }
 
+  /**
+   * This function searches for all links in the chat messages container that contain a YouTube video URL
+   * and replaces the link with an embedded YouTube video player.
+   */
   function convertYoutubeLinkToIframe() {
     // get the container for all chat messages
     const messagesContainer = document.querySelector('.messages-content div');
@@ -371,8 +375,20 @@
         const iframe = document.createElement('iframe');
         iframe.width = '280';
         iframe.height = '157.5';
-        // replace youtu.be with www.youtube.com/embed in the src
-        iframe.src = link.href.replace('youtu.be', 'www.youtube.com/embed');
+
+        // check if the link contains the v parameter
+        if (link.href.includes('youtube.com') && link.href.includes('v=')) {
+          let videoId = link.href.split('v=')[1];
+          const ampersandPosition = videoId.indexOf('&');
+          if (ampersandPosition !== -1) {
+            videoId = videoId.substring(0, ampersandPosition);
+          }
+          iframe.src = `https://www.youtube.com/embed/${videoId}`;
+        } else {
+          // replace youtu.be with www.youtube.com/embed in the src
+          iframe.src = link.href.replace('youtu.be', 'www.youtube.com/embed');
+        }
+
         iframe.allowFullscreen = true;
         iframe.style.display = 'flex';
         iframe.style.margin = '6px';

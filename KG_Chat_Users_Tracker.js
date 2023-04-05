@@ -248,8 +248,10 @@
 
       // check if link ends with ".jpg" | ".jpeg" | ".png" | ".gif" | ".webp"
       if (jpg || jpeg || png || gif || webp) {
+        const url = new URL(link.href);
+        const imageExtension = url.pathname.split('.').pop().toLowerCase();
+
         // Change the text content of the link to image.extension
-        const imageExtension = link.href.split('.').pop().toLowerCase();
         const imageTextContent = 'image.' + imageExtension;
         link.textContent = imageTextContent;
 

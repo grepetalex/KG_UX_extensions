@@ -327,9 +327,87 @@
 
             bigImage.style.top = '50%';
             bigImage.style.left = '50%';
-            bigImage.style.transform = 'translate(-50%, -50%)';
+            bigImage.style.transform = 'translate(-50%, -50%) scale(1)';
             bigImage.style.position = 'fixed';
             bigImage.style.zIndex = '999';
+            bigImage.style.transformOrigin = 'center center';
+
+
+            // ZOOM AND MOVE -- START
+
+            // Ability to zoom the image with mouse wheel up and down
+            // Move the image in the browser viewport with pressed mouse wheel
+
+            // set the initial zoom scale and scaling factor
+            let zoomScale = 1;
+            let scalingFactor = 0.1;
+
+            // set up variables for dragging
+            let isDragging = false;
+            let startX = 0;
+            let startY = 0;
+            let translateX = -50;
+            let translateY = -50;
+
+            // add event listener to bigImage for wheel event
+            bigImage.addEventListener('wheel', function (event) {
+              // determine the direction of the mouse wheel movement
+              const deltaY = event.deltaY;
+              const direction = deltaY < 0 ? 1 : -1;
+
+              // update the zoom scale based on the direction and scaling factor
+              zoomScale += direction * scalingFactor * zoomScale;
+
+              // clamp the zoom scale to a minimum of 1
+              zoomScale = Math.max(zoomScale, 1);
+
+              // apply the new zoom scale and transform origin
+              bigImage.style.transformOrigin = 'center center';
+              bigImage.style.transform = `translate(${translateX}%, ${translateY}%) scale(${zoomScale})`;
+
+              // prevent the default scrolling behavior
+              event.preventDefault();
+            });
+
+            // add event listener to bigImage for mousedown event
+            bigImage.addEventListener('mousedown', function (event) {
+              // check if the middle mouse button is pressed
+              if (event.button === 1) {
+                // set the dragging flag and record the start position
+                isDragging = true;
+                startX = event.clientX;
+                startY = event.clientY;
+              }
+            });
+
+            // add event listener to document for mousemove event
+            document.addEventListener('mousemove', function (event) {
+              if (isDragging) {
+                // calculate the distance moved since the last mousemove event
+                const deltaX = event.clientX - startX;
+                const deltaY = event.clientY - startY;
+
+                // update the translate values
+                translateX += deltaX / 10;
+                translateY += deltaY / 10;
+
+                // apply the new translate values
+                bigImage.style.transform = `translate(${translateX}%, ${translateY}%) scale(${zoomScale})`;
+
+                // update the start position
+                startX = event.clientX;
+                startY = event.clientY;
+              }
+            });
+
+            // add event listener to document for mouseup event
+            document.addEventListener('mouseup', function (event) {
+              // reset the dragging flag
+              isDragging = false;
+            });
+
+            // ZOOM AND MOVE -- END 
+
 
             // Attach a click event listener to the dimming element
             dimming.addEventListener('click', function () {

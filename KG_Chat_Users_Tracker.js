@@ -831,7 +831,7 @@
 
   // SOUND GRAPHICAL SWITCHER
 
-  // Button SVG icons muted and unmuted representation
+  // Button SVG icons "silence", "beep", "voice" representation
   const iconSoundSilence = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="hsl(355, 80%, 65%)" stroke-width="1.4"
       stroke-linecap="round" stroke-linejoin="round" class="feather feather-volume-x">
       <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>

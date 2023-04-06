@@ -314,25 +314,31 @@
 
             document.body.appendChild(dimming);
 
-            // Gradually increase the opacity of the dimming background
-            let opacity = 0;
-            const interval = setInterval(() => {
-              opacity += 0.05;
-              dimming.style.opacity = opacity.toString();
-
-              if (opacity >= 0.5) {
-                clearInterval(interval);
-              }
-            }, 10);
-
             const bigImage = createBigImage(img.src, dimming);
 
             bigImage.style.top = '50%';
             bigImage.style.left = '50%';
             bigImage.style.transform = 'translate(-50%, -50%) scale(1)';
             bigImage.style.position = 'fixed';
+            bigImage.style.opacity = '0';
             bigImage.style.zIndex = '999';
             bigImage.style.transformOrigin = 'center center';
+
+            // Gradually increase the opacity of the dimming background and bigImage
+            let opacity = 0;
+            const interval = setInterval(() => {
+              opacity += 0.05;
+              // Change the opacity from 0 up to 0.5
+              if (opacity <= 0.5) {
+                dimming.style.opacity = opacity.toString();
+              }
+              bigImage.style.opacity = opacity.toString();
+
+              // Change the opacity from 0 up to 1
+              if (opacity >= 1) {
+                clearInterval(interval);
+              }
+            }, 10);
 
 
             // ZOOM AND MOVE -- START

@@ -699,6 +699,14 @@
     if (event.ctrlKey && event.key === ' ') {
       // Trigger click event on chatCloseButton
       chatCloseButton.click();
+      setTimeout(() => {
+        // Check if the chat is closed or opened
+        const chatHidden = document.querySelector('#chat-wrapper.chat-hidden');
+        if (!chatHidden) {
+          // Call the function to assign all the removing functionality again after the chat was closed
+          executeMessageRemover();
+        }
+      }, 300);
     }
   });
 
@@ -760,6 +768,8 @@
       if (mutation.type === 'childList') {
         for (let node of mutation.addedNodes) {
           if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'P') {
+            // Attach contextmenu event listener for messages deletion
+            attachEventsToMessages();
             // read the text content of the new message and speak it
             const latestMessageTextContent = localStorage.getItem('latestMessageTextContent');
             const newMessageTextContent = getLatestMessageTextContent();
@@ -916,5 +926,288 @@
 
   soundSwitcher.appendChild(soundIcon);
   chatButtonsPanel.appendChild(soundSwitcher);
+
+
+  // REMOVE UNWANTED MESSAGES 
+
+  /*
+  ** This algorithm allows for the removal of unwanted messages in the chat that may be unpleasant.
+  ** The messages are saved in localStorage and remain there until they are visible in the chat.
+  ** Once a message is no longer visible in the chat, its corresponding value in localStorage is also removed.
+  ** This method is helpful in storing only necessary unwanted messages, preventing an overgrowth of values over time.
+  */
+
+  // Set messages initially as empty variable
+  let messages;
+
+  function executeMessageRemover() {
+    // Assign empty variable with data
+    messages = document.querySelectorAll('.messages-content div p');
+
+    attachEventsToMessages();
+    createToggleButton();
+    wipeDeletedMessages();
+
+  } // executeMessageRemover function END
+
+
+  // Functions to assign different toggle button styles
+  // Red color tones
+  function assignHiddenButtonStyle(toggleButton) {
+    toggleButton.style.backgroundColor = 'hsl(0, 50%, 30%)';
+    toggleButton.style.color = 'hsl(0, 80%, 75%)';
+    toggleButton.style.border = '1px solid hsl(0, 50%, 50%)';
+  }
+  // Green color tones
+  function assignShowButtonStyle(toggleButton) {
+    toggleButton.style.backgroundColor = 'hsl(90, 50%, 20%)';
+    toggleButton.style.color = 'hsl(90, 60%, 50%)';
+    toggleButton.style.border = '1px solid hsl(90, 50%, 30%)';
+  }
+  // Yellow color tones
+  function assignHideButtonStyle(toggleButton) {
+    toggleButton.style.backgroundColor = 'hsl(55, 60%, 30%)';
+    toggleButton.style.color = 'hsl(60, 55%, 70%)';
+    toggleButton.style.border = '1px solid hsl(50, 50%, 50%)';
+  }
+
+  // Function to attach events on every message what doesn't have any event assigned
+  function attachEventsToMessages() {
+    // Assign empty variable with data
+    let messages = document.querySelectorAll('.messages-content div p');
+    messages.forEach(message => {
+      // Check if the element has the 'contextmenu' id before adding a new event listener
+      if (!message.hasAttribute('id') || message.getAttribute('id') !== 'contextmenu') {
+        // Add id contextmenu to check in the future if the element has the event
+        message.setAttribute('id', 'contextmenu');
+        // Add an event listener for right-clicks on messages
+        message.addEventListener('contextmenu', event => {
+          // Prevent the default context menu from appearing
+          event.preventDefault();
+          // Wrap the message into visible selection to visually know what message will be deleted
+          message.style.setProperty('background-color', 'hsla(0, 50%, 30%, .5)', 'important');
+          message.style.setProperty('box-shadow', 'inset 0px 0px 0px 1px rgb(191, 64, 64)', 'important');
+          message.style.setProperty('background-clip', 'padding-box', 'important');
+
+          // Create a delete button
+          const deleteButton = document.createElement('button');
+          deleteButton.innerText = 'Delete';
+          deleteButton.addEventListener('click', () => {
+            deleteMessage(message);
+            deleteButton.remove();
+            createToggleButton();
+          });
+
+          // Set the delete button styles
+          deleteButton.style.position = 'fixed';
+          deleteButton.style.top = `${event.clientY}px`;
+          deleteButton.style.left = `${event.clientX}px`;
+          deleteButton.style.zIndex = 999;
+          deleteButton.style.padding = '8px 16px';
+          deleteButton.style.backgroundColor = 'hsl(0, 50%, 20%)';
+          deleteButton.style.color = 'hsl(0, 60%, 70%)';
+          deleteButton.style.border = '1px solid hsl(0, 50%, 35%)';
+          deleteButton.style.transition = 'all 0.3s';
+          deleteButton.style.filter = 'brightness(1)';
+
+          // Set the hover styles
+          deleteButton.addEventListener('mouseenter', () => {
+            deleteButton.style.filter = 'brightness(1.5)';
+          });
+
+          // Set the mouse leave styles
+          deleteButton.addEventListener('mouseleave', () => {
+            deleteButton.style.filter = 'brightness(1)';
+          });
+
+          document.body.appendChild(deleteButton);
+
+          // Auto-delete the delete button after 1 second if it hasn't been clicked
+          let timeoutId = setTimeout(() => {
+            if (!deleteButton.matches(':hover')) {
+              deleteButton.remove();
+              message.style.removeProperty('background-color');
+              message.style.removeProperty('box-shadow');
+              message.style.removeProperty('background-clip');
+            }
+          }, 1000);
+
+          // Add event listener for the mouseleave event on the delete button
+          deleteButton.addEventListener('mouseleave', () => {
+            // Set a new timeout to remove the delete button after 1 second if it hasn't been re-hovered over
+            timeoutId = setTimeout(() => {
+              if (!deleteButton.matches(':hover')) {
+                deleteButton.remove();
+                message.style.removeProperty('background-color');
+                message.style.removeProperty('box-shadow');
+                message.style.removeProperty('background-clip');
+              }
+            }, 1000);
+          });
+
+          // Add event listener for the mouseenter event on the delete button to clear the previous timeout
+          deleteButton.addEventListener('mouseenter', () => {
+            clearTimeout(timeoutId);
+          });
+
+        });
+      }
+    }); // messages addEventListener END
+  } // attachEventsToMessages function END
+
+
+  // Function to delete the message from the chat with "Delete" button
+  function deleteMessage(messageElement) {
+    // Get the message content
+    const messageContent = messageElement.innerText;
+    // Retrieve the stored deleted messages array, or create an empty array if none exist
+    const deletedMessages = JSON.parse(localStorage.getItem('deletedChatMessagesContent') || '[]');
+    // Add the deleted message content to the array if it doesn't already exist
+    if (!deletedMessages.includes(messageContent)) {
+      deletedMessages.push(messageContent);
+    }
+    // Store the updated deleted messages array in localStorage
+    localStorage.setItem('deletedChatMessagesContent', JSON.stringify(deletedMessages));
+    // Set the display of the message element to "none"
+    messageElement.style.display = 'none';
+  } // deleteMessage function END
+
+  // Function to remove from localStorage deleted messages values what are not anymore matching the chat message
+  // And also make messages in the chat to be invisible only for whose what are matching the localStorage message
+  function wipeDeletedMessages() {
+    // Retrieve the stored deleted messages array
+    const deletedMessages = JSON.parse(localStorage.getItem('deletedChatMessagesContent') || '[]');
+    // Remove any deleted messages from the array that no longer exist in the chat messages container
+    const newDeletedMessages = deletedMessages.filter(content => {
+      return Array.from(messages).some(message => message.innerText === content);
+    });
+    // Remove messages from the chat that match the deleted messages in localStorage
+    deletedMessages.forEach(deletedMessage => {
+      messages.forEach(message => {
+        if (message.innerText === deletedMessage) {
+          message.style.display = 'none';
+        }
+      });
+    });
+    // Store the updated deleted messages array in localStorage
+    localStorage.setItem('deletedChatMessagesContent', JSON.stringify(newDeletedMessages));
+  } // wipeDeletedMessages END
+
+  // Function to create the button only if localStorage "deletedChatMessagesContent" has at least one deleted message value
+  function createToggleButton() {
+    // Retrieve the stored deleted messages array
+    const deletedMessages = JSON.parse(localStorage.getItem('deletedChatMessagesContent') || '[]');
+
+    // Only create the toggle button if there are deleted messages to show/hide
+    if (deletedMessages.length > 0) {
+      // Check if the button already exists in the DOM
+      let toggleButton = document.getElementById('toggleButton');
+      if (toggleButton === null) {
+        // Create the toggle button
+        toggleButton = document.createElement('button');
+        toggleButton.id = 'toggleButton';
+        toggleButton.addEventListener('click', toggleHiddenMessages);
+        toggleButton.style.position = 'absolute';
+        toggleButton.style.top = '0';
+        toggleButton.style.right = '0';
+        toggleButton.style.padding = '8px 16px';
+        // Initial textContent if at least one message is hidden
+        toggleButton.innerText = 'Hidden';
+        // Initial styles for the Hidden button
+        assignHiddenButtonStyle(toggleButton);
+        toggleButton.style.transition = 'all 0.3s';
+        toggleButton.style.filter = 'brightness(1)';
+
+        // Set the hover styles
+        toggleButton.addEventListener('mouseenter', () => {
+          toggleButton.style.filter = 'brightness(1.5)';
+        });
+
+        // Set the mouse leave styles
+        toggleButton.addEventListener('mouseleave', () => {
+          toggleButton.style.filter = 'brightness(1)';
+        });
+
+        messagesContainer.appendChild(toggleButton);
+      }
+    }
+  } // createToggleButton function END
+
+  // Function to toggle messages display state from "NONE" to "BLOCK" and reverse
+  function toggleHiddenMessages() {
+    // Retrieve the stored deleted messages array
+    const deletedMessages = JSON.parse(localStorage.getItem('deletedChatMessagesContent') || '[]');
+
+    // Check if there are any deleted messages in the local storage
+    if (deletedMessages.length === 0) {
+      // Hide the toggle button if there are no deleted messages
+      toggleButton.style.display = 'none';
+      return;
+    } else {
+      // Show the toggle button if there are deleted messages
+      toggleButton.style.display = 'block';
+    }
+
+    // Toggle the display of each message that matches the key "deletedChatMessagesContent" data
+    messages.forEach(message => {
+      if (deletedMessages.includes(message.innerText)) {
+        // Show hidden messages if innerText is "Hidden" and display equal "NONE"
+        if (toggleButton.innerText === 'Hidden') {
+          if (message.style.display === 'none') {
+            // Change display to "BLOCK"
+            message.style.display = 'block';
+            // Wrap the message into visible selection to visually know what message will be deleted
+            message.style.setProperty('background-color', 'hsla(0, 50%, 30%, .5)', 'important');
+            message.style.setProperty('box-shadow', 'inset 0px 0px 0px 1px rgb(191, 64, 64)', 'important');
+            message.style.setProperty('background-clip', 'padding-box', 'important');
+          }
+          // Show hidden messages if innerText is "Show" and display equal "NONE"
+        } else if (toggleButton.innerText === 'Show') {
+          if (message.style.display === 'none') {
+            message.style.display = 'block';
+            // Wrap the message into visible selection to visually know what message will be deleted
+            message.style.setProperty('background-color', 'hsla(0, 50%, 30%, .5)', 'important');
+            message.style.setProperty('box-shadow', 'inset 0px 0px 0px 1px rgb(191, 64, 64)', 'important');
+            message.style.setProperty('background-clip', 'padding-box', 'important');
+          }
+        } else if (toggleButton.innerText === 'Hide') {
+          if (message.style.display === 'block') {
+            message.style.display = 'none';
+            message.style.removeProperty('background-color');
+            message.style.removeProperty('box-shadow');
+            message.style.removeProperty('background-clip');
+          }
+        }
+      }
+    });
+
+    // Toggle the button text and style
+    if (toggleButton.innerText === 'Hide') {
+      toggleButton.innerText = 'Show';
+      assignShowButtonStyle(toggleButton);
+    } else {
+      toggleButton.innerText = 'Hide';
+      assignHideButtonStyle(toggleButton);
+    }
+  } // toggleHiddenMessages function END
+
+  // create a new MutationObserver to wait for the chat to fully load with all messages
+  var waitForChatObserver = new MutationObserver(function (mutations) {
+    // Get all the message elements from messages container
+    const messages = document.querySelectorAll('.messages-content div p');
+
+    // check if the chat element has been added to the DOM
+    if (document.contains(messagesContainer)) {
+      // check if there are at least 20 messages in the container
+      if (messages.length >= 20) {
+        // stop observing the DOM
+        waitForChatObserver.disconnect();
+        executeMessageRemover();
+      }
+    }
+  });
+
+  // start observing the DOM for changes
+  waitForChatObserver.observe(document, { childList: true, subtree: true });
 
 })();

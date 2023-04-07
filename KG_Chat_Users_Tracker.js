@@ -1175,6 +1175,9 @@
     localStorage.setItem('deletedChatMessagesContent', JSON.stringify(newDeletedMessages));
   } // wipeDeletedMessages END
 
+  // Declare toggleButton variable outside of the function so it is a global variable
+  let toggleButton;
+
   // Function to create the button only if localStorage "deletedChatMessagesContent" has at least one deleted message value
   function createToggleButton() {
     // Retrieve the stored deleted messages array
@@ -1183,7 +1186,7 @@
     // Only create the toggle button if there are deleted messages to show/hide
     if (deletedMessages.length > 0) {
       // Check if the button already exists in the DOM
-      let toggleButton = document.getElementById('toggleButton');
+      toggleButton = document.getElementById('toggleButton');
       if (toggleButton === null) {
         // Create the toggle button
         toggleButton = document.createElement('button');

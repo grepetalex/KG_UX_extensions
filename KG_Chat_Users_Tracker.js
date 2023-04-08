@@ -1299,28 +1299,38 @@
         toggleButton.style.transition = 'all 0.3s';
         toggleButton.style.filter = 'brightness(1)';
 
-        // Set the hover styles
+        // Set the hover styles when the control key is pressed
         toggleButton.addEventListener('mouseenter', () => {
-          if (!isCtrlKeyPressed) {
+          if (isCtrlKeyPressed) {
             // Make a backup of the current toggleButton textContent
-            toggleButton.style.filter = 'grayscale(0) brightness(1.5)';
-          }
-          else if (isCtrlKeyPressed) {
-            toggleButton.style.filter = 'grayscale(1) brightness(1.5)';
+            const originalTextContent = toggleButton.textContent;
+            toggleButton.style.filter = 'grayscale(1) brightness(2)';
+            toggleButton.textContent = 'Restore';
+
+            // Set the textContent back to the original when the mouse leaves
+            toggleButton.addEventListener('mouseleave', () => {
+              if (isCtrlKeyPressed) {
+                toggleButton.style.filter = 'brightness(1)';
+                toggleButton.textContent = originalTextContent;
+              }
+            }, { once: true });
+          } else {
+            toggleButton.style.filter = 'brightness(2)';
           }
         });
 
-        // Set the mouse leave styles
+        // Set the mouse leave styles when the control key is pressed
         toggleButton.addEventListener('mouseleave', () => {
-          if (!isCtrlKeyPressed || isCtrlKeyPressed) {
-            toggleButton.style.filter = 'hue-rotate(0) brightness(1)';
+          if (isCtrlKeyPressed) {
+            toggleButton.style.filter = 'brightness(2)';
+          } else {
+            toggleButton.style.filter = 'brightness(1)';
           }
         });
-
         messagesContainer.appendChild(toggleButton);
       }
     }
-  } // createToggleButton function END
+  }
 
   // Function to toggle messages display state from "NONE" to "BLOCK" and reverse
   function toggleHiddenMessages() {

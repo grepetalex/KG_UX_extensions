@@ -21,70 +21,77 @@
     { name: 'Переборыч', gender: 'male' },
     { name: 'Advisor', gender: 'male' },
     { name: 'Хеопс', gender: 'male' },
-    { name: 'Рустамко', gender: 'male' }
+    { name: 'Рустамко', gender: 'male' },
+    { name: 'elasez_uyefot_2', gender: 'male' }
   ];
 
 
   // SOUND NOTIFICATION
 
-  // Note values and their corresponding frequencies
-  // C0 to B8
-  const notesToFrequency = {};
-  for (let i = 0; i < 88; i++) {
-    const note = i - 48;
-    const frequency = Math.pow(2, (note - 9) / 12) * 440;
-    notesToFrequency[i] = frequency;
+  // Function to create the audio context and return a Promise that resolves when the context is ready
+  function createAudioContext() {
+    const audioContext = new AudioContext();
+    return new Promise(resolve => {
+      audioContext.onstatechange = function () {
+        if (audioContext.state === 'running') {
+          resolve(audioContext);
+        }
+      };
+    });
   }
 
-  // List of notes to play for "User Left" && "User Entered" && "New Messages"
-  const userEnteredNotes = [48, 60]; // C4, C5
-  const userLeftNotes = [60, 48]; // C5, C4
-  const newMessageNotes = [65];
+  // Create the audio context and wait for it to be ready
+  const audioContextPromise = createAudioContext();
+
+  // List of frequencies to play for "User Left" && "User Entered" && "New Messages"
+  const userEnteredFrequencies = [300, 600];
+  const userLeftFrequencies = [600, 300];
+  const newMessageFrequencies = [500];
 
   // Volume and duration settings
-  const volumeEntered = 0.35;
-  const volumeLeft = 0.35;
-  const volumeNewMessage = 0.35;
+  const volume = 0.1;
   const duration = 80;
   const fadeTime = 10;
+  const delay = 100;
 
-  // Function to play a beep given a list of notes and a volume
-  async function playBeep(notes, volume) {
-    const context = new AudioContext();
-    for (const note of notes) {
-      if (note === 0) {
-        // Rest note
-        await new Promise((resolve) => setTimeout(resolve, duration));
-      } else {
-        // Play note
-        const oscillator = context.createOscillator();
-        const gain = context.createGain();
-        oscillator.connect(gain);
-        oscillator.frequency.value = notesToFrequency[note];
-        oscillator.type = "triangle";
+  // Function to play a beep given a list of frequencies
+  function playBeep(frequencies, volume) {
+    audioContextPromise.then(audioContext => {
+      for (let i = 0; i < frequencies.length; i++) {
+        const frequency = frequencies[i];
+        if (frequency === 0) {
+          // Rest note
+          setTimeout(() => { }, duration);
+        } else {
+          // Play note
+          const oscillator = audioContext.createOscillator();
+          const gain = audioContext.createGain();
+          oscillator.connect(gain);
+          oscillator.frequency.value = frequency;
+          oscillator.type = "sine";
 
-        // Create low pass filter to cut frequencies below 250Hz
-        const lowPassFilter = context.createBiquadFilter();
-        lowPassFilter.type = 'lowpass';
-        lowPassFilter.frequency.value = 250;
-        oscillator.connect(lowPassFilter);
+          // Create low pass filter to cut frequencies below 250Hz
+          const lowPassFilter = audioContext.createBiquadFilter();
+          lowPassFilter.type = 'lowpass';
+          lowPassFilter.frequency.value = 250;
+          oscillator.connect(lowPassFilter);
 
-        // Create high pass filter to cut frequencies above 16kHz
-        const highPassFilter = context.createBiquadFilter();
-        highPassFilter.type = 'highpass';
-        highPassFilter.frequency.value = 16000;
-        lowPassFilter.connect(highPassFilter);
+          // Create high pass filter to cut frequencies above 16kHz
+          const highPassFilter = audioContext.createBiquadFilter();
+          highPassFilter.type = 'highpass';
+          highPassFilter.frequency.value = 16000;
+          lowPassFilter.connect(highPassFilter);
 
-        gain.connect(context.destination);
-        gain.gain.setValueAtTime(0, context.currentTime);
-        gain.gain.linearRampToValueAtTime(volume, context.currentTime + fadeTime / 1000);
-        oscillator.start(context.currentTime);
-        oscillator.stop(context.currentTime + duration * 0.001);
-        gain.gain.setValueAtTime(volume, context.currentTime + (duration - fadeTime) / 1000);
-        gain.gain.linearRampToValueAtTime(0, context.currentTime + duration / 1000);
-        await new Promise((resolve) => setTimeout(resolve, duration));
+          gain.connect(audioContext.destination);
+          gain.gain.setValueAtTime(0, audioContext.currentTime);
+          gain.gain.linearRampToValueAtTime(volume, audioContext.currentTime + fadeTime / 1000);
+          oscillator.start(audioContext.currentTime + i * delay / 1000);
+          oscillator.stop(audioContext.currentTime + (i * delay + duration) / 1000);
+          gain.gain.setValueAtTime(volume, audioContext.currentTime + (i * delay + (duration - fadeTime)) / 1000);
+          gain.gain.linearRampToValueAtTime(0, audioContext.currentTime + (i * delay + duration) / 1000);
+        }
       }
-    }
+    });
   }
 
   // define the voice for text to speech
@@ -93,6 +100,7 @@
   // Define the utterance object as a global variable
   const utterance = new SpeechSynthesisUtterance();
   utterance.lang = 'ru-RU';
+  utterance.voice = voice;
 
 
   // Define voice speed limits
@@ -102,18 +110,17 @@
   // Define the default voice speed as a global variable
   let voiceSpeed = parseFloat(localStorage.getItem('voiceSpeed') || '1.5');
 
-
-  // Define the textToSpeech function with speed control as a global function
   function textToSpeech(text, voiceSpeed = voiceSpeed) {
     // Replace underscores with spaces
     const message = text.replace(/_/g, ' ');
-
     // Set the text content of the utterance
     utterance.text = message;
-
     // Set the speed of the utterance
     utterance.rate = voiceSpeed;
-
+    // Calculate the volume of the utterance based on the global volume value
+    const dynamicVolume = volume * 6;
+    // Set the volume of the utterance
+    utterance.volume = dynamicVolume;
     // Speak the utterance
     speechSynthesis.speak(utterance);
   }
@@ -130,7 +137,7 @@
 
   // Functions to play beep for user entering and leaving
   function userEntered(user) {
-    playBeep(userEnteredNotes, volumeEntered);
+    playBeep(userEnteredFrequencies, volume);
     const userGender = getUserGender(user);
     const action = verbs[userGender].enter;
     const message = `${user} ${action}`;
@@ -140,7 +147,7 @@
   }
 
   function userLeft(user) {
-    playBeep(userLeftNotes, volumeLeft);
+    playBeep(userLeftFrequencies, volume);
     const userGender = getUserGender(user);
     const action = verbs[userGender].leave;
     const message = `${user} ${action}`;
@@ -575,7 +582,7 @@
   let isAnimating = false;
 
   // Define a constant to set the debounce delay
-  const debounceTimeout = 300;
+  const debounceTimeout = 1000;
 
   // Define a debounce function to limit the rate at which the mutation observer callback is called
   const debounce = (func, delay) => {
@@ -816,16 +823,16 @@
               localStorage.setItem('latestMessageTextContent', newMessageTextContent);
             }
 
+            // If mode is beep, play the beep sound for the new message
+            if (isBeep && isInitialized && newMessageTextContent && newMessageTextContent !== latestMessageTextContent) {
+              playBeep(newMessageFrequencies, volume);
+              localStorage.setItem('latestMessageTextContent', newMessageTextContent);
+            }
+
             // If it's the first time, update the latest message content in local storage and set isInitialized to true
             if (!isInitialized) {
               localStorage.setItem('latestMessageTextContent', newMessageTextContent);
               isInitialized = true;
-            }
-
-            // If mode is beep, play the beep sound for the new message
-            if (isBeep && isInitialized && newMessageTextContent && newMessageTextContent !== latestMessageTextContent) {
-              playBeep(newMessageNotes, volumeNewMessage);
-              localStorage.setItem('latestMessageTextContent', newMessageTextContent);
             }
           }
         }

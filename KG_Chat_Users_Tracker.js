@@ -90,20 +90,31 @@
   // define the voice for text to speech
   const voice = speechSynthesis.getVoices().find((voice) => voice.name === 'Microsoft Pavel - Russian (Russia)');
 
-  // define the utterance object
+  // Define the utterance object as a global variable
   const utterance = new SpeechSynthesisUtterance();
   utterance.lang = 'ru-RU';
-  utterance.voice = voice;
 
-  // Text to speech function
-  function textToSpeech(text) {
-    // Replace underscores with spaces and match only letters
-    const lettersOnly = text.replace(/_/g, ' ').replace(/[^a-zA-Zа-яА-Я ]/g, '');
 
-    // set the text content of the utterance
-    utterance.text = lettersOnly;
+  // Define voice speed limits
+  const minVoiceSpeed = 0.5;
+  const maxVoiceSpeed = 2.5;
 
-    // speak the utterance
+  // Define the default voice speed as a global variable
+  let voiceSpeed = parseFloat(localStorage.getItem('voiceSpeed') || '1.5');
+
+
+  // Define the textToSpeech function with speed control as a global function
+  function textToSpeech(text, voiceSpeed = voiceSpeed) {
+    // Replace underscores with spaces
+    const message = text.replace(/_/g, ' ');
+
+    // Set the text content of the utterance
+    utterance.text = message;
+
+    // Set the speed of the utterance
+    utterance.rate = voiceSpeed;
+
+    // Speak the utterance
     speechSynthesis.speak(utterance);
   }
 
@@ -124,7 +135,7 @@
     const action = verbs[userGender].enter;
     const message = `${user} ${action}`;
     setTimeout(() => {
-      textToSpeech(message);
+      textToSpeech(message, voiceSpeed);
     }, 300);
   }
 
@@ -134,7 +145,7 @@
     const action = verbs[userGender].leave;
     const message = `${user} ${action}`;
     setTimeout(() => {
-      textToSpeech(message);
+      textToSpeech(message, voiceSpeed);
     }, 300);
   }
 
@@ -801,7 +812,7 @@
 
             // If mode is voice, speak the new message and update the latest message content in local storage
             if (isVoice && isInitialized && newMessageTextContent && newMessageTextContent !== latestMessageTextContent) {
-              textToSpeech(newMessageTextContent);
+              textToSpeech(newMessageTextContent, voiceSpeed);
               localStorage.setItem('latestMessageTextContent', newMessageTextContent);
             }
 
@@ -865,6 +876,22 @@
       <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
       </svg>`;
 
+  // Define the isCtrlKeyPressed variable as a boolean
+  let isCtrlKeyPressed = false;
+
+  // Add event listeners for the Ctrl key
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Control') {
+      isCtrlKeyPressed = true;
+    }
+  });
+
+  document.addEventListener('keyup', (event) => {
+    if (event.key === 'Control') {
+      isCtrlKeyPressed = false;
+    }
+  });
+
   // New message sound notification graphical switcher as a button
   const chatButtonsPanel = document.querySelector('.chat .messages table td:nth-child(3)');
   // Avoid panel squeezing
@@ -880,28 +907,90 @@
   // Retrieve the value from localStorage key "messageNotificationTitle"
   const messageNotificationTitle = localStorage.getItem('messageNotificationTitle');
   soundSwitcher.title = messageNotificationTitle ? messageNotificationTitle : 'Do not disturb';
-  soundSwitcher.addEventListener('click', function () {
-    switch (this.id) {
-      case 'silence':
-        this.id = 'beep';
-        this.title = 'Notify with beep signal';
-        localStorage.setItem('messageNotificationState', 'beep');
-        localStorage.setItem('messageNotificationTitle', 'Notify with beep signal');
-        break;
-      case 'beep':
-        this.id = 'voice';
-        this.title = 'Notify with voice API';
-        localStorage.setItem('messageNotificationState', 'voice');
-        localStorage.setItem('messageNotificationTitle', 'Notify with voice API');
-        break;
-      case 'voice':
-        this.id = 'silence';
-        this.title = 'Do not disturb';
-        localStorage.setItem('messageNotificationState', 'silence');
-        localStorage.setItem('messageNotificationTitle', 'Do not disturb');
-        break;
+  soundSwitcher.addEventListener('click', function (event) {
+    if (!isCtrlKeyPressed) { // Only execute the code if isCtrlKey is false
+      switch (this.id) {
+        case 'silence':
+          this.id = 'beep';
+          this.title = 'Notify with beep signal';
+          localStorage.setItem('messageNotificationState', 'beep');
+          localStorage.setItem('messageNotificationTitle', 'Notify with beep signal');
+          break;
+        case 'beep':
+          this.id = 'voice';
+          this.title = 'Notify with voice API';
+          localStorage.setItem('messageNotificationState', 'voice');
+          localStorage.setItem('messageNotificationTitle', 'Notify with voice API');
+          break;
+        case 'voice':
+          this.id = 'silence';
+          this.title = 'Do not disturb';
+          localStorage.setItem('messageNotificationState', 'silence');
+          localStorage.setItem('messageNotificationTitle', 'Do not disturb');
+          break;
+      }
+      updateSoundIcon();
     }
-    updateSoundIcon();
+  });
+
+  const iconRangeisOut = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round" class="feather feather-slash">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+      </svg>`;
+
+  function showCurrentSpeed(currentSpeed) {
+    let currentVoiceSpeed = document.querySelector('.current-voice-speed');
+
+    if (!currentVoiceSpeed) {
+      currentVoiceSpeed = document.createElement('span');
+      currentVoiceSpeed.classList.add('current-voice-speed');
+      currentVoiceSpeed.style.position = 'absolute';
+      currentVoiceSpeed.style.bottom = '45px';
+      currentVoiceSpeed.style.fontFamily = 'Orbitron, sans-serif';
+      soundSwitcher.appendChild(currentVoiceSpeed);
+    }
+
+    if (currentSpeed <= minVoiceSpeed || currentSpeed >= maxVoiceSpeed) {
+      currentVoiceSpeed.innerHTML = iconRangeisOut;
+    } else {
+      currentVoiceSpeed.textContent = currentSpeed.toFixed(1);
+    }
+
+    if (currentVoiceSpeed.timeoutId) {
+      clearTimeout(currentVoiceSpeed.timeoutId);
+    }
+
+    currentVoiceSpeed.timeoutId = setTimeout(() => {
+      currentVoiceSpeed.remove();
+    }, 1000);
+  }
+
+  // Add event listeners for Ctrl + Left Click to increase voice speed
+  soundSwitcher.addEventListener('click', (event) => {
+    if (isCtrlKeyPressed && event.ctrlKey && event.button === 0) { // check for ctrl + left click
+      const newSpeed = parseFloat(voiceSpeed) + 0.1; // Calculate new speed without rounding
+      const limitedSpeed = Math.min(newSpeed, maxVoiceSpeed); // Limit maximum voice speed
+      if (limitedSpeed !== voiceSpeed) {
+        voiceSpeed = parseFloat(limitedSpeed.toFixed(1)); // Round and assign to voiceSpeed
+        localStorage.setItem('voiceSpeed', voiceSpeed.toString());
+        showCurrentSpeed(voiceSpeed);
+      }
+    }
+  });
+
+  // Add event listeners for Ctrl + Right Click to decrease voice speed
+  soundSwitcher.addEventListener('contextmenu', (event) => {
+    if (isCtrlKeyPressed && event.ctrlKey && event.button === 2) { // check for ctrl + right click
+      event.preventDefault();
+      const newSpeed = parseFloat(voiceSpeed) - 0.1; // Calculate new speed without rounding
+      const limitedSpeed = Math.max(newSpeed, minVoiceSpeed); // Limit minimum voice speed
+      if (limitedSpeed !== voiceSpeed) {
+        voiceSpeed = parseFloat(limitedSpeed.toFixed(1)); // Round and assign to voiceSpeed
+        localStorage.setItem('voiceSpeed', voiceSpeed.toString());
+        showCurrentSpeed(voiceSpeed);
+      }
+    }
   });
 
   const soundIcon = document.createElement('span');
@@ -1109,6 +1198,7 @@
               if (!newDeleteButton.matches(':hover')) {
                 newDeleteButton.remove();
                 clearMessageSelection(message);
+                selectedMessages.clear();
               }
             }, 1000);
           }

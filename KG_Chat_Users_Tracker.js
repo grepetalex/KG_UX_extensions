@@ -1048,20 +1048,20 @@
   // Functions to assign different toggle button styles
   // Red color tones
   function assignHiddenButtonStyle(toggleButton) {
-    toggleButton.style.backgroundColor = 'hsl(0, 50%, 30%)';
-    toggleButton.style.color = 'hsl(0, 80%, 75%)';
+    toggleButton.style.backgroundColor = 'hsl(0, 20%, 10%)';
+    toggleButton.style.color = 'hsl(0, 50%, 50%)';
     toggleButton.style.border = '1px solid hsl(0, 50%, 50%)';
   }
   // Green color tones
   function assignShowButtonStyle(toggleButton) {
-    toggleButton.style.backgroundColor = 'hsl(90, 50%, 20%)';
-    toggleButton.style.color = 'hsl(90, 60%, 50%)';
-    toggleButton.style.border = '1px solid hsl(90, 50%, 30%)';
+    toggleButton.style.backgroundColor = 'hsl(90, 20%, 10%)';
+    toggleButton.style.color = 'hsl(90, 50%, 50%)';
+    toggleButton.style.border = '1px solid hsl(90, 50%, 50%)';
   }
   // Yellow color tones
   function assignHideButtonStyle(toggleButton) {
-    toggleButton.style.backgroundColor = 'hsl(55, 60%, 30%)';
-    toggleButton.style.color = 'hsl(60, 55%, 70%)';
+    toggleButton.style.backgroundColor = 'hsl(50, 20%, 10%)';
+    toggleButton.style.color = 'hsl(50, 50%, 50%)';
     toggleButton.style.border = '1px solid hsl(50, 50%, 50%)';
   }
 
@@ -1301,12 +1301,20 @@
 
         // Set the hover styles
         toggleButton.addEventListener('mouseenter', () => {
-          toggleButton.style.filter = 'brightness(1.5)';
+          if (!isCtrlKeyPressed) {
+            // Make a backup of the current toggleButton textContent
+            toggleButton.style.filter = 'grayscale(0) brightness(1.5)';
+          }
+          else if (isCtrlKeyPressed) {
+            toggleButton.style.filter = 'grayscale(1) brightness(1.5)';
+          }
         });
 
         // Set the mouse leave styles
         toggleButton.addEventListener('mouseleave', () => {
-          toggleButton.style.filter = 'brightness(1)';
+          if (!isCtrlKeyPressed || isCtrlKeyPressed) {
+            toggleButton.style.filter = 'hue-rotate(0) brightness(1)';
+          }
         });
 
         messagesContainer.appendChild(toggleButton);
@@ -1319,57 +1327,77 @@
     // Retrieve the stored deleted messages array
     const deletedMessages = JSON.parse(localStorage.getItem('deletedChatMessagesContent') || '[]');
 
-    // Check if there are any deleted messages in the local storage
-    if (deletedMessages.length === 0) {
-      // Hide the toggle button if there are no deleted messages
-      toggleButton.style.display = 'none';
-      return;
-    } else {
-      // Show the toggle button if there are deleted messages
-      toggleButton.style.display = 'block';
+    if (isCtrlKeyPressed) {
+      // Set deletedChatMessagesContent in local storage as an empty array
+      localStorage.setItem('deletedChatMessagesContent', JSON.stringify([]));
+
+      // Display all messages
+      messages.forEach(message => {
+        message.style.display = 'block';
+        message.style.removeProperty('background-color');
+        message.style.removeProperty('box-shadow');
+        message.style.removeProperty('background-clip');
+      });
+
+      toggleButton.remove();
     }
 
-    // Toggle the display of each message that matches the key "deletedChatMessagesContent" data
-    messages.forEach(message => {
-      if (deletedMessages.includes(message.innerText)) {
-        // Show hidden messages if innerText is "Hidden" and display equal "NONE"
-        if (toggleButton.innerText === 'Hidden') {
-          if (message.style.display === 'none') {
-            // Change display to "BLOCK"
-            message.style.display = 'block';
-            // Wrap the message into visible selection to visually know what message will be deleted
-            message.style.setProperty('background-color', 'hsla(0, 50%, 30%, .5)', 'important');
-            message.style.setProperty('box-shadow', 'inset 0px 0px 0px 1px rgb(191, 64, 64)', 'important');
-            message.style.setProperty('background-clip', 'padding-box', 'important');
-          }
-          // Show hidden messages if innerText is "Show" and display equal "NONE"
-        } else if (toggleButton.innerText === 'Show') {
-          if (message.style.display === 'none') {
-            message.style.display = 'block';
-            // Wrap the message into visible selection to visually know what message will be deleted
-            message.style.setProperty('background-color', 'hsla(0, 50%, 30%, .5)', 'important');
-            message.style.setProperty('box-shadow', 'inset 0px 0px 0px 1px rgb(191, 64, 64)', 'important');
-            message.style.setProperty('background-clip', 'padding-box', 'important');
-          }
-        } else if (toggleButton.innerText === 'Hide') {
-          if (message.style.display === 'block') {
-            message.style.display = 'none';
-            message.style.removeProperty('background-color');
-            message.style.removeProperty('box-shadow');
-            message.style.removeProperty('background-clip');
+    if (!isCtrlKeyPressed) {
+
+      // Check if there are any deleted messages in the local storage
+      if (deletedMessages.length === 0) {
+        // Hide the toggle button if there are no deleted messages
+        toggleButton.style.display = 'none';
+        return;
+      } else {
+        // Show the toggle button if there are deleted messages
+        toggleButton.style.display = 'block';
+      }
+
+      // Toggle the display of each message that matches the key "deletedChatMessagesContent" data
+      messages.forEach(message => {
+        if (deletedMessages.includes(message.innerText)) {
+          // Show hidden messages if innerText is "Hidden" and display equal "NONE"
+          if (toggleButton.innerText === 'Hidden') {
+            if (message.style.display === 'none') {
+              // Change display to "BLOCK"
+              message.style.display = 'block';
+              // Wrap the message into visible selection to visually know what message will be deleted
+              message.style.setProperty('background-color', 'hsla(0, 50%, 30%, .5)', 'important');
+              message.style.setProperty('box-shadow', 'inset 0px 0px 0px 1px rgb(191, 64, 64)', 'important');
+              message.style.setProperty('background-clip', 'padding-box', 'important');
+            }
+            // Show hidden messages if innerText is "Show" and display equal "NONE"
+          } else if (toggleButton.innerText === 'Show') {
+            if (message.style.display === 'none') {
+              message.style.display = 'block';
+              // Wrap the message into visible selection to visually know what message will be deleted
+              message.style.setProperty('background-color', 'hsla(0, 50%, 30%, .5)', 'important');
+              message.style.setProperty('box-shadow', 'inset 0px 0px 0px 1px rgb(191, 64, 64)', 'important');
+              message.style.setProperty('background-clip', 'padding-box', 'important');
+            }
+          } else if (toggleButton.innerText === 'Hide') {
+            if (message.style.display === 'block') {
+              message.style.display = 'none';
+              message.style.removeProperty('background-color');
+              message.style.removeProperty('box-shadow');
+              message.style.removeProperty('background-clip');
+            }
           }
         }
-      }
-    });
+      });
 
-    // Toggle the button text and style
-    if (toggleButton.innerText === 'Hide') {
-      toggleButton.innerText = 'Show';
-      assignShowButtonStyle(toggleButton);
-    } else {
-      toggleButton.innerText = 'Hide';
-      assignHideButtonStyle(toggleButton);
+      // Toggle the button text and style
+      if (toggleButton.innerText === 'Hide') {
+        toggleButton.innerText = 'Show';
+        assignShowButtonStyle(toggleButton);
+      } else {
+        toggleButton.innerText = 'Hide';
+        assignHideButtonStyle(toggleButton);
+      }
+
     }
+
   } // toggleHiddenMessages function END
 
   // create a new MutationObserver to wait for the chat to fully load with all messages

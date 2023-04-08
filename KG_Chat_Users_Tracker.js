@@ -21,8 +21,7 @@
     { name: 'Переборыч', gender: 'male' },
     { name: 'Advisor', gender: 'male' },
     { name: 'Хеопс', gender: 'male' },
-    { name: 'Рустамко', gender: 'male' },
-    { name: 'elasez_uyefot_2', gender: 'male' }
+    { name: 'Рустамко', gender: 'male' }
   ];
 
 
@@ -49,7 +48,7 @@
   const newMessageFrequencies = [500];
 
   // Volume and duration settings
-  const volume = 0.1;
+  const volume = 0.3;
   const duration = 80;
   const fadeTime = 10;
   const delay = 100;

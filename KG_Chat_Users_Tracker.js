@@ -47,10 +47,13 @@
   const userLeftFrequencies = [600, 300];
   const newMessageFrequencies = [500];
 
-  // Volume and duration settings
+  // Volume of new message and left, entered users
   const volume = 0.3;
+  // Duration for each frequency
   const duration = 80;
-  const fadeTime = 10;
+  // Smooth inception and termination for each note
+  const fade = 10;
+  // Space between each note to make noticeable pauses
   const delay = 100;
 
   // Function to play a beep given a list of frequencies
@@ -83,10 +86,10 @@
 
           gain.connect(audioContext.destination);
           gain.gain.setValueAtTime(0, audioContext.currentTime);
-          gain.gain.linearRampToValueAtTime(volume, audioContext.currentTime + fadeTime / 1000);
+          gain.gain.linearRampToValueAtTime(volume, audioContext.currentTime + fade / 1000);
           oscillator.start(audioContext.currentTime + i * delay / 1000);
           oscillator.stop(audioContext.currentTime + (i * delay + duration) / 1000);
-          gain.gain.setValueAtTime(volume, audioContext.currentTime + (i * delay + (duration - fadeTime)) / 1000);
+          gain.gain.setValueAtTime(volume, audioContext.currentTime + (i * delay + (duration - fade)) / 1000);
           gain.gain.linearRampToValueAtTime(0, audioContext.currentTime + (i * delay + duration) / 1000);
         }
       }

@@ -21,7 +21,8 @@
     { name: 'Переборыч', gender: 'male', pronunciation: 'Переборыч' },
     { name: 'Advisor', gender: 'male', pronunciation: 'Адвайзер' },
     { name: 'Хеопс', gender: 'male', pronunciation: 'Хеопс' },
-    { name: 'Рустамко', gender: 'male', pronunciation: 'Рустамко' }
+    { name: 'Рустамко', gender: 'male', pronunciation: 'Рустамко' },
+    { name: 'ExpLo1t', gender: 'female', pronunciation: 'Эксплоит' }
   ];
 
 

@@ -96,14 +96,16 @@
     });
   }
 
-  // define the voice for text to speech
-  const voice = speechSynthesis.getVoices().find((voice) => voice.name === 'Microsoft Pavel - Russian (Russia)');
-
   // Define the utterance object as a global variable
   const utterance = new SpeechSynthesisUtterance();
+  // Define the voice for text to speech as Pavel
+  const voice = speechSynthesis.getVoices().find((voice) => voice.name === 'Microsoft Pavel - Russian (Russia)');
+  // Set the "default" property of the Russian voice to true to make it the default voice for the utterance
+  voice.default = true;
+  // Set the "lang" property of the utterance object to 'ru-RU'
   utterance.lang = 'ru-RU';
+  // Set the "voice" property of the utterance object to the Russian voice
   utterance.voice = voice;
-
 
   // Define voice speed limits
   const minVoiceSpeed = 0.5;

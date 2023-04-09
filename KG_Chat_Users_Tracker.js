@@ -169,17 +169,11 @@
   // Define the function to generate HSL color with user parameters for hue, saturation, lightness
   function getHSLColor(hue, saturation, lightness) {
     // Set default value for hue
-    if (typeof hue === 'undefined') {
-      hue = 180;
-    }
+    if (typeof hue === 'undefined') { hue = 180; }
     // Set default value for saturation
-    if (typeof saturation === 'undefined') {
-      saturation = 50;
-    }
+    if (typeof saturation === 'undefined') { saturation = 50; }
     // Set default value for lightness
-    if (typeof lightness === 'undefined') {
-      lightness = 50;
-    }
+    if (typeof lightness === 'undefined') { lightness = 50; }
     var color = `hsl(${hue},${saturation}%,${lightness}%)`;
     return color;
   }

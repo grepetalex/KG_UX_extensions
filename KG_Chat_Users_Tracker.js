@@ -14,14 +14,15 @@
 
   // Define the users to track and notify with popup and audio
   const usersToTrack = [
-    { name: 'Даниэль', gender: 'male' },
-    { name: 'певец', gender: 'male' },
-    { name: 'ВеликийИнка', gender: 'male' },
-    { name: 'madinko', gender: 'female' },
-    { name: 'Переборыч', gender: 'male' },
-    { name: 'Advisor', gender: 'male' },
-    { name: 'Хеопс', gender: 'male' },
-    { name: 'Рустамко', gender: 'male' }
+    { name: 'Даниэль', gender: 'male', pronunciation: 'Даниэль' },
+    { name: 'певец', gender: 'male', pronunciation: 'Певец' },
+    { name: 'Баристарх', gender: 'male', pronunciation: 'Баристарх' },
+    { name: 'madinko', gender: 'female', pronunciation: 'Мадинко' },
+    { name: 'Переборыч', gender: 'male', pronunciation: 'Переборыч' },
+    { name: 'Advisor', gender: 'male', pronunciation: 'Адвайзер' },
+    { name: 'Хеопс', gender: 'male', pronunciation: 'Хеопс' },
+    { name: 'Рустамко', gender: 'male', pronunciation: 'Рустамко' },
+    { name: 'elasez_uyefot_2', gender: 'male', pronunciation: 'Ноунэйм' }
   ];
 
 
@@ -141,8 +142,9 @@
   function userEntered(user) {
     playBeep(userEnteredFrequencies, volume);
     const userGender = getUserGender(user);
+    const userToTrack = usersToTrack.find(userToTrack => userToTrack.name === user);
     const action = verbs[userGender].enter;
-    const message = `${user} ${action}`;
+    const message = `${userToTrack.pronunciation} ${action}`;
     setTimeout(() => {
       textToSpeech(message, voiceSpeed);
     }, 300);
@@ -151,8 +153,9 @@
   function userLeft(user) {
     playBeep(userLeftFrequencies, volume);
     const userGender = getUserGender(user);
+    const userToTrack = usersToTrack.find(userToTrack => userToTrack.name === user);
     const action = verbs[userGender].leave;
-    const message = `${user} ${action}`;
+    const message = `${userToTrack.pronunciation} ${action}`;
     setTimeout(() => {
       textToSpeech(message, voiceSpeed);
     }, 300);
@@ -667,7 +670,7 @@
               const action = verbs[userGender].enter;
               showUserAction(newUser, action, true);
               if (usersToTrack.some(user => user.name === newUser)) {
-                userEntered(newUser, userGender);
+                userEntered(newUser, userGender); // use `newUser` instead of `newUser.name`
               }
             }
           });
@@ -677,7 +680,7 @@
             const action = verbs[userGender].leave;
             showUserAction(leftUser, action, false);
             if (usersToTrack.some(user => user.name === leftUser)) {
-              userLeft(leftUser, userGender);
+              userLeft(leftUser, userGender); // use `leftUser` instead of `leftUser.name`
             }
           });
 

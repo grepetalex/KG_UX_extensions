@@ -1298,39 +1298,33 @@
         assignHiddenButtonStyle(toggleButton);
         toggleButton.style.transition = 'all 0.3s';
         toggleButton.style.filter = 'brightness(1)';
+        let backupTextContent = toggleButton.textContent;
 
-        // Set the hover styles when the control key is pressed
+        // Set the hover styles
         toggleButton.addEventListener('mouseenter', () => {
           if (isCtrlKeyPressed) {
-            // Make a backup of the current toggleButton textContent
-            const originalTextContent = toggleButton.textContent;
-            toggleButton.style.filter = 'grayscale(1) brightness(2)';
+            backupTextContent = toggleButton.textContent;
             toggleButton.textContent = 'Restore';
-
-            // Set the textContent back to the original when the mouse leaves
-            toggleButton.addEventListener('mouseleave', () => {
-              if (isCtrlKeyPressed) {
-                toggleButton.style.filter = 'brightness(1)';
-                toggleButton.textContent = originalTextContent;
-              }
-            }, { once: true });
+            toggleButton.style.filter = 'grayscale(1) brightness(2)';
           } else {
-            toggleButton.style.filter = 'brightness(2)';
+            toggleButton.style.filter = 'grayscale(0) brightness(2)';
           }
         });
 
-        // Set the mouse leave styles when the control key is pressed
+        // Set the mouse leave styles
         toggleButton.addEventListener('mouseleave', () => {
-          if (isCtrlKeyPressed) {
-            toggleButton.style.filter = 'brightness(2)';
-          } else {
-            toggleButton.style.filter = 'brightness(1)';
+          const isRestore = toggleButton.textContent === 'Restore';
+          if (isCtrlKeyPressed || !isCtrlKeyPressed && isRestore) {
+            toggleButton.textContent = backupTextContent;
           }
+          toggleButton.style.filter = 'hue-rotate(0) brightness(1)';
         });
+
         messagesContainer.appendChild(toggleButton);
       }
     }
   }
+
 
   // Function to toggle messages display state from "NONE" to "BLOCK" and reverse
   function toggleHiddenMessages() {

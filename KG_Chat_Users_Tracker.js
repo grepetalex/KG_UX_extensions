@@ -97,21 +97,42 @@
     });
   }
 
-  // Define the utterance object as a global variable
-  const utterance = new SpeechSynthesisUtterance();
-
-  // Wait for the 'voiceschanged' event to fire on the SpeechSynthesis object
-  speechSynthesis.addEventListener('voiceschanged', () => {
+  // Create a promise that will resolve when the list of available voices is populated
+  const awaitVoices = new Promise(resolve => {
+    // Create a speech synthesis object
+    const synth = window.speechSynthesis;
     // Retrieve the list of available voices
-    const voices = speechSynthesis.getVoices();
+    let voices = synth.getVoices();
     // Define the voice for text to speech as Pavel
-    const voice = voices.find((voice) => voice.name === 'Microsoft Pavel - Russian (Russia)');
-    // Set the "default" property of the Russian voice to true to make it the default voice for the utterance
-    voice.default = true;
-    // Set the "lang" property of the utterance object to 'ru-RU'
-    utterance.lang = 'ru-RU';
-    // Set the "voice" property of the utterance object to the Russian voice
-    utterance.voice = voice;
+    let voice = voices.find(voice => voice.name === 'Microsoft Pavel - Russian (Russia)');
+
+    // If the voices list is empty, wait for it to populate
+    if (voices.length === 0) {
+      synth.addEventListener('voiceschanged', () => {
+        voices = synth.getVoices();
+        voice = voices.find(voice => voice.name === 'Microsoft Pavel - Russian (Russia)');
+        // If the voice is found, continue with the initialization
+        if (voice) {
+          // Define the utterance object as a global variable
+          const utterance = new SpeechSynthesisUtterance();
+          // Set the "lang" property of the utterance object to 'ru-RU'
+          utterance.lang = 'ru-RU';
+          // Set the "voice" property of the utterance object to the Russian voice
+          utterance.voice = voice;
+          // Resolve the promise
+          resolve({ synth, utterance, voices, voice });
+        }
+      });
+    } else {
+      // Define the utterance object as a global variable
+      const utterance = new SpeechSynthesisUtterance();
+      // Set the "lang" property of the utterance object to 'ru-RU'
+      utterance.lang = 'ru-RU';
+      // Set the "voice" property of the utterance object to the Russian voice
+      utterance.voice = voice;
+      // Resolve the promise
+      resolve({ synth, utterance, voices, voice });
+    }
   });
 
   // Define voice speed limits
@@ -121,9 +142,13 @@
   // Define the default voice speed as a global variable
   let voiceSpeed = parseFloat(localStorage.getItem('voiceSpeed') || '1.5');
 
-  function textToSpeech(text, voiceSpeed = voiceSpeed) {
+  async function textToSpeech(text, voiceSpeed = voiceSpeed) {
+    // Wait for the voices to be loaded
+    const { synth, utterance, voices, voice } = await awaitVoices;
+
     // Replace underscores with spaces
     const message = text.replace(/_/g, ' ');
+
     // Set the text content of the utterance
     utterance.text = message;
     // Set the speed of the utterance
@@ -132,8 +157,11 @@
     const dynamicVolume = volume * 6;
     // Set the volume of the utterance
     utterance.volume = dynamicVolume;
+    // Set the voice of the utterance
+    utterance.voice = voice;
+
     // Speak the utterance
-    speechSynthesis.speak(utterance);
+    synth.speak(utterance);
   }
 
   const verbs = {
@@ -961,8 +989,13 @@
       currentVoiceSpeed.classList.add('current-voice-speed');
       currentVoiceSpeed.style.position = 'absolute';
       currentVoiceSpeed.style.bottom = '45px';
+      currentVoiceSpeed.style.opacity = 0;
+      currentVoiceSpeed.style.transition = 'opacity 0.5s ease';
       currentVoiceSpeed.style.fontFamily = 'Orbitron, sans-serif';
       soundSwitcher.appendChild(currentVoiceSpeed);
+      // Trigger reflow to force the browser to repaint and apply initial styles
+      void currentVoiceSpeed.offsetWidth;
+      currentVoiceSpeed.style.opacity = '1';
     }
 
     if (currentSpeed <= minVoiceSpeed || currentSpeed >= maxVoiceSpeed) {
@@ -976,7 +1009,10 @@
     }
 
     currentVoiceSpeed.timeoutId = setTimeout(() => {
-      currentVoiceSpeed.remove();
+      currentVoiceSpeed.style.opacity = '0';
+      setTimeout(() => {
+        currentVoiceSpeed.remove();
+      }, 500);
     }, 1000);
   }
 

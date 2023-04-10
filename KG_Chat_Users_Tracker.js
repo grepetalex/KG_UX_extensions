@@ -99,14 +99,20 @@
 
   // Define the utterance object as a global variable
   const utterance = new SpeechSynthesisUtterance();
-  // Define the voice for text to speech as Pavel
-  const voice = speechSynthesis.getVoices().find((voice) => voice.name === 'Microsoft Pavel - Russian (Russia)');
-  // Set the "default" property of the Russian voice to true to make it the default voice for the utterance
-  voice.default = true;
-  // Set the "lang" property of the utterance object to 'ru-RU'
-  utterance.lang = 'ru-RU';
-  // Set the "voice" property of the utterance object to the Russian voice
-  utterance.voice = voice;
+
+  // Wait for the 'voiceschanged' event to fire on the SpeechSynthesis object
+  speechSynthesis.addEventListener('voiceschanged', () => {
+    // Retrieve the list of available voices
+    const voices = speechSynthesis.getVoices();
+    // Define the voice for text to speech as Pavel
+    const voice = voices.find((voice) => voice.name === 'Microsoft Pavel - Russian (Russia)');
+    // Set the "default" property of the Russian voice to true to make it the default voice for the utterance
+    voice.default = true;
+    // Set the "lang" property of the utterance object to 'ru-RU'
+    utterance.lang = 'ru-RU';
+    // Set the "voice" property of the utterance object to the Russian voice
+    utterance.voice = voice;
+  });
 
   // Define voice speed limits
   const minVoiceSpeed = 0.5;

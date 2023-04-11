@@ -139,8 +139,16 @@
   const minVoiceSpeed = 0.5;
   const maxVoiceSpeed = 2.5;
 
+  // Define voice pitch limits
+  const minVoicePitch = 0.5;
+  const maxVoicePitch = 2.0;
+
   // Define the default voice speed as a global variable
   let voiceSpeed = parseFloat(localStorage.getItem('voiceSpeed') || '1.5');
+
+  // Define the default voice pitch as a global variable
+  let voicePitch = parseFloat(localStorage.getItem('voicePitch') || '1.0');
+
 
   async function textToSpeech(text, voiceSpeed = voiceSpeed) {
     // Wait for the voices to be loaded
@@ -157,6 +165,8 @@
     const dynamicVolume = volume * 6;
     // Set the volume of the utterance
     utterance.volume = dynamicVolume;
+    // Set the pitch of the utterance
+    utterance.pitch = voicePitch;
     // Set the voice of the utterance
     utterance.voice = voice;
 
@@ -918,19 +928,26 @@
       <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
       </svg>`;
 
-  // Define the isCtrlKeyPressed variable as a boolean
+  // Define the isCtrlKeyPressed and isAltKeyPressed variables as booleans
   let isCtrlKeyPressed = false;
+  let isAltKeyPressed = false;
 
-  // Add event listeners for the Ctrl key
+  // Add event listeners for the Ctrl and Alt keys
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Control') {
       isCtrlKeyPressed = true;
+    }
+    if (event.key === 'Alt') {
+      isAltKeyPressed = true;
     }
   });
 
   document.addEventListener('keyup', (event) => {
     if (event.key === 'Control') {
       isCtrlKeyPressed = false;
+    }
+    if (event.key === 'Alt') {
+      isAltKeyPressed = false;
     }
   });
 
@@ -949,8 +966,9 @@
   // Retrieve the value from localStorage key "messageNotificationTitle"
   const messageNotificationTitle = localStorage.getItem('messageNotificationTitle');
   soundSwitcher.title = messageNotificationTitle ? messageNotificationTitle : 'Do not disturb';
+  // Add the isAltKeyPressed condition to the soundSwitcher event listener
   soundSwitcher.addEventListener('click', function (event) {
-    if (!isCtrlKeyPressed) { // Only execute the code if isCtrlKey is false
+    if (!isCtrlKeyPressed && !isAltKeyPressed) { // Only execute the code if both isCtrlKeyPressed and isAltKeyPressed are false
       switch (this.id) {
         case 'silence':
           this.id = 'beep';
@@ -981,64 +999,145 @@
       <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
       </svg>`;
 
-  function showCurrentSpeed(currentSpeed) {
-    let currentVoiceSpeed = document.querySelector('.current-voice-speed');
+  // Function to assign common styles for voice speed and pitch elements
+  function assignVoiceSettingsStyles(element, color) {
+    element.style.position = 'absolute';
+    element.style.bottom = '45px';
+    element.style.opacity = 0;
+    element.style.transition = 'opacity 0.3s ease';
+    element.style.fontFamily = 'Orbitron, sans-serif';
+    element.style.color = color;
+  }
 
-    if (!currentVoiceSpeed) {
-      currentVoiceSpeed = document.createElement('span');
-      currentVoiceSpeed.classList.add('current-voice-speed');
-      currentVoiceSpeed.style.position = 'absolute';
-      currentVoiceSpeed.style.bottom = '45px';
-      currentVoiceSpeed.style.opacity = 0;
-      currentVoiceSpeed.style.transition = 'opacity 0.5s ease';
-      currentVoiceSpeed.style.fontFamily = 'Orbitron, sans-serif';
-      soundSwitcher.appendChild(currentVoiceSpeed);
-      // Trigger reflow to force the browser to repaint and apply initial styles
-      void currentVoiceSpeed.offsetWidth;
-      currentVoiceSpeed.style.opacity = '1';
-    }
+  /*
+   * Shows the current voice speed or pitch as a span element with appropriate styles.
+   * If the Ctrl key is pressed, displays the current voice speed.
+   * If the Alt key is pressed, displays the current voice pitch.
+   */
+  function showVoiceSettings(currentSpeed, currentPitch) {
+    if (isCtrlKeyPressed) {
+      let currentVoiceSpeed = document.querySelector('.current-voice-speed');
+      let currentVoicePitch = document.querySelector('.current-voice-pitch');
 
-    if (currentSpeed <= minVoiceSpeed || currentSpeed >= maxVoiceSpeed) {
-      currentVoiceSpeed.innerHTML = iconRangeisOut;
-    } else {
-      currentVoiceSpeed.textContent = currentSpeed.toFixed(1);
-    }
+      // Remove currentVoicePitch if it exists
+      if (currentVoicePitch) {
+        currentVoicePitch.remove();
+      }
 
-    if (currentVoiceSpeed.timeoutId) {
-      clearTimeout(currentVoiceSpeed.timeoutId);
-    }
+      // Create currentVoiceSpeed if it doesn't exist
+      if (!currentVoiceSpeed) {
+        currentVoiceSpeed = document.createElement('span');
+        currentVoiceSpeed.classList.add('current-voice-speed');
+        assignVoiceSettingsStyles(currentVoiceSpeed, 'hsl(100, 50%, 50%)');
+        soundSwitcher.appendChild(currentVoiceSpeed);
+        void currentVoiceSpeed.offsetWidth;
+        currentVoiceSpeed.style.opacity = '1';
+      }
 
-    currentVoiceSpeed.timeoutId = setTimeout(() => {
-      currentVoiceSpeed.style.opacity = '0';
-      setTimeout(() => {
+      // Set the text content of currentVoiceSpeed
+      if (currentSpeed <= minVoiceSpeed || currentSpeed >= maxVoiceSpeed) {
+        currentVoiceSpeed.innerHTML = iconRangeisOut;
+      } else {
+        currentVoiceSpeed.textContent = currentSpeed.toFixed(1);
+      }
+
+      // Clear any existing timeout on currentVoiceSpeed and set a new one
+      if (currentVoiceSpeed.timeoutId) {
+        clearTimeout(currentVoiceSpeed.timeoutId);
+      }
+
+      currentVoiceSpeed.timeoutId = setTimeout(() => {
+        currentVoiceSpeed.style.opacity = '0';
+        setTimeout(() => {
+          currentVoiceSpeed.remove();
+        }, 500);
+      }, 1000);
+
+    } else if (isAltKeyPressed) {
+      let currentVoicePitch = document.querySelector('.current-voice-pitch');
+      let currentVoiceSpeed = document.querySelector('.current-voice-speed');
+
+      // Remove currentVoiceSpeed if it exists
+      if (currentVoiceSpeed) {
         currentVoiceSpeed.remove();
-      }, 500);
-    }, 1000);
+      }
+
+      // Create currentVoicePitch if it doesn't exist
+      if (!currentVoicePitch) {
+        currentVoicePitch = document.createElement('span');
+        currentVoicePitch.classList.add('current-voice-pitch');
+        assignVoiceSettingsStyles(currentVoicePitch, 'hsl(0, 50%, 70%)');
+        soundSwitcher.appendChild(currentVoicePitch);
+        void currentVoicePitch.offsetWidth;
+        currentVoicePitch.style.opacity = '1';
+      }
+
+      // Set the text content of currentVoicePitch
+      if (currentPitch <= minVoicePitch || currentPitch >= maxVoicePitch) {
+        currentVoicePitch.innerHTML = iconRangeisOut;
+      } else {
+        currentVoicePitch.textContent = currentPitch.toFixed(1);
+      }
+
+      // Clear any existing timeout on currentVoicePitch and set a new one
+      if (currentVoicePitch.timeoutId) {
+        clearTimeout(currentVoicePitch.timeoutId);
+      }
+
+      currentVoicePitch.timeoutId = setTimeout(() => {
+        currentVoicePitch.style.opacity = '0';
+        setTimeout(() => {
+          currentVoicePitch.remove();
+        }, 500);
+      }, 1000);
+
+    }
   }
 
   // Add event listeners for Ctrl + Left Click to increase voice speed
+  // Add event listeners for Shift + Left Click to increase voice pitch
   soundSwitcher.addEventListener('click', (event) => {
-    if (isCtrlKeyPressed && event.ctrlKey && event.button === 0) { // check for ctrl + left click
+    if (isCtrlKeyPressed && event.button === 0) { // check for Ctrl + Left Click
       const newSpeed = parseFloat(voiceSpeed) + 0.1; // Calculate new speed without rounding
       const limitedSpeed = Math.min(newSpeed, maxVoiceSpeed); // Limit maximum voice speed
       if (limitedSpeed !== voiceSpeed) {
         voiceSpeed = parseFloat(limitedSpeed.toFixed(1)); // Round and assign to voiceSpeed
         localStorage.setItem('voiceSpeed', voiceSpeed.toString());
-        showCurrentSpeed(voiceSpeed);
+        showVoiceSettings(voiceSpeed, voicePitch);
+      }
+    }
+    else if (isAltKeyPressed && event.button === 0) { // check for Shift + Left Click
+      const newPitch = parseFloat(voicePitch) + 0.1; // Calculate new pitch without rounding
+      const limitedPitch = Math.min(newPitch, maxVoicePitch); // Limit maximum voice pitch
+      if (limitedPitch !== voicePitch) {
+        voicePitch = parseFloat(limitedPitch.toFixed(1)); // Round and assign to voicePitch
+        localStorage.setItem('voicePitch', voicePitch.toString());
+        showVoiceSettings(voiceSpeed, voicePitch);
       }
     }
   });
 
   // Add event listeners for Ctrl + Right Click to decrease voice speed
+  // Add event listeners for Shift + Right Click to decrease voice pitch
   soundSwitcher.addEventListener('contextmenu', (event) => {
-    if (isCtrlKeyPressed && event.ctrlKey && event.button === 2) { // check for ctrl + right click
+    if (isCtrlKeyPressed && event.button === 2) { // check for Ctrl + Right Click
       event.preventDefault();
       const newSpeed = parseFloat(voiceSpeed) - 0.1; // Calculate new speed without rounding
       const limitedSpeed = Math.max(newSpeed, minVoiceSpeed); // Limit minimum voice speed
       if (limitedSpeed !== voiceSpeed) {
         voiceSpeed = parseFloat(limitedSpeed.toFixed(1)); // Round and assign to voiceSpeed
         localStorage.setItem('voiceSpeed', voiceSpeed.toString());
-        showCurrentSpeed(voiceSpeed);
+        showVoiceSettings(voiceSpeed, voicePitch);
+      }
+    }
+    else if (isAltKeyPressed && event.button === 2) { // check for Shift + Right Click
+      event.preventDefault();
+      const newPitch = parseFloat(voicePitch) - 0.1; // Calculate new pitch without rounding
+      const limitedPitch = Math.max(newPitch, minVoicePitch); // Limit minimum voice pitch
+      if (limitedPitch !== voicePitch) {
+        voicePitch = parseFloat(limitedPitch.toFixed(1)); // Round and assign to voicePitch
+        localStorage.setItem('voicePitch', voicePitch.toString());
+        showVoiceSettings(voiceSpeed, voicePitch);
       }
     }
   });

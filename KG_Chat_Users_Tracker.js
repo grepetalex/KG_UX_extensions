@@ -136,11 +136,11 @@
   });
 
   // Define voice speed limits
-  const minVoiceSpeed = 0.5;
+  const minVoiceSpeed = 0;
   const maxVoiceSpeed = 2.5;
 
   // Define voice pitch limits
-  const minVoicePitch = 0.5;
+  const minVoicePitch = 0;
   const maxVoicePitch = 2.0;
 
   // Define the default voice speed as a global variable
@@ -999,25 +999,47 @@
       <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
       </svg>`;
 
+  // This function combines the results of the above functions to return an object
+  // with both the speed and pitch percentages as strings with a "%" sign appended.
+  function getVoiceSettingsPercentage() {
+    const speedPercent = ((voiceSpeed - minVoiceSpeed) / (maxVoiceSpeed - minVoiceSpeed)) * 100;
+    const pitchPercent = ((voicePitch - minVoicePitch) / (maxVoicePitch - minVoicePitch)) * 100;
+
+    return {
+      speed: `${speedPercent}%`,
+      pitch: `${pitchPercent}%`,
+    };
+  }
+
   // Function to assign common styles for voice speed and pitch elements
-  function assignVoiceSettingsStyles(element, color) {
-    element.style.position = 'absolute';
-    element.style.bottom = '45px';
-    element.style.opacity = 0;
-    element.style.transition = 'opacity 0.3s ease';
-    element.style.fontFamily = 'Orbitron, sans-serif';
-    element.style.color = color;
+  function assignVoiceSettingsStyles(voiceSettings) {
+    voiceSettings.style.position = 'absolute';
+    voiceSettings.style.bottom = '45px';
+    voiceSettings.style.opacity = 0;
+    voiceSettings.style.transition = 'opacity 0.3s ease';
+    voiceSettings.style.fontFamily = 'Orbitron, sans-serif';
   }
 
   /*
-   * Shows the current voice speed or pitch as a span element with appropriate styles.
-   * If the Ctrl key is pressed, displays the current voice speed.
-   * If the Alt key is pressed, displays the current voice pitch.
-   */
-  function showVoiceSettings(currentSpeed, currentPitch) {
+  * Shows the current voice speed or pitch as a span element with appropriate styles.
+  * If the Ctrl key is pressed, displays the current voice speed.
+  * If the Alt key is pressed, displays the current voice pitch.
+  */
+  function showVoiceSettings() {
+    let voiceSettings = document.querySelector('.voice-settings');
+    let currentVoiceSpeed = document.querySelector('.current-voice-speed');
+    let currentVoicePitch = document.querySelector('.current-voice-pitch');
+
     if (isCtrlKeyPressed) {
-      let currentVoiceSpeed = document.querySelector('.current-voice-speed');
-      let currentVoicePitch = document.querySelector('.current-voice-pitch');
+      // Create voiceSettings if it doesn't exist
+      if (!voiceSettings) {
+        voiceSettings = document.createElement('div');
+        voiceSettings.classList.add('voice-settings');
+        soundSwitcher.appendChild(voiceSettings);
+        assignVoiceSettingsStyles(voiceSettings);
+        void voiceSettings.offsetWidth;
+        voiceSettings.style.opacity = '1';
+      }
 
       // Remove currentVoicePitch if it exists
       if (currentVoicePitch) {
@@ -1028,34 +1050,94 @@
       if (!currentVoiceSpeed) {
         currentVoiceSpeed = document.createElement('span');
         currentVoiceSpeed.classList.add('current-voice-speed');
-        assignVoiceSettingsStyles(currentVoiceSpeed, 'hsl(100, 50%, 50%)');
-        soundSwitcher.appendChild(currentVoiceSpeed);
-        void currentVoiceSpeed.offsetWidth;
-        currentVoiceSpeed.style.opacity = '1';
+        voiceSettings.appendChild(currentVoiceSpeed);
       }
 
-      // Set the text content of currentVoiceSpeed
-      if (currentSpeed <= minVoiceSpeed || currentSpeed >= maxVoiceSpeed) {
-        currentVoiceSpeed.innerHTML = iconRangeisOut;
-      } else {
-        currentVoiceSpeed.textContent = currentSpeed.toFixed(1);
+      // Create progress text info
+      let voiceSpeedInfo = voiceSettings.querySelector('.current-voice-speed .voice-value-info');
+      if (!voiceSpeedInfo) {
+        voiceSpeedInfo = document.createElement('span');
+        voiceSpeedInfo.classList.add('voice-value-info');
+        voiceSettings.querySelector('.current-voice-speed').appendChild(voiceSpeedInfo);
+        voiceSpeedInfo.style.display = 'flex';
+        voiceSpeedInfo.style.width = '100%';
+        voiceSpeedInfo.style.justifyContent = 'center';
+        voiceSpeedInfo.style.marginBottom = '6px';
+        voiceSpeedInfo.style.color = 'hsl(100, 50%, 50%)';
       }
 
-      // Clear any existing timeout on currentVoiceSpeed and set a new one
-      if (currentVoiceSpeed.timeoutId) {
-        clearTimeout(currentVoiceSpeed.timeoutId);
+      if (voiceSpeedInfo) {
+        // Set the text content of voiceSpeed
+        if (voiceSpeed <= minVoiceSpeed || voiceSpeed >= maxVoiceSpeed) {
+          voiceSpeedInfo.innerHTML = iconRangeisOut;
+        } else {
+          voiceSpeedInfo.innerHTML = voiceSpeed.toFixed(1);
+        }
       }
 
-      currentVoiceSpeed.timeoutId = setTimeout(() => {
-        currentVoiceSpeed.style.opacity = '0';
+      // Create a new progress element if it doesn't exist
+      let voiceSpeedProgress = voiceSettings.querySelector('.current-voice-speed .voice-progress');
+      if (!voiceSpeedProgress) {
+        voiceSpeedProgress = document.createElement('span');
+        voiceSpeedProgress.classList.add('voice-progress');
+        // Create the progress fill element
+        let fill = document.createElement('span');
+        fill.classList.add('voice-progress-fill');
+        // Append the fill element to the progress element
+        voiceSpeedProgress.appendChild(fill);
+        // Append the progress element to the voice settings element
+        voiceSettings.querySelector('.current-voice-speed').appendChild(voiceSpeedProgress);
+      }
+
+      // Update progress fill width based on voice pitch percentage
+      voiceSpeedProgress.querySelector('.voice-progress-fill').style.width = getVoiceSettingsPercentage().speed;
+
+      // Apply styles to the progress and fill elements
+      const progressStyle = {
+        display: 'block',
+        width: '120px',
+        height: '12px',
+        backgroundColor: 'hsl(90, 60%, 30%)',
+        borderRadius: '6px'
+      };
+
+      const fillStyle = {
+        display: 'block',
+        height: '100%',
+        backgroundColor: 'hsl(90, 60%, 50%)',
+        borderRadius: '6px'
+      };
+
+      for (let property in progressStyle) {
+        voiceSpeedProgress.style[property] = progressStyle[property];
+      }
+
+      for (let property in fillStyle) {
+        voiceSpeedProgress.querySelector('.voice-progress-fill').style[property] = fillStyle[property];
+      }
+
+      // Clear any existing timeout on voiceSettings and set a new one
+      if (voiceSettings.timeoutId) {
+        clearTimeout(voiceSettings.timeoutId);
+      }
+
+      voiceSettings.timeoutId = setTimeout(() => {
+        voiceSettings.style.opacity = '0';
         setTimeout(() => {
-          currentVoiceSpeed.remove();
+          voiceSettings.remove();
         }, 500);
       }, 1000);
 
     } else if (isAltKeyPressed) {
-      let currentVoicePitch = document.querySelector('.current-voice-pitch');
-      let currentVoiceSpeed = document.querySelector('.current-voice-speed');
+      // Create voiceSettings if it doesn't exist
+      if (!voiceSettings) {
+        voiceSettings = document.createElement('div');
+        voiceSettings.classList.add('voice-settings');
+        soundSwitcher.appendChild(voiceSettings);
+        assignVoiceSettingsStyles(voiceSettings);
+        void voiceSettings.offsetWidth;
+        voiceSettings.style.opacity = '1';
+      }
 
       // Remove currentVoiceSpeed if it exists
       if (currentVoiceSpeed) {
@@ -1066,31 +1148,89 @@
       if (!currentVoicePitch) {
         currentVoicePitch = document.createElement('span');
         currentVoicePitch.classList.add('current-voice-pitch');
-        assignVoiceSettingsStyles(currentVoicePitch, 'hsl(0, 50%, 70%)');
-        soundSwitcher.appendChild(currentVoicePitch);
-        void currentVoicePitch.offsetWidth;
-        currentVoicePitch.style.opacity = '1';
+        voiceSettings.appendChild(currentVoicePitch);
       }
 
-      // Set the text content of currentVoicePitch
-      if (currentPitch <= minVoicePitch || currentPitch >= maxVoicePitch) {
-        currentVoicePitch.innerHTML = iconRangeisOut;
-      } else {
-        currentVoicePitch.textContent = currentPitch.toFixed(1);
+      // Create progress text info
+      let voicePitchInfo = voiceSettings.querySelector('.current-voice-pitch .voice-value-info');
+      if (!voicePitchInfo) {
+        voicePitchInfo = document.createElement('span');
+        voicePitchInfo.classList.add('voice-value-info');
+        voiceSettings.querySelector('.current-voice-pitch').appendChild(voicePitchInfo);
+        voicePitchInfo.style.display = 'flex';
+        voicePitchInfo.style.width = '100%';
+        voicePitchInfo.style.justifyContent = 'center';
+        voicePitchInfo.style.marginBottom = '6px';
+        voicePitchInfo.style.color = 'hsl(180, 60%, 50%)';
       }
 
-      // Clear any existing timeout on currentVoicePitch and set a new one
-      if (currentVoicePitch.timeoutId) {
-        clearTimeout(currentVoicePitch.timeoutId);
+      if (voicePitchInfo) {
+        // Set the text content of voicePitch
+        if (voicePitch <= minVoicePitch || voicePitch >= maxVoicePitch) {
+          voicePitchInfo.innerHTML = iconRangeisOut;
+        } else {
+          voicePitchInfo.innerHTML = voicePitch.toFixed(1);
+        }
       }
 
-      currentVoicePitch.timeoutId = setTimeout(() => {
-        currentVoicePitch.style.opacity = '0';
+      // Create a new progress element if it doesn't exist
+      let pitchProgress = voiceSettings.querySelector('.current-voice-pitch .voice-progress');
+      if (!pitchProgress) {
+        pitchProgress = document.createElement('span');
+        pitchProgress.classList.add('voice-progress');
+        // Create the progress fill element
+        let fill = document.createElement('span');
+        fill.classList.add('voice-progress-fill');
+        // Append the fill element to the progress element
+        pitchProgress.appendChild(fill);
+        // Append the progress element to the voice settings element
+        voiceSettings.querySelector('.current-voice-pitch').appendChild(pitchProgress);
+      }
+
+      // Update progress fill width based on voice pitch percentage
+      pitchProgress.querySelector('.voice-progress-fill').style.width = getVoiceSettingsPercentage().pitch;
+
+      // Apply styles to the progress and fill elements
+      const progressStyle = {
+        display: 'block',
+        width: '120px',
+        height: '12px',
+        backgroundColor: 'hsl(180, 60%, 30%)',
+        borderRadius: '6px'
+      };
+
+      const fillStyle = {
+        display: 'block',
+        height: '100%',
+        backgroundColor: 'hsl(180, 60%, 50%)',
+        borderRadius: '6px'
+      };
+
+      for (let property in progressStyle) {
+        pitchProgress.style[property] = progressStyle[property];
+      }
+
+      for (let property in fillStyle) {
+        pitchProgress.querySelector('.voice-progress-fill').style[property] = fillStyle[property];
+      }
+
+      // Clear any existing timeout on voiceSettings and set a new one
+      if (voiceSettings.timeoutId) {
+        clearTimeout(voiceSettings.timeoutId);
+      }
+
+      voiceSettings.timeoutId = setTimeout(() => {
+        voiceSettings.style.opacity = '0';
         setTimeout(() => {
-          currentVoicePitch.remove();
+          voiceSettings.remove();
         }, 500);
       }, 1000);
 
+    } else {
+      // If neither Ctrl nor Alt is pressed, remove voiceSettings if it exists
+      if (voiceSettings) {
+        voiceSettings.remove();
+      }
     }
   }
 
@@ -1103,7 +1243,7 @@
       if (limitedSpeed !== voiceSpeed) {
         voiceSpeed = parseFloat(limitedSpeed.toFixed(1)); // Round and assign to voiceSpeed
         localStorage.setItem('voiceSpeed', voiceSpeed.toString());
-        showVoiceSettings(voiceSpeed, voicePitch);
+        showVoiceSettings();
       }
     }
     else if (isAltKeyPressed && event.button === 0) { // check for Shift + Left Click
@@ -1112,7 +1252,7 @@
       if (limitedPitch !== voicePitch) {
         voicePitch = parseFloat(limitedPitch.toFixed(1)); // Round and assign to voicePitch
         localStorage.setItem('voicePitch', voicePitch.toString());
-        showVoiceSettings(voiceSpeed, voicePitch);
+        showVoiceSettings();
       }
     }
   });
@@ -1127,7 +1267,7 @@
       if (limitedSpeed !== voiceSpeed) {
         voiceSpeed = parseFloat(limitedSpeed.toFixed(1)); // Round and assign to voiceSpeed
         localStorage.setItem('voiceSpeed', voiceSpeed.toString());
-        showVoiceSettings(voiceSpeed, voicePitch);
+        showVoiceSettings();
       }
     }
     else if (isAltKeyPressed && event.button === 2) { // check for Shift + Right Click
@@ -1137,7 +1277,7 @@
       if (limitedPitch !== voicePitch) {
         voicePitch = parseFloat(limitedPitch.toFixed(1)); // Round and assign to voicePitch
         localStorage.setItem('voicePitch', voicePitch.toString());
-        showVoiceSettings(voiceSpeed, voicePitch);
+        showVoiceSettings();
       }
     }
   });

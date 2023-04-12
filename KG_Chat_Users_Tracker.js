@@ -646,6 +646,10 @@
   const chatUsersObserver = new MutationObserver(debounce((mutations) => {
     mutations.forEach((mutation) => {
       if (mutation.type === 'childList') {
+        // Get the sound switcher element and check which option is selected
+        const soundSwitcher = document.querySelector('#voice, #beep, #silence');
+        const isSilence = soundSwitcher && soundSwitcher.id === 'silence';
+
         // Check if the chat is closed or opened
         const chatHidden = document.querySelector('#chat-wrapper.chat-hidden');
         // Retrieve all users textContent from userList ins elements
@@ -689,8 +693,8 @@
           setTimeout(userCountIncrement, speed);
         } // Animation END
 
-        // Check if chat is not closed and animation completed
-        if (!chatHidden && !isAnimating) {
+        // Check if mode is not silence, if chat is not closed and animation completed
+        if (!isSilence && !chatHidden && !isAnimating) {
           // Check if the user count has changed and add pulse animation
           if (userCountValue !== prevUserCountValue) {
             userCount.classList.add('pulse');
@@ -702,8 +706,8 @@
           }
         }
 
-        // Log new and left users if any changes are observed and chat is not hidden
-        if (!chatHidden && hasObservedChanges) {
+        // Check if mode is not silence, if chat is not closed and animation completed
+        if (!isSilence && !chatHidden && hasObservedChanges) {
           newUsers.forEach((newUser) => {
             if (!previousUsers.includes(newUser)) {
               const userGender = getUserGender(newUser) || 'male'; // use 'male' as default
@@ -841,7 +845,6 @@
             const soundSwitcher = document.querySelector('#voice, #beep, #silence');
             const isVoice = soundSwitcher && soundSwitcher.id === 'voice';
             const isBeep = soundSwitcher && soundSwitcher.id === 'beep';
-            const isSilence = soundSwitcher && soundSwitcher.id === 'silence';
 
             // References for the images extensions
             let jpg = 'a[href*=".jpg"]';

@@ -873,8 +873,8 @@
 
   // create a mutation observer to watch for new messages being added
   const newMessagesObserver = new MutationObserver(mutations => {
-    // If isInitialized is false or isReading is true, return without doing anything
-    if (!isInitialized || isReading) {
+    // If isInitialized is false return without doing anything
+    if (!isInitialized) {
       isInitialized = true;
       return;
     }

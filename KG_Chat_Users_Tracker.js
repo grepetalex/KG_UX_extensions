@@ -149,29 +149,35 @@
   // Define the default voice pitch as a global variable
   let voicePitch = parseFloat(localStorage.getItem('voicePitch') || '1.0');
 
+  function textToSpeech(text, voiceSpeed = voiceSpeed) {
+    return new Promise(async (resolve) => {
+      // Wait for the voices to be loaded
+      const { synth, utterance, voices, voice } = await awaitVoices;
 
-  async function textToSpeech(text, voiceSpeed = voiceSpeed) {
-    // Wait for the voices to be loaded
-    const { synth, utterance, voices, voice } = await awaitVoices;
+      // Replace underscores with spaces
+      const message = text.replace(/_/g, ' ');
 
-    // Replace underscores with spaces
-    const message = text.replace(/_/g, ' ');
+      // Set the text content of the utterance
+      utterance.text = message;
+      // Set the speed of the utterance
+      utterance.rate = voiceSpeed;
+      // Calculate the volume of the utterance based on the global volume value
+      const dynamicVolume = volume * 6;
+      // Set the volume of the utterance
+      utterance.volume = dynamicVolume;
+      // Set the pitch of the utterance
+      utterance.pitch = voicePitch;
+      // Set the voice of the utterance
+      utterance.voice = voice;
 
-    // Set the text content of the utterance
-    utterance.text = message;
-    // Set the speed of the utterance
-    utterance.rate = voiceSpeed;
-    // Calculate the volume of the utterance based on the global volume value
-    const dynamicVolume = volume * 6;
-    // Set the volume of the utterance
-    utterance.volume = dynamicVolume;
-    // Set the pitch of the utterance
-    utterance.pitch = voicePitch;
-    // Set the voice of the utterance
-    utterance.voice = voice;
+      // Speak the utterance
+      synth.speak(utterance);
 
-    // Speak the utterance
-    synth.speak(utterance);
+      // Wait for the utterance to end before resolving the Promise
+      utterance.onend = () => {
+        resolve();
+      };
+    });
   }
 
   const verbs = {
@@ -286,12 +292,12 @@
 
   // FUNCTIONALITY
 
-  /**
-     * Converts links to images in chat messages by creating a thumbnail and a big image on click.
-     * Looks for links that contains ".jpg" or ".jpeg" or "png" or ".gif" and creates a thumbnail with the image.
-     * If a thumbnail already exists, it skips the link and looks for the next one.
-     * When a thumbnail is clicked, it creates a dimming layer and a big image that can be closed by clicking on the dimming layer or the big image itself.
-     */
+  /*
+    * Converts links to images in chat messages by creating a thumbnail and a big image on click.
+    * Looks for links that contains ".jpg" or ".jpeg" or "png" or ".gif" and creates a thumbnail with the image.
+    * If a thumbnail already exists, it skips the link and looks for the next one.
+    * When a thumbnail is clicked, it creates a dimming layer and a big image that can be closed by clicking on the dimming layer or the big image itself.
+  */
   function convertImageLinkToImage() {
     // get the container for all chat messages
     const messagesContainer = document.querySelector('.messages-content div');
@@ -330,6 +336,7 @@
             bigImage.src = src;
             bigImage.classList.add('scaled-thumbnail');
             bigImage.style.maxHeight = '90vh';
+            bigImage.style.maxWidth = '90vw';
 
             document.body.appendChild(bigImage);
 
@@ -535,10 +542,10 @@
     }
   }
 
-  /**
+  /*
    * This function searches for all links in the chat messages container that contain a YouTube video URL
    * and replaces the link with an embedded YouTube video player.
-   */
+  */
   function convertYoutubeLinkToIframe() {
     // get the container for all chat messages
     const messagesContainer = document.querySelector('.messages-content div');
@@ -826,8 +833,40 @@
 
   // EVERY NEW MESSAGE READER
 
-  // Avoid reading on load page to read the messages normally on stable presence
+  // Skip reading the messages on page load to read them normally when the user is present and the page is stable
   let isInitialized = false;
+  // Prevent the "readNewMessages" function from being called multiple times until all messages in the set have been read
+  let isReading = false;
+
+  // Create a Set to store the new messages
+  const newMessages = new Set();
+
+  // This function adds a new message to the Set and triggers the "readNewMessages" function if the Set was empty before
+  function addNewMessage(message) {
+    // Check if the new message is not already in the Set
+    if (!newMessages.has(message)) {
+      // Add the new message to the Set
+      newMessages.add(message);
+      // If the "readNewMessages" function is not already in progress, trigger it
+      if (!isReading) {
+        isReading = true;
+        readNewMessages();
+      }
+    }
+  }
+
+  // This function reads the new messages from the Set and removes them after reading
+  async function readNewMessages() {
+    // Read each message in sequence from the Set
+    for (let message of newMessages) {
+      // Call the textToSpeech function to read the message
+      await textToSpeech(message, voiceSpeed);
+      // Remove the message from the Set after reading
+      newMessages.delete(message);
+    }
+    // Set the isReading flag to false after reading all messages
+    isReading = false;
+  }
 
   // create a mutation observer to watch for new messages being added
   const newMessagesObserver = new MutationObserver(mutations => {
@@ -867,8 +906,10 @@
 
             // If mode is voice, speak the new message and update the latest message content in local storage
             if (isVoice && isInitialized && newMessageTextContent && newMessageTextContent !== latestMessageTextContent) {
-              textToSpeech(newMessageTextContent, voiceSpeed);
+              // textToSpeech(newMessageTextContent, voiceSpeed);
               localStorage.setItem('latestMessageTextContent', newMessageTextContent);
+              // Add the new message to the Set
+              addNewMessage(newMessageTextContent);
             }
 
             // If mode is beep, play the beep sound for the new message

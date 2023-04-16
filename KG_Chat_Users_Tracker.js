@@ -929,7 +929,10 @@
     }
   });
 
-  // function to get the cleaned text content of the latest message
+  // Initialize the variable to keep track of the last username seen
+  let lastUsername = null;
+
+  // Function to get the cleaned text content of the latest message with username prefix
   function getLatestMessageTextContent() {
     const message = document.querySelector('.messages-content div p:last-child');
     if (!message) {
@@ -943,9 +946,19 @@
     const time = message.querySelector('.time');
     const username = message.querySelector('.username');
     const timeText = time ? time.textContent : '';
-    const usernameText = username ? username.textContent : '';
+    let usernameText = username ? username.textContent : '';
 
-    return text.replace(timeText, '').replace(usernameText, '').trim();
+    // Remove the "<" and ">" symbols from the username if they are present
+    usernameText = usernameText.replace(/</g, '').replace(/>/g, '');
+
+    let usernamePrefix = '';
+    // Check if the current username is different from the last username seen
+    if (usernameText !== lastUsername) {
+      usernamePrefix = `${usernameText} пишет: `;
+      lastUsername = usernameText;
+    }
+
+    return usernamePrefix + text.replace(timeText, '').replace(usernameText, '').trim();
   }
 
   // observe changes to the messages container element

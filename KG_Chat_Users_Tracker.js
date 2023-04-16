@@ -48,8 +48,10 @@
   const userLeftFrequencies = [600, 300];
   const newMessageFrequencies = [500];
 
-  // Volume of new message and left, entered users
-  const volume = 0.3;
+  // Volume of the reader voice
+  const voiceVolume = 0.8;
+  // Volume of the beep signal
+  const beepVolume = 0.2;
   // Duration for each frequency
   const duration = 80;
   // Smooth inception and termination for each note
@@ -162,9 +164,10 @@
       // Set the speed of the utterance
       utterance.rate = voiceSpeed;
       // Calculate the volume of the utterance based on the global volume value
-      const dynamicVolume = volume * 6;
+      // const dynamicVolume = volume * 6;
       // Set the volume of the utterance
-      utterance.volume = dynamicVolume;
+      // utterance.volume = dynamicVolume;
+      utterance.volume = voiceVolume;
       // Set the pitch of the utterance
       utterance.pitch = voicePitch;
       // Set the voice of the utterance
@@ -192,7 +195,7 @@
 
   // Functions to play beep for user entering and leaving
   function userEntered(user) {
-    playBeep(userEnteredFrequencies, volume);
+    playBeep(userEnteredFrequencies, beepVolume);
     const userGender = getUserGender(user);
     const userToTrack = usersToTrack.find(userToTrack => userToTrack.name === user);
     const action = verbs[userGender].enter;
@@ -203,7 +206,7 @@
   }
 
   function userLeft(user) {
-    playBeep(userLeftFrequencies, volume);
+    playBeep(userLeftFrequencies, beepVolume);
     const userGender = getUserGender(user);
     const userToTrack = usersToTrack.find(userToTrack => userToTrack.name === user);
     const action = verbs[userGender].leave;
@@ -870,6 +873,12 @@
 
   // create a mutation observer to watch for new messages being added
   const newMessagesObserver = new MutationObserver(mutations => {
+    // If isInitialized is false or isReading is true, return without doing anything
+    if (!isInitialized || isReading) {
+      isInitialized = true;
+      return;
+    }
+
     for (let mutation of mutations) {
       if (mutation.type === 'childList') {
         for (let node of mutation.addedNodes) {
@@ -914,20 +923,18 @@
 
             // If mode is beep, play the beep sound for the new message
             if (isBeep && isInitialized && newMessageTextContent && newMessageTextContent !== latestMessageTextContent) {
-              playBeep(newMessageFrequencies, volume);
+              playBeep(newMessageFrequencies, beepVolume);
               localStorage.setItem('latestMessageTextContent', newMessageTextContent);
-            }
-
-            // If it's the first time, update the latest message content in local storage and set isInitialized to true
-            if (!isInitialized) {
-              localStorage.setItem('latestMessageTextContent', newMessageTextContent);
-              isInitialized = true;
             }
           }
         }
       }
     }
   });
+
+  // observe changes to the messages container element
+  const messagesContainer = document.querySelector('.messages-content div');
+  newMessagesObserver.observe(messagesContainer, { childList: true, subtree: true });
 
   // Initialize the variable to keep track of the last username seen
   let lastUsername = null;
@@ -961,9 +968,6 @@
     return usernamePrefix + text.replace(timeText, '').replace(usernameText, '').trim();
   }
 
-  // observe changes to the messages container element
-  const messagesContainer = document.querySelector('.messages-content div');
-  newMessagesObserver.observe(messagesContainer, { childList: true, subtree: true });
 
   // SOUND GRAPHICAL SWITCHER
 

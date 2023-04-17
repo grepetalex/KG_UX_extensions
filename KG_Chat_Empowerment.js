@@ -871,6 +871,42 @@
     isReading = false;
   }
 
+  // Track if the user has loaded messages for the first time
+  let firstTime = true;
+  // The distance from the bottom at which we should trigger auto-scrolling
+  const scrollThreshold = 600;
+
+  // Scrolls the chat container to the bottom if the user has scrolled close enough
+  function scrollMessages() {
+    // Get the chat container
+    const chatContainer = document.querySelector(".messages-content");
+
+    // Get the latest message element
+    const latestMessage = chatContainer.querySelector('p:last-of-type');
+
+    // Check if the latest message is overflowed
+    const isOverflowed = latestMessage.scrollHeight > latestMessage.offsetHeight;
+
+    if (isOverflowed) {
+      console.log('Latest message is overflowed!');
+    } else {
+      console.log('Latest message is not overflowed.');
+    }
+
+    // If it's the user's first time loading messages, auto-scroll to the bottom
+    if (firstTime) {
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+      firstTime = false;
+    } else {
+      // Calculate how far the user is from the bottom
+      const distanceFromBottom = chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight;
+      // If the user is close enough to the bottom, auto-scroll to the bottom
+      if (distanceFromBottom <= scrollThreshold) {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }
+    }
+  }
+
   // create a mutation observer to watch for new messages being added
   const newMessagesObserver = new MutationObserver(mutations => {
     // If isInitialized is false return without doing anything
@@ -926,6 +962,9 @@
               playBeep(newMessageFrequencies, beepVolume);
               localStorage.setItem('latestMessageTextContent', newMessageTextContent);
             }
+
+            // Call the function to scroll to the bottom of the chat
+            scrollMessages();
           }
         }
       }
@@ -1749,9 +1788,18 @@
   } // toggleHiddenMessages function END
 
   // create a new MutationObserver to wait for the chat to fully load with all messages
-  var waitForChatObserver = new MutationObserver(function (mutations) {
+  var waitForChatObserver = new MutationObserver(mutations => {
+    // Get the container for all chat messages
+    const messagesContainer = document.querySelector('.messages-content div');
     // Get all the message elements from messages container
     const messages = document.querySelectorAll('.messages-content div p');
+
+    // References for the images extensions
+    let jpg = 'a[href*=".jpg"]';
+    let jpeg = 'a[href*=".jpeg"]';
+    let png = 'a[href*=".png"]';
+    let gif = 'a[href*=".gif"]';
+    let webp = 'a[href*=".webp"]';
 
     // check if the chat element has been added to the DOM
     if (document.contains(messagesContainer)) {
@@ -1760,6 +1808,18 @@
         // stop observing the DOM
         waitForChatObserver.disconnect();
         executeMessageRemover();
+
+        // Check if any of the messages contain a link with an image and convert it to an image
+        const linksWithImages = messagesContainer.querySelectorAll(`${jpg}, ${jpeg}, ${png}, ${gif}, ${webp}`);
+        linksWithImages.forEach(linkWithImage => convertImageLinkToImage(linkWithImage));
+
+        // Check if any of the messages contain a valid link with a YouTube video and convert it to an iframe
+        const linksWithYoutubeVideos = messagesContainer.querySelectorAll('a[href*="youtube.com/watch?v="], a[href*="youtu.be"]');
+        linksWithYoutubeVideos.forEach(linkWithYoutubeVideo => convertYoutubeLinkToIframe(linkWithYoutubeVideo));
+
+        // Call the function to scroll to the bottom of the chat
+        scrollMessages();
+
       }
     }
   });
@@ -1768,5 +1828,3 @@
   waitForChatObserver.observe(document, { childList: true, subtree: true });
 
 })();
-
-// Planned features: autoscroll on high message container such as images or youtube videos

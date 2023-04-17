@@ -881,18 +881,6 @@
     // Get the chat container
     const chatContainer = document.querySelector(".messages-content");
 
-    // Get the latest message element
-    const latestMessage = chatContainer.querySelector('p:last-of-type');
-
-    // Check if the latest message is overflowed
-    const isOverflowed = latestMessage.scrollHeight > latestMessage.offsetHeight;
-
-    if (isOverflowed) {
-      console.log('Latest message is overflowed!');
-    } else {
-      console.log('Latest message is not overflowed.');
-    }
-
     // If it's the user's first time loading messages, auto-scroll to the bottom
     if (firstTime) {
       chatContainer.scrollTop = chatContainer.scrollHeight;

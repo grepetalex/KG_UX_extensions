@@ -22,8 +22,12 @@
     { name: 'Advisor', gender: 'male', pronunciation: 'Адвайзер' },
     { name: 'Хеопс', gender: 'male', pronunciation: 'Хеопс' },
     { name: 'Рустамко', gender: 'male', pronunciation: 'Рустамко' },
-    { name: 'ExpLo1t', gender: 'female', pronunciation: 'Эксплоит' }
+    { name: 'ExpLo1t', gender: 'female', pronunciation: 'Эксплоит' },
+    { name: 'инфо-пчелы', gender: 'male', pronunciation: 'Инфо-Пчёлы' }
   ];
+
+  // Notify me if someone is addressing to me using such aliases
+  const mentionKeywords = ['Душа_Чата', 'Душа', 'Панчер'];
 
 
   // SOUND NOTIFICATION
@@ -963,36 +967,58 @@
   const messagesContainer = document.querySelector('.messages-content div');
   newMessagesObserver.observe(messagesContainer, { childList: true, subtree: true });
 
+
   // Initialize the variable to keep track of the last username seen
   let lastUsername = null;
 
+  // Function to check if a username is mentioned in the message
+  function isMentionForMe(message) {
+    return mentionKeywords.some(keyword => message.includes(keyword));
+  }
+
+  // Function to replace username mentions with their respective pronunciations
+  function replaceWithPronunciation(text) {
+    const replaceUsername = (username) => {
+      const user = usersToTrack.find(user => user.name === username);
+      return user ? user.pronunciation : username;
+    }
+
+    const pattern = new RegExp(usersToTrack.map(user => user.name).join('|'), 'g');
+    return text.replace(pattern, replaceUsername);
+  }
+
   // Function to get the cleaned text content of the latest message with username prefix
   function getLatestMessageTextContent() {
-    const message = document.querySelector('.messages-content div p:last-child');
-    if (!message) {
+    const messageElement = document.querySelector('.messages-content div p:last-child');
+    if (!messageElement) {
       return null;
     }
 
     const isTextNode = (node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== '';
-    const textNodes = [...message.childNodes].filter(isTextNode);
-    const text = textNodes.map(node => node.textContent).join('').trim();
+    const textNodes = [...messageElement.childNodes].filter(isTextNode);
+    const messageText = textNodes.map(node => node.textContent).join('').trim();
 
-    const time = message.querySelector('.time');
-    const username = message.querySelector('.username');
-    const timeText = time ? time.textContent : '';
-    let usernameText = username ? username.textContent : '';
+    const username = messageElement.querySelector('.username');
+    let usernameText = username ? username.textContent : null;
 
     // Remove the "<" and ">" symbols from the username if they are present
     usernameText = usernameText.replace(/</g, '').replace(/>/g, '');
 
     let usernamePrefix = '';
-    // Check if the current username is different from the last username seen
-    if (usernameText !== lastUsername) {
-      usernamePrefix = `${usernameText} пишет: `;
-      lastUsername = usernameText;
+
+    // If the current username is an alias what is about you, use a "is addressing" prefix
+    if (isMentionForMe(messageText)) {
+      usernamePrefix = `${replaceWithPronunciation(usernameText)} обращается: `;
+    }
+    // If the current username is the same as the last username seen, use a "is writing" prefix
+    else if (usernameText !== lastUsername) {
+      usernamePrefix = `${replaceWithPronunciation(usernameText)} пишет: `;
     }
 
-    return usernamePrefix + text.replace(timeText, '').replace(usernameText, '').trim();
+    lastUsername = usernameText;
+
+    const messageWithPronunciation = `${usernamePrefix}${replaceWithPronunciation(messageText)}`;
+    return messageWithPronunciation;
   }
 
 

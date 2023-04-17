@@ -27,6 +27,7 @@
   ];
 
   // Notify me if someone is addressing to me using such aliases
+  // Case-insensitive. It can be written fully in lowercase or fully in uppercase or in any other ways.
   const mentionKeywords = ['Душа_Чата', 'Душа', 'Панчер'];
 
 
@@ -973,7 +974,9 @@
 
   // Function to check if a username is mentioned in the message
   function isMentionForMe(message) {
-    return mentionKeywords.some(keyword => message.includes(keyword));
+    // return mentionKeywords.some(keyword => message.includes(keyword));
+    const messageLowercase = message.toLowerCase();
+    return mentionKeywords.some(keyword => messageLowercase.includes(keyword.toLowerCase()));
   }
 
   // Function to replace username mentions with their respective pronunciations

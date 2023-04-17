@@ -1768,3 +1768,5 @@
   waitForChatObserver.observe(document, { childList: true, subtree: true });
 
 })();
+
+// Planned features: autoscroll on high message container such as images or youtube videos

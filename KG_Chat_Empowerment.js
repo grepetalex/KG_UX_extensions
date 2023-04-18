@@ -24,7 +24,9 @@
     { name: 'Рустамко', gender: 'male', pronunciation: 'Рустамко' }, // ----- 08
     { name: 'ExpLo1t', gender: 'female', pronunciation: 'Эксплоит' }, // ---- 09
     { name: 'инфо-пчелы', gender: 'male', pronunciation: 'Инфо-Пчёлы' }, // - 10
-    { name: 'Razmontana', gender: 'male', pronunciation: 'Размонтана' } // -- 11
+    { name: 'Razmontana', gender: 'male', pronunciation: 'Размонтана' }, // -- 11
+    // Temp user
+    { name: 'elasez_uyefot_2', gender: 'male', pronunciation: 'Ноунейм' }
   ];
 
   // Notify me if someone is addressing to me using such aliases
@@ -246,6 +248,49 @@
   let previousPopup = null;
 
   function showUserAction(user, action, presence) {
+    // Make sure if the user is tracked to notify about presence in the chat to leave static stamps
+    const isTrackedUser = usersToTrack.some((trackedUser) => trackedUser.name === user);
+
+    if (isTrackedUser) {
+      // Get current time in format "[hour:minutes:seconds]"
+      const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+      // Create a new div element for the chat notification
+      const chatNotification = document.createElement('div');
+
+      // Set the text content of the chat notification to include the user, action, and time
+      chatNotification.innerText = `${user} ${action} в ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+
+      // Check if the presence is true or false
+      if (presence) {
+        // Add the 'user-entered' class to the chat notification
+        chatNotification.classList.add('user-entered');
+        // Set the background color, font color, and border color for the chat notification
+        chatNotification.style.color = getHSLColor(100, 50, 50);
+        chatNotification.style.backgroundColor = getHSLColor(100, 50, 10);
+        chatNotification.style.setProperty('border', `1px solid ${getHSLColor(100, 50, 25)}`, 'important');
+      } else {
+        // Add the 'user-left' class to the chat notification
+        chatNotification.classList.add('user-left');
+        // Set the background color, font color, and border color for the chat notification
+        chatNotification.style.color = getHSLColor(0, 50, 70);
+        chatNotification.style.backgroundColor = getHSLColor(0, 50, 15);
+        chatNotification.style.setProperty('border', `1px solid ${getHSLColor(0, 50, 40)}`, 'important');
+      }
+
+      // Set the padding, display, and margin for the chat notification
+      chatNotification.style.padding = '6px';
+      chatNotification.style.display = 'inline-flex';
+      chatNotification.style.margin = '4px';
+
+      // Get the container for all chat messages
+      const messagesContainer = document.querySelector('.messages-content div');
+
+      // Append the chat notification to the messages container
+      messagesContainer.appendChild(chatNotification);
+    }
+
+    // Create the userPopup element
     const userPopup = document.createElement('div');
     userPopup.classList.add('userPopup');
     userPopup.innerText = `${user} ${action}`;

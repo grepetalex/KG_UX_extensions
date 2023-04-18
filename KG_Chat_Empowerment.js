@@ -51,7 +51,8 @@
   // List of frequencies to play for "User Left" && "User Entered" && "New Messages"
   const userEnteredFrequencies = [300, 600];
   const userLeftFrequencies = [600, 300];
-  const newMessageFrequencies = [500];
+  const usualMessageFrequencies = [500];
+  const mentionMessageFrequencies = [600, 800];
 
   // Volume of the reader voice
   const voiceVolume = 0.8;
@@ -841,6 +842,66 @@
 
   // EVERY NEW MESSAGE READER
 
+  // Initialize the variable to keep track of the last username seen
+  let lastUsername = null;
+
+  // Set the flag as false for the mention beep sound to trigger at first usual beep sound for usual messages 
+  let isMention = false;
+
+  // Function to check if a username is mentioned in the message
+  function isMentionForMe(message) {
+    // return mentionKeywords.some(keyword => message.includes(keyword));
+    const messageLowercase = message.toLowerCase();
+    return mentionKeywords.some(keyword => messageLowercase.includes(keyword.toLowerCase()));
+  }
+
+  // Function to replace username mentions with their respective pronunciations
+  function replaceWithPronunciation(text) {
+    const replaceUsername = (username) => {
+      const user = usersToTrack.find(user => user.name === username);
+      return user ? user.pronunciation : username;
+    }
+
+    const pattern = new RegExp(usersToTrack.map(user => user.name).join('|'), 'g');
+    return text.replace(pattern, replaceUsername);
+  }
+
+  // Function to get the cleaned text content of the latest message with username prefix
+  function getLatestMessageTextContent() {
+    const messageElement = document.querySelector('.messages-content div p:last-child');
+    if (!messageElement) {
+      return null;
+    }
+
+    const isTextNode = (node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== '';
+    const textNodes = [...messageElement.childNodes].filter(isTextNode);
+    const messageText = textNodes.map(node => node.textContent).join('').trim();
+
+    const username = messageElement.querySelector('.username');
+    let usernameText = username ? username.textContent : null;
+
+    // Remove the "<" and ">" symbols from the username if they are present
+    usernameText = usernameText.replace(/</g, '').replace(/>/g, '');
+
+    let usernamePrefix = '';
+
+    // If the current username is an alias what is about you, use a "is addressing" prefix
+    if (isMentionForMe(messageText)) {
+      isMention = true;
+      usernamePrefix = `${replaceWithPronunciation(usernameText)} обращается: `;
+    }
+    // If the current username is the same as the last username seen, use a "is writing" prefix
+    else if (usernameText !== lastUsername) {
+      isMention = false;
+      usernamePrefix = `${replaceWithPronunciation(usernameText)} пишет: `;
+    }
+
+    lastUsername = usernameText;
+
+    const messageWithPronunciation = `${usernamePrefix}${replaceWithPronunciation(messageText)}`;
+    return messageWithPronunciation;
+  }
+
   // Skip reading the messages on page load to read them normally when the user is present and the page is stable
   let isInitialized = false;
   // Prevent the "readNewMessages" function from being called multiple times until all messages in the set have been read
@@ -952,7 +1013,14 @@
 
             // If mode is beep, play the beep sound for the new message
             if (isBeep && isInitialized && newMessageTextContent && newMessageTextContent !== latestMessageTextContent) {
-              playBeep(newMessageFrequencies, beepVolume);
+              // Play mention frequencies if the message is addressed to you
+              if (isMention) {
+                playBeep(mentionMessageFrequencies, beepVolume);
+              }
+              // Play usual frequencies if the message is addressed to other users or not addressed to anybody
+              else {
+                playBeep(usualMessageFrequencies, beepVolume);
+              }
               localStorage.setItem('latestMessageTextContent', newMessageTextContent);
             }
 
@@ -967,62 +1035,6 @@
   // observe changes to the messages container element
   const messagesContainer = document.querySelector('.messages-content div');
   newMessagesObserver.observe(messagesContainer, { childList: true, subtree: true });
-
-
-  // Initialize the variable to keep track of the last username seen
-  let lastUsername = null;
-
-  // Function to check if a username is mentioned in the message
-  function isMentionForMe(message) {
-    // return mentionKeywords.some(keyword => message.includes(keyword));
-    const messageLowercase = message.toLowerCase();
-    return mentionKeywords.some(keyword => messageLowercase.includes(keyword.toLowerCase()));
-  }
-
-  // Function to replace username mentions with their respective pronunciations
-  function replaceWithPronunciation(text) {
-    const replaceUsername = (username) => {
-      const user = usersToTrack.find(user => user.name === username);
-      return user ? user.pronunciation : username;
-    }
-
-    const pattern = new RegExp(usersToTrack.map(user => user.name).join('|'), 'g');
-    return text.replace(pattern, replaceUsername);
-  }
-
-  // Function to get the cleaned text content of the latest message with username prefix
-  function getLatestMessageTextContent() {
-    const messageElement = document.querySelector('.messages-content div p:last-child');
-    if (!messageElement) {
-      return null;
-    }
-
-    const isTextNode = (node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== '';
-    const textNodes = [...messageElement.childNodes].filter(isTextNode);
-    const messageText = textNodes.map(node => node.textContent).join('').trim();
-
-    const username = messageElement.querySelector('.username');
-    let usernameText = username ? username.textContent : null;
-
-    // Remove the "<" and ">" symbols from the username if they are present
-    usernameText = usernameText.replace(/</g, '').replace(/>/g, '');
-
-    let usernamePrefix = '';
-
-    // If the current username is an alias what is about you, use a "is addressing" prefix
-    if (isMentionForMe(messageText)) {
-      usernamePrefix = `${replaceWithPronunciation(usernameText)} обращается: `;
-    }
-    // If the current username is the same as the last username seen, use a "is writing" prefix
-    else if (usernameText !== lastUsername) {
-      usernamePrefix = `${replaceWithPronunciation(usernameText)} пишет: `;
-    }
-
-    lastUsername = usernameText;
-
-    const messageWithPronunciation = `${usernamePrefix}${replaceWithPronunciation(messageText)}`;
-    return messageWithPronunciation;
-  }
 
 
   // SOUND GRAPHICAL SWITCHER

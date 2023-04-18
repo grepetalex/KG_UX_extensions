@@ -287,6 +287,9 @@
 
       // Append the chat notification to the messages container
       messagesContainer.appendChild(chatNotification);
+
+      // Call the function to scroll to the bottom of the chat
+      scrollMessages();
     }
 
     // Create the userPopup element

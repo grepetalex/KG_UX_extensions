@@ -29,7 +29,11 @@
 
   // Notify me if someone is addressing to me using such aliases
   // Case-insensitive. It can be written fully in lowercase or fully in uppercase or in any other ways.
-  const mentionKeywords = ['Душа_Чата', 'Душа', 'Панчер'];
+  const mentionKeywords = [
+    'Душа_Чата',
+    'Душа',
+    'Панчер'
+  ];
 
 
   // SOUND NOTIFICATION

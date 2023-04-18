@@ -923,6 +923,7 @@
       newMessages.add(message);
       // If the "readNewMessages" function is not already in progress, trigger it
       if (!isReading) {
+        // Change the flag to true to be initialized accent beep sound for mention message
         isReading = true;
         readNewMessages();
       }
@@ -1021,6 +1022,8 @@
               // Play mention frequencies if the message is addressed to you
               if (isMention) {
                 playBeep(mentionMessageFrequencies, beepVolume);
+                // Return value as default to continue make a beep sound as a usual message
+                isMention = false;
               }
               // Play usual frequencies if the message is addressed to other users or not addressed to anybody
               else {

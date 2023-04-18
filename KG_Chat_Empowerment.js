@@ -253,11 +253,12 @@
       // Get current time in format "[hour:minutes:seconds]"
       const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
+
       // Create a new div element for the chat notification
       const chatNotification = document.createElement('div');
 
       // Set the text content of the chat notification to include the user, action, and time
-      chatNotification.innerText = `${user} ${action} в ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+      chatNotification.innerText = `${user} ${action} в ${time}`;
 
       // Check if the presence is true or false
       if (presence) {

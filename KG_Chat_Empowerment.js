@@ -1366,7 +1366,7 @@
   // Add event listeners for Ctrl + Left Click to increase voice speed
   // Add event listeners for Shift + Left Click to increase voice pitch
   soundSwitcher.addEventListener('click', (event) => {
-    if (isCtrlKeyPressed && event.ctrlKey && event.button === 0) { // check for Ctrl + Left Click
+    if (isCtrlKeyPressed && event.button === 0) { // check for Ctrl + Left Click
       const newSpeed = parseFloat(voiceSpeed) + 0.1; // Calculate new speed without rounding
       const limitedSpeed = Math.min(newSpeed, maxVoiceSpeed); // Limit maximum voice speed
       if (limitedSpeed !== voiceSpeed) {
@@ -1375,7 +1375,7 @@
         showVoiceSettings();
       }
     }
-    else if (isAltKeyPressed && event.altKey && event.button === 0) { // check for Shift + Left Click
+    else if (isAltKeyPressed && event.button === 0) { // check for Shift + Left Click
       const newPitch = parseFloat(voicePitch) + 0.1; // Calculate new pitch without rounding
       const limitedPitch = Math.min(newPitch, maxVoicePitch); // Limit maximum voice pitch
       if (limitedPitch !== voicePitch) {
@@ -1389,7 +1389,7 @@
   // Add event listeners for Ctrl + Right Click to decrease voice speed
   // Add event listeners for Shift + Right Click to decrease voice pitch
   soundSwitcher.addEventListener('contextmenu', (event) => {
-    if (isCtrlKeyPressed && event.ctrlKey && event.button === 2) { // check for Ctrl + Right Click
+    if (isCtrlKeyPressed && event.button === 2) { // check for Ctrl + Right Click
       event.preventDefault();
       const newSpeed = parseFloat(voiceSpeed) - 0.1; // Calculate new speed without rounding
       const limitedSpeed = Math.max(newSpeed, minVoiceSpeed); // Limit minimum voice speed
@@ -1399,7 +1399,7 @@
         showVoiceSettings();
       }
     }
-    else if (isAltKeyPressed && event.altKey && event.button === 2) { // check for Shift + Right Click
+    else if (isAltKeyPressed && event.button === 2) { // check for Shift + Right Click
       event.preventDefault();
       const newPitch = parseFloat(voicePitch) - 0.1; // Calculate new pitch without rounding
       const limitedPitch = Math.max(newPitch, minVoicePitch); // Limit minimum voice pitch

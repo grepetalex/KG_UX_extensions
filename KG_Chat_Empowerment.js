@@ -14,16 +14,17 @@
 
   // Define the users to track and notify with popup and audio
   const usersToTrack = [
-    { name: 'Даниэль', gender: 'male', pronunciation: 'Даниэль' },
-    { name: 'певец', gender: 'male', pronunciation: 'Певец' },
-    { name: 'Баристарх', gender: 'male', pronunciation: 'Баристарх' },
-    { name: 'madinko', gender: 'female', pronunciation: 'Мадинко' },
-    { name: 'Переборыч', gender: 'male', pronunciation: 'Переборыч' },
-    { name: 'Advisor', gender: 'male', pronunciation: 'Адвайзер' },
-    { name: 'Хеопс', gender: 'male', pronunciation: 'Хеопс' },
-    { name: 'Рустамко', gender: 'male', pronunciation: 'Рустамко' },
-    { name: 'ExpLo1t', gender: 'female', pronunciation: 'Эксплоит' },
-    { name: 'инфо-пчелы', gender: 'male', pronunciation: 'Инфо-Пчёлы' }
+    { name: 'Даниэль', gender: 'male', pronunciation: 'Даниэль' }, // ------- 01
+    { name: 'певец', gender: 'male', pronunciation: 'Певец' }, // ----------- 02
+    { name: 'Баристарх', gender: 'male', pronunciation: 'Баристарх' }, // --- 03
+    { name: 'madinko', gender: 'female', pronunciation: 'Мадинко' }, // ----- 04
+    { name: 'Переборыч', gender: 'male', pronunciation: 'Переборыч' }, // --- 05
+    { name: 'Advisor', gender: 'male', pronunciation: 'Адвайзер' }, // ------ 06
+    { name: 'Хеопс', gender: 'male', pronunciation: 'Хеопс' }, // ----------- 07
+    { name: 'Рустамко', gender: 'male', pronunciation: 'Рустамко' }, // ----- 08
+    { name: 'ExpLo1t', gender: 'female', pronunciation: 'Эксплоит' }, // ---- 09
+    { name: 'инфо-пчелы', gender: 'male', pronunciation: 'Инфо-Пчёлы' }, // - 10
+    { name: 'Razmontana', gender: 'male', pronunciation: 'Размонтана' } // -- 11
   ];
 
   // Notify me if someone is addressing to me using such aliases

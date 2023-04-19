@@ -24,7 +24,8 @@
     { name: 'Рустамко', gender: 'male', pronunciation: 'Рустамко' }, // ----- 08
     { name: 'ExpLo1t', gender: 'female', pronunciation: 'Эксплоит' }, // ---- 09
     { name: 'инфо-пчелы', gender: 'male', pronunciation: 'Инфо-Пчёлы' }, // - 10
-    { name: 'Razmontana', gender: 'male', pronunciation: 'Размонтана' } // -- 11
+    { name: 'Razmontana', gender: 'male', pronunciation: 'Размонтана' }, // -- 11
+    { name: 'elasez_uyefot_2', gender: 'male', pronunciation: 'Супермэн' }
   ];
 
   // Notify me if someone is addressing to me using such aliases
@@ -700,7 +701,7 @@
     }
   }
 
-  empowermentButtonsMargin = '2px';
+  const empowermentButtonsMargin = '2px';
 
   // Retrieve body element to inject this beast elements
   const bodyElement = document.querySelector('body');
@@ -1106,7 +1107,7 @@
                 addNewMessage(newMessageTextContent);
               } else if (isMentionMessage) {
                 // Make sure if the user is tracked before adding new message in a queue for reading
-                const isTrackedUser = usersToTrack.some((trackedUser) => newMessageTextContent.includes(trackedUser.name));
+                const isTrackedUser = usersToTrack.some((trackedUser) => newMessageTextContent.includes(trackedUser.pronunciation));
                 if (isTrackedUser) {
                   // Add the new message to the Set
                   addNewMessage(newMessageTextContent);
@@ -1353,8 +1354,8 @@
   // Function to assign common styles for voice speed and pitch elements
   function assignVoiceSettingsStyles(voiceSettings) {
     voiceSettings.style.position = 'absolute';
-    voiceSettings.style.bottom = '0';
-    voiceSettings.style.right = '50px';
+    voiceSettings.style.top = '65px';
+    voiceSettings.style.right = '70px';
     voiceSettings.style.opacity = 0;
     voiceSettings.style.transition = 'opacity 0.3s ease';
     voiceSettings.style.fontFamily = 'Orbitron, sans-serif';

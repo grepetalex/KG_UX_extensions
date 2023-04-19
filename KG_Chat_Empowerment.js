@@ -742,7 +742,7 @@
 
   .pulse {
     animation-name: pulse;
-    animation-duration: 1s;
+    animation-duration: 0.5s;
     animation-iteration-count: 1;
   }
 
@@ -1207,6 +1207,8 @@
     soundSwitcher.style.height = '48px';
     soundSwitcher.style.cursor = 'pointer';
     soundSwitcher.style.margin = empowermentButtonsMargin;
+    soundSwitcher.style.backgroundColor = 'rgba(0,0,0,0.2)';
+    soundSwitcher.style.border = '1px solid rgba(255,255,255,0.2)';
 
     const messageNotificationTitle = localStorage.getItem('messageNotificationTitle');
     // Assign title for the current notification state
@@ -1227,6 +1229,15 @@
   soundSwitcher.addEventListener('click', function (event) {
     // Only execute the code if both isCtrlKeyPressed and isAltKeyPressed are false
     if (!isCtrlKeyPressed && !isAltKeyPressed) {
+
+      // Add the 'pulse' class to the element
+      this.classList.add('pulse');
+
+      // Remove the 'pulse' class after one second
+      setTimeout(() => {
+        this.classList.remove('pulse');
+      }, 500);
+
       switch (this.id) {
         case 'silence':
           this.id = 'beep';
@@ -1284,6 +1295,8 @@
     messageMode.style.height = '48px';
     messageMode.style.cursor = 'pointer';
     messageMode.style.margin = empowermentButtonsMargin;
+    messageMode.style.backgroundColor = 'rgba(0,0,0,0.2)';
+    messageMode.style.border = '1px solid rgba(255,255,255,0.2)';
 
     // Retrieve the value from localStorage key "messageModeTitle" for messagesMode
     const messageModeTitle = localStorage.getItem('messageModeTitle');
@@ -1303,8 +1316,17 @@
 
   // Add the isAltKeyPressed condition to the messagesMode event listener
   messageMode.addEventListener('click', function (event) {
-    // Only execute the code if both isCtrlKeyPressed and isAltKeyPressed are false
-    if (!isCtrlKeyPressed && !isAltKeyPressed) {
+    // Only execute when isCtrlKeyPressed or isAltKeyPressed are false
+    if (!isCtrlKeyPressed || !isAltKeyPressed) {
+
+      // Add the 'pulse' class to the element
+      this.classList.add('pulse');
+
+      // Remove the 'pulse' class after one second
+      setTimeout(() => {
+        this.classList.remove('pulse');
+      }, 500);
+
       switch (this.id) {
         case 'every-message':
           this.id = 'mention-message';

@@ -36,6 +36,32 @@
   ];
 
 
+  // CTRL && ALT KEY EVENTS
+
+  // Define the isCtrlKeyPressed and isAltKeyPressed variables as booleans
+  let isCtrlKeyPressed = false;
+  let isAltKeyPressed = false;
+
+  // Add event listeners for the Ctrl and Alt keys
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Control') {
+      isCtrlKeyPressed = true;
+    }
+    if (event.key === 'Alt') {
+      isAltKeyPressed = true;
+    }
+  });
+
+  document.addEventListener('keyup', (event) => {
+    if (event.key === 'Control') {
+      isCtrlKeyPressed = false;
+    }
+    if (event.key === 'Alt') {
+      isAltKeyPressed = false;
+    }
+  });
+
+
   // SOUND NOTIFICATION
 
   // Function to create the audio context and return a Promise that resolves when the context is ready
@@ -674,13 +700,71 @@
     }
   }
 
-  // Define references to retrieve and create
-  const userList = document.querySelector('.userlist-content');
+  empowermentButtonsMargin = '2px';
+
+  // Retrieve body element to inject this beast elements
+  const bodyElement = document.querySelector('body');
+  // Create parent container for the beast elements
+  const empowermentButtonsPanel = document.createElement('div');
+  empowermentButtonsPanel.classList.add('empowerment-panel');
+
+  // Create user count container to store the user count number
   const userCount = document.createElement('div');
   userCount.classList.add('user-count');
   userCount.style.filter = 'grayscale(100%)';
+  userCount.style.transition = '0.2s ease-in-out';
+  userCount.style.fontFamily = 'Orbitron';
+  userCount.style.fontSize = '24px';
+  userCount.style.color = '#83cf40';
+  userCount.style.backgroundColor = '#2b4317';
+  userCount.style.width = '48px';
+  userCount.style.height = '48px';
+  userCount.style.display = 'flex';
+  userCount.style.justifyContent = 'center';
+  userCount.style.alignItems = 'center';
+  userCount.style.border = '1px solid #4b7328';
+  userCount.style.animationName = 'pulse';
+  userCount.style.animationDuration = '1s;';
+  userCount.style.animationIterationCount = '1';
+  userCount.style.margin = empowermentButtonsMargin;
+  // Set initial value as 0
   userCount.innerHTML = '0';
-  document.body.appendChild(userCount);
+
+  // Append user count element inside empowerment panel
+  empowermentButtonsPanel.appendChild(userCount);
+  // Apply positioning styles for the empowerment panel
+  empowermentButtonsPanel.style.position = 'fixed';
+  empowermentButtonsPanel.style.top = '60px';
+  empowermentButtonsPanel.style.right = '12px';
+  empowermentButtonsPanel.style.padding = '6px';
+  // Append panel element inside the body
+  bodyElement.appendChild(empowermentButtonsPanel);
+
+  const userCountStyles = `
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron&display=swap');
+
+  @keyframes pulse {
+    0% {
+      filter: brightness(1);
+    }
+    50% {
+      filter: brightness(1.5);
+    }
+    100% {
+      filter: brightness(1);
+    }
+  }
+`;
+
+  // Append styles in head element for the user count element
+  const userCountStylesElement = document.createElement('style');
+  userCountStylesElement.classList.add('user-count-pulse');
+  userCountStylesElement.textContent = userCountStyles;
+  document.head.appendChild(userCountStylesElement);
+
+
+  // Define reference for chat user list
+  const userList = document.querySelector('.userlist-content');
 
   // Initialize variables to keep track of the current and previous users
   let currentUsers = [];
@@ -846,52 +930,6 @@
   });
 
 
-  // STYLIZATION
-
-  const styles = `
-  @import url('https://fonts.googleapis.com/css2?family=Orbitron&display=swap');
-
-  .user-count {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 24px;
-    color: #83cf40;
-    position: fixed;
-    top: 130px;
-    right: 24px;
-    background-color: #2b4317;
-    width: 48px;
-    height: 48px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border: 1px solid #4b7328;
-    transition: filter 0.2s ease-in-out;
-  }
-
-  .pulse {
-    animation-name: pulse;
-    animation-duration: 1s;
-    animation-iteration-count: 1;
-  }
-
-  @keyframes pulse {
-    0% {
-      filter: brightness(1);
-    }
-    50% {
-      filter: brightness(1.5);
-    }
-    100% {
-      filter: brightness(1);
-    }
-  }
-`;
-
-  const styleElement = document.createElement('style');
-  styleElement.textContent = styles;
-  document.head.appendChild(styleElement);
-
-
   // EVERY NEW MESSAGE READER
 
   // Initialize the variable to keep track of the last username seen
@@ -1037,6 +1075,11 @@
             const isVoice = soundSwitcher && soundSwitcher.id === 'voice';
             const isBeep = soundSwitcher && soundSwitcher.id === 'beep';
 
+            // Get the message mode element and check which option is selected
+            const messageMode = document.querySelector('#every-message, #mention-message');
+            const isEveryMessage = messageMode && messageMode.id === 'every-message';
+            const isMentionMessage = messageMode && messageMode.id === 'mention-message';
+
             // References for the images extensions
             let jpg = 'a[href*=".jpg"]';
             let jpeg = 'a[href*=".jpeg"]';
@@ -1058,10 +1101,17 @@
 
             // If mode is voice, speak the new message and update the latest message content in local storage
             if (isVoice && isInitialized && newMessageTextContent && newMessageTextContent !== latestMessageTextContent) {
-              // textToSpeech(newMessageTextContent, voiceSpeed);
-              localStorage.setItem('latestMessageTextContent', newMessageTextContent);
-              // Add the new message to the Set
-              addNewMessage(newMessageTextContent);
+              if (isEveryMessage) {
+                // Add the new message to the Set
+                addNewMessage(newMessageTextContent);
+              } else if (isMentionMessage) {
+                // Make sure if the user is tracked before adding new message in a queue for reading
+                const isTrackedUser = usersToTrack.some((trackedUser) => newMessageTextContent.includes(trackedUser.name));
+                if (isTrackedUser) {
+                  // Add the new message to the Set
+                  addNewMessage(newMessageTextContent);
+                }
+              }
             }
 
             // If mode is beep, play the beep sound for the new message
@@ -1074,7 +1124,9 @@
               }
               // Play usual frequencies if the message is addressed to other users or not addressed to anybody
               else {
-                playBeep(usualMessageFrequencies, beepVolume);
+                if (isEveryMessage) {
+                  playBeep(usualMessageFrequencies, beepVolume);
+                }
               }
               localStorage.setItem('latestMessageTextContent', newMessageTextContent);
             }
@@ -1094,65 +1146,84 @@
 
   // SOUND GRAPHICAL SWITCHER
 
+  const iconStrokeWidth = 1.8;
+  const iconSize = 28;
+  const iconSilenceStroke = 'hsl(355, 80%, 65%)'; // red 
+  const iconBeepStroke = 'hsl(55, 80%, 65%)'; // yellow
+  const iconVoiceStroke = 'hsl(80, 80%, 40%)'; // green
+
+  // Icons for sound switcher button
   // Button SVG icons "silence", "beep", "voice" representation
-  const iconSoundSilence = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="hsl(355, 80%, 65%)" stroke-width="1.4"
-      stroke-linecap="round" stroke-linejoin="round" class="feather feather-volume-x">
+  const iconSoundSilence = `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconSilenceStroke}" stroke-width="${iconStrokeWidth}" stroke-linecap="round" stroke-linejoin="round">
       <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
       <line x1="23" y1="9" x2="17" y2="15"></line>
       <line x1="17" y1="9" x2="23" y2="15"></line>
       </svg>`;
-  const iconSoundBeep = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="hsl(55, 80%, 65%)" stroke-width="1.4"
-      stroke-linecap="round" stroke-linejoin="round" class="feather feather-volume-1">
+  const iconSoundBeep = `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconBeepStroke}" stroke-width="${iconStrokeWidth}" stroke-linecap="round" stroke-linejoin="round">
       <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
       <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
       </svg>`;
-  const iconSoundVoice = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="hsl(80, 80%, 40%)" stroke-width="1.4"
-  stroke-linecap="round" stroke-linejoin="round" class="feather feather-volume-2">
+  const iconSoundVoice = `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconVoiceStroke}" stroke-width="${iconStrokeWidth}" stroke-linecap="round" stroke-linejoin="round">
       <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
       <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
       </svg>`;
 
-  // Define the isCtrlKeyPressed and isAltKeyPressed variables as booleans
-  let isCtrlKeyPressed = false;
-  let isAltKeyPressed = false;
+  // Icons for message mode button
+  // Button SVG icons "every", "mention" representation
+  const iconModeEvery = `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${iconStrokeWidth}" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+      <circle cx="9" cy="7" r="4"></circle>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+      </svg>`;
+  const iconModeMention = `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${iconStrokeWidth}" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+      <circle cx="12" cy="7" r="4"></circle>
+      </svg>`;
 
-  // Add event listeners for the Ctrl and Alt keys
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Control') {
-      isCtrlKeyPressed = true;
-    }
-    if (event.key === 'Alt') {
-      isAltKeyPressed = true;
-    }
-  });
 
-  document.addEventListener('keyup', (event) => {
-    if (event.key === 'Control') {
-      isCtrlKeyPressed = false;
-    }
-    if (event.key === 'Alt') {
-      isAltKeyPressed = false;
-    }
-  });
+  let soundSwitcher, soundSwitcherIcon;
+  let messageMode, messageModeIcon;
 
-  // New message sound notification graphical switcher as a button
-  const chatButtonsPanel = document.querySelector('.chat .messages table td:nth-child(3)');
-  // Avoid panel squeezing
-  chatButtonsPanel.style.minWidth = '105px';
-  const soundSwitcher = document.createElement('div');
+  function createSoundSwitcherButton() {
+    // Create a new element with class 'chat-opt-btn' and id 'silence'
+    soundSwitcher = document.createElement('div');
+    // Retrieve the value from localStorage key "messageNotificationState"
+    const messageNotificationState = localStorage.getItem('messageNotificationState') || 'silence';
+    // Add the class 'chat-opt-btn' to the 'soundSwitcher' element
+    soundSwitcher.classList.add('chat-opt-btn');
+    // Initial button id if the localStorage key isn't created with assigned value by user
+    soundSwitcher.id = messageNotificationState;
+    // Retrieve the value from localStorage key "messageNotificationTitle"
 
-  // Retrieve the value from localStorage key "messageNotificationState"
-  const messageNotificationState = localStorage.getItem('messageNotificationState') || 'silence';
+    // Append some styles
+    soundSwitcher.style.display = 'flex';
+    soundSwitcher.style.justifyContent = 'center';
+    soundSwitcher.style.alignItems = 'center';
+    soundSwitcher.style.width = '48px';
+    soundSwitcher.style.height = '48px';
+    soundSwitcher.style.cursor = 'pointer';
+    soundSwitcher.style.margin = empowermentButtonsMargin;
 
-  soundSwitcher.classList.add('chat-opt-btn');
-  // Initial button id if the localStorage key isn't created
-  soundSwitcher.id = messageNotificationState;
-  // Retrieve the value from localStorage key "messageNotificationTitle"
-  const messageNotificationTitle = localStorage.getItem('messageNotificationTitle');
-  soundSwitcher.title = messageNotificationTitle ? messageNotificationTitle : 'Do not disturb';
+    const messageNotificationTitle = localStorage.getItem('messageNotificationTitle');
+    // Assign title for the current notification state
+    soundSwitcher.title = messageNotificationTitle ? messageNotificationTitle : 'Do not disturb';
+
+    // Create sound switcher button icon container
+    soundSwitcherIcon = document.createElement('span');
+    // Add class to icon container
+    soundSwitcherIcon.classList.add('sound-switcher-icon');
+
+    // Append icon container inside sound switcher button
+    soundSwitcher.appendChild(soundSwitcherIcon);
+    // Append sound switcher button to chat buttons panel
+    empowermentButtonsPanel.appendChild(soundSwitcher);
+  } createSoundSwitcherButton();
+
   // Add the isAltKeyPressed condition to the soundSwitcher event listener
   soundSwitcher.addEventListener('click', function (event) {
-    if (!isCtrlKeyPressed && !isAltKeyPressed) { // Only execute the code if both isCtrlKeyPressed and isAltKeyPressed are false
+    // Only execute the code if both isCtrlKeyPressed and isAltKeyPressed are false
+    if (!isCtrlKeyPressed && !isAltKeyPressed) {
       switch (this.id) {
         case 'silence':
           this.id = 'beep';
@@ -1173,9 +1244,93 @@
           localStorage.setItem('messageNotificationTitle', 'Do not disturb');
           break;
       }
-      updateSoundIcon();
+      updateSoundSwitcherIcon();
     }
   });
+
+  function updateSoundSwitcherIcon() {
+    switch (soundSwitcher.id) {
+      case 'silence':
+        soundSwitcherIcon.innerHTML = iconSoundSilence;
+        break;
+      case 'beep':
+        soundSwitcherIcon.innerHTML = iconSoundBeep;
+        break;
+      case 'voice':
+        soundSwitcherIcon.innerHTML = iconSoundVoice;
+        break;
+    }
+  } updateSoundSwitcherIcon();
+
+
+  function createMessageModeButton() {
+    // Create a new element with class 'chat-opt-btn' and id 'every-messages'
+    messageMode = document.createElement('div');
+    // Retrieve the value from localStorage key "messageModeState" for messagesMode
+    const messageModeState = localStorage.getItem('messageModeState') || 'every-message';
+    // Add the class 'chat-opt-btn' to the 'messagesMode' element
+    messageMode.classList.add('chat-opt-btn');
+    // Initial button id if the localStorage key isn't created with assigned value by user
+    messageMode.id = messageModeState;
+
+    // Append some styles
+    messageMode.style.display = 'flex';
+    messageMode.style.justifyContent = 'center';
+    messageMode.style.alignItems = 'center';
+    messageMode.style.width = '48px';
+    messageMode.style.height = '48px';
+    messageMode.style.cursor = 'pointer';
+    messageMode.style.margin = empowermentButtonsMargin;
+
+    // Retrieve the value from localStorage key "messageModeTitle" for messagesMode
+    const messageModeTitle = localStorage.getItem('messageModeTitle');
+    // Assign title for the current notification state
+    messageMode.title = messageModeTitle ? messageModeTitle : 'Notify about every message';
+
+    // Create message mode button icon container
+    messageModeIcon = document.createElement('span');
+    // Add class to icon container
+    messageModeIcon.classList.add('message-mode-icon');
+
+    // Append icon container inside message mode button
+    messageMode.appendChild(messageModeIcon);
+    // Append sound switcher button to chat buttons panel
+    empowermentButtonsPanel.appendChild(messageMode);
+  } createMessageModeButton();
+
+  // Add the isAltKeyPressed condition to the messagesMode event listener
+  messageMode.addEventListener('click', function (event) {
+    // Only execute the code if both isCtrlKeyPressed and isAltKeyPressed are false
+    if (!isCtrlKeyPressed && !isAltKeyPressed) {
+      switch (this.id) {
+        case 'every-message':
+          this.id = 'mention-message';
+          this.title = 'Notify about mention message';
+          localStorage.setItem('messageModeState', 'mention-message');
+          localStorage.setItem('messageModeTitle', 'Notify about mention message');
+          break;
+        case 'mention-message':
+          this.id = 'every-message';
+          this.title = 'Notify about every message';
+          localStorage.setItem('messageModeState', 'every-message');
+          localStorage.setItem('messageModeTitle', 'Notify about every message');
+          break;
+      }
+      updateMessageModeIcon();
+    }
+  });
+
+  function updateMessageModeIcon() {
+    switch (messageMode.id) {
+      case 'every-message':
+        messageModeIcon.innerHTML = iconModeEvery;
+        break;
+      case 'mention-message':
+        messageModeIcon.innerHTML = iconModeMention;
+        break;
+    }
+  } updateMessageModeIcon();
+
 
   const iconRangeisOut = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
       stroke-linecap="round" stroke-linejoin="round" class="feather feather-slash">
@@ -1198,7 +1353,8 @@
   // Function to assign common styles for voice speed and pitch elements
   function assignVoiceSettingsStyles(voiceSettings) {
     voiceSettings.style.position = 'absolute';
-    voiceSettings.style.bottom = '45px';
+    voiceSettings.style.bottom = '0';
+    voiceSettings.style.right = '50px';
     voiceSettings.style.opacity = 0;
     voiceSettings.style.transition = 'opacity 0.3s ease';
     voiceSettings.style.fontFamily = 'Orbitron, sans-serif';
@@ -1310,7 +1466,7 @@
         setTimeout(() => {
           voiceSettings.remove();
         }, 500);
-      }, 1000);
+      }, 2000);
 
     } else if (isAltKeyPressed) {
       // Create voiceSettings if it doesn't exist
@@ -1408,7 +1564,7 @@
         setTimeout(() => {
           voiceSettings.remove();
         }, 500);
-      }, 1000);
+      }, 2000);
 
     } else {
       // If neither Ctrl nor Alt is pressed, remove voiceSettings if it exists
@@ -1466,28 +1622,6 @@
     }
   });
 
-  const soundIcon = document.createElement('span');
-  soundIcon.classList.add('sound-icon');
-
-  function updateSoundIcon() {
-    switch (soundSwitcher.id) {
-      case 'silence':
-        soundIcon.innerHTML = iconSoundSilence;
-        break;
-      case 'beep':
-        soundIcon.innerHTML = iconSoundBeep;
-        break;
-      case 'voice':
-        soundIcon.innerHTML = iconSoundVoice;
-        break;
-    }
-  }
-
-  // Initially update icon on every page load
-  updateSoundIcon();
-
-  soundSwitcher.appendChild(soundIcon);
-  chatButtonsPanel.appendChild(soundSwitcher);
 
 
   // REMOVE UNWANTED MESSAGES

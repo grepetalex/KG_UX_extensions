@@ -24,8 +24,7 @@
     { name: 'Рустамко', gender: 'male', pronunciation: 'Рустамко' }, // ----- 08
     { name: 'ExpLo1t', gender: 'female', pronunciation: 'Эксплоит' }, // ---- 09
     { name: 'инфо-пчелы', gender: 'male', pronunciation: 'Инфо-Пчёлы' }, // - 10
-    { name: 'Razmontana', gender: 'male', pronunciation: 'Размонтана' }, // -- 11
-    { name: 'elasez_uyefot_2', gender: 'male', pronunciation: 'Супермэн' }
+    { name: 'Razmontana', gender: 'male', pronunciation: 'Размонтана' } // -- 11
   ];
 
   // Notify me if someone is addressing to me using such aliases

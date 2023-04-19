@@ -1173,13 +1173,13 @@
 
   // Icons for message mode button
   // Button SVG icons "every", "mention" representation
-  const iconModeEvery = `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${iconStrokeWidth}" stroke-linecap="round" stroke-linejoin="round">
+  const iconModeEvery = `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="#b2b2b2" stroke-width="${iconStrokeWidth}" stroke-linecap="round" stroke-linejoin="round">
       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
       <circle cx="9" cy="7" r="4"></circle>
       <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
       <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
       </svg>`;
-  const iconModeMention = `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${iconStrokeWidth}" stroke-linecap="round" stroke-linejoin="round">
+  const iconModeMention = `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="#b2b2b2" stroke-width="${iconStrokeWidth}" stroke-linecap="round" stroke-linejoin="round">
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
       <circle cx="12" cy="7" r="4"></circle>
       </svg>`;
@@ -1207,8 +1207,8 @@
     soundSwitcher.style.height = '48px';
     soundSwitcher.style.cursor = 'pointer';
     soundSwitcher.style.margin = empowermentButtonsMargin;
-    soundSwitcher.style.backgroundColor = 'rgba(0,0,0,0.2)';
-    soundSwitcher.style.border = '1px solid rgba(255,255,255,0.2)';
+    soundSwitcher.style.backgroundColor = '#212226';
+    soundSwitcher.style.border = '1px solid #45474b';
 
     const messageNotificationTitle = localStorage.getItem('messageNotificationTitle');
     // Assign title for the current notification state
@@ -1295,8 +1295,8 @@
     messageMode.style.height = '48px';
     messageMode.style.cursor = 'pointer';
     messageMode.style.margin = empowermentButtonsMargin;
-    messageMode.style.backgroundColor = 'rgba(0,0,0,0.2)';
-    messageMode.style.border = '1px solid rgba(255,255,255,0.2)';
+    messageMode.style.backgroundColor = '#212226';
+    messageMode.style.border = '1px solid #45474b';
 
     // Retrieve the value from localStorage key "messageModeTitle" for messagesMode
     const messageModeTitle = localStorage.getItem('messageModeTitle');

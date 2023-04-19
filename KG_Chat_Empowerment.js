@@ -723,9 +723,6 @@
   userCount.style.justifyContent = 'center';
   userCount.style.alignItems = 'center';
   userCount.style.border = '1px solid #4b7328';
-  userCount.style.animationName = 'pulse';
-  userCount.style.animationDuration = '1s;';
-  userCount.style.animationIterationCount = '1';
   userCount.style.margin = empowermentButtonsMargin;
   // Set initial value as 0
   userCount.innerHTML = '0';
@@ -742,6 +739,12 @@
 
   const userCountStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Orbitron&display=swap');
+
+  .pulse {
+    animation-name: pulse;
+    animation-duration: 1s;
+    animation-iteration-count: 1;
+  }
 
   @keyframes pulse {
     0% {

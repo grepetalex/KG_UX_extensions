@@ -731,7 +731,7 @@
   empowermentButtonsPanel.appendChild(userCount);
   // Apply positioning styles for the empowerment panel
   empowermentButtonsPanel.style.position = 'fixed';
-  empowermentButtonsPanel.style.top = '60px';
+  empowermentButtonsPanel.style.top = '120px';
   empowermentButtonsPanel.style.right = '12px';
   empowermentButtonsPanel.style.padding = '6px';
   // Append panel element inside the body

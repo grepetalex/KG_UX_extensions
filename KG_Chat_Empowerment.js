@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         KG_Chat_Empowerment
-// @namespace    http://tampermonkey.net/
+// @namespace    klavogonki
 // @version      0.1
 // @description  Enhance the chat abilities
 // @author       Patcher

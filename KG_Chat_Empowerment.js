@@ -981,6 +981,67 @@
     return text.replace(pattern, replaceUsername);
   }
 
+  // Function what will highlight every mention word in the mention message only
+  function highlightMentionWords() {
+    // Get the container for all chat messages
+    const messagesContainer = document.querySelector('.messages-content div');
+    // Get all the message elements from messages container
+    const messages = document.querySelectorAll('.messages-content div p');
+
+    // Loop through each chat message element
+    messages.forEach((message) => {
+      // Loop through each text node inside the message element
+      Array.from(message.childNodes).forEach((node) => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          // Split the text node content into words
+          const regex = /[\s]+|[^\s\wа-яА-ЯёЁ]+|[\wа-яА-ЯёЁ]+/g;
+          const words = node.textContent.match(regex); // Split using the regex
+
+          // Create a new fragment to hold the new nodes
+          const fragment = document.createDocumentFragment();
+
+          // Loop through each word in the text node
+          words.forEach((word) => {
+            // Check if the word is included in the "mentionKeywords" array (case insensitive)
+            if (mentionKeywords.map(alias => alias.toLowerCase()).includes(word.toLowerCase())) {
+              // Create a new <span> element with the mention class
+              const mentionHighlight = document.createElement('span');
+              mentionHighlight.classList.add('mention');
+              mentionHighlight.textContent = word;
+
+              // Highlight styles
+              mentionHighlight.style.color = '#83cf40';
+              mentionHighlight.style.backgroundColor = '#2b4317';
+              mentionHighlight.style.border = '1px solid #4b7328';
+              mentionHighlight.style.padding = '2px';
+              mentionHighlight.style.display = 'inline-flex';
+
+              // Append the new <span> element to the fragment
+              fragment.appendChild(mentionHighlight);
+            } else {
+              // Check if the word is already inside a mention span
+              const span = document.createElement('span');
+              span.innerHTML = word;
+              if (span.querySelector('.mention')) {
+                // If it is, simply append the word to the fragment
+                fragment.appendChild(word);
+              } else {
+                // If it isn't, create a new text node with the word
+                const textNode = document.createTextNode(word);
+
+                // Append the new text node to the fragment
+                fragment.appendChild(textNode);
+              }
+            }
+          });
+
+          // Replace the original text node with the new fragment
+          node.parentNode.replaceChild(fragment, node);
+        }
+      });
+    });
+  }
+
   // Function to get the cleaned text content of the latest message with username prefix
   function getLatestMessageTextContent() {
     const messageElement = document.querySelector('.messages-content div p:last-child');
@@ -1004,6 +1065,7 @@
     if (isMentionForMe(messageText)) {
       isMention = true;
       usernamePrefix = `${replaceWithPronunciation(usernameText)} обращается: `;
+      highlightMentionWords();
     }
     // If the current username is the same as the last username seen, use a "is writing" prefix
     else if (usernameText !== lastUsername) {
@@ -2112,6 +2174,8 @@
         // Call the function to scroll to the bottom of the chat
         scrollMessages();
 
+        // Call the function to re-highlight all the mention words of the messages
+        highlightMentionWords();
       }
     }
   });

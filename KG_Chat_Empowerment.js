@@ -35,6 +35,9 @@
     'Панчер'
   ];
 
+  // Assign here your actual nickname to use it as an exclusion for the message beep and voice notifications
+  const myNickname = 'Душа_Чата';
+
 
   // CTRL && ALT KEY EVENTS
 
@@ -700,7 +703,7 @@
     }
   }
 
-  const empowermentButtonsMargin = '2px';
+  const empowermentButtonsMargin = 2;
 
   // Retrieve body element to inject this beast elements
   const bodyElement = document.querySelector('body');
@@ -723,7 +726,7 @@
   userCount.style.justifyContent = 'center';
   userCount.style.alignItems = 'center';
   userCount.style.border = '1px solid #4b7328';
-  userCount.style.margin = empowermentButtonsMargin;
+  userCount.style.margin = `${empowermentButtonsMargin}px`;
   // Set initial value as 0
   userCount.innerHTML = '0';
 
@@ -992,7 +995,7 @@
     lastUsername = usernameText;
 
     const messageWithPronunciation = `${usernamePrefix}${replaceWithPronunciation(messageText)}`;
-    return messageWithPronunciation;
+    return { messageText: messageWithPronunciation, usernameText: username };
   }
 
   // Skip reading the messages on page load to read them normally when the user is present and the page is stable
@@ -1071,7 +1074,12 @@
             attachEventsToMessages();
             // read the text content of the new message and speak it
             const latestMessageTextContent = localStorage.getItem('latestMessageTextContent');
-            const newMessageTextContent = getLatestMessageTextContent();
+
+            // Get the latest message text content
+            const newMessageTextContent = getLatestMessageTextContent().messageText;
+
+            // Get the username of the user who sent the latest message
+            const latestMessageUsername = getLatestMessageTextContent().usernameText.textContent;
 
             // Get the sound switcher element and check which option is selected
             const soundSwitcher = document.querySelector('#voice, #beep, #silence');
@@ -1104,34 +1112,40 @@
 
             // If mode is voice, speak the new message and update the latest message content in local storage
             if (isVoice && isInitialized && newMessageTextContent && newMessageTextContent !== latestMessageTextContent) {
-              if (isEveryMessage) {
-                // Add the new message to the Set
-                addNewMessage(newMessageTextContent);
-              } else if (isMentionMessage) {
-                // Make sure if the user is tracked before adding new message in a queue for reading
-                const isTrackedUser = usersToTrack.some((trackedUser) => newMessageTextContent.includes(trackedUser.pronunciation));
-                if (isTrackedUser) {
+              // Speak the new message only if it's not addressed to your nickname
+              if (latestMessageUsername && !latestMessageUsername.includes(myNickname)) {
+                if (isEveryMessage) {
                   // Add the new message to the Set
                   addNewMessage(newMessageTextContent);
+                } else if (isMentionMessage) {
+                  // Make sure if the user is tracked before adding new message in a queue for reading
+                  const isTrackedUser = usersToTrack.some((trackedUser) => newMessageTextContent.includes(trackedUser.pronunciation));
+                  if (isTrackedUser) {
+                    // Add the new message to the Set
+                    addNewMessage(newMessageTextContent);
+                  }
                 }
               }
             }
 
             // If mode is beep, play the beep sound for the new message
             if (isBeep && isInitialized && newMessageTextContent && newMessageTextContent !== latestMessageTextContent) {
-              // Play mention frequencies if the message is addressed to you
-              if (isMention) {
-                playBeep(mentionMessageFrequencies, beepVolume);
-                // Return value as default to continue make a beep sound as a usual message
-                isMention = false;
-              }
-              // Play usual frequencies if the message is addressed to other users or not addressed to anybody
-              else {
-                if (isEveryMessage) {
-                  playBeep(usualMessageFrequencies, beepVolume);
+              // Play the beep sound only if the message is not addressed to your nickname
+              if (latestMessageUsername && !latestMessageUsername.includes(myNickname)) {
+                // Play mention frequencies if the message is addressed to you
+                if (isMention) {
+                  playBeep(mentionMessageFrequencies, beepVolume);
+                  // Return value as default to continue make a beep sound as a usual message
+                  isMention = false;
                 }
+                // Play usual frequencies if the message is addressed to other users or not addressed to anybody
+                else {
+                  if (isEveryMessage) {
+                    playBeep(usualMessageFrequencies, beepVolume);
+                  }
+                }
+                localStorage.setItem('latestMessageTextContent', newMessageTextContent);
               }
-              localStorage.setItem('latestMessageTextContent', newMessageTextContent);
             }
 
             // Call the function to scroll to the bottom of the chat
@@ -1208,7 +1222,7 @@
     soundSwitcher.style.width = '48px';
     soundSwitcher.style.height = '48px';
     soundSwitcher.style.cursor = 'pointer';
-    soundSwitcher.style.margin = empowermentButtonsMargin;
+    soundSwitcher.style.margin = `${empowermentButtonsMargin}px`;
     soundSwitcher.style.backgroundColor = '#212226';
     soundSwitcher.style.border = '1px solid #45474b';
 
@@ -1296,7 +1310,7 @@
     messageMode.style.width = '48px';
     messageMode.style.height = '48px';
     messageMode.style.cursor = 'pointer';
-    messageMode.style.margin = empowermentButtonsMargin;
+    messageMode.style.margin = `${empowermentButtonsMargin}px`;
     messageMode.style.backgroundColor = '#212226';
     messageMode.style.border = '1px solid #45474b';
 

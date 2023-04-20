@@ -1193,6 +1193,9 @@
 
             // If mode is voice, speak the new message and update the latest message content in local storage
             if (isVoice && isInitialized && newMessageTextContent && newMessageTextContent !== latestMessageTextContent) {
+              // Update localStorage key "latestMessageTextContent"
+              // If "newMessageTextContent" value doesn't match "latestMessageTextContent" value
+              localStorage.setItem('latestMessageTextContent', newMessageTextContent);
               // Speak the new message only if it's not addressed to your nickname
               if (latestMessageUsername && !latestMessageUsername.includes(myNickname)) {
                 if (isEveryMessage) {
@@ -1211,6 +1214,9 @@
 
             // If mode is beep, play the beep sound for the new message
             if (isBeep && isInitialized && newMessageTextContent && newMessageTextContent !== latestMessageTextContent) {
+              // Update localStorage key "latestMessageTextContent"
+              // If "newMessageTextContent" value doesn't match "latestMessageTextContent" value
+              localStorage.setItem('latestMessageTextContent', newMessageTextContent);
               // Play the beep sound only if the message is not addressed to your nickname
               if (latestMessageUsername && !latestMessageUsername.includes(myNickname)) {
                 // Play mention frequencies if the message is addressed to you
@@ -1225,7 +1231,6 @@
                     playBeep(usualMessageFrequencies, beepVolume);
                   }
                 }
-                localStorage.setItem('latestMessageTextContent', newMessageTextContent);
               }
             }
 

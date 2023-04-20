@@ -35,8 +35,8 @@
     'Панчер'
   ];
 
-  // Assign here your actual nickname to use it as an exclusion for the message beep and voice notifications
-  const myNickname = 'Душа_Чата';
+  // Your actual nickname to use it as an exclusion for the message beep and voice notifications
+  const myNickname = document.querySelector('.userpanel .user-block .user-dropdown .name span').textContent;
 
 
   // CTRL && ALT KEY EVENTS

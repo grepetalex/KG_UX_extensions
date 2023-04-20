@@ -47,19 +47,38 @@
 
   // Add event listeners for the Ctrl and Alt keys
   document.addEventListener('keydown', (event) => {
+    // Check if the Control key was pressed down
     if (event.key === 'Control') {
       isCtrlKeyPressed = true;
     }
+    // Check if the Alt key was pressed down
     if (event.key === 'Alt') {
       isAltKeyPressed = true;
     }
   });
 
   document.addEventListener('keyup', (event) => {
+    // Check if the Control key was released
     if (event.key === 'Control') {
       isCtrlKeyPressed = false;
     }
+    // Check if the Alt key was released
     if (event.key === 'Alt') {
+      isAltKeyPressed = false;
+    }
+  });
+
+  // Add a blur event listener to the document to reset the variables when the document loses focus
+  document.addEventListener('blur', () => {
+    if (isCtrlKeyPressed && isAltKeyPressed) {
+      console.log('Ctrl and Alt keys were true');
+      isCtrlKeyPressed = false;
+      isAltKeyPressed = false;
+    } else if (isCtrlKeyPressed) {
+      console.log('Ctrl key was true');
+      isCtrlKeyPressed = false;
+    } else if (isAltKeyPressed) {
+      console.log('Alt key was true');
       isAltKeyPressed = false;
     }
   });
@@ -1245,6 +1264,20 @@
   soundSwitcher.addEventListener('click', function (event) {
     // Only execute the code if both isCtrlKeyPressed and isAltKeyPressed are false
     if (!isCtrlKeyPressed && !isAltKeyPressed) {
+
+      // Get progress bar elements if they exist in the DOM
+      let currentVoiceSpeed = document.querySelector('.current-voice-speed');
+      let currentVoicePitch = document.querySelector('.current-voice-pitch');
+
+      // Remove voice speed setting progress bar
+      if (currentVoiceSpeed) {
+        currentVoiceSpeed.remove();
+      }
+
+      // Remove voice pitch setting progress bar
+      if (currentVoicePitch) {
+        currentVoicePitch.remove();
+      }
 
       // Add the 'pulse' class to the element
       this.classList.add('pulse');

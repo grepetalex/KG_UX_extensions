@@ -986,7 +986,7 @@
     // Get the container for all chat messages
     const messagesContainer = document.querySelector('.messages-content div');
     // Get all the message elements from messages container
-    const messages = document.querySelectorAll('.messages-content div p');
+    const messages = messagesContainer.querySelectorAll('.messages-content div p');
 
     // Loop through each chat message element
     messages.forEach((message) => {

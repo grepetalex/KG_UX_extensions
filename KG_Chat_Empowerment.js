@@ -12,6 +12,9 @@
 
   // USERS DEFINITION
 
+  // Your actual nickname to use it as an exclusion for the message beep and voice notifications
+  const myNickname = document.querySelector('.userpanel .user-block .user-dropdown .name span').textContent;
+
   // Define the users to track and notify with popup and audio
   const usersToTrack = [
     { name: 'Даниэль', gender: 'male', pronunciation: 'Даниэль' }, // ------- 01
@@ -30,14 +33,12 @@
   // Notify me if someone is addressing to me using such aliases
   // Case-insensitive. It can be written fully in lowercase or fully in uppercase or in any other ways.
   const mentionKeywords = [
-    'Душа_Чата',
+    // Actual nickname
+    myNickname,
+    // Possible nickname keywords
     'Душа',
     'Панчер'
   ];
-
-  // Your actual nickname to use it as an exclusion for the message beep and voice notifications
-  const myNickname = document.querySelector('.userpanel .user-block .user-dropdown .name span').textContent;
-
 
   // CTRL && ALT KEY EVENTS
 

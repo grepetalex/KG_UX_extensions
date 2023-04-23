@@ -461,7 +461,8 @@
           // create a new thumbnail
           const thumbnail = document.createElement('div');
           thumbnail.classList.add('thumbnail');
-          thumbnail.style.width = '6vw'; // set the initial thumbnail size
+          thumbnail.style.width = '6vw';
+          thumbnail.style.minWidth = '100px';
           thumbnail.style.height = 'auto';
           thumbnail.style.cursor = 'pointer';
 
@@ -871,8 +872,8 @@
           setTimeout(userCountIncrement, speed);
         } // Animation END
 
-        // Check if mode is not silence, if chat is not closed and animation completed
-        if (!isSilence && !chatHidden && !isAnimating) {
+        // Check if chat is not closed and animation not in progress 
+        if (!chatHidden && !isAnimating) {
           // Check if the user count has changed and add pulse animation
           if (userCountValue !== prevUserCountValue) {
             userCount.classList.add('pulse');
@@ -884,14 +885,15 @@
           }
         }
 
-        // Check if mode is not silence, if chat is not closed and animation completed
-        if (!isSilence && !chatHidden && hasObservedChanges) {
+        // Check if chat is not closed and animation is not in progress
+        if (!chatHidden && hasObservedChanges) {
           newUsers.forEach((newUser) => {
             if (!previousUsers.includes(newUser)) {
               const userGender = getUserGender(newUser) || 'male'; // use 'male' as default
               const action = verbs[userGender].enter;
               showUserAction(newUser, action, true);
-              if (usersToTrack.some(user => user.name === newUser)) {
+              // Prevent voice notification if mode is silence
+              if (!isSilence && usersToTrack.some(user => user.name === newUser)) {
                 userEntered(newUser, userGender); // use `newUser` instead of `newUser.name`
               }
             }
@@ -901,7 +903,8 @@
             const userGender = getUserGender(leftUser) || 'male'; // use 'male' as default
             const action = verbs[userGender].leave;
             showUserAction(leftUser, action, false);
-            if (usersToTrack.some(user => user.name === leftUser)) {
+            // Prevent voice notification if mode is silence
+            if (!isSilence && usersToTrack.some(user => user.name === leftUser)) {
               userLeft(leftUser, userGender); // use `leftUser` instead of `leftUser.name`
             }
           });
@@ -961,7 +964,7 @@
   // Initialize the variable to keep track of the last username seen
   let lastUsername = null;
 
-  // Set the flag as false for the mention beep sound to trigger at first usual beep sound for usual messages 
+  // Set the flag as false for the mention beep sound to trigger at first usual beep sound for usual messages
   let isMention = false;
 
   // Function to check if a username is mentioned in the message
@@ -1252,7 +1255,7 @@
 
   const iconStrokeWidth = 1.8;
   const iconSize = 28;
-  const iconSilenceStroke = 'hsl(355, 80%, 65%)'; // red 
+  const iconSilenceStroke = 'hsl(355, 80%, 65%)'; // red
   const iconBeepStroke = 'hsl(55, 80%, 65%)'; // yellow
   const iconVoiceStroke = 'hsl(80, 80%, 40%)'; // green
   const svgUrl = "http://www.w3.org/2000/svg";

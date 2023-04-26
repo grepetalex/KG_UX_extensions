@@ -2173,6 +2173,7 @@
       chatSend.style.setProperty('background-image', `url("data:image/svg+xml,${encodeURIComponent(iconDenied)}")`, 'important');
       chatSend.style.setProperty('background-repeat', 'no-repeat', 'important');
       chatSend.style.setProperty('background-position', 'center', 'important');
+      chatSend.style.setProperty('color', 'transparent', 'important');
       chatText.value = null;
     }
   }

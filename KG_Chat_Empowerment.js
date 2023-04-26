@@ -7,8 +7,8 @@
 // @match        *://klavogonki.ru/g*
 // @grant        none
 // ==/UserScript==
-
 (function () {
+
 
   // USERS DEFINITION
 
@@ -2151,6 +2151,35 @@
 
   } // toggleHiddenMessages function END
 
+
+  // Icon for the disabled chat button
+  const iconDenied = `<svg xmlns="${svgUrl}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgb(255, 100, 100)" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round" class="feather feather-slash">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+      </svg>`;
+
+  // Define the checkForAccessibility function
+  function checkForAccessibility() {
+    // Get references to the chat text and send elements
+    let chatText = document.querySelector('.chat .text');
+    let chatSend = document.querySelector('.chat .send');
+
+    // If either element is disabled, enable them and set background color to red with 50% transparency
+    if (chatText.disabled || chatSend.disabled) {
+      chatText.disabled = false;
+      chatSend.disabled = false;
+      chatSend.style.setProperty('background-color', 'rgb(160, 35, 35)', 'important');
+      chatSend.style.setProperty('background-image', `url("data:image/svg+xml,${encodeURIComponent(iconDenied)}")`, 'important');
+      chatSend.style.setProperty('background-repeat', 'no-repeat', 'important');
+      chatSend.style.setProperty('background-position', 'center', 'important');
+      chatText.value = null;
+    }
+  }
+
+  // Create a debounced version of the checkForAccessibility function
+  const debouncedCheckForAccessibility = debounce(checkForAccessibility, debounceTimeout);
+
   // create a new MutationObserver to wait for the chat to fully load with all messages
   var waitForChatObserver = new MutationObserver(mutations => {
     // Get the container for all chat messages
@@ -2186,6 +2215,9 @@
 
         // Call the function to re-highlight all the mention words of the messages
         highlightMentionWords();
+
+        // Enable chat if blocked
+        debouncedCheckForAccessibility();
       }
     }
   });

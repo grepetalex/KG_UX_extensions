@@ -806,7 +806,7 @@
   let isAnimating = false;
 
   // Define a constant to set the debounce delay
-  const debounceTimeout = 1000;
+  const debounceTimeout = 1500;
 
   // Define a debounce function to limit the rate at which the mutation observer callback is called
   const debounce = (func, delay) => {

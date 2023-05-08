@@ -866,7 +866,7 @@
               setTimeout(() => {
                 userCount.classList.remove('pulse');
                 isAnimating = false; // set isAnimating to false after the animation
-              }, 1000);
+              }, 500);
             }
           };
           setTimeout(userCountIncrement, speed);
@@ -1783,7 +1783,7 @@
   let messages;
 
   function executeMessageRemover() {
-    // Assign empty variable with data
+    // Store let messages with data
     messages = document.querySelectorAll('.messages-content div p');
 
     attachEventsToMessages();
@@ -1862,7 +1862,7 @@
   // Function to attach events on every message what doesn't have any event assigned
   function attachEventsToMessages() {
     // Assign empty variable with data
-    let messages = document.querySelectorAll('.messages-content div p');
+    messages = document.querySelectorAll('.messages-content div p');
     // Store timeoutID to regulate it by multiple events
     let timeoutId = null;
 
@@ -1927,6 +1927,7 @@
             deleteSelectedMessages(message);
             newDeleteButton.remove();
             createToggleButton();
+            selectedMessages.clear();
           });
 
           // Style the delete button

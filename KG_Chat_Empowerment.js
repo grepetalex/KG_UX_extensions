@@ -666,24 +666,44 @@
     // loop through all links
     for (let i = 0; i < links.length; i++) {
       const link = links[i];
-      // Check if youtube link contains full or shortened "youtube" link
-      if (link.href.includes('youtube.com/watch?v=') || link.href.includes('youtu.be')) {
+
+      // Valid youtube video if includes
+      let youtubeFullLink = link.href.includes('youtube.com/watch?v=');
+      let youtubeShareLink = link.href.includes('youtu.be');
+      let youtubeLiveLink = link.href.includes('youtube.com/live');
+      let youtubeEmbedLink = link.href.includes('youtube.com/embed');
+
+      // Check if youtube link contains valid video link
+      if (youtubeFullLink || youtubeShareLink || youtubeLiveLink || youtubeEmbedLink) {
         // create a new iframe
         const iframe = document.createElement('iframe');
         iframe.width = '280';
         iframe.height = '157.5';
 
-        // check if the link contains the v parameter
-        if (link.href.includes('youtube.com') && link.href.includes('v=')) {
+        // Check if the link is youtubeFullLink
+        if (youtubeFullLink) {
           let videoId = link.href.split('v=')[1];
           const ampersandPosition = videoId.indexOf('&');
           if (ampersandPosition !== -1) {
             videoId = videoId.substring(0, ampersandPosition);
           }
           iframe.src = `https://www.youtube.com/embed/${videoId}`;
-        } else {
-          // replace youtu.be with www.youtube.com/embed in the src
+        }
+
+        // Check if the link is youtubeShareLink
+        if (youtubeShareLink) {
           iframe.src = link.href.replace('youtu.be', 'www.youtube.com/embed');
+        }
+
+        // Check if the link is youtubeLiveLink
+        if (youtubeLiveLink) {
+          let videoId = link.href.split("/").pop().split("?")[0];
+          iframe.src = `https://www.youtube.com/embed/${videoId}`;
+        }
+
+        // Check if the link is youtubeEmbeddedLink
+        if (youtubeEmbedLink) {
+          iframe.src = link.href;
         }
 
         iframe.allowFullscreen = true;

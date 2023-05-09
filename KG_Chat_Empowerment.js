@@ -1322,12 +1322,12 @@
   let messageMode, messageModeIcon;
 
   function createSoundSwitcherButton() {
-    // Create a new element with class 'chat-opt-btn' and id 'silence'
+    // Create a new element with class 'sound-switcher-button' and id 'silence'
     soundSwitcher = document.createElement('div');
     // Retrieve the value from localStorage key "messageNotificationState"
     const messageNotificationState = localStorage.getItem('messageNotificationState') || 'silence';
-    // Add the class 'chat-opt-btn' to the 'soundSwitcher' element
-    soundSwitcher.classList.add('chat-opt-btn');
+    // Add the class 'sound-switcher-button' to the 'soundSwitcher' element
+    soundSwitcher.classList.add('sound-switcher-button');
     // Initial button id if the localStorage key isn't created with assigned value by user
     soundSwitcher.id = messageNotificationState;
     // Retrieve the value from localStorage key "messageNotificationTitle"
@@ -1425,12 +1425,12 @@
 
 
   function createMessageModeButton() {
-    // Create a new element with class 'chat-opt-btn' and id 'every-messages'
+    // Create a new element with class 'message-mode-button' and id 'every-messages'
     messageMode = document.createElement('div');
     // Retrieve the value from localStorage key "messageModeState" for messagesMode
     const messageModeState = localStorage.getItem('messageModeState') || 'every-message';
-    // Add the class 'chat-opt-btn' to the 'messagesMode' element
-    messageMode.classList.add('chat-opt-btn');
+    // Add the class 'message-mode-button' to the 'messagesMode' element
+    messageMode.classList.add('message-mode-button');
     // Initial button id if the localStorage key isn't created with assigned value by user
     messageMode.id = messageModeState;
 

@@ -754,7 +754,7 @@
 
   // Create user count container to store the user count number
   const userCount = document.createElement('div');
-  userCount.classList.add('user-count');
+  userCount.classList.add('user-count-indicator');
   userCount.style.filter = 'grayscale(100%)';
   userCount.style.transition = '0.2s ease-in-out';
   userCount.style.fontFamily = 'Orbitron';
@@ -861,7 +861,7 @@
         // Retrieve fresh user count length
         const userCountValue = newUserList.length;
         // Retrieve the counter element
-        const userCount = document.querySelector('.user-count');
+        const userCount = document.querySelector('.user-count-indicator');
 
         // Update grayscale filter
         userCount.style.filter = userCountValue > 0 ? 'none' : 'grayscale(100%)';

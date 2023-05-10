@@ -404,7 +404,7 @@
 
   /*
     * Converts links to images in chat messages by creating a thumbnail and a big image on click.
-    * Looks for links that contains ".jpg" or ".jpeg" or "png" or ".gif" and creates a thumbnail with the image.
+    * Looks for links that contains ".jpg" or ".jpeg" or ".png" or ".gif" or "webp" extension and creates a thumbnail with the image.
     * If a thumbnail already exists, it skips the link and looks for the next one.
     * When a thumbnail is clicked, it creates a dimming layer and a big image that can be closed by clicking on the dimming layer or the big image itself.
   */

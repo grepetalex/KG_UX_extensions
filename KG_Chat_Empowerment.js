@@ -2278,10 +2278,6 @@
     }
   }
 
-  // Create a debounced version of the restoreActiveChatTab function
-  const debouncedRestoreActiveChatTab = debounce(restoreActiveChatTab, debounceTimeout);
-
-
   // create a new MutationObserver to wait for the chat to fully load with all messages
   var waitForChatObserver = new MutationObserver(mutations => {
     // Get the container for all chat messages
@@ -2322,7 +2318,7 @@
         debouncedCheckForAccessibility();
 
         // Restore the active chat tab
-        debouncedRestoreActiveChatTab();
+        restoreActiveChatTab();
       }
     }
   });

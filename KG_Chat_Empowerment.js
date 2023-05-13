@@ -1789,7 +1789,6 @@
   });
 
 
-
   // REMOVE UNWANTED MESSAGES
 
   /*
@@ -2202,6 +2201,87 @@
   // Create a debounced version of the checkForAccessibility function
   const debouncedCheckForAccessibility = debounce(checkForAccessibility, debounceTimeout);
 
+
+  // CHAT SWITCHER
+
+  // Get all elements with the 'general' class
+  var generalChatTabs = document.querySelectorAll('.general');
+  // Get all elements with the 'game' class
+  var gameChatTabs = document.querySelectorAll('.game');
+
+  // Function to handle click event and log the clicked element
+  function switchChatTab(event) {
+    console.log('Clicked element:', event.target);
+    var activeTab = event.target.classList.contains('general') ? 'general' : 'game';
+    localStorage.setItem('activeChatTab', activeTab);
+  }
+
+  // Add click event listeners to the general chat tabs
+  generalChatTabs.forEach(function (tab) {
+    tab.addEventListener('click', switchChatTab);
+  });
+
+  // Add click event listeners to the game chat tabs
+  gameChatTabs.forEach(function (tab) {
+    tab.addEventListener('click', switchChatTab);
+  });
+
+  // Add keydown event listener to the document
+  document.addEventListener('keydown', function (event) {
+    // Check if the Tab key is pressed
+    if (event.key === 'Tab') {
+      // Find the first visible general chat tab that is not active
+      var visibleGeneralChatTab = Array.from(generalChatTabs).find(function (tab) {
+        var computedStyle = window.getComputedStyle(tab);
+        return computedStyle.display !== 'none' && !tab.classList.contains('active');
+      });
+
+      // Find the first visible game chat tab that is not active
+      var visibleGameChatTab = Array.from(gameChatTabs).find(function (tab) {
+        var computedStyle = window.getComputedStyle(tab);
+        return computedStyle.display !== 'none' && !tab.classList.contains('active');
+      });
+
+      // Trigger a click event on the first visible general chat tab
+      if (visibleGeneralChatTab) {
+        visibleGeneralChatTab.click();
+        return; // Exit the loop after clicking
+      }
+
+      // Trigger a click event on the first visible game chat tab
+      if (visibleGameChatTab) {
+        visibleGameChatTab.click();
+        return; // Exit the loop after clicking
+      }
+    }
+  });
+
+  // Function to restore the active chat tab from localStorage
+  function restoreActiveChatTab() {
+    var activeTab = localStorage.getItem('activeChatTab');
+    if (activeTab === 'general') {
+      var visibleGeneralChatTab = Array.from(generalChatTabs).find(function (tab) {
+        var computedStyle = window.getComputedStyle(tab);
+        return computedStyle.display !== 'none' && !tab.classList.contains('active');
+      });
+      if (visibleGeneralChatTab) {
+        visibleGeneralChatTab.click();
+      }
+    } else if (activeTab === 'game') {
+      var visibleGameChatTab = Array.from(gameChatTabs).find(function (tab) {
+        var computedStyle = window.getComputedStyle(tab);
+        return computedStyle.display !== 'none' && !tab.classList.contains('active');
+      });
+      if (visibleGameChatTab) {
+        visibleGameChatTab.click();
+      }
+    }
+  }
+
+  // Create a debounced version of the restoreActiveChatTab function
+  const debouncedRestoreActiveChatTab = debounce(restoreActiveChatTab, debounceTimeout);
+
+
   // create a new MutationObserver to wait for the chat to fully load with all messages
   var waitForChatObserver = new MutationObserver(mutations => {
     // Get the container for all chat messages
@@ -2240,6 +2320,9 @@
 
         // Enable chat if blocked
         debouncedCheckForAccessibility();
+
+        // Restore the active chat tab
+        debouncedRestoreActiveChatTab();
       }
     }
   });

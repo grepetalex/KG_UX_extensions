@@ -1269,11 +1269,20 @@
               convertImageLinkToImage(linkWithImage);
             }
 
-            // Check if the new message contains a valid link with a YouTube video before calling the convertYoutubeLinkToIframe function
-            const linkWithYoutubeVideo = node.querySelector('a[href*="youtube.com/watch?v="], a[href*="youtu.be"]');
-            if (linkWithYoutubeVideo) {
-              convertYoutubeLinkToIframe(linkWithYoutubeVideo);
-            }
+            // Valid youtube video if includes
+            let youtubeFullLink = 'a[href*="youtube.com/watch?v="]';
+            let youtubeShareLink = 'a[href*="youtu.be"]';
+            let youtubeLiveLink = 'a[href*="youtube.com/live"]';
+            let youtubeEmbedLink = 'a[href*="youtube.com/embed"]';
+
+            // Construct the selector string
+            const selector = `${youtubeFullLink}, ${youtubeShareLink}, ${youtubeLiveLink}, ${youtubeEmbedLink}`;
+
+            // Find anchor elements matching the selector within messagesContainer
+            const linksWithYoutubeVideos = messagesContainer.querySelectorAll(selector);
+
+            // Iterate over the found anchor elements and convert them to iframes
+            linksWithYoutubeVideos.forEach(linkWithYoutubeVideo => convertYoutubeLinkToIframe(linkWithYoutubeVideo));
 
             // If mode is voice, speak the new message and update the latest message content in local storage
             if (isVoice && isInitialized && newMessageTextContent && newMessageTextContent !== latestMessageTextContent) {
@@ -2368,8 +2377,19 @@
         const linksWithImages = messagesContainer.querySelectorAll(`${jpg}, ${jpeg}, ${png}, ${gif}, ${webp}`);
         linksWithImages.forEach(linkWithImage => convertImageLinkToImage(linkWithImage));
 
-        // Check if any of the messages contain a valid link with a YouTube video and convert it to an iframe
-        const linksWithYoutubeVideos = messagesContainer.querySelectorAll('a[href*="youtube.com/watch?v="], a[href*="youtu.be"]');
+        // Valid youtube video if includes
+        let youtubeFullLink = 'a[href*="youtube.com/watch?v="]';
+        let youtubeShareLink = 'a[href*="youtu.be"]';
+        let youtubeLiveLink = 'a[href*="youtube.com/live"]';
+        let youtubeEmbedLink = 'a[href*="youtube.com/embed"]';
+
+        // Construct the selector string
+        const selector = `${youtubeFullLink}, ${youtubeShareLink}, ${youtubeLiveLink}, ${youtubeEmbedLink}`;
+
+        // Find anchor elements matching the selector within messagesContainer
+        const linksWithYoutubeVideos = messagesContainer.querySelectorAll(selector);
+
+        // Iterate over the found anchor elements and convert them to iframes
         linksWithYoutubeVideos.forEach(linkWithYoutubeVideo => convertYoutubeLinkToIframe(linkWithYoutubeVideo));
 
         // Restore the active chat tab

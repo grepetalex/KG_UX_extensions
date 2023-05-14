@@ -1179,6 +1179,7 @@
     // Initialize variables
     let previousUser = null;
     let isFirstMessage = true;
+    let spacing = '14px';
 
     // Loop through the chat messages
     for (let i = 0; i < chatMessages.length; i++) {
@@ -1198,7 +1199,7 @@
         // Check if it's not the first message overall
         if (!isFirstMessage) {
           // Add margin-top to create separation between the current message and the previous message
-          message.style.marginTop = '10px';
+          message.style.marginTop = spacing;
         }
       } else {
         // Check if it's not the first message of the current user
@@ -1210,7 +1211,7 @@
 
       // Apply margin-bottom for the last message of each user
       if (i === chatMessages.length - 1 || username !== chatMessages[i + 1].querySelector('span.username span[data-user]').textContent) {
-        message.style.marginBottom = '10px';
+        message.style.marginBottom = spacing;
       } else {
         message.style.marginBottom = null;
       }
@@ -2371,8 +2372,8 @@
         const linksWithYoutubeVideos = messagesContainer.querySelectorAll('a[href*="youtube.com/watch?v="], a[href*="youtu.be"]');
         linksWithYoutubeVideos.forEach(linkWithYoutubeVideo => convertYoutubeLinkToIframe(linkWithYoutubeVideo));
 
-        // Call the function to scroll to the bottom of the chat
-        scrollMessages();
+        // Restore the active chat tab
+        restoreActiveChatTab();
 
         // Call the function to re-highlight all the mention words of the messages
         highlightMentionWords();
@@ -2383,8 +2384,9 @@
         // Enable chat if blocked
         debouncedCheckForAccessibility();
 
-        // Restore the active chat tab
-        restoreActiveChatTab();
+        // Call the function to scroll to the bottom of the chat
+        scrollMessages();
+
       }
     }
   });

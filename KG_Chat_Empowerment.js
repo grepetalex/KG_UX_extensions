@@ -287,7 +287,7 @@
     if (typeof saturation === 'undefined') { saturation = 50; }
     // Set default value for lightness
     if (typeof lightness === 'undefined') { lightness = 50; }
-    var color = `hsl(${hue},${saturation}%,${lightness}%)`;
+    let color = `hsl(${hue},${saturation}%,${lightness}%)`;
     return color;
   }
 
@@ -1163,6 +1163,50 @@
     }
   }
 
+  // Apply chat message grouping by adding margin-bottom to the latest message of each username
+  function applyChatMessageGrouping() {
+    // Get the messages container element
+    const messagesContainer = document.getElementById('chat-content');
+
+    // Get all the chat message elements from the messages container
+    const chatMessages = messagesContainer.querySelectorAll('.messages-content div p');
+
+    // Initialize variables
+    let latestUsername = null;
+    let latestMessage = null;
+
+    // Loop through the chat messages in reverse order
+    for (let i = chatMessages.length - 1; i >= 0; i--) {
+      const message = chatMessages[i];
+      const usernameElement = message.querySelector('span.username');
+
+      // Check if the message contains a username
+      if (!usernameElement) {
+        continue;
+      }
+
+      // Get the username from the current message
+      const username = usernameElement.querySelector('span[data-user]').textContent;
+
+      if (latestUsername === null || latestUsername !== username) {
+        // Remove the style with margin-bottom of the previous latest message with the same username
+        if (latestMessage && latestUsername === username) {
+          latestMessage.removeAttribute('style');
+        }
+
+        // Assign the margin-bottom of 20px to the new latest message
+        message.style.marginBottom = '20px';
+
+        // Update the latest username and message
+        latestUsername = username;
+        latestMessage = message;
+      } else {
+        // Reset the margin-bottom for messages with the same username by removing the style
+        message.removeAttribute('style');
+      }
+    }
+  }
+
   // create a mutation observer to watch for new messages being added
   const newMessagesObserver = new MutationObserver(mutations => {
     // If isInitialized is false return without doing anything
@@ -1260,6 +1304,10 @@
 
             // Call the function to scroll to the bottom of the chat
             scrollMessages();
+
+            // Call the function to apply the chat message grouping
+            applyChatMessageGrouping();
+
           }
         }
       }
@@ -2205,14 +2253,14 @@
   // CHAT SWITCHER
 
   // Get all elements with the 'general' class
-  var generalChatTabs = document.querySelectorAll('.general');
+  let generalChatTabs = document.querySelectorAll('.general');
   // Get all elements with the 'game' class
-  var gameChatTabs = document.querySelectorAll('.game');
+  let gameChatTabs = document.querySelectorAll('.game');
 
   // Function to handle click event and log the clicked element
   function switchChatTab(event) {
     console.log('Clicked element:', event.target);
-    var activeTab = event.target.classList.contains('general') ? 'general' : 'game';
+    let activeTab = event.target.classList.contains('general') ? 'general' : 'game';
     localStorage.setItem('activeChatTab', activeTab);
   }
 
@@ -2231,14 +2279,14 @@
     // Check if the Tab key is pressed
     if (event.key === 'Tab') {
       // Find the first visible general chat tab that is not active
-      var visibleGeneralChatTab = Array.from(generalChatTabs).find(function (tab) {
-        var computedStyle = window.getComputedStyle(tab);
+      let visibleGeneralChatTab = Array.from(generalChatTabs).find(function (tab) {
+        let computedStyle = window.getComputedStyle(tab);
         return computedStyle.display !== 'none' && !tab.classList.contains('active');
       });
 
       // Find the first visible game chat tab that is not active
-      var visibleGameChatTab = Array.from(gameChatTabs).find(function (tab) {
-        var computedStyle = window.getComputedStyle(tab);
+      let visibleGameChatTab = Array.from(gameChatTabs).find(function (tab) {
+        let computedStyle = window.getComputedStyle(tab);
         return computedStyle.display !== 'none' && !tab.classList.contains('active');
       });
 
@@ -2258,18 +2306,18 @@
 
   // Function to restore the active chat tab from localStorage
   function restoreActiveChatTab() {
-    var activeTab = localStorage.getItem('activeChatTab');
+    let activeTab = localStorage.getItem('activeChatTab');
     if (activeTab === 'general') {
-      var visibleGeneralChatTab = Array.from(generalChatTabs).find(function (tab) {
-        var computedStyle = window.getComputedStyle(tab);
+      let visibleGeneralChatTab = Array.from(generalChatTabs).find(function (tab) {
+        let computedStyle = window.getComputedStyle(tab);
         return computedStyle.display !== 'none' && !tab.classList.contains('active');
       });
       if (visibleGeneralChatTab) {
         visibleGeneralChatTab.click();
       }
     } else if (activeTab === 'game') {
-      var visibleGameChatTab = Array.from(gameChatTabs).find(function (tab) {
-        var computedStyle = window.getComputedStyle(tab);
+      let visibleGameChatTab = Array.from(gameChatTabs).find(function (tab) {
+        let computedStyle = window.getComputedStyle(tab);
         return computedStyle.display !== 'none' && !tab.classList.contains('active');
       });
       if (visibleGameChatTab) {
@@ -2279,7 +2327,7 @@
   }
 
   // create a new MutationObserver to wait for the chat to fully load with all messages
-  var waitForChatObserver = new MutationObserver(mutations => {
+  let waitForChatObserver = new MutationObserver(mutations => {
     // Get the container for all chat messages
     const messagesContainer = document.querySelector('.messages-content div');
     // Get all the message elements from messages container
@@ -2313,6 +2361,9 @@
 
         // Call the function to re-highlight all the mention words of the messages
         highlightMentionWords();
+
+        // Call the function to apply the chat message grouping
+        applyChatMessageGrouping();
 
         // Enable chat if blocked
         debouncedCheckForAccessibility();

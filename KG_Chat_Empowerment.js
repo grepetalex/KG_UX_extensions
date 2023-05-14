@@ -484,6 +484,7 @@
             e.stopPropagation();
 
             const dimming = document.createElement('div');
+            dimming.classList.add('dimming-background');
             dimming.style.background = 'black';
             dimming.style.top = '0';
             dimming.style.left = '0';

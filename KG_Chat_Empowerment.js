@@ -1164,7 +1164,11 @@
     }
   }
 
-  // Apply chat message grouping by adding margin-bottom to the latest message of each username
+  /*
+  ** Apply chat message grouping
+  ** By adding margin-top to the first message of the current user 
+  ** And margin-bottom to the latest message of the current user
+  */
   function applyChatMessageGrouping() {
     // Get the messages container element
     const messagesContainer = document.getElementById('chat-content');
@@ -1173,11 +1177,11 @@
     const chatMessages = messagesContainer.querySelectorAll('.messages-content div p');
 
     // Initialize variables
-    let latestUsername = null;
-    let latestMessage = null;
+    let previousUser = null;
+    let isFirstMessage = true;
 
-    // Loop through the chat messages in reverse order
-    for (let i = chatMessages.length - 1; i >= 0; i--) {
+    // Loop through the chat messages
+    for (let i = 0; i < chatMessages.length; i++) {
       const message = chatMessages[i];
       const usernameElement = message.querySelector('span.username');
 
@@ -1189,22 +1193,32 @@
       // Get the username from the current message
       const username = usernameElement.querySelector('span[data-user]').textContent;
 
-      if (latestUsername === null || latestUsername !== username) {
-        // Remove the style with margin-bottom of the previous latest message with the same username
-        if (latestMessage && latestUsername === username) {
-          latestMessage.removeAttribute('style');
+      // Apply margin-top for the first message or when the user changes
+      if (previousUser === null || username !== previousUser) {
+        // Check if it's not the first message overall
+        if (!isFirstMessage) {
+          // Add margin-top to create separation between the current message and the previous message
+          message.style.marginTop = '10px';
         }
-
-        // Assign the margin-bottom of 20px to the new latest message
-        message.style.marginBottom = '20px';
-
-        // Update the latest username and message
-        latestUsername = username;
-        latestMessage = message;
       } else {
-        // Reset the margin-bottom for messages with the same username by removing the style
-        message.removeAttribute('style');
+        // Check if it's not the first message of the current user
+        if (!isFirstMessage) {
+          // Remove the style attribute from the current message to remove any previously set styles
+          message.removeAttribute('style');
+        }
       }
+
+      // Apply margin-bottom for the last message of each user
+      if (i === chatMessages.length - 1 || username !== chatMessages[i + 1].querySelector('span.username span[data-user]').textContent) {
+        message.style.marginBottom = '10px';
+      } else {
+        message.style.marginBottom = null;
+      }
+
+      // Update the previousUser variable to store the current username
+      previousUser = username;
+      // Set isFirstMessage to false to indicate that this is not the first message overall
+      isFirstMessage = false;
     }
   }
 

@@ -27,7 +27,8 @@
     { name: 'Рустамко', gender: 'male', pronunciation: 'Рустамко' }, // ----- 08
     { name: 'ExpLo1t', gender: 'female', pronunciation: 'Эксплоит' }, // ---- 09
     { name: 'инфо-пчелы', gender: 'male', pronunciation: 'Инфо-Пчёлы' }, // - 10
-    { name: 'Razmontana', gender: 'male', pronunciation: 'Размонтана' } // -- 11
+    { name: 'Razmontana', gender: 'male', pronunciation: 'Размонтана' }, // - 11
+    { name: 'oonch', gender: 'male', pronunciation: 'Унч' } // -------------- 12
   ];
 
   // Notify me if someone is addressing to me using such aliases
@@ -2258,7 +2259,7 @@
     let chatText = document.querySelector('.chat .text');
     let chatSend = document.querySelector('.chat .send');
 
-    // If either element is disabled, enable them and set background color to red with 50% transparency
+    // If either element is disabled, enable them and set send button background color to red with 50% transparency
     if (chatText.disabled || chatSend.disabled) {
       chatText.disabled = false;
       chatSend.disabled = false;

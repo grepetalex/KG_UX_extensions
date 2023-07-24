@@ -960,6 +960,18 @@
   // Start observing the tracking user list for changes to highlight them
   trackingUsersObserver.observe(userList, { childList: true });
 
+  // Function to set blinking cursor in the chat type field
+  function setChatFieldFocus() {
+    // Check if the chat is closed or opened
+    const chatHidden = document.querySelector('#chat-wrapper.chat-hidden');
+    // Run if the chat is not closed 
+    if (!chatHidden) {
+      // Chat field
+      let chatText = document.querySelector('.chat .text');
+      chatText.focus();
+    }
+  }
+
   // Button to close the chat
   const chatCloseButton = document.querySelector('.mostright');
 
@@ -970,11 +982,13 @@
       // Trigger click event on chatCloseButton
       chatCloseButton.click();
       setTimeout(() => {
-        // Check if the chat is closed or opened
+        // Run if the chat is not closed
         const chatHidden = document.querySelector('#chat-wrapper.chat-hidden');
         if (!chatHidden) {
           // Call the function to assign all the removing functionality again after the chat was closed
           executeMessageRemover();
+          // Set chat field focus
+          setChatFieldFocus();
         }
       }, 300);
     }
@@ -2407,6 +2421,9 @@
 
         // Call the function to scroll to the bottom of the chat
         scrollMessages();
+
+        // Set chat field focus
+        setChatFieldFocus();
 
       }
     }

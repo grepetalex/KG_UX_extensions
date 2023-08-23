@@ -17,18 +17,19 @@
 
   // Define the users to track and notify with popup and audio
   const usersToTrack = [
-    { name: 'Даниэль', gender: 'male', pronunciation: 'Даниэль' }, // ------- 01
-    { name: 'певец', gender: 'male', pronunciation: 'Певец' }, // ----------- 02
-    { name: 'Баристарх', gender: 'male', pronunciation: 'Баристарх' }, // --- 03
-    { name: 'madinko', gender: 'female', pronunciation: 'Мадинко' }, // ----- 04
-    { name: 'Переборыч', gender: 'male', pronunciation: 'Переборыч' }, // --- 05
-    { name: 'Advisor', gender: 'male', pronunciation: 'Адвайзер' }, // ------ 06
-    { name: 'Хеопс', gender: 'male', pronunciation: 'Хеопс' }, // ----------- 07
-    { name: 'Рустамко', gender: 'male', pronunciation: 'Рустамко' }, // ----- 08
-    { name: 'ExpLo1t', gender: 'female', pronunciation: 'Эксплоит' }, // ---- 09
-    { name: 'инфо-пчелы', gender: 'male', pronunciation: 'Инфо-Пчёлы' }, // - 10
-    { name: 'Razmontana', gender: 'male', pronunciation: 'Размонтана' }, // - 11
-    { name: 'oonch', gender: 'male', pronunciation: 'Унч' } // -------------- 12
+    { name: 'Даниэль', gender: 'male', pronunciation: 'Даниэль' }, // ------------ 01
+    { name: 'певец', gender: 'male', pronunciation: 'Певец' }, // ---------------- 02
+    { name: 'Баристарх', gender: 'male', pronunciation: 'Баристарх' }, // -------- 03
+    { name: 'madinko', gender: 'female', pronunciation: 'Мадинко' }, // ---------- 04
+    { name: 'Переборыч', gender: 'male', pronunciation: 'Переборыч' }, // -------- 05
+    { name: 'Advisor', gender: 'male', pronunciation: 'Адвайзер' }, // ----------- 06
+    { name: 'Хеопс', gender: 'male', pronunciation: 'Хеопс' }, // ---------------- 07
+    { name: 'Рустамко', gender: 'male', pronunciation: 'Рустамко' }, // ---------- 08
+    { name: 'ExpLo1t', gender: 'female', pronunciation: 'Эксплоит' }, // --------- 09
+    { name: 'инфо-пчелы', gender: 'male', pronunciation: 'Инфо-Пчёлы' }, // ------ 10
+    { name: 'Razmontana', gender: 'male', pronunciation: 'Размонтана' }, // ------ 11
+    { name: 'oonch', gender: 'male', pronunciation: 'Унч' }, // ------------------ 12
+    { name: 'SpaceStalker', gender: 'male', pronunciation: 'Спэйс-Сталкер' } // --- 13
   ];
 
   // Notify me if someone is addressing to me using such aliases

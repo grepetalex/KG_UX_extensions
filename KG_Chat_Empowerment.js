@@ -29,7 +29,7 @@
     { name: 'инфо-пчелы', gender: 'male', pronunciation: 'Инфо-Пчёлы' }, // ------ 10
     { name: 'Razmontana', gender: 'male', pronunciation: 'Размонтана' }, // ------ 11
     { name: 'oonch', gender: 'male', pronunciation: 'Унч' }, // ------------------ 12
-    { name: 'SpaceStalker', gender: 'male', pronunciation: 'Спэйс-Сталкер' } // --- 13
+    { name: 'SpaceStalker', gender: 'male', pronunciation: 'Спэйс-Сталкер' } // -- 13
   ];
 
   // Notify me if someone is addressing to me using such aliases

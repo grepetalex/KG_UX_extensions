@@ -131,7 +131,7 @@
   }
 
   // How much skipped races allowed except for the first race created manually
-  const maxSkipCount = 10; // sec
+  const maxSkipCount = 4; // sec
   // Create next race after (N) seconds is out referencing the racing timer (not timeout)
   const startFromTimer = 2; // sec
   // Time in (N) milliseconds after the automatically skip will be triggered due to inactivity

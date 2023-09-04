@@ -131,11 +131,11 @@
   }
 
   // How much skipped races allowed except for the first race created manually
-  const maxSkipCount = 1; // sec
+  const maxSkipCount = 10; // sec
   // Create next race after (N) seconds is out referencing the racing timer (not timeout)
   const startFromTimer = 2; // sec
   // Time in (N) milliseconds after the automatically skip will be triggered due to inactivity
-  const timerDelay = 1500; // best default value 1500 ms
+  const timerDelay = 500; // best default value 500 ms
 
   let autoCheckCount = localStorage.getItem('autoCheckCount') ? parseInt(localStorage.getItem('autoCheckCount')) : 0;
 
@@ -146,7 +146,6 @@
 
     // Small delay before checking the elements display state
     setTimeout(() => {
-
       // first check for the race end
       if (racing.style.display !== 'none' && finished.style.display !== 'none') {
         // wait for a delay after the game ends before replaying
@@ -164,16 +163,47 @@
           if (autoCheckCount < maxSkipCount) {
             autoCheckCount++;
             localStorage.setItem('autoCheckCount', autoCheckCount);
-            console.log('You was inactive after race started. Moving next race.');
-            window.location.href = replay;
+            console.log('You were inactive after race started. Moving to the next race.');
+
+            // Simple replay with the initial timerDelay
+            setTimeout(() => {
+              console.log(`Retrying in ${timerDelay / 1000} seconds...`);
+              window.location.href = replay;
+
+              // Trigger the double replay and increase retry delay if needed
+              let currentRetryDelay = timerDelay; // Initial retry delay
+              const maxRetryDelay = 60000; // Maximum retry delay (60 seconds)
+
+              const doubleReplay = async () => {
+                // First replay
+                await new Promise(resolve => setTimeout(resolve, currentRetryDelay));
+                console.log(`Retrying in ${currentRetryDelay / 1000} seconds...`);
+                window.location.href = replay;
+
+                // Second replay
+                await new Promise(resolve => setTimeout(resolve, currentRetryDelay));
+                console.log(`Retrying in ${currentRetryDelay / 1000} seconds...`);
+                window.location.href = replay;
+
+                // Exponentially increase the retry delay but capped at the maximum
+                currentRetryDelay *= 2;
+                if (currentRetryDelay > maxRetryDelay) {
+                  currentRetryDelay = maxRetryDelay;
+                }
+
+                console.log(`Increasing retry delay to ${currentRetryDelay / 1000} seconds...`);
+                doubleReplay(); // Continuously call the double replay function
+              };
+
+              doubleReplay(); // Start the double replay process
+            }, timerDelay);
           } else {
             localStorage.setItem('autoCheckCount', 0);
-            console.log('You are out of maximum skip count. Moving on game list page.');
+            console.log('You are out of maximum skip count. Moving to the game list page.');
             window.location.href = gameList;
           }
         }
       }
-
     }, 300);
   }
 

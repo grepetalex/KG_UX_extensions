@@ -896,7 +896,7 @@
           setTimeout(userCountIncrement, speed);
         } // Animation END
 
-        // Check if chat is not closed and animation not in progress 
+        // Check if chat is not closed and animation not in progress
         if (!chatHidden && !isAnimating) {
           // Check if the user count has changed and add pulse animation
           if (userCountValue !== prevUserCountValue) {
@@ -966,7 +966,7 @@
   function setChatFieldFocus() {
     // Check if the chat is closed or opened
     const chatHidden = document.querySelector('#chat-wrapper.chat-hidden');
-    // Run if the chat is not closed 
+    // Run if the chat is not closed
     if (!chatHidden) {
       // Chat field
       let chatText = document.querySelector('.chat .text');
@@ -1014,6 +1014,10 @@
 
   // Function to replace username mentions with their respective pronunciations
   function replaceWithPronunciation(text) {
+    if (text === null) {
+      return text;
+    }
+
     const replaceUsername = (username) => {
       const user = usersToTrack.find(user => user.name === username);
       return user ? user.pronunciation : username;
@@ -1098,8 +1102,11 @@
     const username = messageElement.querySelector('.username');
     let usernameText = username ? username.textContent : null;
 
-    // Remove the "<" and ">" symbols from the username if they are present
-    usernameText = usernameText.replace(/</g, '').replace(/>/g, '');
+    // Check if usernameText is not null before replacing "<" and ">" symbols
+    if (usernameText !== null) {
+      // Remove the "<" and ">" symbols from the username if they are present
+      usernameText = usernameText.replace(/</g, '').replace(/>/g, '');
+    }
 
     let usernamePrefix = '';
 
@@ -1181,11 +1188,6 @@
     }
   }
 
-  /*
-  ** Apply chat message grouping
-  ** By adding margin-top to the first message of the current user 
-  ** And margin-bottom to the latest message of the current user
-  */
   function applyChatMessageGrouping() {
     // Get the messages container element
     const messagesContainer = document.getElementById('chat-content');
@@ -1203,42 +1205,76 @@
       const message = chatMessages[i];
       const usernameElement = message.querySelector('span.username');
 
-      // Check if the message contains a username
-      if (!usernameElement) {
-        continue;
-      }
+      // Check if it's a system message with the "system-message" class
+      const isSystemMessage = message.querySelector('.system-message');
 
-      // Get the username from the current message
-      const username = usernameElement.querySelector('span[data-user]').textContent;
-
-      // Apply margin-top for the first message or when the user changes
-      if (previousUser === null || username !== previousUser) {
-        // Check if it's not the first message overall
-        if (!isFirstMessage) {
-          // Add margin-top to create separation between the current message and the previous message
-          message.style.marginTop = spacing;
-        }
-      } else {
-        // Check if it's not the first message of the current user
-        if (!isFirstMessage) {
-          // Remove the style attribute from the current message to remove any previously set styles
-          message.removeAttribute('style');
-        }
-      }
-
-      // Apply margin-bottom for the last message of each user
-      if (i === chatMessages.length - 1 || username !== chatMessages[i + 1].querySelector('span.username span[data-user]').textContent) {
+      if (isSystemMessage) {
+        // Apply margins to system messages
+        message.style.marginTop = spacing;
         message.style.marginBottom = spacing;
-      } else {
-        message.style.marginBottom = null;
-      }
+      } else if (usernameElement) { // Check if the message contains a username
+        // Get the username from the current message
+        const usernameElementWithDataUser = usernameElement.querySelector('span[data-user]');
 
-      // Update the previousUser variable to store the current username
-      previousUser = username;
-      // Set isFirstMessage to false to indicate that this is not the first message overall
-      isFirstMessage = false;
+        if (!usernameElementWithDataUser) {
+          continue; // Skip messages without a data-user element
+        }
+
+        let usernameText = usernameElementWithDataUser.textContent;
+
+        // Remove the "<" and ">" symbols from the username if they are present
+        usernameText = usernameText.replace(/</g, '').replace(/>/g, '');
+
+        // Apply margin-top for the first message or when the user changes
+        if (previousUser === null || usernameText !== previousUser) {
+          // Check if it's not the first message overall
+          if (!isFirstMessage) {
+            // Add margin-top to create separation between the current message and the previous message
+            message.style.marginTop = spacing;
+          }
+        } else {
+          // Check if it's not the first message of the current user
+          if (!isFirstMessage) {
+            // Remove the margin-bottom property from the current message to remove any previously set margin
+            message.style.removeProperty('margin-bottom');
+          }
+        }
+
+        // Check if there is a next message
+        const hasNextMessage = i < chatMessages.length - 1;
+
+        // Check if there is a next message and it contains a username
+        if (hasNextMessage) {
+          const nextMessage = chatMessages[i + 1];
+          const nextUsernameElement = nextMessage.querySelector('span.username');
+
+          if (nextUsernameElement) {
+            const nextUsernameElementWithDataUser = nextUsernameElement.querySelector('span[data-user]');
+
+            if (!nextUsernameElementWithDataUser) {
+              continue; // Skip messages without a data-user element
+            }
+
+            // Get the username from the next message
+            const nextUsernameText = nextUsernameElementWithDataUser.textContent;
+
+            // Apply margin-bottom for the last message of each user
+            if (usernameText !== nextUsernameText) {
+              message.style.marginBottom = spacing;
+            }
+          }
+        }
+
+        // Update the previousUser variable to store the current username
+        previousUser = usernameText;
+        // Set isFirstMessage to false to indicate that this is not the first message overall
+        isFirstMessage = false;
+      }
     }
   }
+
+  // Call the function to apply chat message grouping
+  applyChatMessageGrouping();
 
   // create a mutation observer to watch for new messages being added
   const newMessagesObserver = new MutationObserver(mutations => {
@@ -1258,10 +1294,14 @@
             const latestMessageTextContent = localStorage.getItem('latestMessageTextContent');
 
             // Get the latest message text content
-            const newMessageTextContent = getLatestMessageTextContent().messageText;
+            const latestMessageTextContentResult = getLatestMessageTextContent();
+            const newMessageTextContent = latestMessageTextContentResult.messageText;
 
             // Get the username of the user who sent the latest message
-            const latestMessageUsername = getLatestMessageTextContent().usernameText.textContent;
+            let latestMessageUsername = null;
+            if (latestMessageTextContentResult && latestMessageTextContentResult.usernameText) {
+              latestMessageUsername = latestMessageTextContentResult.usernameText.textContent;
+            }
 
             // Get the sound switcher element and check which option is selected
             const soundSwitcher = document.querySelector('#voice, #beep, #silence');

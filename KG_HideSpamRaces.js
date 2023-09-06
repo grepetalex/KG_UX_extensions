@@ -96,7 +96,7 @@ function hideItemsWithExceededLimit(profileText) {
         // Hide the item by setting display to "none"
         itemToHide.style.display = 'none';
         // Debugging: Log the hidden item and profile text
-        console.log('Hidden item with profile text:', profileText);
+        // console.log('Hidden item with profile text:', profileText);
         // Clear the user's data after hiding
         delete profileTextCount[profileText];
       }

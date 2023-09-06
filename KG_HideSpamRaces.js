@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_HideSpamRaces
 // @namespace    http://klavogonki.ru
-// @version      0.1
+// @version      0.2
 // @description  This script will hide all the races what are created for bad purposes
 // @author       Patcher
 // @match        *://klavogonki.ru/gamelist/
@@ -12,6 +12,44 @@
 // Constants for the threshold and time limits
 const itemThreshold = 1; // Number of items
 const timeLimitInSeconds = 3; // Time in seconds
+const showItemInfo = true; // Boolean flag to control element creation and updating
+
+// Create a single raceItem element if showItemInfo is true
+const raceItem = showItemInfo ? document.createElement('div') : null;
+if (showItemInfo && raceItem) {
+  raceItem.classList.add('raceItems');
+  document.body.appendChild(raceItem);
+
+  // Add initial styles to the raceItem element
+  raceItem.style.display = 'flex';
+  raceItem.style.position = 'fixed';
+  raceItem.style.padding = '6px';
+  raceItem.style.bottom = '6px';
+  raceItem.style.left = '6px';
+}
+
+// Function to update the raceItem element if showItemInfo is true
+function updateRaceItem(profileText, exceededLimit) {
+  if (showItemInfo && raceItem) {
+    // Update the additional classes and background color based on whether it's removed or saved
+    if (exceededLimit) {
+      raceItem.classList.add('removed');
+      raceItem.classList.remove('saved');
+      raceItem.style.backgroundColor = 'hsl(0, 50%, 15%)';
+      raceItem.style.color = 'hsl(0, 50%, 70%)';
+      raceItem.style.setProperty('border', '1px solid hsl(0, 50%, 40%)', 'important');
+    } else {
+      raceItem.classList.remove('removed');
+      raceItem.classList.add('saved');
+      raceItem.style.backgroundColor = 'hsl(100, 50%, 10%)';
+      raceItem.style.color = 'hsl(100, 50%, 50%)';
+      raceItem.style.setProperty('border', '1px solid hsl(100, 50%, 25%)', 'important');
+    }
+
+    // Set the text content
+    raceItem.textContent = profileText;
+  }
+}
 
 // Function to process a single .item element
 function processItem(item) {
@@ -35,10 +73,10 @@ function processItem(item) {
     if (profileTextCount[profileText].count >= itemThreshold && currentTime - lastTimestamp <= timeLimitInSeconds * 1000) {
       // Set a flag to indicate that this user has exceeded the limit
       profileTextCount[profileText].exceededLimit = true;
-    } else {
-      // Debugging: Log the item that was not removed
-      // console.log('Saved item with profile text:', profileText);
     }
+
+    // Update the raceItem element
+    updateRaceItem(profileText, profileTextCount[profileText].exceededLimit);
 
     // Update the count and timestamp for this profile text in the object
     profileTextCount[profileText].count += 1;
@@ -56,7 +94,7 @@ function hideItemsWithExceededLimit(profileText) {
         // Hide the item by setting display to "none"
         itemToHide.style.display = 'none';
         // Debugging: Log the hidden item and profile text
-        // console.log('Hidden item with profile text:', profileText);
+        console.log('Hidden item with profile text:', profileText);
         // Clear the user's data after hiding
         delete profileTextCount[profileText];
       }

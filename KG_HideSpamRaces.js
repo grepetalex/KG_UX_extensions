@@ -31,6 +31,7 @@ if (showItemInfo && raceItem) {
 // Function to update the raceItem element if showItemInfo is true
 function updateRaceItem(profileText, exceededLimit) {
   if (showItemInfo && raceItem) {
+
     // Update the additional classes and background color based on whether it's removed or saved
     if (exceededLimit) {
       raceItem.classList.add('removed');
@@ -48,6 +49,7 @@ function updateRaceItem(profileText, exceededLimit) {
 
     // Set the text content
     raceItem.textContent = profileText;
+
   }
 }
 
@@ -134,3 +136,35 @@ const observer = new MutationObserver(mutationsList => {
 // Start observing #gamelist for changes
 const gamelist = document.getElementById('gamelist');
 observer.observe(gamelist, { childList: true, subtree: true });
+
+// Function to inject the CSS style with the removed Race Item Animation into the <head> tag
+function injectCSS() {
+  const head = document.head || document.getElementsByTagName('head')[0];
+  const style = document.createElement('style');
+
+  style.textContent = `
+    @keyframes removedRaceItemAnimation {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+      }
+      40% {
+        transform: translateY(-30px);
+      }
+      60% {
+        transform: translateY(-15px);
+      }
+    }
+
+    .removed {
+      animation: removedRaceItemAnimation 1s ease-in-out;
+    }
+  `;
+
+  // Add the class 'removed-race-item-animation' to the <style> tag
+  style.classList.add('removed-race-item-animation');
+
+  head.appendChild(style);
+}
+
+// Call the injectCSS function to inject the CSS
+injectCSS();

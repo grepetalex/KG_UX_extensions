@@ -1,18 +1,18 @@
 // ==UserScript==
 // @name         KG_HideSpamRaces
 // @namespace    http://klavogonki.ru
-// @version      0.2
+// @version      0.3
 // @description  This script will hide all the races what are created for bad purposes
 // @author       Patcher
 // @match        *://klavogonki.ru/gamelist/
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=klavogonki.ru
 // @grant        none
 // ==/UserScript==
-
-// Constants for the threshold and time limits
+// Constants for the threshold, time limits, and max hidden elements
 const itemThreshold = 1; // Number of items
 const timeLimitInSeconds = 3; // Time in seconds
 const showItemInfo = true; // Boolean flag to control element creation and updating
+const maxHiddenElements = 300; // Maximum number of hidden elements before removal
 
 // Create a single raceItem element if showItemInfo is true
 const raceItem = showItemInfo ? document.createElement('div') : null;
@@ -95,10 +95,25 @@ function hideItemsWithExceededLimit(profileText) {
       if (itemToHide.parentNode) {
         // Hide the item by setting display to "none"
         itemToHide.style.display = 'none';
+
         // Debugging: Log the hidden item and profile text
         // console.log('Hidden item with profile text:', profileText);
+
         // Clear the user's data after hiding
         delete profileTextCount[profileText];
+
+        // Check if the number of hidden elements exceeds maxHiddenElements
+        const hiddenElements = document.querySelectorAll('#gamelist .item[style*="display: none;"]');
+        if (hiddenElements.length > maxHiddenElements) {
+          // Remove excess hidden elements and their comments
+          hiddenElements.forEach(hiddenElement => {
+            const nextSibling = hiddenElement.nextSibling;
+            if (nextSibling && nextSibling.nodeType === Node.COMMENT_NODE) {
+              nextSibling.parentNode.removeChild(nextSibling);
+            }
+            hiddenElement.parentNode.removeChild(hiddenElement);
+          });
+        }
       }
     }
   });

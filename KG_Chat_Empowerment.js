@@ -406,11 +406,23 @@
   // FUNCTIONALITY
 
   /*
-    * Converts links to images in chat messages by creating a thumbnail and a big image on click.
-    * Looks for links that contains ".jpg" or ".jpeg" or ".png" or ".gif" or "webp" extension and creates a thumbnail with the image.
-    * If a thumbnail already exists, it skips the link and looks for the next one.
-    * When a thumbnail is clicked, it creates a dimming layer and a big image that can be closed by clicking on the dimming layer or the big image itself.
-  */
+   * Converts links to images in chat messages by creating a thumbnail and a big image on click.
+   * Looks for links that contain ".jpg" or ".jpeg" or ".png" or ".gif" or "webp" extension and creates a thumbnail with the image.
+   * If a thumbnail already exists, it skips the link and looks for the next one.
+   * When a thumbnail is clicked, it creates a dimming layer and a big image that can be closed by clicking on the dimming layer or the big image itself.
+   * Allows navigation through images using the left (<) and right (>) arrow keys.
+   */
+
+  // Define global variables for the current big image and dimming background
+  let bigImage = null;
+  let dimming = null;
+
+  // Define an array to store all the thumbnail links and their corresponding image URLs
+  const thumbnailLinks = [];
+  let currentImageIndex = 0;
+  const imageChangeDelay = 50; // Prevent double slide by single press adding slight delay
+  let isChangingImage = false; // Flag to track if an image change is in progress
+
   function convertImageLinkToImage() {
     // get the container for all chat messages
     const messagesContainer = document.querySelector('.messages-content div');
@@ -421,7 +433,7 @@
     for (let i = 0; i < links.length; i++) {
       const link = links[i];
 
-      // References for the images that contains extensions of the images
+      // References for the images that contain extensions of the images
       let jpg = link.href.includes(".jpg");
       let jpeg = link.href.includes(".jpeg");
       let png = link.href.includes(".png");
@@ -443,24 +455,6 @@
         // check if thumbnail already exists
         const thumbnail = link.nextSibling;
         if (!thumbnail || !thumbnail.classList || !thumbnail.classList.contains('thumbnail')) {
-          // function to create a big image with a dimming layer
-          const createBigImage = function (src, dimming) {
-            const bigImage = document.createElement('img');
-            bigImage.src = src;
-            bigImage.classList.add('scaled-thumbnail');
-            bigImage.style.maxHeight = '90vh';
-            bigImage.style.maxWidth = '90vw';
-
-            document.body.appendChild(bigImage);
-
-            bigImage.addEventListener('click', function () {
-              document.body.removeChild(bigImage);
-              document.body.removeChild(dimming);
-            });
-
-            return bigImage;
-          }
-
           // create a new thumbnail
           const thumbnail = document.createElement('div');
           thumbnail.classList.add('thumbnail');
@@ -481,162 +475,82 @@
           // insert the thumbnail after the link
           link.parentNode.insertBefore(thumbnail, link.nextSibling);
 
-          // add click event to thumbnail to create big image and dimming layer
+          // Store the thumbnail link and its corresponding image URL
+          thumbnailLinks.push({ link, imgSrc: link.href });
+
+          // add click event to thumbnail to create a big image and dimming layer
           thumbnail.addEventListener('click', function (e) {
             e.preventDefault();
             e.stopPropagation();
 
-            const dimming = document.createElement('div');
-            dimming.classList.add('dimming-background');
-            dimming.style.background = 'black';
-            dimming.style.top = '0';
-            dimming.style.left = '0';
-            dimming.style.right = '0';
-            dimming.style.bottom = '0';
-            dimming.style.position = 'fixed';
-            dimming.style.opacity = '0';
-            dimming.style.zIndex = '998';
+            currentImageIndex = thumbnailLinks.findIndex((item) => item.imgSrc === link.href); // Set the currentImageIndex directly
 
-            document.body.appendChild(dimming);
+            const clickedImageURL = link.href; // Store the clicked image URL
+            const currentIndex = thumbnailLinks.findIndex((item) => item.imgSrc === clickedImageURL); // Find the index of the clicked image in thumbnailLinks
 
-            const bigImage = createBigImage(img.src, dimming);
+            // console.log("Clicked thumbnail with image link:", clickedImageURL);
+            // console.log("Current Index:", currentIndex);
+            // console.log("All Available Links:", thumbnailLinks.map(item => item.imgSrc));
 
-            bigImage.style.top = '50%';
-            bigImage.style.left = '50%';
-            bigImage.style.transform = 'translate(-50%, -50%) scale(1)';
-            bigImage.style.position = 'fixed';
-            bigImage.style.opacity = '0';
-            bigImage.style.zIndex = '999';
-            bigImage.style.transformOrigin = 'center center';
+            // Check if bigImage and dimming are already created
+            if (!bigImage && !dimming) {
+              dimming = document.createElement('div');
+              dimming.classList.add('dimming-background');
+              dimming.style.background = 'black';
+              dimming.style.top = '0';
+              dimming.style.left = '0';
+              dimming.style.right = '0';
+              dimming.style.bottom = '0';
+              dimming.style.position = 'fixed';
+              dimming.style.opacity = '0';
+              dimming.style.zIndex = '998';
 
-            // Gradually increase the opacity of the dimming background and bigImage
-            let opacity = 0;
-            const interval = setInterval(() => {
-              opacity += 0.05;
-              // Change the opacity from 0 up to 0.5
-              if (opacity <= 0.5) {
-                dimming.style.opacity = opacity.toString();
-              }
-              bigImage.style.opacity = opacity.toString();
+              document.body.appendChild(dimming);
 
-              // Change the opacity from 0 up to 1
-              if (opacity >= 1) {
-                clearInterval(interval);
-              }
-            }, 10);
+              bigImage = createBigImage(img.src, dimming);
 
-
-            // ZOOM AND MOVE -- START
-
-            // Ability to zoom the image with mouse wheel up and down
-            // Move the image in the browser viewport with pressed mouse wheel
-
-            // set the initial zoom scale and scaling factor
-            let zoomScale = 1;
-            let scalingFactor = 0.1;
-
-            // set up variables for dragging
-            let isDragging = false;
-            let startX = 0;
-            let startY = 0;
-            let translateX = -50;
-            let translateY = -50;
-
-            // add event listener to bigImage for wheel event
-            bigImage.addEventListener('wheel', function (event) {
-              // determine the direction of the mouse wheel movement
-              const deltaY = event.deltaY;
-              const direction = deltaY < 0 ? 1 : -1;
-
-              // update the zoom scale based on the direction and scaling factor
-              zoomScale += direction * scalingFactor * zoomScale;
-
-              // clamp the zoom scale to a minimum of 1
-              zoomScale = Math.max(zoomScale, 1);
-
-              // apply the new zoom scale and transform origin
+              bigImage.style.top = '50%';
+              bigImage.style.left = '50%';
+              bigImage.style.transform = 'translate(-50%, -50%) scale(1)';
+              bigImage.style.position = 'fixed';
+              bigImage.style.opacity = '0';
+              bigImage.style.zIndex = '999';
               bigImage.style.transformOrigin = 'center center';
-              bigImage.style.transform = `translate(${translateX}%, ${translateY}%) scale(${zoomScale})`;
 
-              // prevent the default scrolling behavior
-              event.preventDefault();
-            });
+              // Gradually increase the opacity of the dimming background and bigImage
+              let opacity = 0;
+              const interval = setInterval(() => {
+                opacity += 0.05;
+                // Change the opacity from 0 up to 0.5
+                if (opacity <= 0.5) {
+                  dimming.style.opacity = opacity.toString();
+                }
+                bigImage.style.opacity = opacity.toString();
 
-            // add event listener to bigImage for mousedown event
-            bigImage.addEventListener('mousedown', function (event) {
-              // check if the middle mouse button is pressed
-              if (event.button === 1) {
-                // set the dragging flag and record the start position
-                isDragging = true;
-                startX = event.clientX;
-                startY = event.clientY;
-              }
-            });
+                // Change the opacity from 0 up to 1
+                if (opacity >= 1) {
+                  clearInterval(interval);
+                }
+              }, 10);
 
-            // add event listener to document for mousemove event
-            document.addEventListener('mousemove', function (event) {
-              if (isDragging) {
-                // calculate the distance moved since the last mousemove event
-                const deltaX = event.clientX - startX;
-                const deltaY = event.clientY - startY;
-
-                // update the translate values
-                translateX += deltaX / 10;
-                translateY += deltaY / 10;
-
-                // apply the new translate values
-                bigImage.style.transform = `translate(${translateX}%, ${translateY}%) scale(${zoomScale})`;
-
-                // update the start position
-                startX = event.clientX;
-                startY = event.clientY;
-              }
-            });
-
-            // add event listener to document for mouseup event
-            document.addEventListener('mouseup', function (event) {
-              // reset the dragging flag
-              isDragging = false;
-            });
-
-            // ZOOM AND MOVE -- END
-
-
-            // Attach a click event listener to the dimming element
-            dimming.addEventListener('click', function () {
-              removeDimmingContainer();
-            });
-
-            // Attach a keydown event listener to the document object
-            document.addEventListener('keydown', function (event) {
-              // Check if the key pressed was the "Escape" key
-              if (event.key === 'Escape') {
-                // Call the removeDimmingContainer function to remove the dimming and bigImage elements
-                removeDimmingContainer();
-              }
-            });
-
-            // Define the removeDimmingContainer function
-            function removeDimmingContainer() {
-              // Check if the dimming and bigImage elements are present in the document body
-              if (document.body.contains(dimming) && document.body.contains(bigImage)) {
-
-                // Gradually decrease the opacity of the dimming and bigImage elements
-                let opacity = 0.5;
-                const interval = setInterval(() => {
-                  opacity -= 0.1;
-                  dimming.style.opacity = opacity;
-                  bigImage.style.opacity = opacity;
-                  if (opacity <= 0) {
-                    clearInterval(interval);
-                    // Remove the dimming and bigImage elements from the document body
-                    document.body.removeChild(dimming);
-                    document.body.removeChild(bigImage);
-                  }
-                }, 10);
-              }
+              // Attach a keydown event listener to the document object
+              document.addEventListener('keydown', function (event) {
+                // Check if the key pressed was the "Escape" key
+                if (event.key === 'Escape') {
+                  removeDimmingContainer();
+                }
+                // Check if the key pressed was the left arrow key (<)
+                else if (event.key === 'ArrowLeft') {
+                  // Navigate to the previous image
+                  navigateImages(-1);
+                }
+                // Check if the key pressed was the right arrow key (>)
+                else if (event.key === 'ArrowRight') {
+                  // Navigate to the next image
+                  navigateImages(1);
+                }
+              });
             }
-
           }); // thumbnail event end
 
           // add styling to the thumbnail
@@ -656,6 +570,187 @@
       }
     }
   }
+
+  // Function to create a big image with a dimming layer
+  function createBigImage(src, dimming) {
+    const bigImage = document.createElement('img');
+    bigImage.src = src;
+    bigImage.classList.add('scaled-thumbnail');
+    bigImage.style.maxHeight = '90vh';
+    bigImage.style.maxWidth = '90vw';
+
+    document.body.appendChild(bigImage);
+
+    // Add click event listener to the dimming background for removal
+    dimming.addEventListener('click', function () {
+      removeDimmingContainer();
+    });
+
+    bigImage.addEventListener('click', function () {
+      removeDimmingContainer();
+    });
+
+    // ZOOM AND MOVE -- START
+
+    // Set the initial zoom scale and scaling factor
+    let zoomScale = 1;
+    let scalingFactor = 0.1;
+
+    // Set up variables for dragging
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+    let translateX = -50; // Initial translation in percentage
+    let translateY = -50; // Initial translation in percentage
+
+    // Define the movement speed (adjust this as needed)
+    const movementSpeed = 5;
+
+    // Function to handle zooming
+    function handleZoom(event) {
+      // Determine the direction of the mouse wheel movement
+      const deltaY = event.deltaY;
+      const direction = deltaY < 0 ? 1 : -1;
+
+      // Update the zoom scale based on the direction and scaling factor
+      zoomScale += direction * scalingFactor * zoomScale;
+
+      // Clamp the zoom scale to a minimum of 1
+      zoomScale = Math.max(zoomScale, 1);
+
+      // Apply the new zoom scale and transform origin
+      bigImage.style.transformOrigin = 'center center';
+      bigImage.style.transform = `translate(${translateX}%, ${translateY}%) scale(${zoomScale})`;
+
+      // Prevent the default scrolling behavior
+      event.preventDefault();
+    }
+
+    // Add an event listener to bigImage for wheel event
+    bigImage.addEventListener('wheel', handleZoom);
+
+    // Add an event listener to bigImage for mousedown event
+    bigImage.addEventListener('mousedown', function (event) {
+      // Check if the middle mouse button is pressed
+      if (event.button === 1) {
+        // Set the dragging flag
+        isDragging = true;
+
+        // Calculate the initial position relative to the image's position
+        startX = event.clientX;
+        startY = event.clientY;
+      }
+    });
+
+    // Function to update the image position smoothly
+    function updateImagePosition(event) {
+      if (isDragging) {
+        // Calculate the distance moved since the last mousemove event
+        const deltaX = (event.clientX - startX) / zoomScale; // Adjusted for zoomScale
+        const deltaY = (event.clientY - startY) / zoomScale; // Adjusted for zoomScale
+
+        // Update the translate values in percentages
+        translateX += (deltaX / bigImage.clientWidth) * 100;
+        translateY += (deltaY / bigImage.clientHeight) * 100;
+
+        // Apply the new translate values in percentages
+        bigImage.style.transform = `translate(${translateX}%, ${translateY}%) scale(${zoomScale})`;
+
+        // Update the start position
+        startX = event.clientX;
+        startY = event.clientY;
+      }
+    }
+
+    // Add an event listener to document for mousemove event
+    document.addEventListener('mousemove', updateImagePosition);
+
+    // Add an event listener to document for mouseup event
+    document.addEventListener('mouseup', function (event) {
+      // Reset the dragging flag
+      isDragging = false;
+    });
+
+    // Add an event listener to elements with class "dimming-background" for wheel event
+    const dimmingBackgroundElements = document.querySelectorAll('.dimming-background');
+    dimmingBackgroundElements.forEach((dimmingBackgroundElement) => {
+      dimmingBackgroundElement.addEventListener('wheel', handleZoom);
+    });
+
+    // ZOOM AND MOVE -- END
+
+    return bigImage;
+  }
+
+  // Function to navigate between images within bounds
+  function navigateImages(direction) {
+    const newIndex = currentImageIndex + direction;
+
+    // Ensure the new index stays within bounds
+    if (newIndex >= 0 && newIndex < thumbnailLinks.length) {
+      if (isChangingImage) {
+        return; // If an image change is already in progress, do nothing
+      }
+
+      isChangingImage = true; // Set the flag to indicate image change is in progress
+
+      // Update the bigImage with the new image URL
+      if (bigImage) {
+        bigImage.src = thumbnailLinks[newIndex].imgSrc;
+      }
+
+      // Set a timeout to reset the flag after a short delay
+      setTimeout(() => {
+        isChangingImage = false;
+      }, imageChangeDelay); // Adjust the delay duration as needed (e.g., 50 milliseconds)
+
+      // Update the current index
+      currentImageIndex = newIndex;
+    }
+  }
+
+  let isRemovingDimming = false; // Add a flag to track removal process
+
+  // Function to remove the dimming container
+  function removeDimmingContainer() {
+    if (dimming && !isRemovingDimming) {
+      isRemovingDimming = true; // Set the flag to true
+
+      // Gradually decrease the opacity of the dimming and bigImage elements
+      let opacity = 0.5;
+      const interval = setInterval(() => {
+        opacity -= 0.1;
+        dimming.style.opacity = opacity;
+        if (bigImage) {
+          bigImage.style.opacity = opacity;
+        }
+        if (opacity <= 0) {
+          clearInterval(interval);
+
+          // Check if the flag is still true before removing elements
+          if (isRemovingDimming) {
+            // Reset the currentImageIndex to 0
+            currentImageIndex = 0;
+
+            // Remove the dimming element from the document body
+            document.body.removeChild(dimming);
+            // Reset the global variable
+            dimming = null;
+            if (bigImage) {
+              // Remove the bigImage element from the document body
+              document.body.removeChild(bigImage);
+              // Reset the global variable
+              bigImage = null;
+            }
+            isRemovingDimming = false; // Reset the flag
+          }
+        }
+      }, 10);
+    }
+  }
+
+  // Call the function to convert image links to thumbnails
+  convertImageLinkToImage();
 
   /*
    * This function searches for all links in the chat messages container that contain a YouTube video URL

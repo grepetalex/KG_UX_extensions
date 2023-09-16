@@ -149,7 +149,7 @@ const observer = new MutationObserver(mutationsList => {
 
   // Check for users who exceeded the limit and hide their items
   Object.keys(profileTextCount).forEach(profileText => {
-    if (profileTextCount[profileText].exceededLimit) {
+    if (profileTextCount.hasOwnProperty(profileText) && profileTextCount[profileText].exceededLimit) {
       hideItemsWithExceededLimit(profileText);
     }
   });

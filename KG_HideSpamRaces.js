@@ -63,8 +63,10 @@ function processItem(item) {
   if (profileElements.length > 0) {
     const profileTextArray = Array.from(profileElements).map(element => element.textContent.trim());
 
-    // Iterate through the profileTextArray and update the counts and timestamps
-    profileTextArray.forEach(profileText => {
+    // Check if the array contains a valid profile text at index 0
+    if (profileTextArray[0] && profileTextArray[0].trim() !== '') {
+      const profileText = profileTextArray[0]; // Get the profile text at index 0
+
       if (!profileTextCount[profileText]) {
         profileTextCount[profileText] = {
           count: 0,
@@ -90,7 +92,7 @@ function processItem(item) {
       // Update the count and timestamp for this profile text in the object
       profileTextCount[profileText].count += 1;
       profileTextCount[profileText].lastTimestamp = currentTime;
-    });
+    }
   }
 }
 

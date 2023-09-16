@@ -54,54 +54,61 @@ function updateRaceItem(profileText, exceededLimit) {
   }
 }
 
+// Create an object to store the count and timestamp of each profile text
+const profileTextCount = {};
+
 // Function to process a single .item element
 function processItem(item) {
-  const profileElement = item.querySelector('[id^="player_name"]');
-  if (profileElement) {
-    const profileText = profileElement ? profileElement.textContent.trim() : '';
+  const profileElements = item.querySelectorAll('[id^="player_name"]');
+  if (profileElements.length > 0) {
+    const profileTextArray = Array.from(profileElements).map(element => element.textContent.trim());
 
-    // Initialize the profileTextCount object for this profile text
-    if (!profileTextCount[profileText]) {
-      profileTextCount[profileText] = {
-        count: 0,
-        lastTimestamp: 0,
-        exceededLimit: false,
-      };
-    }
+    // Iterate through the profileTextArray and update the counts and timestamps
+    profileTextArray.forEach(profileText => {
+      if (!profileTextCount[profileText]) {
+        profileTextCount[profileText] = {
+          count: 0,
+          lastTimestamp: 0,
+          exceededLimit: false,
+        };
+      }
 
-    const currentTime = Date.now();
-    const lastTimestamp = profileTextCount[profileText].lastTimestamp;
+      const currentTime = Date.now();
 
-    // Check if the user has created more than itemThreshold items with the same profile text within the time limit
-    if (profileTextCount[profileText].count >= itemThreshold && currentTime - lastTimestamp <= timeLimitInSeconds * 1000) {
-      // Set a flag to indicate that this user has exceeded the limit
-      profileTextCount[profileText].exceededLimit = true;
-    }
+      // Check if the user at index 0 has created more than itemThreshold items with the same profile text within the time limit
+      if (profileTextCount[profileText].count >= itemThreshold && currentTime - profileTextCount[profileText].lastTimestamp <= timeLimitInSeconds * 1000) {
+        // Set a flag to indicate that this user has exceeded the limit
+        profileTextCount[profileText].exceededLimit = true;
 
-    // Update the raceItem element
-    updateRaceItem(profileText, profileTextCount[profileText].exceededLimit);
+        // Hide the item
+        item.style.display = 'none';
+      }
 
-    // Update the count and timestamp for this profile text in the object
-    profileTextCount[profileText].count += 1;
-    profileTextCount[profileText].lastTimestamp = currentTime;
+      // Update the raceItem element
+      updateRaceItem(profileText, profileTextCount[profileText].exceededLimit);
+
+      // Update the count and timestamp for this profile text in the object
+      profileTextCount[profileText].count += 1;
+      profileTextCount[profileText].lastTimestamp = currentTime;
+    });
   }
 }
 
 // Function to hide all items of a user who exceeded the limit with a delay
 function hideItemsWithExceededLimit(profileText) {
   document.querySelectorAll('#gamelist .item').forEach(itemToHide => {
-    const itemProfileElement = itemToHide.querySelector('[id^="player_name"]');
-    if (itemProfileElement && itemProfileElement.textContent.trim() === profileText) {
+    const itemProfileElements = itemToHide.querySelectorAll('[id^="player_name"]');
+    const profileTextArray = Array.from(itemProfileElements).map(element => element.textContent.trim());
+    if (profileTextArray.length > 0 && profileTextArray[0] === profileText) {
       // Check if the item still exists in the DOM before attempting to hide it
       if (itemToHide.parentNode) {
         // Hide the item by setting display to "none"
         itemToHide.style.display = 'none';
 
-        // Debugging: Log the hidden item and profile text
-        // console.log('Hidden item with profile text:', profileText);
-
         // Clear the user's data after hiding
-        delete profileTextCount[profileText];
+        profileTextArray.forEach(profileText => {
+          delete profileTextCount[profileText];
+        });
 
         // Check if the number of hidden elements exceeds maxHiddenElements
         const hiddenElements = document.querySelectorAll('#gamelist .item[style*="display: none;"]');
@@ -119,9 +126,6 @@ function hideItemsWithExceededLimit(profileText) {
     }
   });
 }
-
-// Create an object to store the count and timestamp of each profile text
-const profileTextCount = {};
 
 // Iterate through existing .item elements
 document.querySelectorAll('#gamelist .item').forEach(item => {

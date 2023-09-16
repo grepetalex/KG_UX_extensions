@@ -1,13 +1,14 @@
 // ==UserScript==
 // @name         KG_HideSpamRaces
 // @namespace    http://klavogonki.ru
-// @version      0.3
+// @version      0.4
 // @description  This script will hide all the races what are created for bad purposes
 // @author       Patcher
 // @match        *://klavogonki.ru/gamelist/
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=klavogonki.ru
 // @grant        none
 // ==/UserScript==
+
 // Constants for the threshold, time limits, and max hidden elements
 const itemThreshold = 1; // Number of items
 const timeLimitInSeconds = 3; // Time in seconds

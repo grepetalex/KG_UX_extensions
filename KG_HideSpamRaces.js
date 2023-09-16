@@ -56,9 +56,9 @@ function updateRaceItem(profileText, exceededLimit) {
 
 // Function to process a single .item element
 function processItem(item) {
-  const profileElement = item.querySelector('.profile');
+  const profileElement = item.querySelector('[id^="player_name"]');
   if (profileElement) {
-    const profileText = profileElement.textContent.trim();
+    const profileText = profileElement ? profileElement.textContent.trim() : '';
 
     // Initialize the profileTextCount object for this profile text
     if (!profileTextCount[profileText]) {
@@ -90,7 +90,7 @@ function processItem(item) {
 // Function to hide all items of a user who exceeded the limit with a delay
 function hideItemsWithExceededLimit(profileText) {
   document.querySelectorAll('#gamelist .item').forEach(itemToHide => {
-    const itemProfileElement = itemToHide.querySelector('.profile');
+    const itemProfileElement = itemToHide.querySelector('[id^="player_name"]');
     if (itemProfileElement && itemProfileElement.textContent.trim() === profileText) {
       // Check if the item still exists in the DOM before attempting to hide it
       if (itemToHide.parentNode) {

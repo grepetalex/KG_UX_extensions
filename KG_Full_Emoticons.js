@@ -101,6 +101,15 @@ function calculateMaxImageDimensions(category) {
   return { maxImageWidth: maxImageWidthCalculated, maxImageHeight };
 }
 
+// Function to toggle the emoticons popup on double click
+function toggleEmoticonsPopup() {
+  if (isPopupCreated) {
+    removeEmoticonsPopup();
+  } else {
+    createEmoticonsPopup(activeCategory);
+  }
+}
+
 // Function to initialize event listeners
 function initializeEventListeners() {
   if (!isEventListenersInitialized) {
@@ -112,6 +121,15 @@ function initializeEventListeners() {
         removeEmoticonsPopup();
       }
     });
+
+    // Attempt to find the chat input field
+    roomField = determineChatRoom();
+
+    // Check if the chat input field was found
+    if (roomField) {
+      // Attach a double-click event listener to the chat field
+      roomField.addEventListener('dblclick', toggleEmoticonsPopup);
+    }
 
     isEventListenersInitialized = true;
   }

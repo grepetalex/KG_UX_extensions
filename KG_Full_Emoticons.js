@@ -125,7 +125,7 @@ function createEmoticonsPopup(category) {
     popupBox.style.display = 'grid';
 
     // Calculate the maximum image width and height for a given category
-    const { maxImageWidth, maxImageHeight } = calculateMaxImageDimensions(categories[category]);
+    let { maxImageWidth, maxImageHeight } = calculateMaxImageDimensions(categories[category]);
 
     // Define the grid properties for the popup
     popupBox.style.gridTemplateRows = "50px auto";
@@ -199,10 +199,10 @@ function createEmoticonsPopup(category) {
 
     const emoticonButtonsContainer = document.createElement('div');
     emoticonButtonsContainer.classList.add('emoticon-buttons');
-    emoticonButtonsContainer.style.display = 'grid';
+    emoticonButtonsContainer.style.display = 'none'; // Initially hide the container
     emoticonButtonsContainer.style.gridGap = '10px';
-    emoticonButtonsContainer.style.gridTemplateColumns = `repeat(auto-fit, minmax(${maxImageWidth}px, 1fr))`;
-    emoticonButtonsContainer.style.gridAutoRows = `minmax(${maxImageHeight}px, auto)`;
+
+    const imageLoadPromises = [];
 
     categories[category].forEach(emoticon => {
       const button = document.createElement('button');
@@ -220,6 +220,16 @@ function createEmoticonsPopup(category) {
       button.title = buttonTitle;
       button.style.border = 'none';
       button.style.outline = 'none';
+
+      const imageLoadPromise = new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => {
+          resolve();
+        };
+        img.src = imgSrc;
+      });
+
+      imageLoadPromises.push(imageLoadPromise);
 
       button.addEventListener('click', function (event) {
         if (!event.ctrlKey) {
@@ -248,6 +258,19 @@ function createEmoticonsPopup(category) {
       });
 
       emoticonButtonsContainer.appendChild(button);
+    });
+
+    // Wait for all images to load before updating grid properties and making it visible
+    Promise.all(imageLoadPromises).then(() => {
+      // Calculate the maximum image width and height again after all images are loaded
+      const { maxImageWidth: newMaxImageWidth, maxImageHeight: newMaxImageHeight } = calculateMaxImageDimensions(categories[category]);
+
+      // Update grid properties with new values
+      emoticonButtonsContainer.style.gridTemplateColumns = `repeat(auto-fit, minmax(${newMaxImageWidth}px, 1fr))`;
+      emoticonButtonsContainer.style.gridAutoRows = `minmax(${newMaxImageHeight}px, auto)`;
+
+      // Make it visible after all images are loaded
+      emoticonButtonsContainer.style.display = 'grid';
     });
 
     popupBox.appendChild(emoticonButtonsContainer);

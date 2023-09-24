@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         KG_Full_Emoticons
 // @namespace    http://klavogonki.ru/
-// @version      0.1
+// @version      0.2
 // @description  Show all the emoticons
 // @author       Patcher
 // @match        *://klavogonki.ru/g*
 // @match        *://klavogonki.ru/forum/*
+// @match        *://klavogonki.ru/u/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=klavogonki.ru
 // @grant        none
 // ==/UserScript==
@@ -86,6 +87,24 @@ function determineChatRoom() {
       } else if (currentURL.includes("/forum")) {
         roomField = document.querySelectorAll('textarea');
         console.log("Chat Field (Forum):", roomField);
+      } else if (currentURL.includes("/u/")) {
+        // Use a Mutation Observer to wait for the profile textarea
+        const mutationObserver = new MutationObserver(() => {
+          const profileTextarea = document.querySelector('.profile-messages .dialog-write textarea');
+          if (profileTextarea) {
+            roomField = profileTextarea;
+            console.log("Chat Field (Profile Messages):", roomField);
+
+            // Disconnect the Mutation Observer after finding the element
+            mutationObserver.disconnect();
+
+            // Initialize event listeners and create the emoticons popup with the default category
+            initializeEventListeners();
+          }
+        });
+
+        // Observe mutations in the document
+        mutationObserver.observe(document.documentElement, { childList: true, subtree: true });
       }
     }
   }
@@ -160,7 +179,7 @@ function initializeEventListeners() {
       if (roomField instanceof NodeList || roomField instanceof HTMLCollection) {
         roomField.forEach(textArea => {
           textArea.addEventListener('mousedown', function (event) {
-            if (event.detail === 2) {
+            if (event.shiftKey && event.detail === 2) {
               event.preventDefault(); // Prevent the default behavior of double-click
               toggleEmoticonsPopup();
             }
@@ -168,7 +187,7 @@ function initializeEventListeners() {
         });
       } else {
         roomField.addEventListener('mousedown', function (event) {
-          if (event.detail === 2) {
+          if (event.shiftKey && event.detail === 2) {
             event.preventDefault(); // Prevent the default behavior of double-click
             toggleEmoticonsPopup();
           }
@@ -189,6 +208,28 @@ function createEmoticonsPopup(category) {
     if (popupBox) {
       popupBox.addEventListener('dblclick', removeEmoticonsPopup);
     }
+
+    // Create a close button
+    const closeButton = document.createElement('button');
+    closeButton.innerHTML = '&#x2716;'; // Unicode character (X)
+    closeButton.style.backgroundColor = 'rgb(57, 19, 19)';
+    closeButton.style.color = 'rgb(217, 140, 140)';
+    closeButton.style.border = '1px solid rgb(153, 51, 51)';
+    closeButton.style.outline = 'none';
+    closeButton.style.cursor = 'pointer';
+    closeButton.style.width = '50px';
+    closeButton.style.height = '50px';
+    closeButton.style.margin = '8px';
+    closeButton.style.position = 'absolute';
+    closeButton.style.right = '0';
+
+    // Add a click event listener to the close button
+    closeButton.addEventListener('click', function () {
+      removeEmoticonsPopup();
+    });
+
+    // Append the close button to the popupBox
+    popupBox.appendChild(closeButton);
 
     popupBox.style.position = 'fixed';
     popupBox.style.display = 'grid';

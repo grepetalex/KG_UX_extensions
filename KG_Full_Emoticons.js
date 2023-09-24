@@ -5,54 +5,60 @@
 // @description  Show all the emoticons
 // @author       Patcher
 // @match        *://klavogonki.ru/g*
+// @match        *://klavogonki.ru/forum/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=klavogonki.ru
 // @grant        none
 // ==/UserScript==
 
 const categories = {
   "Boys": [
-    ":heart:", ":facepalm:", ":friends:", ":shok:", ":megashok:", ":dash:", ":music:", ":acute:",
-    ":victory:", ":scare:", ":clapping:", ":whistle:", ":popcorn:", ":hello:", ":rose:", ":good:",
-    ":silence:", ":bad:", ":tea:", ":sick:", ":confuse:", ":rofl2:", ":nervous:", ":chaingun:",
-    ":diablo:", ":cult:", ":russian:", ":birthday:", ":champ2:", ":champ:", ":confetti:", ":formula1:"
+    "smile", "biggrin", "angry", "blink", "blush", "cool", "dry", "excl", "happy",
+    "huh", "laugh", "mellow", "ohmy", "ph34r", "rolleyes", "sad", "sleep", "tongue",
+    "unsure", "wacko", "wink", "wub", "first", "second", "third", "power", "badcomp",
+    "complaugh", "crazy", "boredom", "cry", "bye", "dance", "gamer", "rofl", "beer",
+    "kidtruck", "angry2", "spiteful", "sorry", "boykiss", "kissed", "yes", "no", "heart",
+    "hi", "ok", "facepalm", "friends", "shok", "megashok", "dash", "music", "acute", "victory",
+    "scare", "clapping", "whistle", "popcorn", "hello", "rose", "good", "silence", "bad", "tea",
+    "sick", "confuse", "rofl2", "nervous", "chaingun", "diablo", "cult", "russian", "birthday",
+    "champ2", "champ", "confetti", "formula1"
   ],
   "Girls": [
-    ":girlnotebook:", ":girlkiss:", ":curtsey:", ":girlblum:", ":girlcrazy:", ":girlcry:",
-    ":girlwink:", ":girlwacko:", ":umbrage:", ":girlinlove:", ":girldevil:", ":girlimpossible:",
-    ":girlwitch:", ":hysteric:", ":tender:", ":spruceup:", ":girlsad:", ":girlscare:", ":girltea:",
-    ":girlsick:", ":grose:", ":cheerful:", ":cheerleader:", ":girlconfuse:", ":spruceup1:",
-    ":angrygirl:", ":clapgirl:", ":goody:", ":hiya:", ":girlsilence:", ":girlstop:", ":girlnervous:",
-    ":girlwonder:", ":girlwonder:", ":kgrace:", ":kgagainstaz:", ":girlkissboy:", ":girlmusic:"
+    "girlnotebook", "girlkiss", "curtsey", "girlblum", "girlcrazy", "girlcry",
+    "girlwink", "girlwacko", "umbrage", "girlinlove", "girldevil", "girlimpossible",
+    "girlwitch", "hysteric", "tender", "spruceup", "girlsad", "girlscare", "girltea",
+    "girlsick", "grose", "cheerful", "cheerleader", "girlconfuse", "spruceup1",
+    "angrygirl", "clapgirl", "goody", "hiya", "girlsilence", "girlstop", "girlnervous",
+    "girlwonder", "girlwonder", "kgrace", "kgagainstaz", "girlkissboy", "girlmusic"
   ],
   "Christmas": [
-    ":cheers:", ":christmasevil:", ":heyfrombag:", ":merrychristmas:", ":moose:", ":santa:",
-    ":santa2:", ":santa3:", ":santasnegurka:", ":snegurka:", ":snegurochka:", ":snowball:",
-    ":snowgirlwave:", ":snowhand:", ":snowhit:", ":snowman:", ":spruce:"
+    "cheers", "christmasevil", "heyfrombag", "merrychristmas", "moose", "santa",
+    "santa2", "santa3", "santasnegurka", "snegurka", "snegurochka", "snowball",
+    "snowgirlwave", "snowhand", "snowhit", "snowman", "spruce"
   ],
   "Inlove": [
-    ":adultery:", ":airkiss:", ":cave:", ":flowers:", ":flowers2:", ":frog:", ":girlfrog:",
-    ":girlheart2:", ":girllove:", ":grose:", ":heart2:", ":heartcake:", ":hug:", ":inlove:",
-    ":nolove:", ":smell:", ":wecheers:", ":wedance:", ":wedding:", ":wine:"
+    "adultery", "airkiss", "cave", "flowers", "flowers2", "frog", "girlfrog",
+    "girlheart2", "girllove", "grose", "heart2", "heartcake", "hug", "inlove",
+    "nolove", "smell", "wecheers", "wedance", "wedding", "wine"
   ],
   "Army": [
-    ":ak47:", ":armyfriends:", ":armyscare:", ":armystar:", ":armytongue:", ":barret:",
-    ":bayanist:", ":budenov:", ":captain:", ":comandos:", ":fly:", ":foolrifle:", ":girlpogran:",
-    ":girlranker:", ":girlrogatka:", ":girlvdv:", ":kirpich:", ":partizan:", ":pogran:",
-    ":pogranflowers:", ":pogranmail:", ":pogranmama:", ":pogranminigun:", ":pogranrose:",
-    ":pograntort:", ":prival:", ":radistka:", ":ranker:", ":rogatka:", ":soldier:", ":tank:",
-    ":uzi:", ":vdv:", ":vpered:", ":vtik:"
+    "ak47", "armyfriends", "armyscare", "armystar", "armytongue", "barret",
+    "bayanist", "budenov", "captain", "comandos", "fly", "foolrifle", "girlpogran",
+    "girlranker", "girlrogatka", "girlvdv", "kirpich", "partizan", "pogran",
+    "pogranflowers", "pogranmail", "pogranmama", "pogranminigun", "pogranrose",
+    "pograntort", "prival", "radistka", "ranker", "rogatka", "soldier", "tank",
+    "uzi", "vdv", "vpered", "vtik"
   ],
   "8 March": [
-    ":boystroking:", ":cheerleader:", ":confetti:", ":enjoygift:", ":firework:", ":girlicecream:",
-    ":girlmad:", ":girlobserve:", ":girlrevolve:", ":girlshighfive:", ":girlstroking:", ":girlsuper:",
-    ":grats:", ":hairdryer:", ":leisure:", ":primp:", ":respect:", ":serenade:", ":spruceup:"
+    "boystroking", "cheerleader", "confetti", "enjoygift", "firework", "girlicecream",
+    "girlmad", "girlobserve", "girlrevolve", "girlshighfive", "girlstroking", "girlsuper",
+    "grats", "hairdryer", "leisure", "primp", "respect", "serenade", "spruceup"
   ],
   "Halloween": [
-    ":alien:", ":batman:", ":bebebe:", ":bite:", ":carpet:", ":clown:", ":corsair:", ":cowboy:",
-    ":cyborg:", ":dandy:", ":death:", ":dwarf:", ":gangster:", ":ghost:", ":girlpirate:", ":holmes:",
-    ":indigenous:", ":jester:", ":mafia:", ":musketeer:", ":paladin:", ":pioneer:", ":pirate:",
-    ":pirates:", ":robot:", ":rocker:", ":spider:", ":supergirl:", ":terminator:", ":turtle:",
-    ":vampire:", ":witch:", ":wizard:"
+    "alien", "batman", "bebebe", "bite", "carpet", "clown", "corsair", "cowboy",
+    "cyborg", "dandy", "death", "dwarf", "gangster", "ghost", "girlpirate", "holmes",
+    "indigenous", "jester", "mafia", "musketeer", "paladin", "pioneer", "pirate",
+    "pirates", "robot", "rocker", "spider", "supergirl", "terminator", "turtle",
+    "vampire", "witch", "wizard"
   ]
 };
 
@@ -61,15 +67,26 @@ let isEventListenersInitialized = false;
 let isPopupCreated = false;
 let activeCategory = 'Boys';
 
+// Keep track of the last focused textarea
+let lastFocusedTextarea = null;
+
 // Function to determine which chat room we are in
 function determineChatRoom() {
   if (!roomField) {
-    if (window.location.href.startsWith("https://klavogonki.ru/gamelist")) {
-      roomField = document.querySelector('#chat-general input.text');
-      console.log("Chat Field (General):", roomField);
-    } else if (window.location.href.startsWith("https://klavogonki.ru/g/?gmid=")) {
-      roomField = document.querySelector('div[id*="chat-game"] input.text');
-      console.log("Chat Field (Game):", roomField);
+    const currentURL = window.location.href;
+    const allowedDomains = ["klavogonki.ru"];
+
+    if (allowedDomains.some(domain => currentURL.includes(domain))) {
+      if (currentURL.includes("/gamelist")) {
+        roomField = document.querySelector('#chat-general input.text');
+        console.log("Chat Field (General):", roomField);
+      } else if (currentURL.includes("/g/?gmid=")) {
+        roomField = document.querySelector('div[id*="chat-game"] input.text');
+        console.log("Chat Field (Game):", roomField);
+      } else if (currentURL.includes("/forum")) {
+        roomField = document.querySelectorAll('textarea');
+        console.log("Chat Field (Forum):", roomField);
+      }
     }
   }
   return roomField;
@@ -90,7 +107,7 @@ function calculateMaxImageDimensions(category) {
   const maxImageHeight = 34;
 
   const maxImageWidthCalculated = category.reduce((maxWidth, emoticon) => {
-    const emoticonName = emoticon.substring(1, emoticon.length - 1);
+    const emoticonName = emoticon;
     const imgSrc = `/img/smilies/${emoticonName}.gif`;
     const img = new Image();
     img.src = imgSrc;
@@ -110,6 +127,18 @@ function toggleEmoticonsPopup() {
   }
 }
 
+// Function to handle focus on textareas
+function handleTextareaFocus(event) {
+  lastFocusedTextarea = event.target;
+}
+
+// Attach a focus event listener to all textareas
+const textAreas = document.querySelectorAll('textarea');
+textAreas.forEach(textArea => {
+  textArea.addEventListener('focus', handleTextareaFocus);
+});
+
+
 // Function to initialize event listeners
 function initializeEventListeners() {
   if (!isEventListenersInitialized) {
@@ -127,8 +156,24 @@ function initializeEventListeners() {
 
     // Check if the chat input field was found
     if (roomField) {
-      // Attach a double-click event listener to the chat field
-      roomField.addEventListener('dblclick', toggleEmoticonsPopup);
+      // Attach a mousedown event listener to the chat field(s)
+      if (roomField instanceof NodeList || roomField instanceof HTMLCollection) {
+        roomField.forEach(textArea => {
+          textArea.addEventListener('mousedown', function (event) {
+            if (event.detail === 2) {
+              event.preventDefault(); // Prevent the default behavior of double-click
+              toggleEmoticonsPopup();
+            }
+          });
+        });
+      } else {
+        roomField.addEventListener('mousedown', function (event) {
+          if (event.detail === 2) {
+            event.preventDefault(); // Prevent the default behavior of double-click
+            toggleEmoticonsPopup();
+          }
+        });
+      }
     }
 
     isEventListenersInitialized = true;
@@ -139,11 +184,14 @@ function initializeEventListeners() {
 function createEmoticonsPopup(category) {
   if (!isPopupCreated) {
     const popupBox = document.createElement('div');
+
+    // Add a double-click event listener to popupBox if it exists
+    if (popupBox) {
+      popupBox.addEventListener('dblclick', removeEmoticonsPopup);
+    }
+
     popupBox.style.position = 'fixed';
     popupBox.style.display = 'grid';
-
-    // Calculate the maximum image width and height for a given category
-    let { maxImageWidth, maxImageHeight } = calculateMaxImageDimensions(categories[category]);
 
     // Define the grid properties for the popup
     popupBox.style.gridTemplateRows = "50px auto";
@@ -178,12 +226,20 @@ function createEmoticonsPopup(category) {
       if (categories.hasOwnProperty(categoryKey)) {
         const button = document.createElement('button');
         button.textContent = categoryKey;
-        button.addEventListener('click', () => {
-          changeActiveCategory(categoryKey);
-        });
+        button.dataset.category = categoryKey; // Set a dataset attribute for identifying the category
 
-        // Apply button styles
-        const buttonLightness = bodyLightness < 50 ? bodyLightness + 15 : bodyLightness - 15;
+        const savedCategory = localStorage.getItem('activeCategory');
+        const isButtonActive = savedCategory === categoryKey;
+
+        // Determine the button lightness based on whether it's the active category or not
+        let buttonLightness = bodyLightness;
+
+        if (isButtonActive) {
+          buttonLightness = bodyLightness < 50 ? bodyLightness + 20 : bodyLightness - 20;
+        } else {
+          buttonLightness = bodyLightness < 50 ? bodyLightness + 15 : bodyLightness - 15;
+        }
+
         const adjustedButtonLightness = Math.min(100, Math.max(0, buttonLightness));
         const buttonBackgroundColor = `hsl(0, 0%, ${adjustedButtonLightness}%)`;
 
@@ -192,6 +248,10 @@ function createEmoticonsPopup(category) {
         button.style.outline = 'none';
         button.style.marginRight = '5px';
         button.style.cursor = 'pointer';
+
+        button.addEventListener('click', () => {
+          changeActiveCategory(categoryKey);
+        });
 
         button.addEventListener('mouseover', () => {
           const currentButtonLightness = getLightness(button.style.backgroundColor);
@@ -224,7 +284,7 @@ function createEmoticonsPopup(category) {
 
     categories[category].forEach(emoticon => {
       const button = document.createElement('button');
-      const emoticonName = emoticon.substring(1, emoticon.length - 1);
+      const emoticonName = emoticon;
       const imgSrc = `/img/smilies/${emoticonName}.gif`;
       const imgAlt = emoticonName;
       const buttonTitle = emoticonName;
@@ -301,10 +361,22 @@ function createEmoticonsPopup(category) {
 
 // Function to insert emoticon code into the input field
 function insertEmoticonCode(emoticon) {
-  const roomField = determineChatRoom();
+  const roomField = lastFocusedTextarea || determineChatRoom();
   if (roomField) {
     const cursorPosition = roomField.selectionStart;
-    const emoticonCode = `${emoticon} `;
+    let emoticonCode;
+
+    // Check if the current URL indicates a forum page
+    const isForumPage = window.location.href.includes("/forum");
+
+    // Set the format based on whether it's a forum or not
+    if (isForumPage) {
+      // Forum BBCode format
+      emoticonCode = `[img]https://klavogonki.ru/img/smilies/${emoticon}.gif[/img] `;
+    } else {
+      // Chat format
+      emoticonCode = `:${emoticon}: `;
+    }
 
     // Get the current value of the input field
     const currentValue = roomField.value;

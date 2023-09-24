@@ -104,7 +104,7 @@ function determineChatRoom() {
           const profileTextarea = document.querySelector('.profile-messages .dialog-write textarea');
           if (profileTextarea) {
             roomField = profileTextarea;
-            console.log("Chat Field (Profile Messages):", roomField);
+            console.log("Chat Field (Profile):", roomField);
 
             // Disconnect the Mutation Observer after finding the element
             mutationObserver.disconnect();

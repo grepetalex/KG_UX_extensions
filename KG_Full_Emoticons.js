@@ -63,6 +63,17 @@ const categories = {
   ]
 };
 
+// Define emoji symbols for categories
+const categoryEmojis = {
+  "Boys": "😃",
+  "Girls": "👧",
+  "Christmas": "🎄",
+  "Inlove": "❤️",
+  "Army": "🔫",
+  "8 March": "🌼",
+  "Halloween": "🎃",
+};
+
 let roomField = null;
 let isEventListenersInitialized = false;
 let isPopupCreated = false;
@@ -257,16 +268,17 @@ function createEmoticonsPopup(category) {
     popupBox.style.maxHeight = '50vh';
     popupBox.style.overflow = 'auto';
 
-    // Create category buttons inside the popup
+    // Create a container for category buttons
     const buttonContainer = document.createElement('div');
     buttonContainer.classList.add('category-buttons');
     buttonContainer.style.display = 'flex';
     buttonContainer.style.justifyContent = 'center';
 
+    // Create category buttons inside the popup
     for (const categoryKey in categories) {
       if (categories.hasOwnProperty(categoryKey)) {
         const button = document.createElement('button');
-        button.textContent = categoryKey;
+        button.innerHTML = categoryEmojis[categoryKey]; // Use emoji symbol
         button.dataset.category = categoryKey; // Set a dataset attribute for identifying the category
 
         const savedCategory = localStorage.getItem('activeCategory');
@@ -289,6 +301,9 @@ function createEmoticonsPopup(category) {
         button.style.outline = 'none';
         button.style.marginRight = '5px';
         button.style.cursor = 'pointer';
+        button.style.minWidth = '50px';
+        button.style.minHeight = '50px';
+        button.style.fontSize = '1.4em';
 
         button.addEventListener('click', () => {
           changeActiveCategory(categoryKey);

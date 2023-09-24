@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_Full_Emoticons
 // @namespace    http://klavogonki.ru/
-// @version      0.2
+// @version      0.3
 // @description  Show all the emoticons
 // @author       Patcher
 // @match        *://klavogonki.ru/g*
@@ -168,7 +168,6 @@ textAreas.forEach(textArea => {
   textArea.addEventListener('focus', handleTextareaFocus);
 });
 
-
 // Function to initialize event listeners
 function initializeEventListeners() {
   if (!isEventListenersInitialized) {
@@ -176,8 +175,22 @@ function initializeEventListeners() {
       if (event.ctrlKey && event.code === 'Semicolon') {
         event.preventDefault();
         createEmoticonsPopup(activeCategory);
+        console.log('Ctrl + Semicolon pressed');
       } else if (event.key === 'Escape') {
         removeEmoticonsPopup();
+        console.log('Escape key pressed');
+      }
+    });
+
+    // Attach a mousedown event listener to the document and use event delegation
+    document.addEventListener('mousedown', function (event) {
+      // Check if the target element matches the profile textarea
+      if (matchesSelector(event.target, '.profile-messages .dialog-write textarea')) {
+        if (event.shiftKey && event.detail === 2) {
+          event.preventDefault(); // Prevent the default behavior of double-click
+          toggleEmoticonsPopup();
+          console.log('Profile Textarea Double-Click Event Executed');
+        }
       }
     });
 
@@ -193,6 +206,7 @@ function initializeEventListeners() {
             if (event.shiftKey && event.detail === 2) {
               event.preventDefault(); // Prevent the default behavior of double-click
               toggleEmoticonsPopup();
+              console.log('Chat Field Double-Click Event Executed');
             }
           });
         });
@@ -201,6 +215,7 @@ function initializeEventListeners() {
           if (event.shiftKey && event.detail === 2) {
             event.preventDefault(); // Prevent the default behavior of double-click
             toggleEmoticonsPopup();
+            console.log('Chat Field Double-Click Event Executed');
           }
         });
       }
@@ -208,6 +223,11 @@ function initializeEventListeners() {
 
     isEventListenersInitialized = true;
   }
+}
+
+// Helper function to check if an element matches a selector
+function matchesSelector(element, selector) {
+  return element && element.matches && element.matches(selector);
 }
 
 // Function to create the emoticons popup for a given category

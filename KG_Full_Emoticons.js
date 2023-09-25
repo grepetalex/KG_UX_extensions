@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_Full_Emoticons
 // @namespace    http://klavogonki.ru/
-// @version      0.3
+// @version      0.4
 // @description  Show all the emoticons
 // @author       Patcher
 // @match        *://klavogonki.ru/g*
@@ -503,6 +503,41 @@ function changeActiveCategory(newCategory) {
   // Create a new emoticons popup with the updated category
   createEmoticonsPopup(activeCategory);
 }
+
+const categoryKeys = Object.keys(categories); // Define categoryKeys
+
+// Function to change the active category based on the "Tab" key press
+function changeCategoryOnTabPress(event) {
+  const emoticonsPopup = document.querySelector('.emoticons-popup');
+
+  if (event.key === 'Tab' && emoticonsPopup !== null) {
+    event.preventDefault();
+
+    // Get the currently active category from localStorage
+    const activeCategory = localStorage.getItem('activeCategory');
+
+    // Find the index of the active category in categoryKeys
+    const activeCategoryIndex = categoryKeys.indexOf(activeCategory);
+
+    // Determine the index of the next category to focus, cycling if necessary
+    const nextCategoryIndex = (activeCategoryIndex + 1) % categoryKeys.length;
+
+    // Get the name of the next category
+    const nextCategory = categoryKeys[nextCategoryIndex];
+
+    // Update the active category in localStorage
+    localStorage.setItem('activeCategory', nextCategory);
+
+    // Optionally, you can call changeActiveCategory to handle the category change
+    changeActiveCategory(nextCategory);
+
+    // Log the active category for debugging
+    // console.log(`Active Category: ${nextCategory}`);
+  }
+}
+
+// Add event listener for the "Tab" key press
+document.addEventListener('keydown', changeCategoryOnTabPress);
 
 // Initialize event listeners and create the emoticons popup with the default category
 initializeEventListeners();

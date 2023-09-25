@@ -127,6 +127,10 @@ function removeEmoticonsPopup() {
   const popupBox = document.querySelector('.emoticons-popup');
   if (popupBox) {
     document.body.removeChild(popupBox);
+
+    // Remove event listener for the "Tab" key press
+    document.removeEventListener('keydown', changeCategoryOnTabPress);
+
     isPopupCreated = false; // Reset the flag when the popup is removed
   }
 }
@@ -235,9 +239,12 @@ function createEmoticonsPopup(category) {
   if (!isPopupCreated) {
     const popupBox = document.createElement('div');
 
-    // Add a double-click event listener to popupBox if it exists
     if (popupBox) {
+      // Add event listener for the "double-click"
       popupBox.addEventListener('dblclick', removeEmoticonsPopup);
+
+      // Add event listener for the "Tab" key press
+      document.addEventListener('keydown', changeCategoryOnTabPress);
     }
 
     // Create a close button
@@ -282,11 +289,13 @@ function createEmoticonsPopup(category) {
     popupBox.style.zIndex = '9999';
     popupBox.style.top = '50%';
     popupBox.style.left = '50%';
-    popupBox.style.transform = 'translate(-50%, -50%)';
+    popupBox.style.transform = 'translate(-50%, 150px)';
     popupBox.style.maxWidth = '50vw';
+    popupBox.style.minWidth = '550px';
     popupBox.style.width = '50vw';
     popupBox.style.maxHeight = '50vh';
     popupBox.style.overflow = 'auto';
+    popupBox.style.top = '0';
 
     // Create a container for category buttons
     const buttonContainer = document.createElement('div');
@@ -536,8 +545,6 @@ function changeCategoryOnTabPress(event) {
   }
 }
 
-// Add event listener for the "Tab" key press
-document.addEventListener('keydown', changeCategoryOnTabPress);
 
 // Initialize event listeners and create the emoticons popup with the default category
 initializeEventListeners();

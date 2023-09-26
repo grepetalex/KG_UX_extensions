@@ -365,7 +365,7 @@ function createEmoticonsPopup(category) {
         let buttonLightness = bodyLightness;
 
         if (isButtonActive) {
-          buttonLightness = bodyLightness < 50 ? bodyLightness + 20 : bodyLightness - 20;
+          buttonLightness = bodyLightness < 50 ? bodyLightness + 30 : bodyLightness - 30;
         } else {
           buttonLightness = bodyLightness < 50 ? bodyLightness + 15 : bodyLightness - 15;
         }

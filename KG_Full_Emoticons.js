@@ -382,7 +382,9 @@ function createEmoticonsPopup(category) {
         button.style.minHeight = '50px';
         button.style.fontSize = '1.4em';
 
+        // Add a click event listener to the category buttons
         button.addEventListener('click', () => {
+          // Call a function to set the active category
           changeActiveCategory(categoryKey);
         });
 

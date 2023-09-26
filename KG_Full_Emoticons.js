@@ -209,7 +209,7 @@ function initializeEventListeners() {
       if (event.ctrlKey && event.code === 'Semicolon') {
         event.preventDefault();
         toggleEmoticonsPopup(); // Toggle the emoticons panel
-        console.log('Ctrl + Semicolon pressed');
+        // console.log('Ctrl + Semicolon pressed');
       } else if (event.key === 'Escape') {
         removeEmoticonsPopup(); // Close the emoticons panel if it exists
         console.log('Escape key pressed');
@@ -226,7 +226,7 @@ function initializeEventListeners() {
         if (event.shiftKey && event.detail === 2) {
           event.preventDefault(); // Prevent the default behavior of double-click
           toggleEmoticonsPopup();
-          console.log('Textarea Double-Click Event Executed');
+          // console.log('Textarea Double-Click Event Executed');
         }
       }
     });
@@ -494,41 +494,45 @@ function createEmoticonsPopup(category) {
 
 // Function to insert emoticon code into the input field
 function insertEmoticonCode(emoticon) {
+  // Get the input or textarea element (roomField)
   const roomField = lastFocusedTextarea || determineChatRoom();
-  if (roomField) {
-    const cursorPosition = roomField.selectionStart;
-    let emoticonCode;
 
-    // Check if the current URL indicates a forum page
-    const isForumPage = window.location.href.includes("/forum");
-
-    // Set the format based on whether it's a forum or not
-    if (isForumPage) {
-      // Forum BBCode format
-      emoticonCode = `[img]https://klavogonki.ru/img/smilies/${emoticon}.gif[/img] `;
-    } else {
-      // Chat format
-      emoticonCode = `:${emoticon}: `;
-    }
-
-    // Get the current value of the input field
-    const currentValue = roomField.value;
-
-    // Insert the emoticon code at the cursor position
-    const newValue =
-      currentValue.substring(0, cursorPosition) +
-      emoticonCode +
-      currentValue.substring(cursorPosition);
-
-    // Update the input field value with the new value
-    roomField.value = newValue;
-
-    // Set the cursor position after the inserted emoticon
-    roomField.setSelectionRange(cursorPosition + emoticonCode.length, cursorPosition + emoticonCode.length);
-
-    // Focus on the input field
-    roomField.focus();
+  // Check if roomField is not a valid input or textarea element
+  if (!roomField || !(roomField instanceof HTMLInputElement) && !(roomField instanceof HTMLTextAreaElement)) {
+    console.log('roomField is not in focus. Please click on the input field to select it before inserting the emoticon code.');
+    return; // Exit the function early
   }
+
+  // Get the cursor position
+  const cursorPosition = roomField.selectionStart || 0; // Default to 0 if selectionStart is not supported
+
+  // Check if the current URL indicates a forum page
+  const isForumPage = window.location.href.includes("/forum");
+
+  // Set the format based on whether it's a forum or not
+  let emoticonCode;
+  if (isForumPage) {
+    // Forum BBCode format
+    emoticonCode = `[img]https://klavogonki.ru/img/smilies/${emoticon}.gif[/img] `;
+  } else {
+    // Chat format
+    emoticonCode = `:${emoticon}: `;
+  }
+
+  // Get the current value of the input field
+  const currentValue = roomField.value || '';
+
+  // Insert the emoticon code at the cursor position
+  const newValue = currentValue.slice(0, cursorPosition) + emoticonCode + currentValue.slice(cursorPosition);
+
+  // Update the input field value with the new value
+  roomField.value = newValue;
+
+  // Set the cursor position after the inserted emoticon
+  roomField.setSelectionRange(cursorPosition + emoticonCode.length, cursorPosition + emoticonCode.length);
+
+  // Focus on the input field
+  roomField.focus();
 }
 
 // Function to get lightness from an RGB color string

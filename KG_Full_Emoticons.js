@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_Full_Emoticons
 // @namespace    http://klavogonki.ru/
-// @version      0.4
+// @version      0.5
 // @description  Show all the emoticons
 // @author       Patcher
 // @match        *://klavogonki.ru/g*
@@ -191,15 +191,6 @@ function calculateMaxImageDimensions(category) {
   return { maxImageWidth: maxImageWidthCalculated, maxImageHeight };
 }
 
-// Function to toggle the emoticons popup on double click
-function toggleEmoticonsPopup() {
-  if (isPopupCreated) {
-    removeEmoticonsPopup();
-  } else {
-    createEmoticonsPopup(activeCategory);
-  }
-}
-
 // Function to handle focus on textareas
 function handleTextareaFocus(event) {
   lastFocusedTextarea = event.target;
@@ -217,10 +208,10 @@ function initializeEventListeners() {
     document.addEventListener('keydown', function (event) {
       if (event.ctrlKey && event.code === 'Semicolon') {
         event.preventDefault();
-        createEmoticonsPopup(activeCategory);
+        toggleEmoticonsPopup(); // Toggle the emoticons panel
         console.log('Ctrl + Semicolon pressed');
       } else if (event.key === 'Escape') {
-        removeEmoticonsPopup();
+        removeEmoticonsPopup(); // Close the emoticons panel if it exists
         console.log('Escape key pressed');
       }
     });
@@ -268,6 +259,21 @@ function initializeEventListeners() {
     }
 
     isEventListenersInitialized = true;
+  }
+}
+
+// Toggles the emoticons panel by checking its existence and taking appropriate action.
+function toggleEmoticonsPopup() {
+  // Find the emoticons panel element with the class '.emoticons-popup'
+  const emoticonsPopup = document.querySelector('.emoticons-popup');
+
+  // Check if the emoticons panel element exists in the document
+  if (emoticonsPopup) {
+    // If the panel exists, close it by removing it from the DOM
+    removeEmoticonsPopup();
+  } else {
+    // If the panel doesn't exist, create and display it with the active category
+    createEmoticonsPopup(activeCategory);
   }
 }
 

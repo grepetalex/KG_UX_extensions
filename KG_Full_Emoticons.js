@@ -101,7 +101,10 @@ function determineChatRoom() {
       } else if (currentURL.includes("/u/")) {
         // Use a Mutation Observer to wait for the profile textarea
         const mutationObserver = new MutationObserver(() => {
-          const profileTextarea = document.querySelector('.profile-messages .dialog-write textarea');
+          const savedTextarea = '.profile-messages .dialog-write textarea';
+          const directTextarea = '.dlg-send-user-message .message-text textarea';
+          const profileTextarea = document.querySelector(`${savedTextarea}, ${directTextarea}`);
+
           if (profileTextarea) {
             roomField = profileTextarea;
             console.log("Chat Field (Profile):", roomField);
@@ -188,12 +191,19 @@ function initializeEventListeners() {
 
     // Attach a mousedown event listener to the document and use event delegation
     document.addEventListener('mousedown', function (event) {
-      // Check if the target element matches the profile textarea
-      if (matchesSelector(event.target, '.profile-messages .dialog-write textarea')) {
+      // Define the selectors for savedTextarea and directTextarea
+      const savedTextarea = '.profile-messages .dialog-write textarea';
+      const directTextarea = '.dlg-send-user-message .message-text textarea';
+
+      // Combine the selectors into textareaSelectors
+      const textareaSelectors = `${savedTextarea}, ${directTextarea}`;
+
+      // Check if the target element matches the textarea selectors
+      if (matchesSelector(event.target, textareaSelectors)) {
         if (event.shiftKey && event.detail === 2) {
           event.preventDefault(); // Prevent the default behavior of double-click
           toggleEmoticonsPopup();
-          console.log('Profile Textarea Double-Click Event Executed');
+          console.log('Textarea Double-Click Event Executed');
         }
       }
     });

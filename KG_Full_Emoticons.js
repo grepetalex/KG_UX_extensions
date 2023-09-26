@@ -191,17 +191,6 @@ function calculateMaxImageDimensions(category) {
   return { maxImageWidth: maxImageWidthCalculated, maxImageHeight };
 }
 
-// Function to handle focus on textareas
-function handleTextareaFocus(event) {
-  lastFocusedTextarea = event.target;
-}
-
-// Attach a focus event listener to all textareas
-const textAreas = document.querySelectorAll('textarea');
-textAreas.forEach(textArea => {
-  textArea.addEventListener('focus', handleTextareaFocus);
-});
-
 // Function to initialize event listeners
 function initializeEventListeners() {
   if (!isEventListenersInitialized) {

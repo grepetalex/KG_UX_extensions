@@ -82,46 +82,82 @@ let activeCategory = 'Boys';
 // Keep track of the last focused textarea
 let lastFocusedTextarea = null;
 
+// Flags to prevent multiple detections of Direct Message and Saved Message textareas
+let hasDetectedDirectMessage = false;
+let hasDetectedSavedMessage = false;
+
+// Function to debounce resetting the flags
+function debounceResetFlags() {
+  setTimeout(() => {
+    hasDetectedDirectMessage = false;
+    hasDetectedSavedMessage = false;
+  }, 5000);
+}
+
 // Function to determine which chat room we are in
 function determineChatRoom() {
+  // Check if the roomField has not been set yet
   if (!roomField) {
+    // Get the current URL of the webpage
     const currentURL = window.location.href;
+
+    // Define an array of allowed domains
     const allowedDomains = ["klavogonki.ru"];
 
+    // Check if the current URL includes any allowed domains
     if (allowedDomains.some(domain => currentURL.includes(domain))) {
+      // Check the URL path to determine the context
       if (currentURL.includes("/gamelist")) {
+        // Set roomField to the General chat input field
         roomField = document.querySelector('#chat-general input.text');
-        console.log("Chat Field (General):", roomField);
+        // console.log("Chat Field (General):", roomField);
       } else if (currentURL.includes("/g/?gmid=")) {
+        // Set roomField to the Game chat input field
         roomField = document.querySelector('div[id*="chat-game"] input.text');
-        console.log("Chat Field (Game):", roomField);
+        // console.log("Chat Field (Game):", roomField);
       } else if (currentURL.includes("/forum")) {
+        // Set roomField to an array of Forum textareas
         roomField = document.querySelectorAll('textarea');
-        console.log("Chat Field (Forum):", roomField);
+        // console.log("Chat Field (Forum):", roomField);
       } else if (currentURL.includes("/u/")) {
-        // Use a Mutation Observer to wait for the profile textarea
-        const mutationObserver = new MutationObserver(() => {
-          const savedTextarea = '.profile-messages .dialog-write textarea';
-          const directTextarea = '.dlg-send-user-message .message-text textarea';
-          const profileTextarea = document.querySelector(`${savedTextarea}, ${directTextarea}`);
+        // Check if neither Direct Message nor Saved Message has been detected yet
+        if (!hasDetectedDirectMessage || !hasDetectedSavedMessage) {
+          // Create a Mutation Observer to watch for changes in the document
+          const observer = new MutationObserver(() => {
+            // Check for the presence of Direct Message and Saved Message textareas
+            const directMessageTextarea = document.querySelector('.dlg-send-user-message .message-text textarea');
+            const savedMessageTextarea = document.querySelector('.profile-messages .dialog-write textarea');
 
-          if (profileTextarea) {
-            roomField = profileTextarea;
-            console.log("Chat Field (Profile):", roomField);
+            if (directMessageTextarea && !hasDetectedDirectMessage) {
+              // Set roomField to the Direct Message textarea
+              roomField = directMessageTextarea;
+              // console.log("Chat Field (Direct Message):", roomField);
+              // Initialize event listeners for this textarea
+              initializeEventListeners();
+              // Set the flag to prevent further detections of Direct Message
+              hasDetectedDirectMessage = true;
+              // Debounce resetting the flags
+              debounceResetFlags();
+            } else if (savedMessageTextarea && !hasDetectedSavedMessage) {
+              // Set roomField to the Saved Message textarea
+              roomField = savedMessageTextarea;
+              // console.log("Chat Field (Saved Message):", roomField);
+              // Initialize event listeners for this textarea
+              initializeEventListeners();
+              // Set the flag to prevent further detections of Saved Message
+              hasDetectedSavedMessage = true;
+              // Debounce resetting the flags
+              debounceResetFlags();
+            }
+          });
 
-            // Disconnect the Mutation Observer after finding the element
-            mutationObserver.disconnect();
-
-            // Initialize event listeners and create the emoticons popup with the default category
-            initializeEventListeners();
-          }
-        });
-
-        // Observe mutations in the document
-        mutationObserver.observe(document.documentElement, { childList: true, subtree: true });
+          // Start observing mutations in the document's structure
+          observer.observe(document.documentElement, { childList: true, subtree: true });
+        }
       }
     }
   }
+  // Return the determined or detected roomField
   return roomField;
 }
 
@@ -191,15 +227,11 @@ function initializeEventListeners() {
 
     // Attach a mousedown event listener to the document and use event delegation
     document.addEventListener('mousedown', function (event) {
-      // Define the selectors for savedTextarea and directTextarea
-      const savedTextarea = '.profile-messages .dialog-write textarea';
-      const directTextarea = '.dlg-send-user-message .message-text textarea';
-
-      // Combine the selectors into textareaSelectors
-      const textareaSelectors = `${savedTextarea}, ${directTextarea}`;
-
+      // Selectors for direct and saved message textareas
+      const directMessageSelector = '.dlg-send-user-message .message-text textarea';
+      const savedMessageSelector = '.profile-messages .dialog-write textarea';
       // Check if the target element matches the textarea selectors
-      if (matchesSelector(event.target, textareaSelectors)) {
+      if (matchesSelector(event.target, `${directMessageSelector}, ${savedMessageSelector}`)) {
         if (event.shiftKey && event.detail === 2) {
           event.preventDefault(); // Prevent the default behavior of double-click
           toggleEmoticonsPopup();
@@ -554,7 +586,6 @@ function changeCategoryOnTabPress(event) {
     // console.log(`Active Category: ${nextCategory}`);
   }
 }
-
 
 // Initialize event listeners and create the emoticons popup with the default category
 initializeEventListeners();

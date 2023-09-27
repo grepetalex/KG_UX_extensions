@@ -82,16 +82,14 @@ let activeCategory = 'Boys';
 // Keep track of the last focused textarea
 let lastFocusedTextarea = null;
 
-// Flags to prevent multiple detections of Direct Message and Saved Message textareas
-let hasDetectedDirectMessage = false;
-let hasDetectedSavedMessage = false;
+// Flags to prevent multiple detections of Profile textareas
+let hasDetectedProfileTextarea = false;
 
 // Function to debounce resetting the flags
 function debounceResetFlags() {
   setTimeout(() => {
-    hasDetectedDirectMessage = false;
-    hasDetectedSavedMessage = false;
-  }, 5000);
+    hasDetectedProfileTextarea = false;
+  }, 3000);
 }
 
 // Function to determine which chat room we are in
@@ -120,35 +118,36 @@ function determineChatRoom() {
         roomField = document.querySelectorAll('textarea');
         // console.log("Chat Field (Forum):", roomField);
       } else if (currentURL.includes("/u/")) {
-        // Check if neither Direct Message nor Saved Message has been detected yet
-        if (!hasDetectedDirectMessage || !hasDetectedSavedMessage) {
+        // Check if neither Direct Message, Saved Message, nor Journal has been detected yet
+        if (!hasDetectedProfileTextarea) {
           // Create a Mutation Observer to watch for changes in the document
           const observer = new MutationObserver(() => {
-            // Check for the presence of Direct Message and Saved Message textareas
+            // Check for the presence of Direct Message, Saved Message, and Journal textareas
             const directMessageTextarea = document.querySelector('.dlg-send-user-message .message-text textarea');
             const savedMessageTextarea = document.querySelector('.profile-messages .dialog-write textarea');
+            const journalMessageTextarea = document.querySelector('.profile-root .journal .write textarea');
 
-            if (directMessageTextarea && !hasDetectedDirectMessage) {
+            // Set roomField based on the detected textarea
+            if (directMessageTextarea && !hasDetectedProfileTextarea) {
               // Set roomField to the Direct Message textarea
               roomField = directMessageTextarea;
-              // console.log("Chat Field (Direct Message):", roomField);
-              // Initialize event listeners for this textarea
-              initializeEventListeners();
-              // Set the flag to prevent further detections of Direct Message
-              hasDetectedDirectMessage = true;
-              // Debounce resetting the flags
-              debounceResetFlags();
-            } else if (savedMessageTextarea && !hasDetectedSavedMessage) {
+              console.log("Chat Field (Direct Message):", roomField);
+            } else if (savedMessageTextarea && !hasDetectedProfileTextarea) {
               // Set roomField to the Saved Message textarea
               roomField = savedMessageTextarea;
-              // console.log("Chat Field (Saved Message):", roomField);
-              // Initialize event listeners for this textarea
-              initializeEventListeners();
-              // Set the flag to prevent further detections of Saved Message
-              hasDetectedSavedMessage = true;
-              // Debounce resetting the flags
-              debounceResetFlags();
+              console.log("Chat Field (Saved Message):", roomField);
+            } else if (journalMessageTextarea && !hasDetectedProfileTextarea) {
+              // Set roomField to the Journal textarea
+              roomField = journalMessageTextarea;
+              console.log("Chat Field (Journal):", roomField);
             }
+
+            // Initialize event listeners for this textarea
+            initializeEventListeners();
+            // Set the flag to prevent further detections
+            hasDetectedProfileTextarea = true;
+            // Debounce resetting the flags
+            debounceResetFlags();
           });
 
           // Start observing mutations in the document's structure
@@ -191,6 +190,17 @@ function calculateMaxImageDimensions(category) {
   return { maxImageWidth: maxImageWidthCalculated, maxImageHeight };
 }
 
+// Function to handle focus on textareas
+function handleTextareaFocus(event) {
+  lastFocusedTextarea = event.target;
+}
+
+// Attach a focus event listener to all textareas
+const textAreas = document.querySelectorAll('textarea');
+textAreas.forEach(textArea => {
+  textArea.addEventListener('focus', handleTextareaFocus);
+});
+
 // Function to initialize event listeners
 function initializeEventListeners() {
   if (!isEventListenersInitialized) {
@@ -207,15 +217,18 @@ function initializeEventListeners() {
 
     // Attach a mousedown event listener to the document and use event delegation
     document.addEventListener('mousedown', function (event) {
-      // Selectors for direct and saved message textareas
-      const directMessageSelector = '.dlg-send-user-message .message-text textarea';
-      const savedMessageSelector = '.profile-messages .dialog-write textarea';
-      // Check if the target element matches the textarea selectors
-      if (matchesSelector(event.target, `${directMessageSelector}, ${savedMessageSelector}`)) {
+      // Check if the target element matches any of the textarea selectors
+      const textareaSelectors = [
+        '.dlg-send-user-message .message-text textarea',
+        '.profile-messages .dialog-write textarea',
+        '.profile-root .journal .write textarea'
+      ];
+
+      if (textareaSelectors.some(selector => event.target.matches(selector))) {
         if (event.shiftKey && event.detail === 2) {
           event.preventDefault(); // Prevent the default behavior of double-click
           toggleEmoticonsPopup();
-          // console.log('Textarea Double-Click Event Executed');
+          console.log('Textarea Double-Click Event Executed');
         }
       }
     });

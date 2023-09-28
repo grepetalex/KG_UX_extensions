@@ -122,9 +122,10 @@ function determineChatRoom() {
         if (!hasDetectedProfileTextarea) {
           // Create a Mutation Observer to watch for changes in the document
           const observer = new MutationObserver(() => {
-            // Check for the presence of Direct Message, Saved Message, and Journal textareas
+            // Check for the presence of Direct Message, Saved Message, Edit Bio and Journal textareas
             const directMessageTextarea = document.querySelector('.dlg-send-user-message .message-text textarea');
             const savedMessageTextarea = document.querySelector('.profile-messages .dialog-write textarea');
+            const editBioTextarea = document.querySelector('.profile-edit-bio .edit textarea');
             const journalMessageTextarea = document.querySelectorAll('.profile-root .journal .write textarea');
 
             // Find the focused textarea among the detected textareas
@@ -149,6 +150,10 @@ function determineChatRoom() {
               // Set roomField to the last focused textarea
               roomField = lastFocusedTextarea;
               console.log("Chat Field (Journal):", roomField);
+            } else if (editBioTextarea && !hasDetectedProfileTextarea) {
+              // Set roomField to the Edit Bio Textarea
+              roomField = editBioTextarea;
+              console.log("Chat Field (Edit Bio):", roomField);
             }
 
             // Initialize event listeners for this textarea
@@ -230,6 +235,7 @@ function initializeEventListeners() {
       const textareaSelectors = [
         '.dlg-send-user-message .message-text textarea',
         '.profile-messages .dialog-write textarea',
+        '.profile-edit-bio .edit textarea',
         '.profile-root .journal .write textarea'
       ];
 

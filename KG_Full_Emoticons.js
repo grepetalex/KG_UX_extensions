@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_Full_Emoticons
 // @namespace    http://klavogonki.ru/
-// @version      0.5
+// @version      0.6
 // @description  Show all the emoticons
 // @author       Patcher
 // @match        *://klavogonki.ru/g*
@@ -125,7 +125,16 @@ function determineChatRoom() {
             // Check for the presence of Direct Message, Saved Message, and Journal textareas
             const directMessageTextarea = document.querySelector('.dlg-send-user-message .message-text textarea');
             const savedMessageTextarea = document.querySelector('.profile-messages .dialog-write textarea');
-            const journalMessageTextarea = document.querySelector('.profile-root .journal .write textarea');
+            const journalMessageTextarea = document.querySelectorAll('.profile-root .journal .write textarea');
+
+            // Find the focused textarea among the detected textareas
+            for (const textarea of journalMessageTextarea) {
+              if (document.activeElement === textarea) {
+                // Store in the global variable
+                lastFocusedTextarea = textarea;
+                break;
+              }
+            }
 
             // Set roomField based on the detected textarea
             if (directMessageTextarea && !hasDetectedProfileTextarea) {
@@ -136,9 +145,9 @@ function determineChatRoom() {
               // Set roomField to the Saved Message textarea
               roomField = savedMessageTextarea;
               console.log("Chat Field (Saved Message):", roomField);
-            } else if (journalMessageTextarea && !hasDetectedProfileTextarea) {
-              // Set roomField to the Journal textarea
-              roomField = journalMessageTextarea;
+            } else if (lastFocusedTextarea && !hasDetectedProfileTextarea) {
+              // Set roomField to the last focused textarea
+              roomField = lastFocusedTextarea;
               console.log("Chat Field (Journal):", roomField);
             }
 

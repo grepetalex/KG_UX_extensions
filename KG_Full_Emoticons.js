@@ -72,6 +72,7 @@ const categoryEmojis = {
   "Army": "🔫",
   "WomenDay": "🌼",
   "Halloween": "🎃",
+  "Favourites": "🌟"
 };
 
 let roomField = null;
@@ -85,6 +86,17 @@ let lastFocusedTextarea = null;
 // Flags to prevent multiple detections of Profile textareas
 let hasDetectedProfileTextarea = false;
 
+// Function to load favorite emoticons from localStorage
+function loadFavoriteEmoticons() {
+  // Retrieve favorite emoticons from localStorage or initialize an empty array if not found
+  const favoriteEmoticons = JSON.parse(localStorage.getItem('favoriteEmoticons')) || [];
+
+  // Assign the favorite emoticons to the "Favourites" category using dot notation
+  categories.Favourites = favoriteEmoticons;
+}
+
+// Example usage
+loadFavoriteEmoticons();
 // Function to debounce resetting the flags
 function debounceResetFlags() {
   setTimeout(() => {
@@ -217,6 +229,33 @@ function calculateMaxImageDimensions(category) {
 // Function to initialize event listeners
 function initializeEventListeners() {
   if (!isEventListenersInitialized) {
+    // Load favorite emoticons from localStorage
+    loadFavoriteEmoticons();
+
+    // Find the "Favourites" button within the category buttons
+    const favouritesButton = document.querySelector('.category-buttons button[data-category="Favourites"]');
+
+    // Check if the "Favourites" button exists
+    if (favouritesButton) {
+      // Add a click event listener to the "Favourites" button
+      favouritesButton.addEventListener('click', function (event) {
+        // Check if the shift key is pressed while clicking the button
+        if (event.shiftKey) {
+          // Clear all favorites from localStorage
+          localStorage.removeItem('favoriteEmoticons');
+
+          // Clear the "Favourites" category in your data structure (assuming "categories" is an object)
+          categories.Favourites = [];
+
+          // Update the visual state of category buttons
+          updateCategoryButtonsState(activeCategory);
+
+          // Update the emoticons container to reflect the changes
+          updateEmoticonsContainer();
+        }
+      });
+    }
+
     document.addEventListener('keydown', function (event) {
       if (event.ctrlKey && event.code === 'Semicolon') {
         event.preventDefault();
@@ -445,6 +484,19 @@ function createCategoryContainer(category) {
     });
   }
 
+  // Function to handle the click event for the "Favourites" button
+  function handleFavouritesButtonClick(event) {
+    if (event.shiftKey) {
+      // Clear all favorites
+      localStorage.removeItem('favoriteEmoticons');
+      categories.Favourites = [];
+      // Update the state of category buttons
+      updateCategoryButtonsState(activeCategory);
+      // Update the emoticons container
+      updateEmoticonsContainer();
+    }
+  }
+
   for (const categoryKey in categories) {
     if (categories.hasOwnProperty(categoryKey)) {
       const categoryButton = document.createElement('button');
@@ -466,6 +518,13 @@ function createCategoryContainer(category) {
       categoryButton.style.minHeight = '50px';
       categoryButton.style.fontSize = '1.4em';
 
+      if (categoryKey === 'Favourites') {
+        setFavouritesButtonOpacity(categoryButton); // Use the function to control opacity
+
+        // Attach the click event listener to the "Favourites" button
+        categoryButton.addEventListener('click', handleFavouritesButtonClick);
+      }
+
       // Add event listeners for the category button using the function
       addCategoryButtonListeners(categoryButton, categoryKey);
 
@@ -486,11 +545,30 @@ function updateCategoryButtonsState(newCategory) {
     const categoryButtonBackground = isButtonActive ? activeButtonBackground : defaultButtonBackground;
 
     button.style.backgroundColor = categoryButtonBackground;
+
+    if (categoryKey === 'Favourites') {
+      setFavouritesButtonOpacity(button); // Control the opacity of the "Favourites" button
+    }
   });
+}
+
+// Function to control the opacity of the "Favourites" button based on its content
+function setFavouritesButtonOpacity(categoryButton) {
+  if (categories.Favourites.length === 0) {
+    categoryButton.style.opacity = 0.5; // Set opacity to 0.5 if "Favourites" is empty
+  } else {
+    categoryButton.style.removeProperty('opacity'); // Remove opacity if "Favourites" is not empty
+  }
 }
 
 // Function to create the emoticons container with buttons for a given category
 function createEmoticonsContainer(category) {
+  // Define the isEmoticonFavorite function
+  function isEmoticonFavorite(emoticon) {
+    const favoriteEmoticons = JSON.parse(localStorage.getItem('favoriteEmoticons')) || [];
+    return favoriteEmoticons.includes(emoticon);
+  }
+
   const emoticonButtonsContainer = document.createElement('div');
   emoticonButtonsContainer.classList.add('emoticon-buttons');
   emoticonButtonsContainer.style.display = 'none'; // Initially hide the container
@@ -504,7 +582,14 @@ function createEmoticonsContainer(category) {
     const imgSrc = `/img/smilies/${emoticonName}.gif`;
     const imgAlt = emoticonName;
     const buttonTitle = emoticonName;
-    emoticonButton.style.backgroundColor = defaultButtonBackground;
+
+    // Check if the emoticon is a favorite and set the background color accordingly
+    if (category !== 'Favourites') {
+      emoticonButton.style.backgroundColor = isEmoticonFavorite(emoticon) ? activeButtonBackground : defaultButtonBackground;
+    } else {
+      emoticonButton.style.backgroundColor = defaultButtonBackground; // For the "Favourites" category, always use the default background
+    }
+
     emoticonButton.innerHTML = `<img src="${imgSrc}" alt="${imgAlt}">`;
     emoticonButton.title = buttonTitle;
     emoticonButton.style.border = 'none';
@@ -521,12 +606,42 @@ function createEmoticonsContainer(category) {
     imageLoadPromises.push(imageLoadPromise);
 
     emoticonButton.addEventListener('click', function (event) {
-      if (!event.ctrlKey) {
-        insertEmoticonCode(emoticon);
-        removeEmoticonsPopup();
+      if (activeCategory === 'Favourites') {
+        if (event.ctrlKey) {
+          // If Ctrl key is pressed, just insert the emoticon code
+          insertEmoticonCode(emoticon);
+        } else if (event.shiftKey) {
+          // If Shift key is pressed, remove the emoticon from "Favourites" if it exists
+          const favoriteEmoticons = JSON.parse(localStorage.getItem('favoriteEmoticons')) || [];
+          const index = favoriteEmoticons.indexOf(emoticon);
+          if (index !== -1) {
+            favoriteEmoticons.splice(index, 1);
+            localStorage.setItem('favoriteEmoticons', JSON.stringify(favoriteEmoticons));
+            // Update the categories object
+            const favIndex = categories.Favourites.indexOf(emoticon);
+            if (favIndex !== -1) {
+              categories.Favourites.splice(favIndex, 1);
+            }
+            // Update the state of category buttons
+            updateCategoryButtonsState(activeCategory);
+            // Update the emoticons container
+            updateEmoticonsContainer();
+          }
+        } else {
+          // If neither Ctrl nor Shift is pressed, insert the emoticon code and remove the emoticons popup
+          insertEmoticonCode(emoticon);
+          removeEmoticonsPopup();
+        }
       } else {
-        // If Ctrl key is pressed, just insert the emoticon code
-        insertEmoticonCode(emoticon);
+        // If the active category is not "Favourites," add the emoticon to "Favourites"
+        const favoriteEmoticons = JSON.parse(localStorage.getItem('favoriteEmoticons')) || [];
+        if (!favoriteEmoticons.includes(emoticon)) {
+          favoriteEmoticons.push(emoticon);
+          localStorage.setItem('favoriteEmoticons', JSON.stringify(favoriteEmoticons));
+          categories.Favourites.push(emoticon);
+          // Update the state of category buttons for "Favourites"
+          updateCategoryButtonsState(activeCategory);
+        }
       }
     });
 
@@ -535,7 +650,13 @@ function createEmoticonsContainer(category) {
     });
 
     emoticonButton.addEventListener('mouseout', () => {
-      emoticonButton.style.backgroundColor = defaultButtonBackground;
+      // Check if the emoticon is a favorite and set the background color accordingly
+      if (category !== 'Favourites') {
+        emoticonButton.style.backgroundColor = isEmoticonFavorite(emoticon) ? activeButtonBackground : defaultButtonBackground;
+      } else {
+        // For the "Favourites" category, always use the default background
+        emoticonButton.style.backgroundColor = defaultButtonBackground;
+      }
     });
 
     emoticonButtonsContainer.appendChild(emoticonButton);
@@ -555,6 +676,26 @@ function createEmoticonsContainer(category) {
 
     return emoticonButtonsContainer;
   });
+}
+
+// Function to update the emoticons container based on the active category
+function updateEmoticonsContainer() {
+  // Remove the existing emoticons container (if any)
+  const existingEmoticonsContainer = document.querySelector('.emoticon-buttons');
+  if (existingEmoticonsContainer) {
+    existingEmoticonsContainer.remove();
+  }
+
+  // Create a new emoticons container with the updated category
+  createEmoticonsContainer(activeCategory)
+    .then(emoticonsContainer => {
+      // Append the new container to the popup (if the popup exists)
+      const existingPopup = document.querySelector('.emoticons-popup');
+      if (existingPopup) {
+        // Append the new category buttons container
+        existingPopup.appendChild(emoticonsContainer);
+      }
+    });
 }
 
 // Function to insert emoticon code into the input field
@@ -608,25 +749,11 @@ function changeActiveCategoryOnClick(newCategory) {
   // Update the activeCategory variable
   activeCategory = newCategory;
 
-  // Update the state of category buttons first
+  // Update the state of category buttons
   updateCategoryButtonsState(activeCategory);
 
-  // Remove the existing emoticons container (if any)
-  const existingEmoticonsContainer = document.querySelector('.emoticon-buttons');
-  if (existingEmoticonsContainer) {
-    existingEmoticonsContainer.remove();
-  }
-
-  // Create a new emoticons container with the updated category
-  createEmoticonsContainer(activeCategory)
-    .then(emoticonsContainer => {
-      // Append the new container to the popup (if the popup exists)
-      const existingPopup = document.querySelector('.emoticons-popup');
-      if (existingPopup) {
-        // Append the new category buttons container
-        existingPopup.appendChild(emoticonsContainer);
-      }
-    });
+  // Call the function to update the emoticons container
+  updateEmoticonsContainer();
 }
 
 const categoryKeys = Object.keys(categories); // Define categoryKeys

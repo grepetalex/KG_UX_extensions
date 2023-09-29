@@ -49,7 +49,7 @@ const categories = {
     "pograntort", "prival", "radistka", "ranker", "rogatka", "soldier", "tank",
     "uzi", "vdv", "vpered", "vtik"
   ],
-  "8 March": [
+  "WomenDay": [
     "boystroking", "cheerleader", "confetti", "enjoygift", "firework", "girlicecream",
     "girlmad", "girlobserve", "girlrevolve", "girlshighfive", "girlstroking", "girlsuper",
     "grats", "hairdryer", "leisure", "primp", "respect", "serenade", "spruceup"
@@ -70,7 +70,7 @@ const categoryEmojis = {
   "Christmas": "🎄",
   "Inlove": "❤️",
   "Army": "🔫",
-  "8 March": "🌼",
+  "WomenDay": "🌼",
   "Halloween": "🎃",
 };
 
@@ -90,6 +90,11 @@ function debounceResetFlags() {
   setTimeout(() => {
     hasDetectedProfileTextarea = false;
   }, 3000);
+}
+
+// Function to handle focus on textareas only for forum
+function handleTextareaFocus(event) {
+  lastFocusedTextarea = event.target;
 }
 
 // Function to determine which chat room we are in
@@ -114,9 +119,14 @@ function determineChatRoom() {
         roomField = document.querySelector('div[id*="chat-game"] input.text');
         // console.log("Chat Field (Game):", roomField);
       } else if (currentURL.includes("/forum")) {
+        // Select all forum textareas
+        let allForumTextareas = document.querySelectorAll('textarea');
         // Set roomField to an array of Forum textareas
-        roomField = document.querySelectorAll('textarea');
-        // console.log("Chat Field (Forum):", roomField);
+        roomField = allForumTextareas;
+        console.log("Chat Field (Forum):", roomField);
+        allForumTextareas.forEach(textArea => {
+          textArea.addEventListener('focus', handleTextareaFocus);
+        });
       } else if (currentURL.includes("/u/")) {
         // Check if neither Direct Message, Saved Message, nor Journal has been detected yet
         if (!hasDetectedProfileTextarea) {
@@ -204,17 +214,6 @@ function calculateMaxImageDimensions(category) {
   return { maxImageWidth: maxImageWidthCalculated, maxImageHeight };
 }
 
-// Function to handle focus on textareas
-function handleTextareaFocus(event) {
-  lastFocusedTextarea = event.target;
-}
-
-// Attach a focus event listener to all textareas
-const textAreas = document.querySelectorAll('textarea');
-textAreas.forEach(textArea => {
-  textArea.addEventListener('focus', handleTextareaFocus);
-});
-
 // Function to initialize event listeners
 function initializeEventListeners() {
   if (!isEventListenersInitialized) {
@@ -299,8 +298,61 @@ function matchesSelector(element, selector) {
   return element && element.matches && element.matches(selector);
 }
 
+// Get current body background color
+const bodyBackgroundColor = window.getComputedStyle(document.body).backgroundColor;
+// Store the lightness with the helper function getLightness
+const bodyLightness = getLightness(bodyBackgroundColor);
+
+// Function to get lightness from an RGB color string and round it
+function getLightness(color) {
+  const match = color.match(/\d+/g);
+  if (match && match.length === 3) {
+    const r = parseInt(match[0]);
+    const g = parseInt(match[1]);
+    const b = parseInt(match[2]);
+    const max = Math.max(r, g, b) / 255;
+    const min = Math.min(r, g, b) / 255;
+    const lightness = Math.round(((max + min) / 2) * 100); // Round to the nearest integer
+    return lightness;
+  }
+  return 0;
+}
+
+// Function to get the adjusted background color in HSL format
+function getAdjustedBackground(caseType) {
+  let adjustment = 0;
+
+  switch (caseType) {
+    case 'popupBackground':
+      adjustment = 10;
+      break;
+    case 'defaultButton':
+      adjustment = 15;
+      break;
+    case 'hoverButton':
+      adjustment = 25;
+      break;
+    case 'activeButton':
+      adjustment = 35;
+      break;
+    default:
+      adjustment = 0; // Default case, no adjustment
+  }
+
+  const adjustedLightness = bodyLightness < 50 ? bodyLightness + adjustment : bodyLightness - adjustment;
+  const adjustedBackgroundColor = `hsl(0, 0%, ${adjustedLightness}%)`;
+  return adjustedBackgroundColor;
+}
+
+// Store adjusted backgrounds for elements
+const popupBackground = getAdjustedBackground('popupBackground');
+const defaultButtonBackground = getAdjustedBackground('defaultButton');
+const hoverButtonBackground = getAdjustedBackground('hoverButton');
+const activeButtonBackground = getAdjustedBackground('activeButton');
+
 // Function to create the emoticons popup for a given category
 function createEmoticonsPopup(category) {
+  // POPUP ITSELF
   if (!isPopupCreated) {
     const popupBox = document.createElement('div');
 
@@ -312,6 +364,7 @@ function createEmoticonsPopup(category) {
       document.addEventListener('keydown', changeCategoryOnTabPress);
     }
 
+    // CLOSE BUTTON
     // Create a close button
     const closeButton = document.createElement('button');
     closeButton.innerHTML = '&#x2716;'; // Unicode character (X)
@@ -336,19 +389,9 @@ function createEmoticonsPopup(category) {
 
     popupBox.style.position = 'fixed';
     popupBox.style.display = 'grid';
-
-    // Define the grid properties for the popup
     popupBox.style.gridTemplateRows = "50px auto";
     popupBox.style.gridGap = '10px';
-
-    // Calculate background color for the popup
-    const bodyBackgroundColor = window.getComputedStyle(document.body).backgroundColor;
-    const bodyLightness = getLightness(bodyBackgroundColor);
-    const popupLightness = bodyLightness < 50 ? bodyLightness + 10 : bodyLightness - 10;
-    const adjustedPopupLightness = Math.min(100, Math.max(0, popupLightness));
-    const popupBackgroundColor = `hsl(0, 0%, ${adjustedPopupLightness}%)`;
-
-    popupBox.style.backgroundColor = popupBackgroundColor;
+    popupBox.style.backgroundColor = popupBackground;
     popupBox.style.border = 'none';
     popupBox.style.padding = '10px';
     popupBox.style.zIndex = '9999';
@@ -362,71 +405,64 @@ function createEmoticonsPopup(category) {
     popupBox.style.overflow = 'auto';
     popupBox.style.top = '0';
 
+    // CATEGORY BUTTONS
     // Create a container for category buttons
-    const buttonContainer = document.createElement('div');
-    buttonContainer.classList.add('category-buttons');
-    buttonContainer.style.display = 'flex';
-    buttonContainer.style.justifyContent = 'center';
+    const categoryButtonsContainer = document.createElement('div');
+    categoryButtonsContainer.classList.add('category-buttons');
+    categoryButtonsContainer.style.display = 'flex';
+    categoryButtonsContainer.style.justifyContent = 'center';
+
+    // Create a function to add event listeners for category buttons
+    function addCategoryButtonListeners(categoryButton, categoryKey) {
+      // Add a click event listener to the category buttons
+      categoryButton.addEventListener('click', () => {
+        // Call a function to set the active category
+        changeActiveCategoryOnClick(categoryKey);
+      });
+
+      categoryButton.addEventListener('mouseover', () => {
+        categoryButton.style.backgroundColor = hoverButtonBackground;
+      });
+
+      categoryButton.addEventListener('mouseout', () => {
+        // Update the background color based on whether it's the active category or not
+        categoryButton.style.backgroundColor = categoryKey === activeCategory ? activeButtonBackground : defaultButtonBackground;
+      });
+    }
 
     // Create category buttons inside the popup
     for (const categoryKey in categories) {
       if (categories.hasOwnProperty(categoryKey)) {
-        const button = document.createElement('button');
-        button.innerHTML = categoryEmojis[categoryKey]; // Use emoji symbol
-        button.dataset.category = categoryKey; // Set a dataset attribute for identifying the category
+        const categoryButton = document.createElement('button');
+        categoryButton.innerHTML = categoryEmojis[categoryKey]; // Use emoji symbol
+        categoryButton.dataset.category = categoryKey; // Set a dataset attribute for identifying the category
 
         const savedCategory = localStorage.getItem('activeCategory');
         const isButtonActive = savedCategory === categoryKey;
 
-        // Determine the button lightness based on whether it's the active category or not
-        let buttonLightness = bodyLightness;
+        // Determine the button background color based on whether it's the active category or not
+        const categoryButtonBackground = isButtonActive ? activeButtonBackground : defaultButtonBackground;
 
-        if (isButtonActive) {
-          buttonLightness = bodyLightness < 50 ? bodyLightness + 30 : bodyLightness - 30;
-        } else {
-          buttonLightness = bodyLightness < 50 ? bodyLightness + 15 : bodyLightness - 15;
-        }
+        categoryButton.style.backgroundColor = categoryButtonBackground;
+        categoryButton.style.border = 'none';
+        categoryButton.style.outline = 'none';
+        categoryButton.style.marginRight = '5px';
+        categoryButton.style.cursor = 'pointer';
+        categoryButton.style.minWidth = '50px';
+        categoryButton.style.minHeight = '50px';
+        categoryButton.style.fontSize = '1.4em';
 
-        const adjustedButtonLightness = Math.min(100, Math.max(0, buttonLightness));
-        const buttonBackgroundColor = `hsl(0, 0%, ${adjustedButtonLightness}%)`;
+        // Add event listeners for the category button using the function
+        addCategoryButtonListeners(categoryButton, categoryKey);
 
-        button.style.backgroundColor = buttonBackgroundColor;
-        button.style.border = 'none';
-        button.style.outline = 'none';
-        button.style.marginRight = '5px';
-        button.style.cursor = 'pointer';
-        button.style.minWidth = '50px';
-        button.style.minHeight = '50px';
-        button.style.fontSize = '1.4em';
-
-        // Add a click event listener to the category buttons
-        button.addEventListener('click', () => {
-          // Call a function to set the active category
-          changeActiveCategory(categoryKey);
-        });
-
-        button.addEventListener('mouseover', () => {
-          const currentButtonLightness = getLightness(button.style.backgroundColor);
-          const hoverLightness = bodyLightness < 50
-            ? currentButtonLightness + 10
-            : currentButtonLightness - 10;
-
-          const adjustedHoverLightness = Math.min(100, Math.max(0, hoverLightness));
-          const hoverBackgroundColor = `hsl(0, 0%, ${adjustedHoverLightness}%)`;
-
-          button.style.backgroundColor = hoverBackgroundColor;
-        });
-
-        button.addEventListener('mouseout', () => {
-          button.style.backgroundColor = buttonBackgroundColor;
-        });
-
-        buttonContainer.appendChild(button);
+        categoryButtonsContainer.appendChild(categoryButton);
       }
     }
 
-    popupBox.appendChild(buttonContainer);
+    popupBox.appendChild(categoryButtonsContainer);
 
+    // EMOTICON BUTTONS
+    // Create a container for emoticon buttons
     const emoticonButtonsContainer = document.createElement('div');
     emoticonButtonsContainer.classList.add('emoticon-buttons');
     emoticonButtonsContainer.style.display = 'none'; // Initially hide the container
@@ -435,21 +471,16 @@ function createEmoticonsPopup(category) {
     const imageLoadPromises = [];
 
     categories[category].forEach(emoticon => {
-      const button = document.createElement('button');
+      const emoticonButton = document.createElement('button');
       const emoticonName = emoticon;
       const imgSrc = `/img/smilies/${emoticonName}.gif`;
       const imgAlt = emoticonName;
       const buttonTitle = emoticonName;
-
-      const buttonLightness = bodyLightness < 50 ? bodyLightness + 15 : bodyLightness - 15;
-      const adjustedButtonLightness = Math.min(100, Math.max(0, buttonLightness));
-      const buttonBackgroundColor = `hsl(0, 0%, ${adjustedButtonLightness}%)`;
-
-      button.style.backgroundColor = buttonBackgroundColor;
-      button.innerHTML = `<img src="${imgSrc}" alt="${imgAlt}">`;
-      button.title = buttonTitle;
-      button.style.border = 'none';
-      button.style.outline = 'none';
+      emoticonButton.style.backgroundColor = defaultButtonBackground;
+      emoticonButton.innerHTML = `<img src="${imgSrc}" alt="${imgAlt}">`;
+      emoticonButton.title = buttonTitle;
+      emoticonButton.style.border = 'none';
+      emoticonButton.style.outline = 'none';
 
       const imageLoadPromise = new Promise(resolve => {
         const img = new Image();
@@ -461,7 +492,7 @@ function createEmoticonsPopup(category) {
 
       imageLoadPromises.push(imageLoadPromise);
 
-      button.addEventListener('click', function (event) {
+      emoticonButton.addEventListener('click', function (event) {
         if (!event.ctrlKey) {
           insertEmoticonCode(emoticon);
           removeEmoticonsPopup();
@@ -471,23 +502,15 @@ function createEmoticonsPopup(category) {
         }
       });
 
-      button.addEventListener('mouseover', () => {
-        const currentButtonLightness = getLightness(button.style.backgroundColor);
-        const hoverLightness = bodyLightness < 50
-          ? currentButtonLightness + 10
-          : currentButtonLightness - 10;
-
-        const adjustedHoverLightness = Math.min(100, Math.max(0, hoverLightness));
-        const hoverBackgroundColor = `hsl(0, 0%, ${adjustedHoverLightness}%)`;
-
-        button.style.backgroundColor = hoverBackgroundColor;
+      emoticonButton.addEventListener('mouseover', () => {
+        emoticonButton.style.backgroundColor = hoverButtonBackground;
       });
 
-      button.addEventListener('mouseout', () => {
-        button.style.backgroundColor = buttonBackgroundColor;
+      emoticonButton.addEventListener('mouseout', () => {
+        emoticonButton.style.backgroundColor = defaultButtonBackground;
       });
 
-      emoticonButtonsContainer.appendChild(button);
+      emoticonButtonsContainer.appendChild(emoticonButton);
     });
 
     // Wait for all images to load before updating grid properties and making it visible
@@ -554,23 +577,8 @@ function insertEmoticonCode(emoticon) {
   roomField.focus();
 }
 
-// Function to get lightness from an RGB color string
-function getLightness(color) {
-  const match = color.match(/\d+/g);
-  if (match && match.length === 3) {
-    const r = parseInt(match[0]);
-    const g = parseInt(match[1]);
-    const b = parseInt(match[2]);
-    const max = Math.max(r, g, b) / 255;
-    const min = Math.min(r, g, b) / 255;
-    const lightness = ((max + min) / 2) * 100;
-    return lightness;
-  }
-  return 0;
-}
-
 // Function to change the active category
-function changeActiveCategory(newCategory) {
+function changeActiveCategoryOnClick(newCategory) {
   // Save the new active category to localStorage
   localStorage.setItem('activeCategory', newCategory);
 
@@ -609,7 +617,7 @@ function changeCategoryOnTabPress(event) {
     localStorage.setItem('activeCategory', nextCategory);
 
     // Optionally, you can call changeActiveCategory to handle the category change
-    changeActiveCategory(nextCategory);
+    changeActiveCategoryOnClick(nextCategory);
 
     // Log the active category for debugging
     // console.log(`Active Category: ${nextCategory}`);

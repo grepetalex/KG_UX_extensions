@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_Full_Emoticons
 // @namespace    http://klavogonki.ru/
-// @version      0.6
+// @version      0.7
 // @description  Show all the emoticons
 // @author       Patcher
 // @match        *://klavogonki.ru/g*

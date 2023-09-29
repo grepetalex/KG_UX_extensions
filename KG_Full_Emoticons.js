@@ -350,6 +350,7 @@ const defaultButtonBackground = getAdjustedBackground('defaultButton');
 const hoverButtonBackground = getAdjustedBackground('hoverButton');
 const activeButtonBackground = getAdjustedBackground('activeButton');
 
+
 // Function to create the emoticons popup for a given category
 function createEmoticonsPopup(category) {
   // POPUP ITSELF
@@ -405,133 +406,155 @@ function createEmoticonsPopup(category) {
     popupBox.style.overflow = 'auto';
     popupBox.style.top = '0';
 
-    // CATEGORY BUTTONS
-    // Create a container for category buttons
-    const categoryButtonsContainer = document.createElement('div');
-    categoryButtonsContainer.classList.add('category-buttons');
-    categoryButtonsContainer.style.display = 'flex';
-    categoryButtonsContainer.style.justifyContent = 'center';
+    // Create and append category buttons
+    popupBox.appendChild(createCategoryContainer(activeCategory));
 
-    // Create a function to add event listeners for category buttons
-    function addCategoryButtonListeners(categoryButton, categoryKey) {
-      // Add a click event listener to the category buttons
-      categoryButton.addEventListener('click', () => {
-        // Call a function to set the active category
-        changeActiveCategoryOnClick(categoryKey);
+    // Create the emoticons container and add inside it emoticon buttons
+    createEmoticonsContainer(category)
+      .then(emoticonsContainer => {
+        popupBox.appendChild(emoticonsContainer);
       });
-
-      categoryButton.addEventListener('mouseover', () => {
-        categoryButton.style.backgroundColor = hoverButtonBackground;
-      });
-
-      categoryButton.addEventListener('mouseout', () => {
-        // Update the background color based on whether it's the active category or not
-        categoryButton.style.backgroundColor = categoryKey === activeCategory ? activeButtonBackground : defaultButtonBackground;
-      });
-    }
-
-    // Create category buttons inside the popup
-    for (const categoryKey in categories) {
-      if (categories.hasOwnProperty(categoryKey)) {
-        const categoryButton = document.createElement('button');
-        categoryButton.innerHTML = categoryEmojis[categoryKey]; // Use emoji symbol
-        categoryButton.dataset.category = categoryKey; // Set a dataset attribute for identifying the category
-
-        const savedCategory = localStorage.getItem('activeCategory');
-        const isButtonActive = savedCategory === categoryKey;
-
-        // Determine the button background color based on whether it's the active category or not
-        const categoryButtonBackground = isButtonActive ? activeButtonBackground : defaultButtonBackground;
-
-        categoryButton.style.backgroundColor = categoryButtonBackground;
-        categoryButton.style.border = 'none';
-        categoryButton.style.outline = 'none';
-        categoryButton.style.marginRight = '5px';
-        categoryButton.style.cursor = 'pointer';
-        categoryButton.style.minWidth = '50px';
-        categoryButton.style.minHeight = '50px';
-        categoryButton.style.fontSize = '1.4em';
-
-        // Add event listeners for the category button using the function
-        addCategoryButtonListeners(categoryButton, categoryKey);
-
-        categoryButtonsContainer.appendChild(categoryButton);
-      }
-    }
-
-    popupBox.appendChild(categoryButtonsContainer);
-
-    // EMOTICON BUTTONS
-    // Create a container for emoticon buttons
-    const emoticonButtonsContainer = document.createElement('div');
-    emoticonButtonsContainer.classList.add('emoticon-buttons');
-    emoticonButtonsContainer.style.display = 'none'; // Initially hide the container
-    emoticonButtonsContainer.style.gridGap = '10px';
-
-    const imageLoadPromises = [];
-
-    categories[category].forEach(emoticon => {
-      const emoticonButton = document.createElement('button');
-      const emoticonName = emoticon;
-      const imgSrc = `/img/smilies/${emoticonName}.gif`;
-      const imgAlt = emoticonName;
-      const buttonTitle = emoticonName;
-      emoticonButton.style.backgroundColor = defaultButtonBackground;
-      emoticonButton.innerHTML = `<img src="${imgSrc}" alt="${imgAlt}">`;
-      emoticonButton.title = buttonTitle;
-      emoticonButton.style.border = 'none';
-      emoticonButton.style.outline = 'none';
-
-      const imageLoadPromise = new Promise(resolve => {
-        const img = new Image();
-        img.onload = () => {
-          resolve();
-        };
-        img.src = imgSrc;
-      });
-
-      imageLoadPromises.push(imageLoadPromise);
-
-      emoticonButton.addEventListener('click', function (event) {
-        if (!event.ctrlKey) {
-          insertEmoticonCode(emoticon);
-          removeEmoticonsPopup();
-        } else {
-          // If Ctrl key is pressed, just insert the emoticon code
-          insertEmoticonCode(emoticon);
-        }
-      });
-
-      emoticonButton.addEventListener('mouseover', () => {
-        emoticonButton.style.backgroundColor = hoverButtonBackground;
-      });
-
-      emoticonButton.addEventListener('mouseout', () => {
-        emoticonButton.style.backgroundColor = defaultButtonBackground;
-      });
-
-      emoticonButtonsContainer.appendChild(emoticonButton);
-    });
-
-    // Wait for all images to load before updating grid properties and making it visible
-    Promise.all(imageLoadPromises).then(() => {
-      // Calculate the maximum image width and height again after all images are loaded
-      const { maxImageWidth: newMaxImageWidth, maxImageHeight: newMaxImageHeight } = calculateMaxImageDimensions(categories[category]);
-
-      // Update grid properties with new values
-      emoticonButtonsContainer.style.gridTemplateColumns = `repeat(auto-fit, minmax(${newMaxImageWidth}px, 1fr))`;
-      emoticonButtonsContainer.style.gridAutoRows = `minmax(${newMaxImageHeight}px, auto)`;
-
-      // Make it visible after all images are loaded
-      emoticonButtonsContainer.style.display = 'grid';
-    });
-
-    popupBox.appendChild(emoticonButtonsContainer);
 
     popupBox.classList.add('emoticons-popup');
     document.body.appendChild(popupBox);
     isPopupCreated = true;
   }
+}
+
+// Function to create category buttons for the given category
+function createCategoryContainer(category) {
+  const categoryButtonsContainer = document.createElement('div');
+  categoryButtonsContainer.classList.add('category-buttons');
+  categoryButtonsContainer.style.display = 'flex';
+  categoryButtonsContainer.style.justifyContent = 'center';
+
+  function addCategoryButtonListeners(categoryButton, categoryKey) {
+    // Add a click event listener to the category buttons
+    categoryButton.addEventListener('click', () => {
+      // Call a function to change the active category
+      changeActiveCategoryOnClick(categoryKey);
+    });
+
+    categoryButton.addEventListener('mouseover', () => {
+      categoryButton.style.backgroundColor = hoverButtonBackground;
+    });
+
+    categoryButton.addEventListener('mouseout', () => {
+      // Update the background color based on whether it's the active category or not
+      categoryButton.style.backgroundColor = categoryKey === activeCategory ? activeButtonBackground : defaultButtonBackground;
+    });
+  }
+
+  for (const categoryKey in categories) {
+    if (categories.hasOwnProperty(categoryKey)) {
+      const categoryButton = document.createElement('button');
+      categoryButton.innerHTML = categoryEmojis[categoryKey]; // Use emoji symbol
+      categoryButton.dataset.category = categoryKey; // Set a dataset attribute for identifying the category
+
+      const savedCategory = localStorage.getItem('activeCategory');
+      const isButtonActive = savedCategory === categoryKey;
+
+      // Determine the button background color based on whether it's the active category or not
+      const categoryButtonBackground = isButtonActive ? activeButtonBackground : defaultButtonBackground;
+
+      categoryButton.style.backgroundColor = categoryButtonBackground;
+      categoryButton.style.border = 'none';
+      categoryButton.style.outline = 'none';
+      categoryButton.style.marginRight = '5px';
+      categoryButton.style.cursor = 'pointer';
+      categoryButton.style.minWidth = '50px';
+      categoryButton.style.minHeight = '50px';
+      categoryButton.style.fontSize = '1.4em';
+
+      // Add event listeners for the category button using the function
+      addCategoryButtonListeners(categoryButton, categoryKey);
+
+      categoryButtonsContainer.appendChild(categoryButton);
+    }
+  }
+
+  return categoryButtonsContainer;
+}
+
+// Function to update the state of category buttons
+function updateCategoryButtonsState(newCategory) {
+  const categoryButtons = document.querySelectorAll('.category-buttons button');
+
+  categoryButtons.forEach(button => {
+    const categoryKey = button.dataset.category;
+    const isButtonActive = categoryKey === newCategory;
+    const categoryButtonBackground = isButtonActive ? activeButtonBackground : defaultButtonBackground;
+
+    button.style.backgroundColor = categoryButtonBackground;
+  });
+}
+
+// Function to create the emoticons container with buttons for a given category
+function createEmoticonsContainer(category) {
+  const emoticonButtonsContainer = document.createElement('div');
+  emoticonButtonsContainer.classList.add('emoticon-buttons');
+  emoticonButtonsContainer.style.display = 'none'; // Initially hide the container
+  emoticonButtonsContainer.style.gridGap = '10px';
+
+  const imageLoadPromises = [];
+
+  categories[category].forEach(emoticon => {
+    const emoticonButton = document.createElement('button');
+    const emoticonName = emoticon;
+    const imgSrc = `/img/smilies/${emoticonName}.gif`;
+    const imgAlt = emoticonName;
+    const buttonTitle = emoticonName;
+    emoticonButton.style.backgroundColor = defaultButtonBackground;
+    emoticonButton.innerHTML = `<img src="${imgSrc}" alt="${imgAlt}">`;
+    emoticonButton.title = buttonTitle;
+    emoticonButton.style.border = 'none';
+    emoticonButton.style.outline = 'none';
+
+    const imageLoadPromise = new Promise(resolve => {
+      const img = new Image();
+      img.onload = () => {
+        resolve();
+      };
+      img.src = imgSrc;
+    });
+
+    imageLoadPromises.push(imageLoadPromise);
+
+    emoticonButton.addEventListener('click', function (event) {
+      if (!event.ctrlKey) {
+        insertEmoticonCode(emoticon);
+        removeEmoticonsPopup();
+      } else {
+        // If Ctrl key is pressed, just insert the emoticon code
+        insertEmoticonCode(emoticon);
+      }
+    });
+
+    emoticonButton.addEventListener('mouseover', () => {
+      emoticonButton.style.backgroundColor = hoverButtonBackground;
+    });
+
+    emoticonButton.addEventListener('mouseout', () => {
+      emoticonButton.style.backgroundColor = defaultButtonBackground;
+    });
+
+    emoticonButtonsContainer.appendChild(emoticonButton);
+  });
+
+  // Wait for all images to load before updating grid properties and making it visible
+  return Promise.all(imageLoadPromises).then(() => {
+    // Calculate the maximum image width and height again after all images are loaded
+    const { maxImageWidth: newMaxImageWidth, maxImageHeight: newMaxImageHeight } = calculateMaxImageDimensions(categories[category]);
+
+    // Update grid properties with new values
+    emoticonButtonsContainer.style.gridTemplateColumns = `repeat(auto-fit, minmax(${newMaxImageWidth}px, 1fr))`;
+    emoticonButtonsContainer.style.gridAutoRows = `minmax(${newMaxImageHeight}px, auto)`;
+
+    // Make it visible after all images are loaded
+    emoticonButtonsContainer.style.display = 'grid';
+
+    return emoticonButtonsContainer;
+  });
 }
 
 // Function to insert emoticon code into the input field
@@ -585,11 +608,25 @@ function changeActiveCategoryOnClick(newCategory) {
   // Update the activeCategory variable
   activeCategory = newCategory;
 
-  // Remove the existing emoticons popup (if any)
-  removeEmoticonsPopup();
+  // Update the state of category buttons first
+  updateCategoryButtonsState(activeCategory);
 
-  // Create a new emoticons popup with the updated category
-  createEmoticonsPopup(activeCategory);
+  // Remove the existing emoticons container (if any)
+  const existingEmoticonsContainer = document.querySelector('.emoticon-buttons');
+  if (existingEmoticonsContainer) {
+    existingEmoticonsContainer.remove();
+  }
+
+  // Create a new emoticons container with the updated category
+  createEmoticonsContainer(activeCategory)
+    .then(emoticonsContainer => {
+      // Append the new container to the popup (if the popup exists)
+      const existingPopup = document.querySelector('.emoticons-popup');
+      if (existingPopup) {
+        // Append the new category buttons container
+        existingPopup.appendChild(emoticonsContainer);
+      }
+    });
 }
 
 const categoryKeys = Object.keys(categories); // Define categoryKeys

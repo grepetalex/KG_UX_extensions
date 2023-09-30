@@ -80,6 +80,9 @@ let isEventListenersInitialized = false;
 let isPopupCreated = false;
 let activeCategory = 'Boys';
 
+// Define an array to store the history of active categories
+const categoryHistory = [];
+
 // Keep track of the last focused textarea
 let lastFocusedTextarea = null;
 
@@ -241,17 +244,23 @@ function initializeEventListeners() {
       favouritesButton.addEventListener('click', function (event) {
         // Check if the shift key is pressed while clicking the button
         if (event.shiftKey) {
-          // Clear all favorites from localStorage
-          localStorage.removeItem('favoriteEmoticons');
+          // Check if there is a category history
+          if (categoryHistory.length > 0) {
+            // Pop the previous active category from the history
+            const previousCategory = categoryHistory.pop();
 
-          // Clear the "Favourites" category in your data structure (assuming "categories" is an object)
-          categories.Favourites = [];
+            // Set the active category to the previous one
+            changeActiveCategoryOnClick(previousCategory);
 
-          // Update the visual state of category buttons
-          updateCategoryButtonsState(activeCategory);
+            // Clear all favorites from localStorage
+            localStorage.removeItem('favoriteEmoticons');
 
-          // Update the emoticons container to reflect the changes
-          updateEmoticonsContainer();
+            // Update the state of category buttons
+            updateCategoryButtonsState(activeCategory);
+
+            // Update the emoticons container
+            updateEmoticonsContainer();
+          }
         }
       });
     }
@@ -389,7 +398,6 @@ const defaultButtonBackground = getAdjustedBackground('defaultButton');
 const hoverButtonBackground = getAdjustedBackground('hoverButton');
 const activeButtonBackground = getAdjustedBackground('activeButton');
 
-
 // Function to create the emoticons popup for a given category
 function createEmoticonsPopup(category) {
   // POPUP ITSELF
@@ -469,9 +477,11 @@ function createCategoryContainer(category) {
 
   function addCategoryButtonListeners(categoryButton, categoryKey) {
     // Add a click event listener to the category buttons
-    categoryButton.addEventListener('click', () => {
-      // Call a function to change the active category
-      changeActiveCategoryOnClick(categoryKey);
+    categoryButton.addEventListener('click', (event) => {
+      if (!event.shiftKey && !event.ctrlKey) {
+        // Call a function to change the active category only if neither Shift nor Ctrl key is pressed
+        changeActiveCategoryOnClick(categoryKey);
+      }
     });
 
     categoryButton.addEventListener('mouseover', () => {
@@ -490,6 +500,15 @@ function createCategoryContainer(category) {
       // Clear all favorites
       localStorage.removeItem('favoriteEmoticons');
       categories.Favourites = [];
+      // Check if there's a category in the categoryHistory array
+      if (categoryHistory.length > 0) {
+        // Get the previously active category from the history
+        const previousCategory = categoryHistory.pop();
+        // Save the new active category to localStorage
+        localStorage.setItem('activeCategory', previousCategory);
+        // Update the activeCategory variable
+        activeCategory = previousCategory;
+      }
       // Update the state of category buttons
       updateCategoryButtonsState(activeCategory);
       // Update the emoticons container
@@ -606,34 +625,28 @@ function createEmoticonsContainer(category) {
     imageLoadPromises.push(imageLoadPromise);
 
     emoticonButton.addEventListener('click', function (event) {
-      if (activeCategory === 'Favourites') {
-        if (event.ctrlKey) {
-          // If Ctrl key is pressed, just insert the emoticon code
-          insertEmoticonCode(emoticon);
-        } else if (event.shiftKey) {
-          // If Shift key is pressed, remove the emoticon from "Favourites" if it exists
-          const favoriteEmoticons = JSON.parse(localStorage.getItem('favoriteEmoticons')) || [];
-          const index = favoriteEmoticons.indexOf(emoticon);
-          if (index !== -1) {
-            favoriteEmoticons.splice(index, 1);
-            localStorage.setItem('favoriteEmoticons', JSON.stringify(favoriteEmoticons));
-            // Update the categories object
-            const favIndex = categories.Favourites.indexOf(emoticon);
-            if (favIndex !== -1) {
-              categories.Favourites.splice(favIndex, 1);
-            }
-            // Update the state of category buttons
-            updateCategoryButtonsState(activeCategory);
-            // Update the emoticons container
-            updateEmoticonsContainer();
+      if (event.ctrlKey) {
+        // If Ctrl key is pressed, just insert the emoticon code
+        insertEmoticonCode(emoticon);
+      } else if (event.shiftKey && activeCategory === 'Favourites') {
+        // If Shift key is pressed and in the "Favourites" category, remove the emoticon from "Favourites" if it exists
+        const favoriteEmoticons = JSON.parse(localStorage.getItem('favoriteEmoticons')) || [];
+        const index = favoriteEmoticons.indexOf(emoticon);
+        if (index !== -1) {
+          favoriteEmoticons.splice(index, 1);
+          localStorage.setItem('favoriteEmoticons', JSON.stringify(favoriteEmoticons));
+          // Update the categories object
+          const favIndex = categories.Favourites.indexOf(emoticon);
+          if (favIndex !== -1) {
+            categories.Favourites.splice(favIndex, 1);
           }
-        } else {
-          // If neither Ctrl nor Shift is pressed, insert the emoticon code and remove the emoticons popup
-          insertEmoticonCode(emoticon);
-          removeEmoticonsPopup();
+          // Update the state of category buttons
+          updateCategoryButtonsState(activeCategory);
+          // Update the emoticons container
+          updateEmoticonsContainer();
         }
-      } else {
-        // If the active category is not "Favourites," add the emoticon to "Favourites"
+      } else if (event.shiftKey && activeCategory !== 'Favourites') {
+        // If Shift key is pressed and not in the "Favourites" category, add the emoticon to "Favourites"
         const favoriteEmoticons = JSON.parse(localStorage.getItem('favoriteEmoticons')) || [];
         if (!favoriteEmoticons.includes(emoticon)) {
           favoriteEmoticons.push(emoticon);
@@ -642,6 +655,10 @@ function createEmoticonsContainer(category) {
           // Update the state of category buttons for "Favourites"
           updateCategoryButtonsState(activeCategory);
         }
+      } else {
+        // If neither Ctrl nor Shift is pressed, insert the emoticon code and remove the emoticons popup
+        insertEmoticonCode(emoticon);
+        removeEmoticonsPopup();
       }
     });
 
@@ -743,6 +760,16 @@ function insertEmoticonCode(emoticon) {
 
 // Function to change the active category
 function changeActiveCategoryOnClick(newCategory) {
+  // Check if the new category is empty and prevent switching if it is
+  if (isCategoryEmpty(newCategory)) {
+    return;
+  }
+
+  // Store the current active category in the history array if it's not "Favourites"
+  if (activeCategory !== 'Favourites') {
+    categoryHistory.push(activeCategory);
+  }
+
   // Save the new active category to localStorage
   localStorage.setItem('activeCategory', newCategory);
 
@@ -772,7 +799,14 @@ function changeCategoryOnTabPress(event) {
     const activeCategoryIndex = categoryKeys.indexOf(activeCategory);
 
     // Determine the index of the next category to focus, cycling if necessary
-    const nextCategoryIndex = (activeCategoryIndex + 1) % categoryKeys.length;
+    let nextCategoryIndex = (activeCategoryIndex + 1) % categoryKeys.length;
+
+    // Check if "Favourites" is empty
+    const favoriteEmoticons = JSON.parse(localStorage.getItem('favoriteEmoticons')) || [];
+    if (nextCategoryIndex === categoryKeys.indexOf('Favourites') && favoriteEmoticons.length === 0) {
+      // "Favourites" is empty, so start from the first category
+      nextCategoryIndex = 0;
+    }
 
     // Get the name of the next category
     const nextCategory = categoryKeys[nextCategoryIndex];
@@ -786,6 +820,20 @@ function changeCategoryOnTabPress(event) {
     // Log the active category for debugging
     // console.log(`Active Category: ${nextCategory}`);
   }
+}
+
+// Initialize event listeners and create the emoticons popup with the default category
+initializeEventListeners();
+
+// Retrieve the active category from localStorage or use the default category if not found
+activeCategory = localStorage.getItem('activeCategory') || 'Boys';
+function isCategoryEmpty(category) {
+  if (category === 'Favourites') {
+    const favoriteEmoticons = JSON.parse(localStorage.getItem('favoriteEmoticons')) || [];
+    return favoriteEmoticons.length === 0;
+  }
+  // Handle other categories here if needed
+  return false;
 }
 
 // Initialize event listeners and create the emoticons popup with the default category

@@ -78,7 +78,7 @@ const categoryEmojis = {
 let roomField = null;
 let isEventListenersInitialized = false;
 let isPopupCreated = false;
-let activeCategory = 'Boys';
+let activeCategory = null;
 
 // Define an array to store the history of active categories
 const categoryHistory = [];
@@ -307,7 +307,6 @@ function initializeEventListeners() {
             if (event.shiftKey && event.detail === 2) {
               event.preventDefault(); // Prevent the default behavior of double-click
               toggleEmoticonsPopup();
-              console.log('Chat Field Double-Click Event Executed');
             }
           });
         });
@@ -316,7 +315,6 @@ function initializeEventListeners() {
           if (event.shiftKey && event.detail === 2) {
             event.preventDefault(); // Prevent the default behavior of double-click
             toggleEmoticonsPopup();
-            console.log('Chat Field Double-Click Event Executed');
           }
         });
       }
@@ -835,9 +833,3 @@ function isCategoryEmpty(category) {
   // Handle other categories here if needed
   return false;
 }
-
-// Initialize event listeners and create the emoticons popup with the default category
-initializeEventListeners();
-
-// Retrieve the active category from localStorage or use the default category if not found
-activeCategory = localStorage.getItem('activeCategory') || 'Boys';

@@ -256,29 +256,19 @@
     return user ? user.gender : null;
   }
 
-  // Functions to play beep for user entering and leaving
-  function userEntered(user) {
-    playBeep(userEnteredFrequencies, beepVolume);
-    const userGender = getUserGender(user);
+  // Handles user entering and leaving actions
+  function userAction(user, actionType, userGender) {
     const userToTrack = usersToTrack.find(userToTrack => userToTrack.name === user);
-    const action = verbs[userGender].enter;
+    const action = actionType === "enter" ? verbs[userGender].enter : verbs[userGender].leave;
+    const frequencies = actionType === "enter" ? userEnteredFrequencies : userLeftFrequencies;
     const message = `${userToTrack.pronunciation} ${action}`;
+
+    playBeep(frequencies, beepVolume);
+
     setTimeout(() => {
       textToSpeech(message, voiceSpeed);
     }, 300);
   }
-
-  function userLeft(user) {
-    playBeep(userLeftFrequencies, beepVolume);
-    const userGender = getUserGender(user);
-    const userToTrack = usersToTrack.find(userToTrack => userToTrack.name === user);
-    const action = verbs[userGender].leave;
-    const message = `${userToTrack.pronunciation} ${action}`;
-    setTimeout(() => {
-      textToSpeech(message, voiceSpeed);
-    }, 300);
-  }
-
 
   // POPUPS
 
@@ -1013,7 +1003,7 @@
               showUserAction(newUser, action, true);
               // Prevent voice notification if mode is silence
               if (!isSilence && usersToTrack.some(user => user.name === newUser)) {
-                userEntered(newUser, userGender); // use `newUser` instead of `newUser.name`
+                userAction(newUser, "enter", userGender);
               }
             }
           });
@@ -1024,7 +1014,7 @@
             showUserAction(leftUser, action, false);
             // Prevent voice notification if mode is silence
             if (!isSilence && usersToTrack.some(user => user.name === leftUser)) {
-              userLeft(leftUser, userGender); // use `leftUser` instead of `leftUser.name`
+              userAction(leftUser, "leave", userGender);
             }
           });
 
@@ -1057,15 +1047,26 @@
   // Start observing the tracking user list for changes to highlight them
   trackingUsersObserver.observe(userList, { childList: true });
 
-  // Function to set blinking cursor in the chat type field
+  // Function to set focus on the chat input field based on the current URL
   function setChatFieldFocus() {
     // Check if the chat is closed or opened
     const chatHidden = document.querySelector('#chat-wrapper.chat-hidden');
-    // Run if the chat is not closed
-    if (!chatHidden) {
-      // Chat field
-      let chatText = document.querySelector('.chat .text');
-      chatText.focus();
+
+    // Determine the current URL and chat type based on URL keywords
+    const currentURL = window.location.href;
+    let chatInput; // Variable to store the chat input element
+
+    if (currentURL.includes('gamelist')) {
+      // If the URL contains "gamelist," it's a general chat
+      chatInput = document.querySelector('#chat-general .text');
+    } else if (currentURL.includes('gmid')) {
+      // If the URL contains "gmid," it's a game chat
+      chatInput = document.querySelector('[id^="chat-game"] .text');
+    }
+
+    // Run if the chat is not closed and a chat input element is found
+    if (!chatHidden && chatInput) {
+      chatInput.focus(); // Set focus on the selected chat input field
     }
   }
 
@@ -2483,6 +2484,10 @@
 
   // Function to restore the active chat tab from localStorage
   function restoreActiveChatTab() {
+
+    // Define the debounced function for setChatFieldFocus
+    const debouncedSetChatFieldFocus = debounce(setChatFieldFocus, 1000);
+
     let activeTab = localStorage.getItem('activeChatTab');
     if (activeTab === 'general') {
       let visibleGeneralChatTab = Array.from(generalChatTabs).find(function (tab) {
@@ -2491,6 +2496,7 @@
       });
       if (visibleGeneralChatTab) {
         visibleGeneralChatTab.click();
+        debouncedSetChatFieldFocus();
       }
     } else if (activeTab === 'game') {
       let visibleGameChatTab = Array.from(gameChatTabs).find(function (tab) {
@@ -2499,6 +2505,7 @@
       });
       if (visibleGameChatTab) {
         visibleGameChatTab.click();
+        debouncedSetChatFieldFocus();
       }
     }
   }

@@ -1047,29 +1047,6 @@
   // Start observing the tracking user list for changes to highlight them
   trackingUsersObserver.observe(userList, { childList: true });
 
-  // Function to set focus on the chat input field based on the current URL
-  function setChatFieldFocus() {
-    // Check if the chat is closed or opened
-    const chatHidden = document.querySelector('#chat-wrapper.chat-hidden');
-
-    // Determine the current URL and chat type based on URL keywords
-    const currentURL = window.location.href;
-    let chatInput; // Variable to store the chat input element
-
-    if (currentURL.includes('gamelist')) {
-      // If the URL contains "gamelist," it's a general chat
-      chatInput = document.querySelector('#chat-general .text');
-    } else if (currentURL.includes('gmid')) {
-      // If the URL contains "gmid," it's a game chat
-      chatInput = document.querySelector('[id^="chat-game"] .text');
-    }
-
-    // Run if the chat is not closed and a chat input element is found
-    if (!chatHidden && chatInput) {
-      chatInput.focus(); // Set focus on the selected chat input field
-    }
-  }
-
   // Button to close the chat
   const chatCloseButton = document.querySelector('.mostright');
 
@@ -2435,6 +2412,77 @@
   // Get all elements with the 'game' class
   let gameChatTabs = document.querySelectorAll('.game');
 
+  // Function to set focus on the chat input field based on the current URL on page load
+  function setChatFieldFocus() {
+    // Check if the chat is closed or opened
+    const chatHidden = document.querySelector('#chat-wrapper.chat-hidden');
+
+    // Determine the current URL and chat type based on URL keywords
+    const currentURL = window.location.href;
+    let chatInput; // Variable to store the chat input element
+
+    if (currentURL.includes('gamelist')) {
+      // If the URL contains "gamelist," it's a general chat
+      chatInput = document.querySelector('#chat-general .text');
+    } else if (currentURL.includes('gmid')) {
+      // If the URL contains "gmid," it's a game chat
+      chatInput = document.querySelector('[id^="chat-game"] .text');
+    }
+
+    // Run if the chat is not closed and a chat input element is found
+    if (!chatHidden && chatInput) {
+      chatInput.focus(); // Set focus on the selected chat input field
+    }
+  }
+
+  // Function to set focus on the chat input field based on active chat tab on tab key press
+  function toggleFocusAndSwitchTab() {
+    // Check if the chat is closed or opened
+    const chatHidden = document.querySelector('#chat-wrapper.chat-hidden');
+
+    // Get general chat tabs and game chat tabs
+    let generalChatTabs = document.querySelectorAll('.general');
+    let gameChatTabs = document.querySelectorAll('.game');
+
+    // Find the first visible general chat tab that is not active
+    let visibleGeneralChatTab = Array.from(generalChatTabs).find(function (tab) {
+      let computedStyle = window.getComputedStyle(tab);
+      return computedStyle.display !== 'none' && !tab.classList.contains('active');
+    });
+
+    // Find the first visible game chat tab that is not active
+    let visibleGameChatTab = Array.from(gameChatTabs).find(function (tab) {
+      let computedStyle = window.getComputedStyle(tab);
+      return computedStyle.display !== 'none' && !tab.classList.contains('active');
+    });
+
+    // Run if a chat tab is found
+    if (!chatHidden && (visibleGeneralChatTab || visibleGameChatTab)) {
+      // Click on the visible chat tab
+      if (visibleGeneralChatTab) {
+        visibleGeneralChatTab.click();
+      } else if (visibleGameChatTab) {
+        visibleGameChatTab.click();
+      }
+
+      // Determine the chat input element based on visible tabs
+      let chatInput; // Variable to store the chat input element
+
+      if (visibleGeneralChatTab) {
+        // If the visible chat tab is a general chat tab, focus on general chat input
+        chatInput = document.querySelector('#chat-general .text');
+      } else if (visibleGameChatTab) {
+        // If the visible chat tab is a game chat tab, focus on game chat input
+        chatInput = document.querySelector('[id^="chat-game"] .text');
+      }
+
+      // Run if a chat input element is found
+      if (chatInput) {
+        chatInput.focus(); // Set focus on the selected chat input field
+      }
+    }
+  }
+
   // Function to handle click event and log the clicked element
   function switchChatTab(event) {
     console.log('Clicked element:', event.target);
@@ -2456,34 +2504,15 @@
   document.addEventListener('keydown', function (event) {
     // Check if the Tab key is pressed
     if (event.key === 'Tab') {
-      // Find the first visible general chat tab that is not active
-      let visibleGeneralChatTab = Array.from(generalChatTabs).find(function (tab) {
-        let computedStyle = window.getComputedStyle(tab);
-        return computedStyle.display !== 'none' && !tab.classList.contains('active');
-      });
-
-      // Find the first visible game chat tab that is not active
-      let visibleGameChatTab = Array.from(gameChatTabs).find(function (tab) {
-        let computedStyle = window.getComputedStyle(tab);
-        return computedStyle.display !== 'none' && !tab.classList.contains('active');
-      });
-
-      // Trigger a click event on the first visible general chat tab
-      if (visibleGeneralChatTab) {
-        visibleGeneralChatTab.click();
-        return; // Exit the loop after clicking
-      }
-
-      // Trigger a click event on the first visible game chat tab
-      if (visibleGameChatTab) {
-        visibleGameChatTab.click();
-        return; // Exit the loop after clicking
-      }
+      // Call toggleFocusAndSwitchTab function when Tab key is pressed
+      toggleFocusAndSwitchTab();
+      // Prevent the default tab behavior (moving focus to the next element in the DOM)
+      event.preventDefault();
     }
   });
 
-  // Function to restore the active chat tab from localStorage
-  function restoreActiveChatTab() {
+  // Function to restore chat tab from localStorage and set the focus for game page
+  function restoreChatTabAndFocus() {
 
     // Define the debounced function for setChatFieldFocus
     const debouncedSetChatFieldFocus = debounce(setChatFieldFocus, 1000);
@@ -2551,8 +2580,8 @@
         // Iterate over the found anchor elements and convert them to iframes
         linksWithYoutubeVideos.forEach(linkWithYoutubeVideo => convertYoutubeLinkToIframe(linkWithYoutubeVideo));
 
-        // Restore the active chat tab
-        restoreActiveChatTab();
+        // Restore chat tab from localStorage
+        restoreChatTabAndFocus();
 
         // Call the function to re-highlight all the mention words of the messages
         highlightMentionWords();
@@ -2566,7 +2595,7 @@
         // Call the function to scroll to the bottom of the chat
         scrollMessages();
 
-        // Set chat field focus
+        // Call the setChatFieldFocus function when the page loads
         setChatFieldFocus();
 
       }

@@ -2513,11 +2513,9 @@
 
   // Function to restore chat tab from localStorage and set the focus for game page
   function restoreChatTabAndFocus() {
-
-    // Define the debounced function for setChatFieldFocus
-    const debouncedSetChatFieldFocus = debounce(setChatFieldFocus, 1000);
-
     let activeTab = localStorage.getItem('activeChatTab');
+    let chatInput; // Variable to store the chat input element to be focused
+
     if (activeTab === 'general') {
       let visibleGeneralChatTab = Array.from(generalChatTabs).find(function (tab) {
         let computedStyle = window.getComputedStyle(tab);
@@ -2525,7 +2523,7 @@
       });
       if (visibleGeneralChatTab) {
         visibleGeneralChatTab.click();
-        debouncedSetChatFieldFocus();
+        chatInput = document.querySelector('#chat-general .text');
       }
     } else if (activeTab === 'game') {
       let visibleGameChatTab = Array.from(gameChatTabs).find(function (tab) {
@@ -2534,8 +2532,13 @@
       });
       if (visibleGameChatTab) {
         visibleGameChatTab.click();
-        debouncedSetChatFieldFocus();
+        chatInput = document.querySelector('[id^="chat-game"] .text');
       }
+    }
+
+    // Set focus on the chat input field if chatInput is defined
+    if (chatInput) {
+      chatInput.focus();
     }
   }
 

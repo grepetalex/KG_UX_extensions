@@ -80,7 +80,38 @@
   let checkerInterrupted = false;
   let timerId;
 
-  const replay = `https://klavogonki.ru/g/${new URLSearchParams(window.location.search).get('gmid')}.replay`;
+  // const replay = `https://klavogonki.ru/g/${new URLSearchParams(window.location.search).get('gmid')}.replay`;
+
+  /**
+   * Generates a game link based on the provided constants and the content of the '#gamedesc' element.
+   * @returns {string} The constructed game link URL.
+   */
+
+  function createGameLink() {
+    const protocol = 'https';
+    const hostname = 'klavogonki.ru';
+    const pathname = '/create/';
+    const type = 'normal';
+    const levelFrom = '1';
+    const levelTo = '9';
+
+    // Get the gameDescriptionElement
+    const gameDescriptionElement = document.querySelector('#gamedesc');
+
+    // Extract timeout value from the text nodes inside gameDescriptionElement or use default '10'
+    const timeout = (gameDescriptionElement?.textContent.match(/таймаут\s*(\d+)/)?.[1] || '10');
+
+    // Extract gametype and voc values using gameDescriptionElement as the selector context
+    const gametype = gameDescriptionElement?.querySelector('span')?.getAttribute('class')?.replace(/-/g, '=');
+    const voc = gameDescriptionElement?.querySelector('a')?.getAttribute('href').match(/\d+/)?.[0];
+
+    // Construct the URL based on the defined constants and extracted values
+    const url = `${protocol}://${hostname}${pathname}?type=${type}&level_from=${levelFrom}&level_to=${levelTo}&timeout=${timeout}&submit=1${voc ? `&voc=${voc}` : ''}${gametype ? `&${gametype}` : ''}`;
+
+    return url;
+  }
+
+  let replay = createGameLink();
   const gameList = 'https://klavogonki.ru/gamelist/';
 
 

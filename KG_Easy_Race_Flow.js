@@ -211,11 +211,6 @@
                 console.log(`Retrying in ${currentRetryDelay / 1000} seconds...`);
                 window.location.href = replay;
 
-                // Second replay
-                await new Promise(resolve => setTimeout(resolve, currentRetryDelay));
-                console.log(`Retrying in ${currentRetryDelay / 1000} seconds...`);
-                window.location.href = replay;
-
                 // Exponentially increase the retry delay but capped at the maximum
                 currentRetryDelay *= 2;
                 if (currentRetryDelay > maxRetryDelay) {

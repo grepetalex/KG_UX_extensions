@@ -7,8 +7,8 @@
 // @match        *://klavogonki.ru/g*
 // @grant        none
 // ==/UserScript==
-(function () {
 
+(function () {
 
   // USERS DEFINITION
 
@@ -30,7 +30,8 @@
     { name: 'Razmontana', gender: 'male', pronunciation: 'Размонтана' }, // ------ 11
     { name: 'un4given', gender: 'male', pronunciation: 'Унч' }, // --------------- 12
     { name: 'SpaceStalker', gender: 'male', pronunciation: 'Спэйс-Сталкер' }, // - 13
-    { name: 'iChessKnock', gender: 'male', pronunciation: 'Чеснок' } // ---------- 14
+    { name: 'iChessKnock', gender: 'male', pronunciation: 'Чеснок' }, // --------- 14
+    { name: 'Anatolysov', gender: 'male', pronunciation: 'Анатолий' } // --------- 15
   ];
 
   // Notify me if someone is addressing to me using such aliases
@@ -43,46 +44,31 @@
     'Панчер'
   ];
 
-  // CTRL && ALT KEY EVENTS
 
-  // Define the isCtrlKeyPressed and isAltKeyPressed variables as booleans
+  // Key Events: CTRL and ALT
+
+  // Initialize variables to track the state of Ctrl and Alt keys
   let isCtrlKeyPressed = false;
   let isAltKeyPressed = false;
 
-  // Add event listeners for the Ctrl and Alt keys
-  document.addEventListener('keydown', (event) => {
-    // Check if the Control key was pressed down
-    if (event.key === 'Control') {
-      isCtrlKeyPressed = true;
-    }
-    // Check if the Alt key was pressed down
-    if (event.key === 'Alt') {
-      isAltKeyPressed = true;
-    }
-  });
+  // Helper function to set key state based on key events
+  const setKeyPressed = (key, value) => {
+    if (key === 'Control') isCtrlKeyPressed = value;
+    if (key === 'Alt') isAltKeyPressed = value;
+  };
 
-  document.addEventListener('keyup', (event) => {
-    // Check if the Control key was released
-    if (event.key === 'Control') {
-      isCtrlKeyPressed = false;
-    }
-    // Check if the Alt key was released
-    if (event.key === 'Alt') {
-      isAltKeyPressed = false;
-    }
-  });
+  // Add event listeners for keydown and keyup events
+  document.addEventListener('keydown', (event) => setKeyPressed(event.key, true));
+  document.addEventListener('keyup', (event) => setKeyPressed(event.key, false));
 
-  // Add a blur event listener to the document to reset the variables when the document loses focus
+  // Add a blur event listener to reset variables when the document loses focus
   document.addEventListener('blur', () => {
-    if (isCtrlKeyPressed && isAltKeyPressed) {
-      console.log('Ctrl and Alt keys were true');
+    // Check if Ctrl or Alt keys were pressed
+    if (isCtrlKeyPressed || isAltKeyPressed) {
+      // Log the combination of keys that were true
+      console.log(`${isCtrlKeyPressed ? 'Ctrl ' : ''}${isAltKeyPressed ? 'Alt ' : ''}key was true`);
+      // Reset key states
       isCtrlKeyPressed = false;
-      isAltKeyPressed = false;
-    } else if (isCtrlKeyPressed) {
-      console.log('Ctrl key was true');
-      isCtrlKeyPressed = false;
-    } else if (isAltKeyPressed) {
-      console.log('Alt key was true');
       isAltKeyPressed = false;
     }
   });
@@ -272,16 +258,9 @@
 
   // POPUPS
 
-  // Define the function to generate HSL color with user parameters for hue, saturation, lightness
-  function getHSLColor(hue, saturation, lightness) {
-    // Set default value for hue
-    if (typeof hue === 'undefined') { hue = 180; }
-    // Set default value for saturation
-    if (typeof saturation === 'undefined') { saturation = 50; }
-    // Set default value for lightness
-    if (typeof lightness === 'undefined') { lightness = 50; }
-    let color = `hsl(${hue},${saturation}%,${lightness}%)`;
-    return color;
+  // Generate HSL color with optional parameters for hue, saturation, lightness
+  function getHSLColor(hue = 180, saturation = 50, lightness = 50) {
+    return `hsl(${hue},${saturation}%,${lightness}%)`;
   }
 
   // Reference for the existing popup
@@ -742,65 +721,41 @@
   // Call the function to convert image links to thumbnails
   convertImageLinkToImage();
 
-  /*
-   * This function searches for all links in the chat messages container that contain a YouTube video URL
-   * and replaces the link with an embedded YouTube video player.
-  */
+  // Function to convert YouTube links to embedded iframes in a chat messages container
   function convertYoutubeLinkToIframe() {
-    // get the container for all chat messages
+    // Get the container for all chat messages
     const messagesContainer = document.querySelector('.messages-content div');
-    // get all links inside the messages container
+
+    // Find all links inside the messages container
     const links = messagesContainer.querySelectorAll('p a');
 
-    // loop through all links
-    for (let i = 0; i < links.length; i++) {
-      const link = links[i];
+    // Loop through each link
+    for (const link of links) {
+      const url = link.href;
 
-      // Valid youtube video if includes
-      let youtubeFullLink = link.href.includes('youtube.com/watch?v=');
-      let youtubeShareLink = link.href.includes('youtu.be');
-      let youtubeLiveLink = link.href.includes('youtube.com/live');
-      let youtubeEmbedLink = link.href.includes('youtube.com/embed');
+      // Use the regular expression to match different YouTube link formats and extract the video ID
+      const match = url.match(/(?:shorts\/|live\/|watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
 
-      // Check if youtube link contains valid video link
-      if (youtubeFullLink || youtubeShareLink || youtubeLiveLink || youtubeEmbedLink) {
-        // create a new iframe
+      // If the link is a valid YouTube link, replace it with an embedded iframe
+      if (match && match[1]) {
+        // Extract the video ID from the matched result
+        const videoId = match[1];
+
+        // Create a new iframe element
         const iframe = document.createElement('iframe');
+
+        // Set attributes and styles for the iframe
         iframe.width = '280';
         iframe.height = '157.5';
-
-        // Check if the link is youtubeFullLink
-        if (youtubeFullLink) {
-          let videoId = link.href.split('v=')[1];
-          const ampersandPosition = videoId.indexOf('&');
-          if (ampersandPosition !== -1) {
-            videoId = videoId.substring(0, ampersandPosition);
-          }
-          iframe.src = `https://www.youtube.com/embed/${videoId}`;
-        }
-
-        // Check if the link is youtubeShareLink
-        if (youtubeShareLink) {
-          iframe.src = link.href.replace('youtu.be', 'www.youtube.com/embed');
-        }
-
-        // Check if the link is youtubeLiveLink
-        if (youtubeLiveLink) {
-          let videoId = link.href.split("/").pop().split("?")[0];
-          iframe.src = `https://www.youtube.com/embed/${videoId}`;
-        }
-
-        // Check if the link is youtubeEmbeddedLink
-        if (youtubeEmbedLink) {
-          iframe.src = link.href;
-        }
-
         iframe.allowFullscreen = true;
         iframe.style.display = 'flex';
         iframe.style.margin = '6px';
         iframe.style.border = 'none';
 
-        // replace the link with the iframe
+        // Set the iframe source to embed the YouTube video
+        iframe.src = `https://www.youtube.com/embed/${videoId}`;
+
+        // Replace the original link with the newly created iframe in the DOM
         link.parentNode.replaceChild(iframe, link);
       }
     }
@@ -2564,24 +2519,11 @@
         waitForChatObserver.disconnect();
         executeMessageRemover();
 
-        // Check if any of the messages contain a link with an image and convert it to an image
-        const linksWithImages = messagesContainer.querySelectorAll(`${jpg}, ${jpeg}, ${png}, ${gif}, ${webp}`);
-        linksWithImages.forEach(linkWithImage => convertImageLinkToImage(linkWithImage));
+        // Convert image links to visible image containers
+        convertImageLinkToImage();
 
-        // Valid youtube video if includes
-        let youtubeFullLink = 'a[href*="youtube.com/watch?v="]';
-        let youtubeShareLink = 'a[href*="youtu.be"]';
-        let youtubeLiveLink = 'a[href*="youtube.com/live"]';
-        let youtubeEmbedLink = 'a[href*="youtube.com/embed"]';
-
-        // Construct the selector string
-        const selector = `${youtubeFullLink}, ${youtubeShareLink}, ${youtubeLiveLink}, ${youtubeEmbedLink}`;
-
-        // Find anchor elements matching the selector within messagesContainer
-        const linksWithYoutubeVideos = messagesContainer.querySelectorAll(selector);
-
-        // Iterate over the found anchor elements and convert them to iframes
-        linksWithYoutubeVideos.forEach(linkWithYoutubeVideo => convertYoutubeLinkToIframe(linkWithYoutubeVideo));
+        // Convert YouTube links to visible iframe containers
+        convertYoutubeLinkToIframe();
 
         // Restore chat tab from localStorage
         restoreChatTabAndFocus();

@@ -1408,8 +1408,6 @@
       if (mutation.type === 'childList') {
         for (let node of mutation.addedNodes) {
           if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'P') {
-            // Attach contextmenu event listener for messages deletion
-            attachEventsToMessages();
             // read the text content of the new message and speak it
             const latestMessageTextContent = localStorage.getItem('latestMessageTextContent');
 
@@ -1476,14 +1474,14 @@
               }
             }
 
+            // Attach contextmenu event listener for messages deletion
+            attachEventsToMessages();
+
             // Convert image links to visible image containers
             convertImageLinkToImage();
 
             // Convert YouTube links to visible iframe containers
             convertYoutubeLinkToIframe();
-
-            // Call the function to scroll to the bottom of the chat
-            scrollMessages();
 
             // Call the function to apply the chat message grouping
             applyChatMessageGrouping();
@@ -1491,6 +1489,8 @@
             // Call the function to remove duplicate messages
             removeDuplicateMessages();
 
+            // Call the function to scroll to the bottom of the chat
+            scrollMessages();
           }
         }
       }

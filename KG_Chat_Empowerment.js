@@ -763,7 +763,7 @@
     // Call the function to scroll to the bottom of the chat
     scrollMessages();
 
-  }
+  } // end convertYoutubeLinkToIframe
 
   // Function to highlight users from 'usersToTrack' array in the userlist
   function highlightTrackingUsers() {

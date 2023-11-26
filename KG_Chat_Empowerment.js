@@ -395,7 +395,7 @@
     // get the container for all chat messages
     const messagesContainer = document.querySelector('.messages-content div');
     // get all links inside the messages container
-    const links = messagesContainer.querySelectorAll('p a');
+    const links = messagesContainer.querySelectorAll('p a:not(.skipped)');
 
     // loop through all links
     for (let i = 0; i < links.length; i++) {
@@ -433,114 +433,142 @@
 
           // create an image inside the thumbnail
           const img = document.createElement('img');
+
+          // Add an onload event to check if the image is loaded successfully
+          img.onload = function () {
+            // Make an HTTP request to the image URL to check headers
+            fetch(link.href, { method: 'HEAD' })
+              .then(response => {
+                // Check if the response content type corresponds to an image
+                if (response.headers.get('content-type') && response.headers.get('content-type').startsWith('image/')) {
+                  thumbnail.appendChild(img);
+
+                  // insert the thumbnail after the link
+                  link.parentNode.insertBefore(thumbnail, link.nextSibling);
+
+                  // Store the thumbnail link and its corresponding image URL
+                  thumbnailLinks.push({ link, imgSrc: link.href });
+
+                  // add click event to thumbnail to create a big image and dimming layer
+                  thumbnail.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    currentImageIndex = thumbnailLinks.findIndex((item) => item.imgSrc === link.href); // Set the currentImageIndex directly
+
+                    const clickedImageURL = link.href; // Store the clicked image URL
+                    const currentIndex = thumbnailLinks.findIndex((item) => item.imgSrc === clickedImageURL); // Find the index of the clicked image in thumbnailLinks
+
+                    // Check if bigImage and dimming are already created
+                    if (!bigImage && !dimming) {
+                      dimming = document.createElement('div');
+                      dimming.classList.add('dimming-background');
+                      dimming.style.background = 'black';
+                      dimming.style.top = '0';
+                      dimming.style.left = '0';
+                      dimming.style.right = '0';
+                      dimming.style.bottom = '0';
+                      dimming.style.position = 'fixed';
+                      dimming.style.opacity = '0';
+                      dimming.style.zIndex = '998';
+
+                      document.body.appendChild(dimming);
+
+                      bigImage = createBigImage(img.src, dimming);
+
+                      bigImage.style.top = '50%';
+                      bigImage.style.left = '50%';
+                      bigImage.style.transform = 'translate(-50%, -50%) scale(1)';
+                      bigImage.style.position = 'fixed';
+                      bigImage.style.opacity = '0';
+                      bigImage.style.zIndex = '999';
+                      bigImage.style.transformOrigin = 'center center';
+
+                      // Gradually increase the opacity of the dimming background and bigImage
+                      let opacity = 0;
+                      const interval = setInterval(() => {
+                        opacity += 0.05;
+                        // Change the opacity from 0 up to 0.5
+                        if (opacity <= 0.5) {
+                          dimming.style.opacity = opacity.toString();
+                        }
+                        bigImage.style.opacity = opacity.toString();
+
+                        // Change the opacity from 0 up to 1
+                        if (opacity >= 1) {
+                          clearInterval(interval);
+                        }
+                      }, 10);
+
+                      // Attach a keydown event listener to the document object
+                      document.addEventListener('keydown', function (event) {
+                        // Check if the key pressed was the "Escape" key
+                        if (event.key === 'Escape') {
+                          removeDimmingContainer();
+                        }
+                        // Check if the key pressed was the left arrow key (<)
+                        else if (event.key === 'ArrowLeft') {
+                          // Navigate to the previous image
+                          navigateImages(-1);
+                        }
+                        // Check if the key pressed was the right arrow key (>)
+                        else if (event.key === 'ArrowRight') {
+                          // Navigate to the next image
+                          navigateImages(1);
+                        }
+                      });
+                    }
+                  }); // thumbnail event end
+
+                  // add styling to the thumbnail
+                  thumbnail.style.backgroundColor = 'transparent';
+                  thumbnail.style.padding = '2px';
+                  thumbnail.style.margin = '6px';
+                  // add mouseover and mouseout event listeners to the thumbnail
+                  thumbnail.addEventListener('mouseover', function () {
+                    img.style.opacity = 0.7;
+                    img.style.transition = 'opacity 0.3s';
+                  });
+
+                  thumbnail.addEventListener('mouseout', function () {
+                    img.style.opacity = 1;
+                  });
+                } else {
+                  // Handle the case where the fetched content is not an image
+                  console.error("Not an image:", link.href);
+
+                  // Add a class to the link to skip future conversion attempts
+                  link.classList.add('skipped');
+                }
+              })
+              .catch(error => {
+                // Handle fetch errors
+                console.error("Error fetching image:", error);
+
+                // Add a class to the link to skip future conversion attempts
+                link.classList.add('skipped');
+              });
+          };
+
+          // Add an onerror event to handle cases where the image fails to load
+          img.onerror = function () {
+            // Handle the case where the image failed to load (e.g., it's a fake image)
+            console.error("Failed to load image:", link.href);
+
+            // Add a class to the link to skip future conversion attempts
+            link.classList.add('skipped');
+          };
+
           img.src = link.href;
           img.style.maxHeight = '100%';
           img.style.maxWidth = '100%';
           img.style.backgroundColor = 'transparent';
-
-          thumbnail.appendChild(img);
-
-          // insert the thumbnail after the link
-          link.parentNode.insertBefore(thumbnail, link.nextSibling);
-
-          // Store the thumbnail link and its corresponding image URL
-          thumbnailLinks.push({ link, imgSrc: link.href });
-
-          // add click event to thumbnail to create a big image and dimming layer
-          thumbnail.addEventListener('click', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-
-            currentImageIndex = thumbnailLinks.findIndex((item) => item.imgSrc === link.href); // Set the currentImageIndex directly
-
-            const clickedImageURL = link.href; // Store the clicked image URL
-            const currentIndex = thumbnailLinks.findIndex((item) => item.imgSrc === clickedImageURL); // Find the index of the clicked image in thumbnailLinks
-
-            // console.log("Clicked thumbnail with image link:", clickedImageURL);
-            // console.log("Current Index:", currentIndex);
-            // console.log("All Available Links:", thumbnailLinks.map(item => item.imgSrc));
-
-            // Check if bigImage and dimming are already created
-            if (!bigImage && !dimming) {
-              dimming = document.createElement('div');
-              dimming.classList.add('dimming-background');
-              dimming.style.background = 'black';
-              dimming.style.top = '0';
-              dimming.style.left = '0';
-              dimming.style.right = '0';
-              dimming.style.bottom = '0';
-              dimming.style.position = 'fixed';
-              dimming.style.opacity = '0';
-              dimming.style.zIndex = '998';
-
-              document.body.appendChild(dimming);
-
-              bigImage = createBigImage(img.src, dimming);
-
-              bigImage.style.top = '50%';
-              bigImage.style.left = '50%';
-              bigImage.style.transform = 'translate(-50%, -50%) scale(1)';
-              bigImage.style.position = 'fixed';
-              bigImage.style.opacity = '0';
-              bigImage.style.zIndex = '999';
-              bigImage.style.transformOrigin = 'center center';
-
-              // Gradually increase the opacity of the dimming background and bigImage
-              let opacity = 0;
-              const interval = setInterval(() => {
-                opacity += 0.05;
-                // Change the opacity from 0 up to 0.5
-                if (opacity <= 0.5) {
-                  dimming.style.opacity = opacity.toString();
-                }
-                bigImage.style.opacity = opacity.toString();
-
-                // Change the opacity from 0 up to 1
-                if (opacity >= 1) {
-                  clearInterval(interval);
-                }
-              }, 10);
-
-              // Attach a keydown event listener to the document object
-              document.addEventListener('keydown', function (event) {
-                // Check if the key pressed was the "Escape" key
-                if (event.key === 'Escape') {
-                  removeDimmingContainer();
-                }
-                // Check if the key pressed was the left arrow key (<)
-                else if (event.key === 'ArrowLeft') {
-                  // Navigate to the previous image
-                  navigateImages(-1);
-                }
-                // Check if the key pressed was the right arrow key (>)
-                else if (event.key === 'ArrowRight') {
-                  // Navigate to the next image
-                  navigateImages(1);
-                }
-              });
-            }
-          }); // thumbnail event end
-
-          // add styling to the thumbnail
-          thumbnail.style.backgroundColor = 'transparent';
-          thumbnail.style.padding = '2px';
-          thumbnail.style.margin = '6px';
-          // add mouseover and mouseout event listeners to the thumbnail
-          thumbnail.addEventListener('mouseover', function () {
-            img.style.opacity = 0.7;
-            img.style.transition = 'opacity 0.3s';
-          });
-
-          thumbnail.addEventListener('mouseout', function () {
-            img.style.opacity = 1;
-          });
         }
       }
     }
 
     // Call the function to scroll to the bottom of the chat
     scrollMessages();
-
   } // end convertImageLinkToImage
 
   // Function to create a big image with a dimming layer

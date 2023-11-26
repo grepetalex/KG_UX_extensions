@@ -401,15 +401,11 @@
     for (let i = 0; i < links.length; i++) {
       const link = links[i];
 
-      // References for the images that contain extensions of the images
-      let jpg = link.href.includes(".jpg");
-      let jpeg = link.href.includes(".jpeg");
-      let png = link.href.includes(".png");
-      let gif = link.href.includes(".gif");
-      let webp = link.href.includes(".webp");
+      // List of allowed image file extensions
+      const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
 
-      // check if link ends with ".jpg" | ".jpeg" | ".png" | ".gif" | ".webp"
-      if (jpg || jpeg || png || gif || webp) {
+      // Check if the link's href ends with any of the specified image extensions
+      if (imageExtensions.some(ext => link.href.includes(ext))) {
         const url = new URL(link.href);
         const imageExtension = url.pathname.split('.').pop().toLowerCase();
 
@@ -533,6 +529,10 @@
                   thumbnail.addEventListener('mouseout', function () {
                     img.style.opacity = 1;
                   });
+
+                  // Call the function to scroll to the bottom of the chat
+                  scrollMessages();
+
                 } else {
                   // Handle the case where the fetched content is not an image
                   console.error("Not an image:", link.href);
@@ -567,8 +567,6 @@
       }
     }
 
-    // Call the function to scroll to the bottom of the chat
-    scrollMessages();
   } // end convertImageLinkToImage
 
   // Function to create a big image with a dimming layer
@@ -1432,6 +1430,136 @@
     });
   }
 
+  // Function to calculate Jaro-Winkler distance between two strings
+  function calculateJaroWinklerDistance(str1, str2) {
+    const matchWindow = Math.floor(Math.max(str1.length, str2.length) / 2) - 1;
+
+    // Count matches
+    const matches = Array(Math.min(str1.length, str2.length)).fill(false);
+
+    for (let i = 0; i < str1.length; i++) {
+      const start = Math.max(0, i - matchWindow);
+      const end = Math.min(i + matchWindow + 1, str2.length);
+
+      for (let j = start; j < end; j++) {
+        if (!matches[j] && str1[i] === str2[j]) {
+          matches[j] = true;
+          break;
+        }
+      }
+    }
+
+    const matchingCharacters = matches.filter(match => match).length;
+
+    if (matchingCharacters === 0) {
+      return 0;
+    }
+
+    // Count transpositions
+    let transpositions = 0;
+
+    let k = 0;
+    for (let i = 0; i < str1.length; i++) {
+      if (matches[i]) {
+        while (!matches[k]) {
+          k++;
+        }
+
+        if (str1[i] !== str2[k]) {
+          transpositions++;
+        }
+
+        k++;
+      }
+    }
+
+    transpositions /= 2;
+
+    // Calculate Jaro distance
+    const jaroDistance = (matchingCharacters / str1.length + matchingCharacters / str2.length + (matchingCharacters - transpositions) / matchingCharacters) / 3;
+
+    // Calculate Jaro-Winkler distance
+    const prefixLength = Math.min(4, str1.length, str2.length);
+
+    let commonPrefix = 0;
+    for (let i = 0; i < prefixLength; i++) {
+      if (str1[i] === str2[i]) {
+        commonPrefix++;
+      } else {
+        break;
+      }
+    }
+
+    const jaroWinklerDistance = jaroDistance + 0.1 * commonPrefix * (1 - jaroDistance);
+
+    return jaroWinklerDistance;
+  }
+
+  // Function to remove spam messages based on Jaro-Winkler distance
+  function removeSpamMessages() {
+    // Get the messages container element
+    const messagesContainer = document.getElementById('chat-content');
+
+    // Get all the chat message elements from the messages container
+    const chatMessages = messagesContainer.querySelectorAll('.messages-content div p');
+
+    // Arrays to store kept and hidden messages
+    const keptMessages = [];
+    const hiddenMessages = [];
+
+    // Iterate through each chat message
+    chatMessages.forEach((message, index) => {
+      // Extract the text content without considering the time and username
+      const messageText = Array.from(message.childNodes)
+        .filter(node => node.nodeType === Node.TEXT_NODE)
+        .map(node => node.textContent)
+        .join('');
+
+      // Extract the user's username
+      const usernameElement = message.querySelector('.username span[data-user]');
+      if (!usernameElement) {
+        return; // Skip messages without a username
+      }
+
+      const username = usernameElement.textContent;
+
+      // Now you can use the messageText and username for further processing
+
+      // Iterate through preceding messages for comparison
+      let hidden = false;
+      for (let i = 0; i < index; i++) {
+        const previousMessage = chatMessages[i];
+        const previousMessageText = Array.from(previousMessage.childNodes)
+          .filter(node => node.nodeType === Node.TEXT_NODE)
+          .map(node => node.textContent)
+          .join('');
+
+        // Calculate Jaro-Winkler distance and set a threshold for similarity
+        const similarityThreshold = 0.8;
+
+        const similarity = calculateJaroWinklerDistance(messageText, previousMessageText);
+
+        if (similarity >= similarityThreshold) {
+          // Hide the similar message
+          message.style.display = 'none';
+          hidden = true;
+          break; // Break the loop to avoid hiding multiple occurrences
+        }
+      }
+
+      // Log messages based on whether they are hidden or not
+      if (hidden) {
+        hiddenMessages.push({ index, text: messageText });
+      } else {
+        keptMessages.push({ index, text: messageText });
+      }
+    });
+
+    // Log the results
+    // console.log('Kept Messages:', keptMessages);
+    // console.log('Hidden Messages:', hiddenMessages);
+  }
+
   // create a mutation observer to watch for new messages being added
   const newMessagesObserver = new MutationObserver(mutations => {
     // If isInitialized is false return without doing anything
@@ -1524,6 +1652,9 @@
 
             // Call the function to remove duplicate messages
             removeDuplicateMessages();
+
+            // Call the function to remove spam messages
+            removeSpamMessages();
 
             // Call the function to scroll to the bottom of the chat
             scrollMessages();
@@ -2623,6 +2754,9 @@
 
         // Call the function to remove duplicate messages
         removeDuplicateMessages();
+
+        // Call the function to remove spam messages
+        removeSpamMessages();
 
         // Convert image links to visible image containers
         convertImageLinkToImage();

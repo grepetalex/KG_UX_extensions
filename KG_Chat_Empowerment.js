@@ -537,7 +537,11 @@
         }
       }
     }
-  }
+
+    // Call the function to scroll to the bottom of the chat
+    scrollMessages();
+
+  } // end convertImageLinkToImage
 
   // Function to create a big image with a dimming layer
   function createBigImage(src, dimming) {
@@ -755,6 +759,10 @@
         link.parentNode.replaceChild(iframe, link);
       }
     }
+
+    // Call the function to scroll to the bottom of the chat
+    scrollMessages();
+
   }
 
   // Function to highlight users from 'usersToTrack' array in the userlist

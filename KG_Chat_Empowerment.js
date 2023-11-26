@@ -1319,76 +1319,51 @@
 
     // Iterate over each chat message
     chatMessages.forEach((message, index) => {
+      // Check if the message contains text content
+      const hasTextContent = Array.from(message.childNodes).some(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== '');
+
+      if (!hasTextContent) {
+        return; // Skip messages without text content
+      }
+
       // Extract the text content without considering the time and username
       const messageText = Array.from(message.childNodes)
         .filter(node => node.nodeType === Node.TEXT_NODE)
         .map(node => node.textContent)
         .join('');
 
-      // Extract and process links
-      const links = Array.from(message.querySelectorAll('a[href]'));
-
-      // Check if the message contains only empty text or links
-      if (!messageText.trim() && links.length === 0) {
-        // If the message contains only empty text and no links, skip to the next message
-        return;
-      }
-
       // Extract the user's username
       const usernameElement = message.querySelector('.username span[data-user]');
       if (!usernameElement) {
-        // If the message has no username, skip to the next message
-        return;
+        return; // Skip messages without a username
       }
       const username = usernameElement.dataset.user;
 
       // Create an object for the username if it doesn't exist
       usernameMessages[username] = usernameMessages[username] || {};
 
-      // Create a Set to store unique href values
-      const uniqueHrefs = new Set();
-
-      // Process each link
-      for (const link of links) {
-        const href = link.getAttribute('href');
-
-        // Check if the href has occurred before in this message
-        if (uniqueHrefs.has(href)) {
-          // If the same link href occurs more than once in this message, hide the entire message
-          message.style.display = 'none';
-          // Note: This hides the entire message if there are multiple occurrences of the same link href
-          return;
-        } else {
-          // If it's the first occurrence, add it to the uniqueHrefs Set
-          uniqueHrefs.add(href);
-        }
-      }
-
-      // Combine text content and links for identification
-      const messageTextAndLinks = `${messageText}${Array.from(uniqueHrefs).join('')}`;
-
-      // Add the message to the object based on its text content and links
-      if (!usernameMessages[username][messageTextAndLinks]) {
+      // Add the message to the object based on its text content
+      if (!usernameMessages[username][messageText]) {
         // If the message is encountered for the first time, initialize the object
-        usernameMessages[username][messageTextAndLinks] = {
+        usernameMessages[username][messageText] = {
           occurrences: 1,
           messages: [message]
         };
       } else {
         // If the message is a duplicate, increment occurrences and add to messages array
-        usernameMessages[username][messageTextAndLinks].occurrences++;
-        usernameMessages[username][messageTextAndLinks].messages.push(message);
+        usernameMessages[username][messageText].occurrences++;
+        usernameMessages[username][messageText].messages.push(message);
         totalDuplicateCount++;
       }
     });
 
     // Iterate over each username and text content
     Object.keys(usernameMessages).forEach((username) => {
-      Object.keys(usernameMessages[username]).forEach((messageTextAndLinks) => {
+      Object.keys(usernameMessages[username]).forEach((messageText) => {
         // Check if occurrences are 2 or more
-        if (usernameMessages[username][messageTextAndLinks].occurrences >= 2) {
+        if (usernameMessages[username][messageText].occurrences >= 2) {
           // Set class 'spam-message' and display: none for all occurrences except the first one for this username and text content
-          usernameMessages[username][messageTextAndLinks].messages.forEach((message, i) => {
+          usernameMessages[username][messageText].messages.forEach((message, i) => {
             if (i === 0) {
               // Add class 'initial-spam-message' for the first message
               if (!message.classList.contains('initial-spam-message')) {
@@ -1404,12 +1379,12 @@
                 }
 
                 // Update the text content of the span for this username and text content
-                spamCountSpan.textContent = ` ${usernameMessages[username][messageTextAndLinks].occurrences - 1}`;
+                spamCountSpan.textContent = ` ${usernameMessages[username][messageText].occurrences - 1}`;
               } else {
                 // If the element already has 'initial-spam-message', update the span element
                 let spamCountSpan = message.querySelector('.spam-messages-count');
                 if (spamCountSpan) {
-                  spamCountSpan.textContent = ` ${usernameMessages[username][messageTextAndLinks].occurrences - 1}`;
+                  spamCountSpan.textContent = ` ${usernameMessages[username][messageText].occurrences - 1}`;
                 }
               }
             } else {

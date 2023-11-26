@@ -717,9 +717,6 @@
     }
   }
 
-  // Call the function to convert image links to thumbnails
-  convertImageLinkToImage();
-
   // Function to convert YouTube links to embedded iframes in a chat messages container
   function convertYoutubeLinkToIframe() {
     // Get the container for all chat messages
@@ -1436,34 +1433,6 @@
             const isEveryMessage = messageMode && messageMode.id === 'every-message';
             const isMentionMessage = messageMode && messageMode.id === 'mention-message';
 
-            // References for the images extensions
-            let jpg = 'a[href*=".jpg"]';
-            let jpeg = 'a[href*=".jpeg"]';
-            let png = 'a[href*=".png"]';
-            let gif = 'a[href*=".gif"]';
-            let webp = 'a[href*=".webp"]';
-
-            // Check if the new message contains a link with an image before calling the convertImageLinkToImage function
-            const linkWithImage = node.querySelector(`${jpg}, ${jpeg}, ${png}, ${gif}, ${webp}`);
-            if (linkWithImage) {
-              convertImageLinkToImage(linkWithImage);
-            }
-
-            // Valid youtube video if includes
-            let youtubeFullLink = 'a[href*="youtube.com/watch?v="]';
-            let youtubeShareLink = 'a[href*="youtu.be"]';
-            let youtubeLiveLink = 'a[href*="youtube.com/live"]';
-            let youtubeEmbedLink = 'a[href*="youtube.com/embed"]';
-
-            // Construct the selector string
-            const selector = `${youtubeFullLink}, ${youtubeShareLink}, ${youtubeLiveLink}, ${youtubeEmbedLink}`;
-
-            // Find anchor elements matching the selector within messagesContainer
-            const linksWithYoutubeVideos = messagesContainer.querySelectorAll(selector);
-
-            // Iterate over the found anchor elements and convert them to iframes
-            linksWithYoutubeVideos.forEach(linkWithYoutubeVideo => convertYoutubeLinkToIframe(linkWithYoutubeVideo));
-
             // If mode is voice, speak the new message and update the latest message content in local storage
             if (isVoice && isInitialized && newMessageTextContent && newMessageTextContent !== latestMessageTextContent) {
               // Update localStorage key "latestMessageTextContent"
@@ -1506,6 +1475,12 @@
                 }
               }
             }
+
+            // Convert image links to visible image containers
+            convertImageLinkToImage();
+
+            // Convert YouTube links to visible iframe containers
+            convertYoutubeLinkToIframe();
 
             // Call the function to scroll to the bottom of the chat
             scrollMessages();
@@ -2601,13 +2576,6 @@
     const messagesContainer = document.querySelector('.messages-content div');
     // Get all the message elements from messages container
     const messages = document.querySelectorAll('.messages-content div p');
-
-    // References for the images extensions
-    let jpg = 'a[href*=".jpg"]';
-    let jpeg = 'a[href*=".jpeg"]';
-    let png = 'a[href*=".png"]';
-    let gif = 'a[href*=".gif"]';
-    let webp = 'a[href*=".webp"]';
 
     // check if the chat element has been added to the DOM
     if (document.contains(messagesContainer)) {

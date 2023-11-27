@@ -1509,7 +1509,7 @@
     return messageContent;
   }
 
-  // Removes Spam Messages Based on Jaro-Winkler Distance
+  // Function to remove spam messages based on Jaro-Winkler distance
   function removeSpamMessages() {
     // Get the messages container element
     const messagesContainer = document.getElementById('chat-content');
@@ -1544,10 +1544,10 @@
         const similarity = calculateJaroWinklerDistance(messageText, previousMessageText);
 
         if (similarity >= similarityThreshold) {
-          // Hide the similar message
-          message.style.display = 'none';
+          // Remove the similar message
+          message.remove();
           hidden = true;
-          break; // Break the loop to avoid hiding multiple occurrences
+          break; // Break the loop to avoid removing multiple occurrences
         }
       }
 
@@ -1563,6 +1563,7 @@
     console.log('Kept Messages:', keptMessages);
     console.log('Hidden Messages:', hiddenMessages);
   }
+
   // create a mutation observer to watch for new messages being added
   const newMessagesObserver = new MutationObserver(mutations => {
     // If isInitialized is false return without doing anything

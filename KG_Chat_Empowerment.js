@@ -1430,6 +1430,146 @@
     });
   }
 
+  // Function to calculate Jaro-Winkler distance between two strings
+  function calculateJaroWinklerDistance(str1, str2) {
+    const matchWindow = Math.floor(Math.max(str1.length, str2.length) / 2) - 1;
+
+    // Count matches
+    const matches = Array(Math.min(str1.length, str2.length)).fill(false);
+
+    for (let i = 0; i < str1.length; i++) {
+      const start = Math.max(0, i - matchWindow);
+      const end = Math.min(i + matchWindow + 1, str2.length);
+
+      for (let j = start; j < end; j++) {
+        if (!matches[j] && str1[i] === str2[j]) {
+          matches[j] = true;
+          break;
+        }
+      }
+    }
+
+    const matchingCharacters = matches.filter(match => match).length;
+
+    if (matchingCharacters === 0) {
+      return 0;
+    }
+
+    // Count transpositions
+    let transpositions = 0;
+
+    let k = 0;
+    for (let i = 0; i < str1.length; i++) {
+      if (matches[i]) {
+        while (!matches[k]) {
+          k++;
+        }
+
+        if (str1[i] !== str2[k]) {
+          transpositions++;
+        }
+
+        k++;
+      }
+    }
+
+    transpositions /= 2;
+
+    // Calculate Jaro distance
+    const jaroDistance = (matchingCharacters / str1.length + matchingCharacters / str2.length + (matchingCharacters - transpositions) / matchingCharacters) / 3;
+
+    // Calculate Jaro-Winkler distance
+    const prefixLength = Math.min(4, str1.length, str2.length);
+
+    let commonPrefix = 0;
+    for (let i = 0; i < prefixLength; i++) {
+      if (str1[i] === str2[i]) {
+        commonPrefix++;
+      } else {
+        break;
+      }
+    }
+
+    const jaroWinklerDistance = jaroDistance + 0.1 * commonPrefix * (1 - jaroDistance);
+
+    return jaroWinklerDistance;
+  }
+
+  // Extracts message text, excluding first word if ends with comma (nickname)
+  function extractMessageText(message) {
+    // Extract the raw text content without considering the time and username
+    const messageContent = Array.from(message.childNodes)
+      .filter(node => node.nodeType === Node.TEXT_NODE)
+      .map(node => node.textContent.trim())
+      .join(' ');
+
+    // Split the message content into words
+    const [firstWord, ...remainingWords] = messageContent.split(/\s+/);
+
+    // Process the first word, handling commas
+    const processedFirstWord = firstWord.endsWith(',')
+      ? firstWord.slice(0, -1) // Remove the trailing comma
+      : firstWord;
+
+    // Join the processed first word with the remaining words
+    return [processedFirstWord, ...remainingWords].join(' ');
+  }
+
+  // Function to remove spam messages based on Jaro-Winkler distance
+  function removeSpamMessages() {
+    // Get the messages container element
+    const messagesContainer = document.getElementById('chat-content');
+
+    // Get all the chat message elements from the messages container
+    const chatMessages = messagesContainer.querySelectorAll('.messages-content div p');
+
+    // Arrays to store kept and hidden messages
+    const keptMessages = [];
+    const hiddenMessages = [];
+
+    // Iterate through each chat message
+    chatMessages.forEach((message, index) => {
+      // Extract the text content without considering the time and username
+      const messageText = extractMessageText(message);
+
+      // Extract the user's username
+      const usernameElement = message.querySelector('.username span[data-user]');
+      if (!usernameElement) {
+        return; // Skip messages without a username
+      }
+
+      // Iterate through preceding messages for comparison
+      let hidden = false;
+      for (let i = 0; i < index; i++) {
+        const previousMessage = chatMessages[i];
+        const previousMessageText = extractMessageText(previousMessage);
+
+        // Calculate Jaro-Winkler distance and set a threshold for similarity
+        const similarityThreshold = 0.8;
+
+        const similarity = calculateJaroWinklerDistance(messageText, previousMessageText);
+
+        if (similarity >= similarityThreshold) {
+          // Hide the similar message
+          message.style.display = 'none';
+          hidden = true;
+          break; // Break the loop to avoid hiding multiple occurrences
+        }
+      }
+
+      // Log messages based on whether they are hidden or not
+      if (hidden) {
+        hiddenMessages.push({ index, text: messageText });
+      } else {
+        keptMessages.push({ index, text: messageText });
+      }
+    });
+
+    // Log the results
+    console.log('Kept Messages:', keptMessages);
+    console.log('Hidden Messages:', hiddenMessages);
+  }
+
   // create a mutation observer to watch for new messages being added
   const newMessagesObserver = new MutationObserver(mutations => {
     // If isInitialized is false return without doing anything
@@ -1522,6 +1662,9 @@
 
             // Call the function to remove duplicate messages
             removeDuplicateMessages();
+
+            // Calls the removeSpamMessages function to filter and hide similar chat messages based on Jaro-Winkler distance.
+            removeSpamMessages();
 
             // Call the function to scroll to the bottom of the chat
             scrollMessages();
@@ -2621,6 +2764,9 @@
 
         // Call the function to remove duplicate messages
         removeDuplicateMessages();
+
+        // Calls the removeSpamMessages function to filter and hide similar chat messages based on Jaro-Winkler distance.
+        removeSpamMessages();
 
         // Convert image links to visible image containers
         convertImageLinkToImage();

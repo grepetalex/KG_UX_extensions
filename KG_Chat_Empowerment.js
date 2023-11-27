@@ -1430,92 +1430,86 @@
     });
   }
 
-  // Function to calculate Jaro-Winkler distance between two strings
-  function calculateJaroWinklerDistance(str1, str2) {
-    const matchWindow = Math.floor(Math.max(str1.length, str2.length) / 2) - 1;
+  // Jaro-Winkler Distance Calculation Function
+  function calculateJaroWinklerDistance(s1, s2) {
+    // Jaro distance calculation
+    const matchingWindow = Math.floor(Math.max(s1.length, s2.length) / 2) - 1;
+    const s1Matches = new Array(s1.length).fill(false);
+    const s2Matches = new Array(s2.length).fill(false);
 
-    // Count matches
-    const matches = Array(Math.min(str1.length, str2.length)).fill(false);
-
-    for (let i = 0; i < str1.length; i++) {
-      const start = Math.max(0, i - matchWindow);
-      const end = Math.min(i + matchWindow + 1, str2.length);
+    let commonMatches = 0;
+    for (let i = 0; i < s1.length; i++) {
+      const start = Math.max(0, i - matchingWindow);
+      const end = Math.min(i + matchingWindow + 1, s2.length);
 
       for (let j = start; j < end; j++) {
-        if (!matches[j] && str1[i] === str2[j]) {
-          matches[j] = true;
+        if (!s2Matches[j] && s1[i] === s2[j]) {
+          s1Matches[i] = true;
+          s2Matches[j] = true;
+          commonMatches++;
           break;
         }
       }
     }
 
-    const matchingCharacters = matches.filter(match => match).length;
-
-    if (matchingCharacters === 0) {
-      return 0;
+    if (commonMatches === 0) {
+      return 0; // No common characters, distance is 0
     }
 
-    // Count transpositions
+    // Transposition calculation
     let transpositions = 0;
-
     let k = 0;
-    for (let i = 0; i < str1.length; i++) {
-      if (matches[i]) {
-        while (!matches[k]) {
+    for (let i = 0; i < s1.length; i++) {
+      if (s1Matches[i]) {
+        while (!s2Matches[k]) {
           k++;
         }
-
-        if (str1[i] !== str2[k]) {
+        if (s1[i] !== s2[k]) {
           transpositions++;
         }
-
         k++;
       }
     }
 
-    transpositions /= 2;
+    const jaroSimilarity = (commonMatches / s1.length + commonMatches / s2.length + (commonMatches - transpositions) / commonMatches) / 3;
 
-    // Calculate Jaro distance
-    const jaroDistance = (matchingCharacters / str1.length + matchingCharacters / str2.length + (matchingCharacters - transpositions) / matchingCharacters) / 3;
-
-    // Calculate Jaro-Winkler distance
-    const prefixLength = Math.min(4, str1.length, str2.length);
-
+    // Jaro-Winkler adjustment
+    const prefixLength = Math.min(4, Math.min(s1.length, s2.length));
     let commonPrefix = 0;
     for (let i = 0; i < prefixLength; i++) {
-      if (str1[i] === str2[i]) {
+      if (s1[i] === s2[i]) {
         commonPrefix++;
       } else {
         break;
       }
     }
 
-    const jaroWinklerDistance = jaroDistance + 0.1 * commonPrefix * (1 - jaroDistance);
+    const winklerAdjustment = commonPrefix * 0.1 * (1 - jaroSimilarity);
+
+    const jaroWinklerDistance = jaroSimilarity + winklerAdjustment;
 
     return jaroWinklerDistance;
   }
 
-  // Extracts message text, excluding first word if ends with comma (nickname)
+  // Extracts Message Text, Excludes First Word if Ends with Comma
   function extractMessageText(message) {
-    // Extract the raw text content without considering the time and username
     const messageContent = Array.from(message.childNodes)
       .filter(node => node.nodeType === Node.TEXT_NODE)
       .map(node => node.textContent.trim())
       .join(' ');
 
-    // Split the message content into words
-    const [firstWord, ...remainingWords] = messageContent.split(/\s+/);
+    const words = messageContent.split(/\s+/);
 
-    // Process the first word, handling commas
-    const processedFirstWord = firstWord.endsWith(',')
-      ? firstWord.slice(0, -1) // Remove the trailing comma
-      : firstWord;
+    if (words.length > 1) {
+      // Exclude the first word (e.g., nickname), handling commas
+      const [, ...remainingWords] = words; // Use destructuring to skip the first word
+      return remainingWords.join(' ');
+    }
 
-    // Join the processed first word with the remaining words
-    return [processedFirstWord, ...remainingWords].join(' ');
+    return messageContent;
   }
 
-  // Function to remove spam messages based on Jaro-Winkler distance
+  // Removes Spam Messages Based on Jaro-Winkler Distance
   function removeSpamMessages() {
     // Get the messages container element
     const messagesContainer = document.getElementById('chat-content');
@@ -1569,7 +1563,6 @@
     console.log('Kept Messages:', keptMessages);
     console.log('Hidden Messages:', hiddenMessages);
   }
-
   // create a mutation observer to watch for new messages being added
   const newMessagesObserver = new MutationObserver(mutations => {
     // If isInitialized is false return without doing anything

@@ -1539,7 +1539,7 @@
         const previousMessageText = extractMessageText(previousMessage);
 
         // Calculate Jaro-Winkler distance and set a threshold for similarity
-        const similarityThreshold = 0.8;
+        const similarityThreshold = 0.9;
 
         const similarity = calculateJaroWinklerDistance(messageText, previousMessageText);
 
@@ -1579,8 +1579,8 @@
     });
 
     // Log the results
-    // console.log('Kept Messages:', keptMessages);
-    // console.log('Hidden Messages:', hiddenMessages);
+    console.log('Kept Messages:', keptMessages);
+    console.log('Hidden Messages:', hiddenMessages);
   }
 
   // create a mutation observer to watch for new messages being added

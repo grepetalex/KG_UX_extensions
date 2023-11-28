@@ -1544,11 +1544,30 @@
         const similarity = calculateJaroWinklerDistance(messageText, previousMessageText);
 
         if (similarity >= similarityThreshold) {
-          // Remove the similar message
-          message.remove();
+          // Apply a smooth scale transformation initially
+          message.style.transition = 'transform 2s ease';
+          message.style.transformOrigin = 'right';
+          message.style.transform = 'scale(1)';
+
+          // Change the color to chocolate
+          message.style.color = 'chocolate';
+
+          // After 2 seconds, transition to scale 0
+          setTimeout(() => {
+            // Apply a new transition for the scale to 0
+            message.style.transition = 'transform 0.3s ease';
+            message.style.transform = 'scale(0)';
+
+            // Remove the element after the complete transition
+            setTimeout(() => {
+              message.remove();
+            }, 300);
+          }, 2000);
+
           hidden = true;
           break; // Break the loop to avoid removing multiple occurrences
         }
+
       }
 
       // Log messages based on whether they are hidden or not

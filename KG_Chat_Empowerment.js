@@ -1334,102 +1334,6 @@
   // Call the function to apply chat message grouping
   applyChatMessageGrouping();
 
-  // Function to remove duplicate messages in a chat
-  function removeDuplicateMessages() {
-    // Get the messages container element
-    const messagesContainer = document.getElementById('chat-content');
-
-    // Get all the chat message elements from the messages container
-    const chatMessages = messagesContainer.querySelectorAll('.messages-content div p');
-
-    // Create an object to store messages for each username
-    const usernameMessages = {};
-
-    // Total count of duplicate messages
-    let totalDuplicateCount = 0;
-
-    // Iterate over each chat message
-    chatMessages.forEach((message, index) => {
-      // Check if the message contains text content
-      const hasTextContent = Array.from(message.childNodes).some(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== '');
-
-      if (!hasTextContent) {
-        return; // Skip messages without text content
-      }
-
-      // Extract the text content without considering the time and username
-      const messageText = Array.from(message.childNodes)
-        .filter(node => node.nodeType === Node.TEXT_NODE)
-        .map(node => node.textContent)
-        .join('');
-
-      // Extract the user's username
-      const usernameElement = message.querySelector('.username span[data-user]');
-      if (!usernameElement) {
-        return; // Skip messages without a username
-      }
-      const username = usernameElement.dataset.user;
-
-      // Create an object for the username if it doesn't exist
-      usernameMessages[username] = usernameMessages[username] || {};
-
-      // Add the message to the object based on its text content
-      if (!usernameMessages[username][messageText]) {
-        // If the message is encountered for the first time, initialize the object
-        usernameMessages[username][messageText] = {
-          occurrences: 1,
-          messages: [message]
-        };
-      } else {
-        // If the message is a duplicate, increment occurrences and add to messages array
-        usernameMessages[username][messageText].occurrences++;
-        usernameMessages[username][messageText].messages.push(message);
-        totalDuplicateCount++;
-      }
-    });
-
-    // Iterate over each username and text content
-    Object.keys(usernameMessages).forEach((username) => {
-      Object.keys(usernameMessages[username]).forEach((messageText) => {
-        // Check if occurrences are 2 or more
-        if (usernameMessages[username][messageText].occurrences >= 2) {
-          // Set class 'spam-message' and display: none for all occurrences except the first one for this username and text content
-          usernameMessages[username][messageText].messages.forEach((message, i) => {
-            if (i === 0) {
-              // Add class 'initial-spam-message' for the first message
-              if (!message.classList.contains('initial-spam-message')) {
-                message.classList.add('initial-spam-message');
-
-                // Create a span element if it doesn't exist for this username and text content
-                let spamCountSpan = message.querySelector('.spam-messages-count');
-                if (!spamCountSpan) {
-                  spamCountSpan = document.createElement('span');
-                  spamCountSpan.classList.add('spam-messages-count');
-                  spamCountSpan.style.color = 'chocolate';
-                  message.appendChild(spamCountSpan);
-                }
-
-                // Update the text content of the span for this username and text content
-                spamCountSpan.textContent = ` ${usernameMessages[username][messageText].occurrences - 1}`;
-              } else {
-                // If the element already has 'initial-spam-message', update the span element
-                let spamCountSpan = message.querySelector('.spam-messages-count');
-                if (spamCountSpan) {
-                  spamCountSpan.textContent = ` ${usernameMessages[username][messageText].occurrences - 1}`;
-                }
-              }
-            } else {
-              if (!message.classList.contains('spam-message')) {
-                message.classList.add('spam-message');
-                message.style.display = 'none';
-              }
-            }
-          });
-        }
-      });
-    });
-  }
-
   // Jaro-Winkler Distance Calculation Function
   function calculateJaroWinklerDistance(s1, s2) {
     // Jaro distance calculation
@@ -1672,9 +1576,6 @@
 
             // Call the function to apply the chat message grouping
             applyChatMessageGrouping();
-
-            // Call the function to remove duplicate messages
-            removeDuplicateMessages();
 
             // Calls the removeSpamMessages function to filter and hide similar chat messages based on Jaro-Winkler distance.
             removeSpamMessages();
@@ -2774,9 +2675,6 @@
         // stop observing the DOM
         waitForChatObserver.disconnect();
         executeMessageRemover();
-
-        // Call the function to remove duplicate messages
-        removeDuplicateMessages();
 
         // Calls the removeSpamMessages function to filter and hide similar chat messages based on Jaro-Winkler distance.
         removeSpamMessages();

@@ -1487,15 +1487,35 @@
     // console.log('Hidden Messages:', hiddenMessages);
   }
 
-  // Constants for the time difference threshold (in milliseconds) and message limit
-  const timeDifferenceThreshold = 2000; // Increased to 1 second
-  const messageLimit = 1; // Set this value to 2 (more than 2 messages in 1 second)
-
+  // Time difference threshold (in milliseconds) to identify spam (increased to 1 second)
+  const timeDifferenceThreshold = 2000;
+  // Message limit within a specific time frame (set this value to 2 for more than 2 messages in 1 second)
+  const messageLimit = 1;
   // Object to track user-specific data
   let userChatData = {};
 
   // Function to track and handle spam messages
   function banSpammer() {
+    // Function to format time difference
+    function formatTimeDifference(difference) {
+      const milliseconds = difference % 1000;
+      const seconds = Math.floor((difference / 1000) % 60);
+      const minutes = Math.floor((difference / (1000 * 60)) % 60);
+      const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
+
+      // Initialize an empty string to store formatted time information for console logs
+      let formattedTime = '';
+
+      // Construct a formatted time string
+      if (hours > 0) formattedTime += `${hours} hr `;
+      if (minutes > 0) formattedTime += `${minutes} mn `;
+      if (hours === 0 && minutes === 0 && seconds > 0) formattedTime += `${seconds} s `;
+      if (milliseconds > 0) formattedTime += milliseconds === 1000 ? '1 mn ' : `${milliseconds} ms`;
+
+      return formattedTime.trim();
+    }
+
+    // Get the current timestamp
     const currentTime = new Date().getTime();
 
     // Select the last p element in the chat
@@ -1509,14 +1529,20 @@
       if (userId) {
         // Initialize user-specific data if not already present
         if (!userChatData[userId]) {
-          userChatData[userId] = { count: 0, time: currentTime }; // Initialize time with current time
+          userChatData[userId] = {
+            count: 0,
+            time: currentTime,
+            userName: userIdElement ? userIdElement.textContent : 'Unknown User',
+            previousTime: null
+          }; // Initialize time with current time
         }
 
-        // Collect user information
-        const userName = userIdElement ? userIdElement.textContent : 'Unknown User';
-
-        // Calculate time difference
+        // Calculate time difference between the current and previous message
         const timeDifference = currentTime - userChatData[userId].time;
+
+        // Log the user information for each console log
+        const logUserInfo = `%cID: ${userId}, Name: ${userChatData[userId].userName}, ` +
+          `Time Difference: ${formatTimeDifference(timeDifference)}, Messages Count: ${userChatData[userId].count}`;
 
         if (timeDifference < timeDifferenceThreshold) {
           // Increment the user's message count for the chat
@@ -1532,25 +1558,20 @@
               }
             });
 
-            // Log the spam information with id, name, time difference, and count in a single string
-            console.log(
-              `%cSpam info: User ID: ${userId}, Name: ${userName}, Time Diff: ${timeDifference} ms, Msg Count: ${userChatData[userId].count}`,
-              'color: red'
-            );
+            // Log the spam information with red color
+            console.log(logUserInfo, 'color: red');
 
             // Reset user's message count
             userChatData[userId].count = 0;
           }
         } else {
           // Update the user's time and reset the count if the time difference exceeds the threshold
+          userChatData[userId].previousTime = userChatData[userId].time;
           userChatData[userId].time = currentTime;
           userChatData[userId].count = 1;
 
-          // Log the message information with id, name, time difference, and count in a single string
-          console.log(
-            `%cMsg info: User ID: ${userId}, Name: ${userName}, Time Diff: ${timeDifference} ms, Msg Count: ${userChatData[userId].count}`,
-            'color: green'
-          );
+          // Log the message information with green color
+          console.log(logUserInfo, 'color: green');
         }
       }
     }

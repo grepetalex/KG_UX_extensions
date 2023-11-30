@@ -1483,8 +1483,8 @@
     });
 
     // Log the results
-    console.log('Kept Messages:', keptMessages);
-    console.log('Hidden Messages:', hiddenMessages);
+    // console.log('Kept Messages:', keptMessages);
+    // console.log('Hidden Messages:', hiddenMessages);
   }
 
   // create a mutation observer to watch for new messages being added

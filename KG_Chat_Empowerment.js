@@ -1487,6 +1487,73 @@
     // console.log('Hidden Messages:', hiddenMessages);
   }
 
+  // Constants for the time difference threshold (in milliseconds) and message limit
+  const timeDifferenceThreshold = 1000; // Increased to 1 second
+  const messageLimit = 2; // Set this value to 2 (more than 2 messages in 1 second)
+
+  // Variables to track the latest message and state for the chat
+  let chatData = { count: 0, time: 0 };
+
+  // Function to track and handle spam messages
+  function banSpammer() {
+    const currentTime = new Date().getTime();
+
+    // Select the last p element in the chat
+    const latestMessage = document.querySelector('.messages-content p:last-child');
+
+    if (latestMessage) {
+      // Select the span element with data-user attribute inside the latest p element
+      const userIdElement = latestMessage.querySelector('span[data-user]');
+      const userId = userIdElement ? userIdElement.getAttribute('data-user') : null;
+
+      // Increment the user's message count for the chat
+      chatData.count++;
+
+      // Collect user information
+      const userName = userIdElement ? userIdElement.textContent : 'Unknown User';
+
+      if (userId && currentTime - chatData.time < timeDifferenceThreshold) {
+        if (chatData.count > messageLimit) {
+          // Remove all messages of the user if the limit is exceeded
+          const userMessages = document.querySelectorAll(`.messages-content span[data-user="${userId}"]`);
+          userMessages.forEach(message => {
+            const pTag = message.closest('p');
+            if (pTag) {
+              pTag.remove();
+            }
+          });
+
+          // Calculate time difference
+          const timeDifference = currentTime - chatData.time;
+
+          // Log the spam information with id, name, time difference, and count in a single string
+          console.log(
+            `%cSpam info: User ID: ${userId}, Name: ${userName}, Time Diff: ${timeDifference} ms, Msg Count: ${chatData.count}`,
+            'color: red'
+          );
+
+          // Reset user's message count
+          chatData.count = 0;
+        }
+      } else {
+        // Reset the user's message count if the time difference exceeds the threshold
+        chatData.count = 1;
+
+        // Calculate time difference
+        const timeDifference = currentTime - chatData.time;
+
+        // Log the message information with id, name, time difference, and count in a single string
+        console.log(
+          `%cMsg info: User ID: ${userId}, Name: ${userName}, Time Diff: ${timeDifference} ms, Msg Count: ${chatData.count}`,
+          'color: green'
+        );
+      }
+
+      // Update the latest message information
+      chatData.time = currentTime;
+    }
+  }
+
   // create a mutation observer to watch for new messages being added
   const newMessagesObserver = new MutationObserver(mutations => {
     // If isInitialized is false return without doing anything
@@ -1579,6 +1646,9 @@
 
             // Calls the removeSpamMessages function to filter and hide similar chat messages based on Jaro-Winkler distance.
             removeSpamMessages();
+
+            // Call the banSpammer function to track and handle potential spam messages
+            banSpammer();
 
             // Call the function to scroll to the bottom of the chat
             scrollMessages();

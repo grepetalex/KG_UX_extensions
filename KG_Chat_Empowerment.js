@@ -1488,11 +1488,11 @@
   }
 
   // Constants for the time difference threshold (in milliseconds) and message limit
-  const timeDifferenceThreshold = 1000; // Increased to 1 second
-  const messageLimit = 2; // Set this value to 2 (more than 2 messages in 1 second)
+  const timeDifferenceThreshold = 2000; // Increased to 1 second
+  const messageLimit = 1; // Set this value to 2 (more than 2 messages in 1 second)
 
-  // Variables to track the latest message and state for the chat
-  let chatData = { count: 0, time: 0 };
+  // Object to track user-specific data
+  let userChatData = {};
 
   // Function to track and handle spam messages
   function banSpammer() {
@@ -1506,51 +1506,53 @@
       const userIdElement = latestMessage.querySelector('span[data-user]');
       const userId = userIdElement ? userIdElement.getAttribute('data-user') : null;
 
-      // Increment the user's message count for the chat
-      chatData.count++;
-
-      // Collect user information
-      const userName = userIdElement ? userIdElement.textContent : 'Unknown User';
-
-      if (userId && currentTime - chatData.time < timeDifferenceThreshold) {
-        if (chatData.count > messageLimit) {
-          // Remove all messages of the user if the limit is exceeded
-          const userMessages = document.querySelectorAll(`.messages-content span[data-user="${userId}"]`);
-          userMessages.forEach(message => {
-            const pTag = message.closest('p');
-            if (pTag) {
-              pTag.remove();
-            }
-          });
-
-          // Calculate time difference
-          const timeDifference = currentTime - chatData.time;
-
-          // Log the spam information with id, name, time difference, and count in a single string
-          console.log(
-            `%cSpam info: User ID: ${userId}, Name: ${userName}, Time Diff: ${timeDifference} ms, Msg Count: ${chatData.count}`,
-            'color: red'
-          );
-
-          // Reset user's message count
-          chatData.count = 0;
+      if (userId) {
+        // Initialize user-specific data if not already present
+        if (!userChatData[userId]) {
+          userChatData[userId] = { count: 0, time: currentTime }; // Initialize time with current time
         }
-      } else {
-        // Reset the user's message count if the time difference exceeds the threshold
-        chatData.count = 1;
+
+        // Collect user information
+        const userName = userIdElement ? userIdElement.textContent : 'Unknown User';
 
         // Calculate time difference
-        const timeDifference = currentTime - chatData.time;
+        const timeDifference = currentTime - userChatData[userId].time;
 
-        // Log the message information with id, name, time difference, and count in a single string
-        console.log(
-          `%cMsg info: User ID: ${userId}, Name: ${userName}, Time Diff: ${timeDifference} ms, Msg Count: ${chatData.count}`,
-          'color: green'
-        );
+        if (timeDifference < timeDifferenceThreshold) {
+          // Increment the user's message count for the chat
+          userChatData[userId].count++;
+
+          if (userChatData[userId].count > messageLimit) {
+            // Remove all messages of the user if the limit is exceeded
+            const userMessages = document.querySelectorAll(`.messages-content span[data-user="${userId}"]`);
+            userMessages.forEach(message => {
+              const pTag = message.closest('p');
+              if (pTag) {
+                pTag.remove();
+              }
+            });
+
+            // Log the spam information with id, name, time difference, and count in a single string
+            console.log(
+              `%cSpam info: User ID: ${userId}, Name: ${userName}, Time Diff: ${timeDifference} ms, Msg Count: ${userChatData[userId].count}`,
+              'color: red'
+            );
+
+            // Reset user's message count
+            userChatData[userId].count = 0;
+          }
+        } else {
+          // Update the user's time and reset the count if the time difference exceeds the threshold
+          userChatData[userId].time = currentTime;
+          userChatData[userId].count = 1;
+
+          // Log the message information with id, name, time difference, and count in a single string
+          console.log(
+            `%cMsg info: User ID: ${userId}, Name: ${userName}, Time Diff: ${timeDifference} ms, Msg Count: ${userChatData[userId].count}`,
+            'color: green'
+          );
+        }
       }
-
-      // Update the latest message information
-      chatData.time = currentTime;
     }
   }
 

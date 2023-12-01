@@ -1509,7 +1509,7 @@
 
     // Map each non-zero value to a formatted string with its corresponding unit
     const formattedStrings = values
-      .map((value, index) => (value > 0 ? `${value} ${units[index]}` : ''));
+      .map((value, index) => (value > 0 ? `${value} ${units[index]}${value > 1 ? 's' : ''}` : ''));
 
     // Filter out empty strings (units with a value of 0) and join the remaining strings
     const formattedTime = formattedStrings

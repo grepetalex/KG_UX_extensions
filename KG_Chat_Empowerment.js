@@ -1494,27 +1494,34 @@
   // Object to track user-specific data
   let userChatData = {};
 
+  // Function to format time difference
+  function formatTimeDifference(difference) {
+    // Define time units
+    const units = ['hour', 'minute', 'second', 'millisecond'];
+
+    // Calculate values for each time unit
+    const values = [
+      Math.floor(difference / (1000 * 60 * 60)), // hours
+      Math.floor((difference / (1000 * 60)) % 60), // minutes
+      Math.floor((difference / 1000) % 60), // seconds
+      difference % 1000 // milliseconds
+    ];
+
+    // Map each non-zero value to a formatted string with its corresponding unit
+    const formattedStrings = values
+      .map((value, index) => (value > 0 ? `${value} ${units[index]}` : ''));
+
+    // Filter out empty strings (units with a value of 0) and join the remaining strings
+    const formattedTime = formattedStrings
+      .filter(Boolean)
+      .join(' ');
+
+    // Return the formatted time string
+    return formattedTime;
+  }
+
   // Function to track and handle spam messages
   function banSpammer() {
-    // Function to format time difference
-    function formatTimeDifference(difference) {
-      const milliseconds = difference % 1000;
-      const seconds = Math.floor((difference / 1000) % 60);
-      const minutes = Math.floor((difference / (1000 * 60)) % 60);
-      const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
-
-      // Initialize an empty string to store formatted time information for console logs
-      let formattedTime = '';
-
-      // Construct a formatted time string
-      if (hours > 0) formattedTime += `${hours} hr `;
-      if (minutes > 0) formattedTime += `${minutes} mn `;
-      if (hours === 0 && minutes === 0 && seconds > 0) formattedTime += `${seconds} s `;
-      if (milliseconds > 0) formattedTime += milliseconds === 1000 ? '1 mn ' : `${milliseconds} ms`;
-
-      return formattedTime.trim();
-    }
-
     // Get the current timestamp
     const currentTime = new Date().getTime();
 
@@ -1522,57 +1529,50 @@
     const latestMessage = document.querySelector('.messages-content p:last-child');
 
     if (latestMessage) {
-      // Select the span element with data-user attribute inside the latest p element
       const userIdElement = latestMessage.querySelector('span[data-user]');
       const userId = userIdElement ? userIdElement.getAttribute('data-user') : null;
 
-      if (userId) {
-        // Initialize user-specific data if not already present
-        if (!userChatData[userId]) {
-          userChatData[userId] = {
-            count: 0,
-            time: currentTime,
-            userName: userIdElement ? userIdElement.textContent : 'Unknown User',
-            previousTime: null
-          }; // Initialize time with current time
+      // Initialize user-specific data outside the if block
+      if (!userChatData[userId]) {
+        userChatData[userId] = {
+          count: 0,
+          time: currentTime,
+          userName: userIdElement ? userIdElement.textContent : 'Unknown User',
+          previousTime: null,
+          firstInteraction: true
+        };
+      }
+
+      const logUserInfo = `%cID: ${userId}, Name: ${userChatData[userId].userName}, ` +
+        `Time Difference: ${formatTimeDifference(currentTime - userChatData[userId].time)}, ` +
+        `Messages Count: ${userChatData[userId].count}`;
+
+      if (userChatData[userId].firstInteraction) {
+        // Log a special message for the first interaction
+        console.log(`%c${userChatData[userId].userName} posted the first message for the current chat session.`, 'color: yellow');
+        userChatData[userId].firstInteraction = false;
+      } else if ((currentTime - userChatData[userId].time) < timeDifferenceThreshold) {
+        userChatData[userId].count++;
+
+        if (userChatData[userId].count > messageLimit) {
+          const userMessages = document.querySelectorAll(`.messages-content span[data-user="${userId}"]`);
+          userMessages.forEach(message => {
+            const pTag = message.closest('p');
+            if (pTag) {
+              pTag.remove();
+            }
+          });
+
+          console.log(logUserInfo, 'color: red');
+
+          userChatData[userId].count = 0;
         }
+      } else {
+        userChatData[userId].previousTime = userChatData[userId].time;
+        userChatData[userId].time = currentTime;
+        userChatData[userId].count = 1;
 
-        // Calculate time difference between the current and previous message
-        const timeDifference = currentTime - userChatData[userId].time;
-
-        // Log the user information for each console log
-        const logUserInfo = `%cID: ${userId}, Name: ${userChatData[userId].userName}, ` +
-          `Time Difference: ${formatTimeDifference(timeDifference)}, Messages Count: ${userChatData[userId].count}`;
-
-        if (timeDifference < timeDifferenceThreshold) {
-          // Increment the user's message count for the chat
-          userChatData[userId].count++;
-
-          if (userChatData[userId].count > messageLimit) {
-            // Remove all messages of the user if the limit is exceeded
-            const userMessages = document.querySelectorAll(`.messages-content span[data-user="${userId}"]`);
-            userMessages.forEach(message => {
-              const pTag = message.closest('p');
-              if (pTag) {
-                pTag.remove();
-              }
-            });
-
-            // Log the spam information with red color
-            console.log(logUserInfo, 'color: red');
-
-            // Reset user's message count
-            userChatData[userId].count = 0;
-          }
-        } else {
-          // Update the user's time and reset the count if the time difference exceeds the threshold
-          userChatData[userId].previousTime = userChatData[userId].time;
-          userChatData[userId].time = currentTime;
-          userChatData[userId].count = 1;
-
-          // Log the message information with green color
-          console.log(logUserInfo, 'color: green');
-        }
+        console.log(logUserInfo, 'color: green');
       }
     }
   }

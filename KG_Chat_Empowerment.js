@@ -15,6 +15,43 @@
   // Your actual nickname to use it as an exclusion for the message beep and voice notifications
   const myNickname = document.querySelector('.userpanel .user-block .user-dropdown .name span').textContent;
 
+  // Define voice speed limits
+  const minVoiceSpeed = 0;
+  const maxVoiceSpeed = 2.5;
+
+  // Define voice pitch limits
+  const minVoicePitch = 0;
+  const maxVoicePitch = 2.0;
+
+  // Define default voice speed and pitch
+  const defaultVoiceSpeed = 1.5;
+  const defaultVoicePitch = 1.0;
+
+  // Retrieve KG_Chat_Empowerment from localStorage or create an object with empty voiceSettings if it doesn't exist
+  // This is the main key for the settings
+  let KG_Chat_Empowerment = JSON.parse(localStorage.getItem('KG_Chat_Empowerment'));
+
+  // If KG_Chat_Empowerment doesn't exist in localStorage, create it with an empty voiceSettings object
+  if (!KG_Chat_Empowerment) {
+    KG_Chat_Empowerment = {
+      voiceSettings: {
+        voiceSpeed: defaultVoiceSpeed,  // Set default values for voiceSpeed
+        voicePitch: defaultVoicePitch,  // Set default values for voicePitch
+      },
+      messageSettings: {},
+    };
+    localStorage.setItem('KG_Chat_Empowerment', JSON.stringify(KG_Chat_Empowerment));
+  }
+
+  // Define the default voice speed and pitch
+  let voiceSpeed = KG_Chat_Empowerment.voiceSettings.voiceSpeed !== null
+    ? KG_Chat_Empowerment.voiceSettings.voiceSpeed
+    : defaultVoiceSpeed; // Default value if KG_Chat_Empowerment.voiceSettings.voiceSpeed is null
+
+  let voicePitch = KG_Chat_Empowerment.voiceSettings.voicePitch !== null
+    ? KG_Chat_Empowerment.voiceSettings.voicePitch
+    : defaultVoicePitch; // Default value if KG_Chat_Empowerment.voiceSettings.voicePitch is null
+
   // Define the users to track and notify with popup and audio
   const usersToTrack = [
     { name: 'Даниэль', gender: 'male', pronunciation: 'Даниэль' }, // ------------ 01
@@ -184,20 +221,6 @@
       resolve({ synth, utterance, voices, voice });
     }
   });
-
-  // Define voice speed limits
-  const minVoiceSpeed = 0;
-  const maxVoiceSpeed = 2.5;
-
-  // Define voice pitch limits
-  const minVoicePitch = 0;
-  const maxVoicePitch = 2.0;
-
-  // Define the default voice speed as a global variable
-  let voiceSpeed = parseFloat(localStorage.getItem('voiceSpeed') || '1.5');
-
-  // Define the default voice pitch as a global variable
-  let voicePitch = parseFloat(localStorage.getItem('voicePitch') || '1.0');
 
   function textToSpeech(text, voiceSpeed = voiceSpeed) {
     return new Promise(async (resolve) => {
@@ -1752,7 +1775,7 @@
     // Create a new element with class 'sound-switcher-button' and id 'silence'
     soundSwitcher = document.createElement('div');
     // Retrieve the value from localStorage key "messageNotificationState"
-    const messageNotificationState = localStorage.getItem('messageNotificationState') || 'silence';
+    const messageNotificationState = KG_Chat_Empowerment.messageSettings.messageNotificationState || 'silence';
     // Add the class 'sound-switcher-button' to the 'soundSwitcher' element
     soundSwitcher.classList.add('sound-switcher-button');
     // Initial button id if the localStorage key isn't created with assigned value by user
@@ -1770,9 +1793,10 @@
     soundSwitcher.style.backgroundColor = '#212226';
     soundSwitcher.style.border = '1px solid #45474b';
 
-    const messageNotificationTitle = localStorage.getItem('messageNotificationTitle');
+    // Retrieve the value from KG_Chat_Empowerment.messageSettings.messageNotificationTitle
+    const messageNotificationTitle = KG_Chat_Empowerment.messageSettings.messageNotificationTitle || 'Do not disturb';
     // Assign title for the current notification state
-    soundSwitcher.title = messageNotificationTitle ? messageNotificationTitle : 'Do not disturb';
+    soundSwitcher.title = messageNotificationTitle;
 
     // Create sound switcher button icon container
     soundSwitcherIcon = document.createElement('span');
@@ -1816,22 +1840,25 @@
         case 'silence':
           this.id = 'beep';
           this.title = 'Notify with beep signal';
-          localStorage.setItem('messageNotificationState', 'beep');
-          localStorage.setItem('messageNotificationTitle', 'Notify with beep signal');
+          KG_Chat_Empowerment.messageSettings.messageNotificationState = 'beep';
+          KG_Chat_Empowerment.messageSettings.messageNotificationTitle = 'Notify with beep signal';
           break;
         case 'beep':
           this.id = 'voice';
           this.title = 'Notify with voice API';
-          localStorage.setItem('messageNotificationState', 'voice');
-          localStorage.setItem('messageNotificationTitle', 'Notify with voice API');
+          KG_Chat_Empowerment.messageSettings.messageNotificationState = 'voice';
+          KG_Chat_Empowerment.messageSettings.messageNotificationTitle = 'Notify with voice API';
           break;
         case 'voice':
           this.id = 'silence';
           this.title = 'Do not disturb';
-          localStorage.setItem('messageNotificationState', 'silence');
-          localStorage.setItem('messageNotificationTitle', 'Do not disturb');
+          KG_Chat_Empowerment.messageSettings.messageNotificationState = 'silence';
+          KG_Chat_Empowerment.messageSettings.messageNotificationTitle = 'Do not disturb';
           break;
       }
+      // Stringify KG_Chat_Empowerment before updating in localStorage
+      localStorage.setItem('KG_Chat_Empowerment', JSON.stringify(KG_Chat_Empowerment));
+
       updateSoundSwitcherIcon();
     }
   });
@@ -1854,8 +1881,8 @@
   function createMessageModeButton() {
     // Create a new element with class 'message-mode-button' and id 'every-messages'
     messageMode = document.createElement('div');
-    // Retrieve the value from localStorage key "messageModeState" for messagesMode
-    const messageModeState = localStorage.getItem('messageModeState') || 'every-message';
+    // Retrieve the value from KG_Chat_Empowerment.messageSettings.messageModeState
+    const messageModeState = KG_Chat_Empowerment.messageSettings.messageModeState || 'every-message';
     // Add the class 'message-mode-button' to the 'messagesMode' element
     messageMode.classList.add('message-mode-button');
     // Initial button id if the localStorage key isn't created with assigned value by user
@@ -1872,10 +1899,10 @@
     messageMode.style.backgroundColor = '#212226';
     messageMode.style.border = '1px solid #45474b';
 
-    // Retrieve the value from localStorage key "messageModeTitle" for messagesMode
-    const messageModeTitle = localStorage.getItem('messageModeTitle');
+    // Retrieve the value from KG_Chat_Empowerment.messageSettings.messageModeTitle
+    const messageModeTitle = KG_Chat_Empowerment.messageSettings.messageModeTitle || 'Notify about every message';
     // Assign title for the current notification state
-    messageMode.title = messageModeTitle ? messageModeTitle : 'Notify about every message';
+    messageMode.title = messageModeTitle;
 
     // Create message mode button icon container
     messageModeIcon = document.createElement('span');
@@ -1905,16 +1932,20 @@
         case 'every-message':
           this.id = 'mention-message';
           this.title = 'Notify about mention message';
-          localStorage.setItem('messageModeState', 'mention-message');
-          localStorage.setItem('messageModeTitle', 'Notify about mention message');
+          KG_Chat_Empowerment.messageSettings.messageModeState = 'mention-message';
+          KG_Chat_Empowerment.messageSettings.messageModeTitle = 'Notify about mention message';
           break;
         case 'mention-message':
           this.id = 'every-message';
           this.title = 'Notify about every message';
-          localStorage.setItem('messageModeState', 'every-message');
-          localStorage.setItem('messageModeTitle', 'Notify about every message');
+          KG_Chat_Empowerment.messageSettings.messageModeState = 'every-message';
+          KG_Chat_Empowerment.messageSettings.messageModeTitle = 'Notify about every message';
           break;
       }
+
+      // Stringify KG_Chat_Empowerment before updating in localStorage
+      localStorage.setItem('KG_Chat_Empowerment', JSON.stringify(KG_Chat_Empowerment));
+
       updateMessageModeIcon();
     }
   });
@@ -2167,54 +2198,59 @@
     }
   }
 
-  // Add event listeners for Ctrl + Left Click to increase voice speed
-  // Add event listeners for Shift + Left Click to increase voice pitch
-  soundSwitcher.addEventListener('click', (event) => {
-    if (isCtrlKeyPressed && event.button === 0) { // check for Ctrl + Left Click
-      const newSpeed = parseFloat(voiceSpeed) + 0.1; // Calculate new speed without rounding
-      const limitedSpeed = Math.min(newSpeed, maxVoiceSpeed); // Limit maximum voice speed
-      if (limitedSpeed !== voiceSpeed) {
-        voiceSpeed = parseFloat(limitedSpeed.toFixed(1)); // Round and assign to voiceSpeed
-        localStorage.setItem('voiceSpeed', voiceSpeed.toString());
-        showVoiceSettings();
-      }
-    }
-    else if (isAltKeyPressed && event.button === 0) { // check for Shift + Left Click
-      const newPitch = parseFloat(voicePitch) + 0.1; // Calculate new pitch without rounding
-      const limitedPitch = Math.min(newPitch, maxVoicePitch); // Limit maximum voice pitch
-      if (limitedPitch !== voicePitch) {
-        voicePitch = parseFloat(limitedPitch.toFixed(1)); // Round and assign to voicePitch
-        localStorage.setItem('voicePitch', voicePitch.toString());
-        showVoiceSettings();
-      }
-    }
-  });
+  // Add event listeners for both regular click and right-click (contextmenu)
+  soundSwitcher.addEventListener('click', handleVoiceChange);
+  soundSwitcher.addEventListener('contextmenu', handleVoiceChange);
 
-  // Add event listeners for Ctrl + Right Click to decrease voice speed
-  // Add event listeners for Shift + Right Click to decrease voice pitch
-  soundSwitcher.addEventListener('contextmenu', (event) => {
-    if (isCtrlKeyPressed && event.button === 2) { // check for Ctrl + Right Click
-      event.preventDefault();
-      const newSpeed = parseFloat(voiceSpeed) - 0.1; // Calculate new speed without rounding
-      const limitedSpeed = Math.max(newSpeed, minVoiceSpeed); // Limit minimum voice speed
-      if (limitedSpeed !== voiceSpeed) {
-        voiceSpeed = parseFloat(limitedSpeed.toFixed(1)); // Round and assign to voiceSpeed
-        localStorage.setItem('voiceSpeed', voiceSpeed.toString());
-        showVoiceSettings();
-      }
-    }
-    else if (isAltKeyPressed && event.button === 2) { // check for Shift + Right Click
-      event.preventDefault();
-      const newPitch = parseFloat(voicePitch) - 0.1; // Calculate new pitch without rounding
-      const limitedPitch = Math.max(newPitch, minVoicePitch); // Limit minimum voice pitch
-      if (limitedPitch !== voicePitch) {
-        voicePitch = parseFloat(limitedPitch.toFixed(1)); // Round and assign to voicePitch
-        localStorage.setItem('voicePitch', voicePitch.toString());
-        showVoiceSettings();
-      }
-    }
-  });
+  // Event handler function for handling both click and right-click events
+  function handleVoiceChange(event) {
+    event.preventDefault(); // Prevent default context menu on right-click
 
+    // Check if it's a left click or right click
+    const isLeftClick = event.button === 0;
+    const isRightClick = event.button === 2;
+
+    // Check for Ctrl + Left Click or Ctrl + Right Click
+    if ((isCtrlKeyPressed && isLeftClick) || (isCtrlKeyPressed && isRightClick)) {
+      // Determine whether to change voice speed or pitch
+      const prop = 'voiceSpeed';
+      // Calculate new value and limit it within specified bounds
+      const newValue = parseFloat(KG_Chat_Empowerment.voiceSettings[prop]) +
+        (isLeftClick ? -0.1 : 0.1);
+      const limitedValue = Math.min(maxVoiceSpeed, Math.max(minVoiceSpeed, newValue));
+      // Update the voice setting with the limited value
+      updateVoiceSetting(prop, limitedValue);
+    }
+    // Check for Alt + Left Click or Alt + Right Click
+    else if ((isAltKeyPressed && isLeftClick) || (isAltKeyPressed && isRightClick)) {
+      // Determine whether to change voice speed or pitch
+      const prop = 'voicePitch';
+      // Calculate new value and limit it within specified bounds
+      const newValue = parseFloat(KG_Chat_Empowerment.voiceSettings[prop]) +
+        (isLeftClick ? -0.1 : 0.1);
+      const limitedValue = Math.min(maxVoicePitch, Math.max(minVoicePitch, newValue));
+      // Update the voice setting with the limited value
+      updateVoiceSetting(prop, limitedValue);
+    }
+  }
+
+  // Function to update the voice setting, round the value, and update storage
+  function updateVoiceSetting(prop, value) {
+    // Round the value to one decimal place
+    const roundedValue = parseFloat(value.toFixed(1));
+    // Update the voice setting in the application state
+    KG_Chat_Empowerment.voiceSettings[prop] = roundedValue;
+    // Update voiceSpeed and voicePitch variables
+    if (prop === 'voiceSpeed') {
+      voiceSpeed = roundedValue;
+    } else if (prop === 'voicePitch') {
+      voicePitch = roundedValue;
+    }
+    // Store the updated state in localStorage
+    localStorage.setItem('KG_Chat_Empowerment', JSON.stringify(KG_Chat_Empowerment));
+    // Show the updated voice settings
+    showVoiceSettings();
+  }
 
   // REMOVE UNWANTED MESSAGES
 

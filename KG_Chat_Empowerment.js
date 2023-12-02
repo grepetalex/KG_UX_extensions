@@ -1405,9 +1405,14 @@
     const words = messageContent.split(/\s+/);
 
     if (words.length > 1) {
-      // Exclude the first word (e.g., nickname), handling commas
-      const [, ...remainingWords] = words; // Use destructuring to skip the first word
-      return remainingWords.join(' ');
+      // Check if the first word ends with a comma
+      const firstWord = words[0];
+      const isCommaSeparated = firstWord.endsWith(',');
+
+      // Exclude the first word if it ends with a comma
+      const [, ...remainingWords] = words;
+
+      return isCommaSeparated ? remainingWords.join(' ') : messageContent;
     }
 
     return messageContent;
@@ -1421,70 +1426,77 @@
     // Get all the chat message elements from the messages container
     const chatMessages = messagesContainer.querySelectorAll('.messages-content div p');
 
-    // Arrays to store kept and hidden messages
-    const keptMessages = [];
-    const hiddenMessages = [];
+    // Object to store user logs
+    const userLogs = {};
 
     // Iterate through each chat message
     chatMessages.forEach((message, index) => {
       // Extract the text content without considering the time and username
       const messageText = extractMessageText(message);
 
-      // Extract the user's username
+      // Extract the user's username and user ID
       const usernameElement = message.querySelector('.username span[data-user]');
       if (!usernameElement) {
         return; // Skip messages without a username
       }
 
-      // Iterate through preceding messages for comparison
+      const userId = usernameElement.getAttribute('data-user');
+      const nickname = usernameElement.textContent;
+
+      // Find or create user log entry
+      if (!userLogs[nickname]) {
+        userLogs[nickname] = { userId, keptMessages: [], removedMessages: [] };
+      }
+
+      // Get the user log
+      const userLog = userLogs[nickname];
+
+      // Iterate through preceding messages for the same user for comparison
       let hidden = false;
       for (let i = 0; i < index; i++) {
         const previousMessage = chatMessages[i];
-        const previousMessageText = extractMessageText(previousMessage);
+        const previousUsernameElement = previousMessage.querySelector('.username span[data-user]');
 
-        // Calculate Jaro-Winkler distance and set a threshold for similarity
-        const similarityThreshold = 0.9;
-
-        const similarity = calculateJaroWinklerDistance(messageText, previousMessageText);
-
-        if (similarity >= similarityThreshold) {
-          // Apply a smooth scale transformation initially
-          message.style.transition = 'transform 2s ease';
-          message.style.transformOrigin = 'right';
-          message.style.transform = 'scale(1)';
-
-          // Change the color to chocolate
-          message.style.color = 'chocolate';
-
-          // After 2 seconds, transition to scale 0
-          setTimeout(() => {
-            // Apply a new transition for the scale to 0
-            message.style.transition = 'transform 0.3s ease';
-            message.style.transform = 'scale(0)';
-
-            // Remove the element after the complete transition
-            setTimeout(() => {
-              message.remove();
-            }, 300);
-          }, 2000);
-
-          hidden = true;
-          break; // Break the loop to avoid removing multiple occurrences
+        // Skip messages without a username
+        if (!previousUsernameElement) {
+          continue;
         }
 
-      }
+        const previousUserId = previousUsernameElement.getAttribute('data-user');
 
-      // Log messages based on whether they are hidden or not
-      if (hidden) {
-        hiddenMessages.push({ index, text: messageText });
-      } else {
-        keptMessages.push({ index, text: messageText });
+        // Compare messages only if they belong to the same user
+        if (userId === previousUserId) {
+          const previousMessageText = extractMessageText(previousMessage);
+
+          // Calculate Jaro-Winkler distance and set a threshold for similarity
+          const similarityThreshold = 0.9;
+
+          const similarity = calculateJaroWinklerDistance(messageText, previousMessageText);
+
+          if (similarity >= similarityThreshold) {
+            // Apply logic to hide or remove the message
+            message.style.transition = 'transform 2s ease';
+            message.style.transformOrigin = 'right';
+            message.style.transform = 'scale(1)';
+            message.style.color = 'coral';
+
+            setTimeout(() => {
+              message.style.transition = 'transform 0.3s ease';
+              message.style.transform = 'scale(0)';
+
+              setTimeout(() => {
+                message.remove();
+                // Add the message to removedMessages for the specific user
+                userLog.removedMessages.push({ index, text: messageText });
+                hidden = true;
+              }, 300);
+            }, 2000);
+
+            break; // Break the loop to avoid removing multiple occurrences
+          }
+        }
       }
     });
-
-    // Log the results
-    // console.log('Kept Messages:', keptMessages);
-    // console.log('Hidden Messages:', hiddenMessages);
   }
 
   // Time difference threshold (in milliseconds) to identify spam (increased to 1 second)

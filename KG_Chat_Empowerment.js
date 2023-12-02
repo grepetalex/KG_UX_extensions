@@ -35,8 +35,8 @@
   if (!KG_Chat_Empowerment) {
     KG_Chat_Empowerment = {
       voiceSettings: {
-        voiceSpeed: defaultVoiceSpeed,  // Set default values for voiceSpeed
-        voicePitch: defaultVoicePitch,  // Set default values for voicePitch
+        voiceSpeed: defaultVoiceSpeed, // Set default values for voiceSpeed
+        voicePitch: defaultVoicePitch, // Set default values for voicePitch
       },
       messageSettings: {},
     };
@@ -321,9 +321,10 @@
       }
 
       // Set the padding, display, and margin for the chat notification
-      chatNotification.style.padding = '6px';
+      chatNotification.style.padding = '4px';
       chatNotification.style.display = 'inline-flex';
-      chatNotification.style.margin = '4px';
+      chatNotification.style.margin = '4px 2px';
+      chatNotification.style.fontSize = '0.8em';
 
       // Get the container for all chat messages
       const messagesContainer = document.querySelector('.messages-content div');
@@ -1525,9 +1526,11 @@
   // Time difference threshold (in milliseconds) to identify spam (increased to 1 second)
   const timeDifferenceThreshold = 2000;
   // Message limit within a specific time frame (set this value to 2 for more than 2 messages in 1 second)
-  const messageLimit = 1;
+  const messageLimit = 5;
   // Object to track user-specific data
   let userChatData = {};
+  // Maximum number of consecutive times a user is allowed to exceed the message limit
+  const thresholdMaxTries = 5;
 
   // Function to format time difference
   function formatTimeDifference(difference) {
@@ -1555,6 +1558,17 @@
     return formattedTime;
   }
 
+  // Helper function to remove all messages by a user
+  function removeUserMessages(userId) {
+    const userMessages = document.querySelectorAll(`.messages-content span[data-user="${userId}"]`);
+    userMessages.forEach(message => {
+      const pTag = message.closest('p');
+      if (pTag) {
+        pTag.remove();
+      }
+    });
+  }
+
   // Function to track and handle spam messages
   function banSpammer() {
     // Get the current timestamp
@@ -1564,50 +1578,79 @@
     const latestMessage = document.querySelector('.messages-content p:last-child');
 
     if (latestMessage) {
+      // Get user ID from the last message
       const userIdElement = latestMessage.querySelector('span[data-user]');
       const userId = userIdElement ? userIdElement.getAttribute('data-user') : null;
 
       // Initialize user-specific data outside the if block
       if (!userChatData[userId]) {
         userChatData[userId] = {
-          count: 0,
+          messagesCount: 0,
+          thresholdMaxTries: 0,
           time: currentTime,
           userName: userIdElement ? userIdElement.textContent : 'Unknown User',
           previousTime: null,
-          firstInteraction: true
+          firstInteraction: true,
+          banned: false
         };
       }
 
-      const logUserInfo = `%cID: ${userId}, Name: ${userChatData[userId].userName}, ` +
-        `Time Difference: ${formatTimeDifference(currentTime - userChatData[userId].time)}, ` +
-        `Messages Count: ${userChatData[userId].count}`;
+      // Calculate time difference
+      const timeDifference = currentTime - userChatData[userId].time;
 
+      // Function to generate log information dynamically
+      function generateLogUserInfo() {
+        return `%cID: ${userId}, Name: ${userChatData[userId].userName}, ` +
+          `Time Difference: ${formatTimeDifference(timeDifference)}, ` +
+          `Messages Count: ${userChatData[userId].messagesCount}, ` +
+          `Spam Tries: ${userChatData[userId].thresholdMaxTries}, ` +
+          `Banned: ${userChatData[userId].banned}`;
+      }
+
+      // Special handling for the first interaction
       if (userChatData[userId].firstInteraction) {
-        // Log a special message for the first interaction
         console.log(`%c${userChatData[userId].userName} posted the first message for the current chat session.`, 'color: yellow');
         userChatData[userId].firstInteraction = false;
-      } else if ((currentTime - userChatData[userId].time) < timeDifferenceThreshold) {
-        userChatData[userId].count++;
+      }
 
-        if (userChatData[userId].count > messageLimit) {
-          const userMessages = document.querySelectorAll(`.messages-content span[data-user="${userId}"]`);
-          userMessages.forEach(message => {
-            const pTag = message.closest('p');
-            if (pTag) {
-              pTag.remove();
-            }
-          });
-
-          console.log(logUserInfo, 'color: red');
-
-          userChatData[userId].count = 0;
-        }
+      // Check if the user is banned
+      else if (userChatData[userId].banned) {
+        // Remove all the messages by that user continuously until banned
+        removeUserMessages(userId);
       } else {
-        userChatData[userId].previousTime = userChatData[userId].time;
-        userChatData[userId].time = currentTime;
-        userChatData[userId].count = 1;
+        if (timeDifference < timeDifferenceThreshold) {
+          // Check if the time difference is less than the threshold
+          userChatData[userId].messagesCount++;
 
-        console.log(logUserInfo, 'color: green');
+          if (userChatData[userId].messagesCount > messageLimit) {
+            // Remove all messages by that user if messages limit was exceeded
+            removeUserMessages(userId);
+
+            // Check if the thresholdMaxTries is equal or more than the limit
+            userChatData[userId].thresholdMaxTries++;
+
+            if (userChatData[userId].thresholdMaxTries >= thresholdMaxTries) {
+              // Set 'banned' to true after passing the max thresholdMaxTries to remove user messages passing the messages limit checking
+              userChatData[userId].banned = true;
+              console.log(generateLogUserInfo(), 'color: pink');
+              console.log(`%c${userChatData[userId].userName} cannot send messages anymore`, 'color: pink');
+            } else {
+              // Log the information immediately after updating the values if not banned
+              console.log(generateLogUserInfo(), 'color: red');
+            }
+          } else {
+            // Log the information immediately after updating the values if not banned and not exceeding the limit
+            console.log(generateLogUserInfo(), 'color: green');
+          }
+        } else {
+          // If none of the above conditions are met, update user-specific data for the current interaction
+          userChatData[userId].previousTime = userChatData[userId].time;
+          userChatData[userId].time = currentTime;
+          userChatData[userId].messagesCount = 1;
+
+          // Log the information immediately after updating the values if not banned and not exceeding the limit
+          console.log(generateLogUserInfo(), 'color: green');
+        }
       }
     }
   }

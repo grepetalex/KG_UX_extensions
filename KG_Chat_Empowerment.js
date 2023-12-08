@@ -448,8 +448,13 @@
           thumbnail.classList.add('thumbnail');
           thumbnail.style.width = '6vw';
           thumbnail.style.minWidth = '100px';
+          thumbnail.style.maxHeight = '200px';
           thumbnail.style.height = 'auto';
           thumbnail.style.cursor = 'pointer';
+          thumbnail.style.backgroundColor = 'transparent';
+          thumbnail.style.padding = '2px';
+          thumbnail.style.margin = '6px';
+
 
           // create an image inside the thumbnail
           const img = document.createElement('img');
@@ -540,10 +545,6 @@
                     }
                   }); // thumbnail event end
 
-                  // add styling to the thumbnail
-                  thumbnail.style.backgroundColor = 'transparent';
-                  thumbnail.style.padding = '2px';
-                  thumbnail.style.margin = '6px';
                   // add mouseover and mouseout event listeners to the thumbnail
                   thumbnail.addEventListener('mouseover', function () {
                     img.style.opacity = 0.7;
@@ -1066,13 +1067,25 @@
       // Trigger click event on chatCloseButton
       chatCloseButton.click();
       setTimeout(() => {
-        // Run if the chat is not closed
+        // Check if the chat is not closed
         const chatHidden = document.querySelector('#chat-wrapper.chat-hidden');
-        if (!chatHidden) {
+        if (chatHidden) {
+          // Reset the flag to indicate the first chat load
+          firstChatLoad = true;
+          // Reset messagesCount when the chat is closed
+          messagesCount = 0;
+          // Log the values to the console
+          console.log('The chat has been closed. firstChatLoad:', firstChatLoad);
+        } else {
           // Call the function to assign all the removing functionality again after the chat was closed
           executeMessageRemover();
           // Set chat field focus
           setChatFieldFocus();
+
+          // Reset the flag to indicate not the first chat load without a delay
+          firstChatLoad = false;
+          // Log the values to the console
+          console.log('The chat has been opened. firstChatLoad:', firstChatLoad);
         }
       }, 300);
     }
@@ -1359,21 +1372,20 @@
   applyChatMessageGrouping();
 
   // Jaro-Winkler Distance Calculation Function
-  function calculateJaroWinklerDistance(s1, s2) {
-    // Jaro distance calculation
-    const matchingWindow = Math.floor(Math.max(s1.length, s2.length) / 2) - 1;
-    const s1Matches = new Array(s1.length).fill(false);
-    const s2Matches = new Array(s2.length).fill(false);
-
+  function calculateDistance(s1, s2) {
+    const windowSize = Math.floor(Math.max(s1.length, s2.length) / 2) - 1;
+    const s1Matches = Array(s1.length).fill(false);
+    const s2Matches = Array(s2.length).fill(false);
     let commonMatches = 0;
+
+    // Distance calculation
     for (let i = 0; i < s1.length; i++) {
-      const start = Math.max(0, i - matchingWindow);
-      const end = Math.min(i + matchingWindow + 1, s2.length);
+      const start = Math.max(0, i - windowSize);
+      const end = Math.min(i + windowSize + 1, s2.length);
 
       for (let j = start; j < end; j++) {
         if (!s2Matches[j] && s1[i] === s2[j]) {
-          s1Matches[i] = true;
-          s2Matches[j] = true;
+          s1Matches[i] = s2Matches[j] = true;
           commonMatches++;
           break;
         }
@@ -1389,35 +1401,27 @@
     let k = 0;
     for (let i = 0; i < s1.length; i++) {
       if (s1Matches[i]) {
-        while (!s2Matches[k]) {
-          k++;
-        }
-        if (s1[i] !== s2[k]) {
-          transpositions++;
-        }
-        k++;
+        while (!s2Matches[k]) k++;
+        if (s1[i] !== s2[k++]) transpositions++;
       }
     }
 
-    const jaroSimilarity = (commonMatches / s1.length + commonMatches / s2.length + (commonMatches - transpositions) / commonMatches) / 3;
+    const similarity = (commonMatches / s1.length + commonMatches / s2.length + (commonMatches - transpositions) / commonMatches) / 3;
 
-    // Jaro-Winkler adjustment
+    // Adjustment
     const prefixLength = Math.min(4, Math.min(s1.length, s2.length));
     let commonPrefix = 0;
-    for (let i = 0; i < prefixLength; i++) {
-      if (s1[i] === s2[i]) {
-        commonPrefix++;
-      } else {
-        break;
-      }
+    for (let i = 0; i < prefixLength && s1[i] === s2[i]; i++) {
+      commonPrefix++;
     }
 
-    const winklerAdjustment = commonPrefix * 0.1 * (1 - jaroSimilarity);
+    const adjustment = commonPrefix * 0.1 * (1 - similarity);
 
-    const jaroWinklerDistance = jaroSimilarity + winklerAdjustment;
+    const distance = similarity + adjustment;
 
-    return jaroWinklerDistance;
+    return distance;
   }
+
 
   // Extracts Message Text, Excludes First Word if Ends with Comma
   function extractMessageText(message) {
@@ -1495,7 +1499,7 @@
           // Calculate Jaro-Winkler distance and set a threshold for similarity
           const similarityThreshold = 0.9;
 
-          const similarity = calculateJaroWinklerDistance(messageText, previousMessageText);
+          const similarity = calculateDistance(messageText, previousMessageText);
 
           if (similarity >= similarityThreshold) {
             // Apply logic to hide or remove the message
@@ -1655,6 +1659,12 @@
     }
   }
 
+  // Assuming firstChatLoad is initially set to true
+  let firstChatLoad = true;
+
+  // Initialize messagesCount outside the observer
+  let messagesCount = 0;
+
   // create a mutation observer to watch for new messages being added
   const newMessagesObserver = new MutationObserver(mutations => {
     // If isInitialized is false return without doing anything
@@ -1733,26 +1743,31 @@
               }
             }
 
-            // Attach contextmenu event listener for messages deletion
-            attachEventsToMessages();
+            // Increment messagesCount
+            messagesCount++;
 
-            // Convert image links to visible image containers
-            convertImageLinkToImage();
+            // Check if there are at least 20 messages
+            if (messagesCount >= 20) {
+              // Attach contextmenu event listener for messages deletion
+              attachEventsToMessages();
+              // Convert image links to visible image containers
+              convertImageLinkToImage();
+              // Convert YouTube links to visible iframe containers
+              convertYoutubeLinkToIframe();
+              // Call the function to apply the chat message grouping
+              applyChatMessageGrouping();
+              // Calls the removeSpamMessages function to filter and hide similar chat messages based on Jaro-Winkler distance.
+              removeSpamMessages();
+              // Call the function to scroll to the bottom of the chat
+              scrollMessages();
 
-            // Convert YouTube links to visible iframe containers
-            convertYoutubeLinkToIframe();
+              // Call the functions only when the chat is not hidden after some delay in the hotkey event Ctrl + Space
+              if (!firstChatLoad) {
+                // Call the banSpammer function to track and handle potential spam messages
+                banSpammer();
+              }
+            }
 
-            // Call the function to apply the chat message grouping
-            applyChatMessageGrouping();
-
-            // Calls the removeSpamMessages function to filter and hide similar chat messages based on Jaro-Winkler distance.
-            removeSpamMessages();
-
-            // Call the banSpammer function to track and handle potential spam messages
-            banSpammer();
-
-            // Call the function to scroll to the bottom of the chat
-            scrollMessages();
           }
         }
       }

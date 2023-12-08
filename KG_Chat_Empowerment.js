@@ -1072,6 +1072,8 @@
         if (chatHidden) {
           // Reset the flag to indicate the first chat load
           firstChatLoad = true;
+          // Set flag to false to prevent notifications about entered and left users on chat expanding
+          hasObservedChanges = false;
           // Reset messagesCount when the chat is closed
           messagesCount = 0;
           // Log the values to the console

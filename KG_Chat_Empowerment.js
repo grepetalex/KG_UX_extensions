@@ -1070,24 +1070,16 @@
         // Check if the chat is not closed
         const chatHidden = document.querySelector('#chat-wrapper.chat-hidden');
         if (chatHidden) {
-          // Reset the flag to indicate the first chat load
-          firstChatLoad = true;
-          // Set flag to false to prevent notifications about entered and left users on chat expanding
-          hasObservedChanges = false;
-          // Reset messagesCount when the chat is closed
-          messagesCount = 0;
-          // Log the values to the console
-          console.log('The chat has been closed. firstChatLoad:', firstChatLoad);
+          // Avoid "newMessagesObserver" run the call functions multiple times when the chat opens again
+          isInitialized = false;
         } else {
           // Call the function to assign all the removing functionality again after the chat was closed
           executeMessageRemover();
           // Set chat field focus
           setChatFieldFocus();
-
-          // Reset the flag to indicate not the first chat load without a delay
-          firstChatLoad = false;
-          // Log the values to the console
-          console.log('The chat has been opened. firstChatLoad:', firstChatLoad);
+          // Allow after "N" delay to run the "newMessagesObserver" call functions safely without repeating
+          isInitialized = false;
+          setTimeout(() => (isInitialized = false), 3000);
         }
       }, 300);
     }
@@ -1225,8 +1217,6 @@
     return { messageText: messageWithPronunciation, usernameText: username };
   }
 
-  // Skip reading the messages on page load to read them normally when the user is present and the page is stable
-  let isInitialized = false;
   // Prevent the "readNewMessages" function from being called multiple times until all messages in the set have been read
   let isReading = false;
 
@@ -1661,11 +1651,8 @@
     }
   }
 
-  // Assuming firstChatLoad is initially set to true
-  let firstChatLoad = true;
-
-  // Initialize messagesCount outside the observer
-  let messagesCount = 0;
+  // Skip reading the messages on page load to read them normally when the user is present and the page is stable
+  let isInitialized = false;
 
   // create a mutation observer to watch for new messages being added
   const newMessagesObserver = new MutationObserver(mutations => {
@@ -1745,11 +1732,7 @@
               }
             }
 
-            // Increment messagesCount
-            messagesCount++;
-
-            // Check if there are at least 20 messages
-            if (messagesCount >= 20) {
+            if (isInitialized) {
               // Attach contextmenu event listener for messages deletion
               attachEventsToMessages();
               // Convert image links to visible image containers
@@ -1762,12 +1745,8 @@
               removeSpamMessages();
               // Call the function to scroll to the bottom of the chat
               scrollMessages();
-
-              // Call the functions only when the chat is not hidden after some delay in the hotkey event Ctrl + Space
-              if (!firstChatLoad) {
-                // Call the banSpammer function to track and handle potential spam messages
-                banSpammer();
-              }
+              // Call the banSpammer function to track and handle potential spam messages
+              banSpammer();
             }
 
           }

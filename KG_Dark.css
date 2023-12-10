@@ -4328,8 +4328,9 @@ html[xmlns*='xhtml'] a[href*='klavogonki.ru/chatlogs/'] {
     transition: .2s !important;
 }
 /* chat main messages container overflow hidden fix */
-#chat-container .messages-content>div {
+#chat-container .messages-content > div {
     overflow: hidden !important;
+    margin-bottom: 50px !important;
 }
 /* chat fix firefox user table select border cell */
 #chat-fixed-placeholder table {
@@ -4617,11 +4618,11 @@ code {
 }
 .chat .messages span.clickable:hover {
     color: var(--lightblue) !important;
+    text-decoration: none !important;
 }
 /* chat messages private && system messages */
 .chat .messages .time {
-    padding: 2px !important;
-    color: var(--red) !important;
+    color: transparent !important;
     cursor: not-allowed !important;
 }
 .chat .messages .time[style*='background-color: yellow'] {

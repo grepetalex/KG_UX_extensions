@@ -4613,18 +4613,18 @@ code {
     font-size: 14px !important;
 }
 /* chat messages simple message time */
-.chat .messages span.clickable {
+.chat .messages .time span {
+    cursor: pointer !important;
     color: var(--blue) !important;
 }
-.chat .messages span.clickable:hover {
+.chat .messages .time span:hover {
     color: var(--lightblue) !important;
     text-decoration: none !important;
 }
-/* chat messages private && system messages */
 .chat .messages .time {
-    color: transparent !important;
-    cursor: not-allowed !important;
+  color: transparent !important;
 }
+/* is mention time for me */
 .chat .messages .time[style*='background-color: yellow'] {
     padding: 2px !important;
     font-weight: bold !important;

@@ -919,6 +919,7 @@
     #chat-general .userlist-content {
       opacity: 0;
     }
+
     .chat-user-list {
         display: flex;
         flex-direction: column;
@@ -1031,7 +1032,6 @@
             if (data && data.title) {
               cachedUserInfo[userId] = {
                 statusTitle: data.title,
-                // Add other user-related information here
               };
               localStorage.setItem('fetchedUsers', JSON.stringify(cachedUserInfo));
               resolve(data.title);
@@ -1368,7 +1368,7 @@
   let isAnimating = false;
 
   // Define a constant to set the debounce delay
-  const debounceTimeout = 1500;
+  const debounceTimeout = 1000;
 
   // Define a debounce function to limit the rate at which the mutation observer callback is called
   const debounce = (func, delay) => {

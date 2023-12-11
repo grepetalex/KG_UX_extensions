@@ -909,6 +909,388 @@
   document.head.appendChild(userCountStylesElement);
 
 
+  // Add styles for hover effects dynamically to the head
+  const newChatUserListStyles = document.createElement('style');
+
+  // Apply class to the style element
+  newChatUserListStyles.classList.add('new_chat_user_list');
+
+  newChatUserListStyles.innerHTML = `
+    .chat-user-list {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: 20px;
+        background-color: #282B2F;
+    }
+
+    .chat-user-list [class^="rank-group"] {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .chat-user-list [class^="user"] {
+        display: inline-flex;
+        margin: 2px 0;
+    }
+
+    .chat-user-list .avatar {
+        width: 24px;
+        height: 24px;
+        display: inline-flex;
+    }
+    .chat-user-list .avatar img {
+        transition: transform 0.3s;
+    }
+    .chat-user-list .avatar img:hover {
+        transform: scale(2);
+    }
+
+    .chat-user-list .name {
+        text-decoration: none;
+        display: inline-flex;
+        width: auto;
+        height: 24px;
+        line-height: 24px;
+        padding: 0 8px;
+    }
+    .chat-user-list .name:hover {
+        text-decoration: underline;
+    }
+
+    .chat-user-list .profile,
+    .chat-user-list .moderator {
+        display: inline-flex;
+        width: 24px;
+        height: 24px;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .chat-user-list svg.feather-meh {
+        stroke: gray;
+    }
+
+    .chat-user-list svg.online {
+        stroke: lightgreen;
+    }   
+    .chat-user-list svg.offline {
+        stroke: chocolate;
+    }
+`;
+
+  document.head.appendChild(newChatUserListStyles);
+
+  // Function to get status title from API or local storage cache
+  function getStatusTitle(userId) {
+    return new Promise((resolve, reject) => {
+      const cachedUserInfo = JSON.parse(localStorage.getItem('fetchedUsers')) || {};
+
+      if (cachedUserInfo[userId]) {
+        resolve(cachedUserInfo[userId].statusTitle);
+      } else {
+        const apiUrl = `https://klavogonki.ru/api/profile/get-summary?id=${userId}`;
+
+        fetch(apiUrl)
+          .then(response => {
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error('Network response was not ok.');
+          })
+          .then(data => {
+            if (data && data.title) {
+              cachedUserInfo[userId] = {
+                statusTitle: data.title,
+                // Add other user-related information here
+              };
+              localStorage.setItem('fetchedUsers', JSON.stringify(cachedUserInfo));
+              resolve(data.title);
+            } else {
+              throw new Error('Invalid data format received from the API.');
+            }
+          })
+          .catch(error => {
+            console.error(`Error fetching status title for user ${userId}:`, error);
+            reject(error);
+          });
+      }
+    });
+  }
+
+  // Function to get rank color based on status title
+  function getRankColor(statusTitle) {
+    const statusColors = {
+      'Экстракибер': '#06B4E9', // Light Blue
+      'Кибергонщик': '#5681ff', // Medium Blue
+      'Супермен': '#7A1FAE', // Purple
+      'Маньяк': '#DA0543', // Red
+      'Гонщик': '#FF8C00', // Orange
+      'Профи': '#C1AA00', // Yellow
+      'Таксист': '#2DAB4F', // Green
+      'Любитель': '#61B5B3', // Light Cyan
+      'Новичок': '#AFAFAF' // Grey
+    };
+
+    return statusColors[statusTitle] || '#000000'; // Default to black color if status title not found
+  }
+
+  // Function to get rank class based on status title in English
+  function getRankClass(statusTitle) {
+    const statusClasses = {
+      'Экстракибер': 'extra_cyber',
+      'Кибергонщик': 'cyber_racer',
+      'Супермен': 'superman',
+      'Маньяк': 'maniac',
+      'Гонщик': 'racer',
+      'Профи': 'pro',
+      'Таксист': 'driver',
+      'Любитель': 'amateur',
+      'Новичок': 'newbie'
+    };
+
+    return statusClasses[statusTitle] || 'unknown'; // Default to 'unknown' class if status title not found
+  }
+
+
+  // Function to handle private message
+  function insertPrivate(userId) {
+    const userName = document.querySelector(`.name[data-user="${userId}"]`).textContent;
+    const message = `<${userName}>`;
+
+    const textElement = document.querySelector('.messages .text');
+    textElement.value = message;
+
+    textElement.focus();
+    textElement.selectionEnd = textElement.value.length;
+
+    console.log(`Setting private message to: ${message}`);
+  }
+
+  const infoSVG = (userId, isRevoked) => {
+    const statusClass = isRevoked ? 'offline' : 'online';
+
+    return `
+        <svg xmlns="http://www.w3.org/2000/svg" 
+            width="14" 
+            height="14" 
+            viewBox="0 0 24 24" 
+            fill="none"
+            stroke-width="2" 
+            stroke-linecap="round" 
+            stroke-linejoin="round" 
+            class="feather feather-info ${statusClass}">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>`;
+  };
+
+  // Inline SVG source for the "meh" icon
+  const mehSVG = `
+<svg xmlns="http://www.w3.org/2000/svg" 
+     width="24" 
+     height="24" 
+     viewBox="0 0 24 24" 
+     fill="none"
+     stroke-width="1.4" 
+     stroke-linecap="round" 
+     stroke-linejoin="round" 
+     class="feather feather-meh">
+    <circle cx="12" cy="12" r="10"></circle>
+    <line x1="8" y1="15" x2="16" y2="15"></line>
+    <line x1="9" y1="9" x2="9.01" y2="9"></line>
+    <line x1="15" y1="9" x2="15.01" y2="9"></line>
+</svg>`;
+
+  // SVG icon for the moderator
+  const moderatorSVG = `
+    <svg xmlns="http://www.w3.org/2000/svg" 
+        width="14" 
+        height="14" 
+        viewBox="0 0 24 24" 
+        fill="none"
+        stroke="gold" 
+        stroke-width="2" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        class="feather feather-shield">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+    </svg>`;
+
+  // Array to store user IDs and their status titles
+  const fetchedUsers = JSON.parse(localStorage.getItem('fetchedUsers')) || {};
+
+  function createUserElement(userId, statusTitle, userName, isRevoked) {
+    const bigAvatarUrl = `/storage/avatars/${userId}_big.png`;
+
+    const newUserElement = document.createElement('div');
+    const rankClass = getRankClass(statusTitle);
+    newUserElement.classList.add(`user${userId}`, rankClass); // Assign the rank class
+
+    const newAvatarElement = document.createElement('div');
+    newAvatarElement.classList.add('avatar');
+
+    const avatarContent = document.createElement('img');
+    avatarContent.src = bigAvatarUrl;
+
+    avatarContent.addEventListener('error', function () {
+      // If there's an error loading the avatar, replace with the static SVG
+      newAvatarElement.innerHTML = mehSVG;
+    });
+
+    // If there's no error, use the img element
+    newAvatarElement.appendChild(avatarContent);
+
+    const newNameElement = document.createElement('a');
+    newNameElement.classList.add('name');
+    newNameElement.title = 'Написать в приват';
+    newNameElement.dataset.user = userId;
+    newNameElement.textContent = userName;
+
+    const rankColor = getRankColor(statusTitle);
+    newNameElement.style.setProperty('color', rankColor, 'important');
+
+    const newProfileElement = document.createElement('a');
+    newProfileElement.classList.add('profile');
+    newProfileElement.title = 'Профиль';
+    newProfileElement.target = '_blank';
+    newProfileElement.href = `/profile/${userId}/`;
+    newProfileElement.innerHTML = infoSVG(userId, isRevoked); // Update this line
+
+    newNameElement.addEventListener('click', function () {
+      insertPrivate(userId);
+    });
+
+    newUserElement.appendChild(newAvatarElement);
+    newUserElement.appendChild(newNameElement);
+    newUserElement.appendChild(newProfileElement);
+
+    // Check if there is an <img> element with a src attribute containing the word "moderator" inside the ins element
+    const hasModeratorIcon = document.querySelector(`.userlist-content ins.user${userId} img[src*="moderator"]`);
+
+    if (hasModeratorIcon) {
+      const moderatorIcon = document.createElement('div');
+      moderatorIcon.classList.add('moderator');
+      moderatorIcon.innerHTML = moderatorSVG;
+      newUserElement.appendChild(moderatorIcon);
+    }
+
+    return newUserElement;
+  }
+
+  // Function to refresh the user list
+  function refreshUserList() {
+    // Get the original user list container
+    const originalUserListContainer = document.querySelector('.userlist-content');
+
+    // Get or create the user list container
+    let userListContainer = document.querySelector('.chat-user-list');
+    if (!userListContainer) {
+      userListContainer = document.createElement('div');
+      userListContainer.classList.add('chat-user-list');
+
+      // Find the element with the class "userlist"
+      const userlistElement = document.querySelector('.userlist');
+
+      // Append the userListContainer to the userlistElement if found
+      if (userlistElement) {
+        userlistElement.appendChild(userListContainer);
+      }
+    }
+
+    // Define the rank order
+    const rankOrder = ['extra_cyber', 'cyber_racer', 'superman', 'maniac', 'racer', 'pro', 'driver', 'amateur', 'newbie'];
+
+    // Create an object to store subparent elements for each rank class
+    const rankSubparents = {};
+
+    // Check if subparent elements already exist, if not, create them
+    rankOrder.forEach(rankClass => {
+      const existingSubparent = userListContainer.querySelector(`.rank-group-${rankClass}`);
+      if (!existingSubparent) {
+        rankSubparents[rankClass] = document.createElement('div');
+        rankSubparents[rankClass].classList.add(`rank-group-${rankClass}`);
+        userListContainer.appendChild(rankSubparents[rankClass]);
+      } else {
+        rankSubparents[rankClass] = existingSubparent;
+      }
+    });
+
+    // Create a set to store existing user IDs in the updated user list
+    const existingUserIds = new Set();
+
+    // Iterate over each user element in the original user list
+    originalUserListContainer.querySelectorAll('ins').forEach(userElement => {
+      const nameElement = userElement.querySelector('.name');
+      const userId = nameElement.getAttribute('data-user');
+      const userName = nameElement.textContent;
+
+      // Check if the user already exists in the updated user list
+      if (!existingUserIds.has(userId)) {
+        if (!fetchedUsers[userId]) {
+          getStatusTitle(userId)
+            .then(statusTitle => {
+              fetchedUsers[userId] = { statusTitle };
+              localStorage.setItem('fetchedUsers', JSON.stringify(fetchedUsers));
+
+              // Pass the new parameter isRevoked to createUserElement
+              const isRevoked = userElement.classList.contains('revoked');
+              const newUserElement = createUserElement(userId, statusTitle, userName, isRevoked);
+
+              const rankClass = getRankClass(statusTitle);
+
+              // Add the user to the corresponding rank group
+              rankSubparents[rankClass].appendChild(newUserElement);
+
+              // Update existing user IDs
+              existingUserIds.add(userId);
+            })
+            .catch(error => {
+              console.error(`Error fetching status title for user ${userId}:`, error);
+            });
+        } else {
+          // If the user exists, ensure the element exists and update existing user IDs
+          const statusTitle = fetchedUsers[userId].statusTitle;
+          const rankClass = getRankClass(statusTitle);
+
+          // Check if the user element already exists
+          const existingUserElement = userListContainer.querySelector(`.user${userId}.${rankClass}`);
+          if (!existingUserElement) {
+            const isRevoked = userElement.classList.contains('revoked');
+            // Pass the new parameter isRevoked to createUserElement
+            const newUserElement = createUserElement(userId, statusTitle, userName, isRevoked);
+
+            // Add the user to the corresponding rank group
+            rankSubparents[rankClass].appendChild(newUserElement);
+          }
+
+          // Update existing user IDs
+          existingUserIds.add(userId);
+        }
+      }
+    });
+
+    // Remove any existing user elements that are not present in the updated user list
+    userListContainer.querySelectorAll('.chat-user-list [class^="user"]').forEach(userElement => {
+      const userId = userElement.querySelector('.name').getAttribute('data-user');
+      if (!existingUserIds.has(userId)) {
+        userElement.remove();
+      }
+    });
+  }
+
+  function refreshFetchedUsers() {
+    const lastClearTime = localStorage.getItem('lastClearTime');
+    const shouldClearCache = !lastClearTime || (new Date().getTime().toString() - lastClearTime) / (1000 * 60 * 60) >= 24;
+
+    if (shouldClearCache) {
+      localStorage.removeItem('fetchedUsers');
+      localStorage.setItem('lastClearTime', new Date().getTime().toString());
+    }
+  }
+
+
   // Define reference for chat user list
   const userList = document.querySelector('.userlist-content');
 
@@ -1015,6 +1397,10 @@
               if (!isSilence && usersToTrack.some(user => user.name === newUser)) {
                 userAction(newUser, "enter", userGender);
               }
+
+              // Refresh experimental custom chat user list on old list changes
+              refreshUserList();
+
             }
           });
 
@@ -1026,8 +1412,11 @@
             if (!isSilence && usersToTrack.some(user => user.name === leftUser)) {
               userAction(leftUser, "leave", userGender);
             }
-          });
 
+            // Refresh experimental custom chat user list on old list changes
+            refreshUserList();
+
+          });
         } else {
           // Indicator should look deactivated after the chat is closed
           userCount.style.filter = "grayscale(1)";
@@ -2879,6 +3268,12 @@
 
         // Call the function to scroll to the bottom of the chat
         scrollMessages();
+
+        // Call the function to refresh the user list and clear the cache if needed
+        refreshFetchedUsers();
+
+        // Refresh experimental custom chat user list on old list changes
+        refreshUserList();
 
         // Call the setChatFieldFocus function when the page loads
         setChatFieldFocus();

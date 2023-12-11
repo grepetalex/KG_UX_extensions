@@ -1032,7 +1032,7 @@
     const statusColors = {
       'Экстракибер': '#06B4E9', // Light Blue
       'Кибергонщик': '#5681ff', // Medium Blue
-      'Супермен': '#7A1FAE', // Purple
+      'Супермен': '#A22AE6', // Purple
       'Маньяк': '#DA0543', // Red
       'Гонщик': '#FF8C00', // Orange
       'Профи': '#C1AA00', // Yellow

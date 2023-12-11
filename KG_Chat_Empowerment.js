@@ -816,32 +816,32 @@
 
   } // end convertYoutubeLinkToIframe
 
-  // Function to highlight users from 'usersToTrack' array in the userlist
-  function highlightTrackingUsers() {
-    // Select all ins elements from the userlist
-    const insElements = document.querySelectorAll('.userlist-content ins');
+  // // Function to highlight users from 'usersToTrack' array in the userlist
+  // function highlightTrackingUsers() {
+  //   // Select all ins elements from the userlist
+  //   const insElements = document.querySelectorAll('.userlist-content ins');
 
-    // Iterate over the ins elements and check if they contain an anchor element
-    for (const ins of insElements) {
-      const anchor = ins.querySelector('a.name');
-      if (anchor) {
-        // Retrieve the username from the anchor textContent
-        const name = anchor.textContent.trim();
-        // Find the user in 'usersToTrack' array by their name
-        const userToTrack = usersToTrack.find(user => user.name === name);
-        // If the user is found and not revoked, set their anchor text color to green
-        if (userToTrack && !ins.classList.contains('revoked')) {
-          anchor.style.setProperty('color', '#83cf40', 'important');
-          anchor.style.setProperty('text-shadow', '0 0 1px #83cf40', 'important');
-        }
-        // If the user is found and is revoked, set their anchor text color to a red
-        else if (userToTrack && ins.classList.contains('revoked')) {
-          anchor.style.setProperty('color', '#ff8080', 'important');
-          anchor.style.setProperty('text-shadow', '0 0 1px #ff8080', 'important');
-        }
-      }
-    }
-  }
+  //   // Iterate over the ins elements and check if they contain an anchor element
+  //   for (const ins of insElements) {
+  //     const anchor = ins.querySelector('a.name');
+  //     if (anchor) {
+  //       // Retrieve the username from the anchor textContent
+  //       const name = anchor.textContent.trim();
+  //       // Find the user in 'usersToTrack' array by their name
+  //       const userToTrack = usersToTrack.find(user => user.name === name);
+  //       // If the user is found and not revoked, set their anchor text color to green
+  //       if (userToTrack && !ins.classList.contains('revoked')) {
+  //         anchor.style.setProperty('color', '#83cf40', 'important');
+  //         anchor.style.setProperty('text-shadow', '0 0 1px #83cf40', 'important');
+  //       }
+  //       // If the user is found and is revoked, set their anchor text color to a red
+  //       else if (userToTrack && ins.classList.contains('revoked')) {
+  //         anchor.style.setProperty('color', '#ff8080', 'important');
+  //         anchor.style.setProperty('text-shadow', '0 0 1px #ff8080', 'important');
+  //       }
+  //     }
+  //   }
+  // }
 
   const empowermentButtonsMargin = 2;
 
@@ -916,6 +916,9 @@
   newChatUserListStyles.classList.add('new_chat_user_list');
 
   newChatUserListStyles.innerHTML = `
+    #chat-general .userlist-content {
+      opacity: 0;
+    }
     .chat-user-list {
         display: flex;
         flex-direction: column;
@@ -1475,14 +1478,14 @@
   // Start observing the chat user list for changes to notify about them
   chatUsersObserver.observe(userList, { childList: true });
 
-  // Create a separate MutationObserver to watch for changes to the tracking user list
-  const trackingUsersObserver = new MutationObserver(() => {
-    // Whenever the tracking user list changes, call the highlightTrackingUsers function
-    highlightTrackingUsers();
-  });
+  // // Create a separate MutationObserver to watch for changes to the tracking user list
+  // const trackingUsersObserver = new MutationObserver(() => {
+  //   // Whenever the tracking user list changes, call the highlightTrackingUsers function
+  //   highlightTrackingUsers();
+  // });
 
-  // Start observing the tracking user list for changes to highlight them
-  trackingUsersObserver.observe(userList, { childList: true });
+  // // Start observing the tracking user list for changes to highlight them
+  // trackingUsersObserver.observe(userList, { childList: true });
 
   // Button to close the chat
   const chatCloseButton = document.querySelector('.mostright');

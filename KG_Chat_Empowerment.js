@@ -921,8 +921,9 @@
         flex-direction: column;
         position: absolute;
         top: 20px;
+        padding-top: 8px;
         width: 200px;
-        height: 95%;
+        height: 94%;
         overflow-y: auto;
         background-color: #282B2F;
     }
@@ -944,6 +945,7 @@
     }
     .chat-user-list .avatar img {
         transition: transform 0.3s;
+        transform-origin: left;
     }
     .chat-user-list .avatar img:hover {
         transform: scale(2);
@@ -962,6 +964,7 @@
     }
 
     .chat-user-list .profile,
+    .chat-user-list .tracked,
     .chat-user-list .moderator {
         display: inline-flex;
         width: 24px;
@@ -1106,20 +1109,42 @@
     <line x1="15" y1="9" x2="15.01" y2="9"></line>
 </svg>`;
 
-  // SVG icon for the moderator
+  // SVG icon for the moderator with gradient
   const moderatorSVG = `
     <svg xmlns="http://www.w3.org/2000/svg" 
-        width="14" 
-        height="14" 
+        width="18" 
+        height="18" 
         viewBox="0 0 24 24" 
-        fill="none"
-        stroke="gold" 
+        fill="url(#moderatorGradient)"  <!-- Use a gradient fill -->
+        stroke="none" 
         stroke-width="2" 
         stroke-linecap="round" 
         stroke-linejoin="round" 
         class="feather feather-shield">
+        <!-- Define the gradient -->
+        <defs>
+            <linearGradient id="moderatorGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style="stop-color: gold; stop-opacity: 1" />
+                <stop offset="100%" style="stop-color: darkorange; stop-opacity: 1" />
+            </linearGradient>
+        </defs>
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
     </svg>`;
+
+  // SVG icon for the tracked
+  const trackedSVG = `
+  <svg xmlns="http://www.w3.org/2000/svg" 
+       width="14" 
+       height="14" 
+       viewBox="0 0 24 24" 
+       fill="none"
+       stroke="LightSkyBlue" 
+       stroke-width="2" 
+       stroke-linecap="round" 
+       stroke-linejoin="round" 
+       class="feather feather-star">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+  </svg>`;
 
   // Array to store user IDs and their status titles
   const fetchedUsers = JSON.parse(localStorage.getItem('fetchedUsers')) || {};
@@ -1168,6 +1193,16 @@
     newUserElement.appendChild(newAvatarElement);
     newUserElement.appendChild(newNameElement);
     newUserElement.appendChild(newProfileElement);
+
+    // Check if there is a user in 'usersToTrack' array by their name
+    const userToTrack = usersToTrack.find(user => user.name === userName);
+
+    if (userToTrack) {
+      const trackedIcon = document.createElement('div');
+      trackedIcon.classList.add('tracked');
+      trackedIcon.innerHTML = trackedSVG;
+      newUserElement.appendChild(trackedIcon);
+    }
 
     // Check if there is an <img> element with a src attribute containing the word "moderator" inside the ins element
     const hasModeratorIcon = document.querySelector(`.userlist-content ins.user${userId} img[src*="moderator"]`);

@@ -1438,10 +1438,6 @@
               if (!isSilence && usersToTrack.some(user => user.name === newUser)) {
                 userAction(newUser, "enter", userGender);
               }
-
-              // Refresh experimental custom chat user list on old list changes
-              refreshUserList();
-
             }
           });
 
@@ -1453,11 +1449,11 @@
             if (!isSilence && usersToTrack.some(user => user.name === leftUser)) {
               userAction(leftUser, "leave", userGender);
             }
-
-            // Refresh experimental custom chat user list on old list changes
-            refreshUserList();
-
           });
+
+          // Refresh experimental custom chat user list on old list changes
+          refreshUserList();
+
         } else {
           // Indicator should look deactivated after the chat is closed
           userCount.style.filter = "grayscale(1)";

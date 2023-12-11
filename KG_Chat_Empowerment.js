@@ -922,7 +922,7 @@
         position: absolute;
         top: 20px;
         width: 200px;
-        height: 90%;
+        height: 95%;
         overflow-y: auto;
         background-color: #282B2F;
     }

@@ -921,6 +921,9 @@
         flex-direction: column;
         position: absolute;
         top: 20px;
+        width: 200px;
+        height: 90%;
+        overflow-y: auto;
         background-color: #282B2F;
     }
 

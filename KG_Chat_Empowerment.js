@@ -980,11 +980,31 @@
         stroke: gray;
     }
 
+    /* Common rotation animation */
+    @keyframes rotateAnimation {
+        0% {
+            transform: rotate(0deg) scale(1);
+            transition-timing-function: ease-in-out;
+        }
+        50% {
+            transform: rotate(180deg) scale(1.2);
+            transition-timing-function: linear;
+        }
+        100% {
+            transform: rotate(360deg) scale(1);
+        }
+    }
+
+    /* Animation for online status */
     .chat-user-list svg.online {
         stroke: lightgreen;
-    }   
+        animation: rotateAnimation 2s forwards;
+    }
+
+    /* Animation for offline status */
     .chat-user-list svg.offline {
         stroke: chocolate;
+        animation: rotateAnimation 2s forwards;
     }
 `;
 

@@ -1011,13 +1011,13 @@
 
   document.head.appendChild(newChatUserListStyles);
 
-  // Function to get status title from API or local storage cache
-  function getStatusTitle(userId) {
+  // Function to get profile summary from API or local storage cache
+  function getProfileSummary(userId) {
     return new Promise((resolve, reject) => {
       const cachedUserInfo = JSON.parse(localStorage.getItem('fetchedUsers')) || {};
 
       if (cachedUserInfo[userId]) {
-        resolve(cachedUserInfo[userId].statusTitle);
+        resolve({ rank: cachedUserInfo[userId].rank, login: cachedUserInfo[userId].login });
       } else {
         const apiUrl = `https://klavogonki.ru/api/profile/get-summary?id=${userId}`;
 
@@ -1029,18 +1029,22 @@
             throw new Error('Network response was not ok.');
           })
           .then(data => {
-            if (data && data.title) {
+            if (data && data.user && data.user.login && data.status && data.status.title) {
+              const rank = data.status.title;
+              const login = data.user.login;
+
               cachedUserInfo[userId] = {
-                statusTitle: data.title,
+                rank: rank,
+                login: login,
               };
               localStorage.setItem('fetchedUsers', JSON.stringify(cachedUserInfo));
-              resolve(data.title);
+              resolve({ rank, login });
             } else {
               throw new Error('Invalid data format received from the API.');
             }
           })
           .catch(error => {
-            console.error(`Error fetching status title for user ${userId}:`, error);
+            console.error(`Error fetching profile summary for user ${userId}:`, error);
             reject(error);
           });
       }
@@ -1081,7 +1085,6 @@
     return statusClasses[statusTitle] || 'unknown'; // Default to 'unknown' class if status title not found
   }
 
-
   // Function to handle private message
   function insertPrivate(userId) {
     const userName = document.querySelector(`.name[data-user="${userId}"]`).textContent;
@@ -1117,20 +1120,20 @@
 
   // Inline SVG source for the "meh" icon
   const mehSVG = `
-<svg xmlns="http://www.w3.org/2000/svg" 
-     width="24" 
-     height="24" 
-     viewBox="0 0 24 24" 
-     fill="none"
-     stroke-width="1.4" 
-     stroke-linecap="round" 
-     stroke-linejoin="round" 
-     class="feather feather-meh">
-    <circle cx="12" cy="12" r="10"></circle>
-    <line x1="8" y1="15" x2="16" y2="15"></line>
-    <line x1="9" y1="9" x2="9.01" y2="9"></line>
-    <line x1="15" y1="9" x2="15.01" y2="9"></line>
-</svg>`;
+    <svg xmlns="http://www.w3.org/2000/svg" 
+        width="24" 
+        height="24" 
+        viewBox="0 0 24 24" 
+        fill="none"
+        stroke-width="1.4" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        class="feather feather-meh">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="8" y1="15" x2="16" y2="15"></line>
+        <line x1="9" y1="9" x2="9.01" y2="9"></line>
+        <line x1="15" y1="9" x2="15.01" y2="9"></line>
+    </svg>`;
 
   // SVG icon for the moderator with gradient
   const moderatorSVG = `
@@ -1240,8 +1243,7 @@
     return newUserElement;
   }
 
-  // Function to refresh the user list
-  function refreshUserList() {
+  async function refreshUserList() {
     // Get the original user list container
     const originalUserListContainer = document.querySelector('.userlist-content');
 
@@ -1282,44 +1284,30 @@
     const existingUserIds = new Set();
 
     // Iterate over each user element in the original user list
-    originalUserListContainer.querySelectorAll('ins').forEach(userElement => {
+    for (const userElement of originalUserListContainer.querySelectorAll('ins')) {
       const nameElement = userElement.querySelector('.name');
       const userId = nameElement.getAttribute('data-user');
       const userName = nameElement.textContent;
 
       // Check if the user already exists in the updated user list
       if (!existingUserIds.has(userId)) {
-        if (!fetchedUsers[userId]) {
-          getStatusTitle(userId)
-            .then(statusTitle => {
-              fetchedUsers[userId] = { statusTitle };
-              localStorage.setItem('fetchedUsers', JSON.stringify(fetchedUsers));
+        try {
+          // Use getProfileSummary instead of getStatusTitle
+          const { rank: statusTitle, login } = await getProfileSummary(userId);
 
-              // Pass the new parameter isRevoked to createUserElement
-              const isRevoked = userElement.classList.contains('revoked');
-              const newUserElement = createUserElement(userId, statusTitle, userName, isRevoked);
+          if (!fetchedUsers[userId]) {
+            fetchedUsers[userId] = { rank: statusTitle, login };
+            localStorage.setItem('fetchedUsers', JSON.stringify(fetchedUsers));
+          }
 
-              const rankClass = getRankClass(statusTitle);
+          // Pass the new parameter isRevoked to createUserElement
+          const isRevoked = userElement.classList.contains('revoked');
 
-              // Add the user to the corresponding rank group
-              rankSubparents[rankClass].appendChild(newUserElement);
-
-              // Update existing user IDs
-              existingUserIds.add(userId);
-            })
-            .catch(error => {
-              console.error(`Error fetching status title for user ${userId}:`, error);
-            });
-        } else {
-          // If the user exists, ensure the element exists and update existing user IDs
-          const statusTitle = fetchedUsers[userId].statusTitle;
           const rankClass = getRankClass(statusTitle);
 
-          // Check if the user element already exists
-          const existingUserElement = userListContainer.querySelector(`.user${userId}.${rankClass}`);
+          // Check if the user with the same ID already exists in the corresponding rank group
+          const existingUserElement = rankSubparents[rankClass].querySelector(`.user${userId}`);
           if (!existingUserElement) {
-            const isRevoked = userElement.classList.contains('revoked');
-            // Pass the new parameter isRevoked to createUserElement
             const newUserElement = createUserElement(userId, statusTitle, userName, isRevoked);
 
             // Add the user to the corresponding rank group
@@ -1328,9 +1316,11 @@
 
           // Update existing user IDs
           existingUserIds.add(userId);
+        } catch (error) {
+          console.error(`Error fetching profile summary for user ${userId}:`, error);
         }
       }
-    });
+    }
 
     // Remove any existing user elements that are not present in the updated user list
     userListContainer.querySelectorAll('.chat-user-list [class^="user"]').forEach(userElement => {

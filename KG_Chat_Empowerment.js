@@ -988,7 +988,7 @@
     }
 
     /* Common rotation animation */
-    @keyframes rotateAnimation {
+    @keyframes rotateProfileIconAnimation {
         0% {
             transform: rotate(0deg) scale(1);
             transition-timing-function: ease-in-out;
@@ -1005,13 +1005,13 @@
     /* Animation for online status */
     .chat-user-list svg.online {
         stroke: lightgreen;
-        animation: rotateAnimation 2s forwards;
+        animation: rotateProfileIconAnimation 2s forwards;
     }
 
     /* Animation for offline status */
     .chat-user-list svg.offline {
         stroke: chocolate;
-        animation: rotateAnimation 2s forwards;
+        animation: rotateProfileIconAnimation 2s forwards;
     }
 `;
 

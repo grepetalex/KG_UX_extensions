@@ -920,6 +920,12 @@
       opacity: 0;
     }
 
+    #chat-general .smile-tab {
+      background-color: #282B2F;
+      position: relative;
+      z-index: 1;
+    }
+
     .chat-user-list {
         display: flex;
         flex-direction: column;
@@ -978,7 +984,7 @@
     }
 
     .chat-user-list svg.feather-meh {
-        stroke: gray;
+        stroke: #A47C5E;
     }
 
     /* Common rotation animation */

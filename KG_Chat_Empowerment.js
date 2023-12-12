@@ -1018,41 +1018,41 @@
   document.head.appendChild(newChatUserListStyles);
 
   // Function to get profile summary from API or local storage cache
-  function getProfileSummary(userId) {
-    return new Promise((resolve, reject) => {
+  async function getProfileSummary(userId) {
+    return new Promise(async (resolve, reject) => {
       const cachedUserInfo = JSON.parse(localStorage.getItem('fetchedUsers')) || {};
 
       if (cachedUserInfo[userId]) {
         resolve({ rank: cachedUserInfo[userId].rank, login: cachedUserInfo[userId].login });
       } else {
-        const apiUrl = `https://klavogonki.ru/api/profile/get-summary?id=${userId}`;
+        try {
+          const apiUrl = `https://klavogonki.ru/api/profile/get-summary?id=${userId}`;
+          const response = await fetch(apiUrl);
 
-        fetch(apiUrl)
-          .then(response => {
-            if (response.ok) {
-              return response.json();
-            }
+          if (!response.ok) {
             throw new Error('Network response was not ok.');
-          })
-          .then(data => {
-            if (data && data.user && data.user.login && data.status && data.status.title) {
-              const rank = data.status.title;
-              const login = data.user.login;
+          }
 
-              cachedUserInfo[userId] = {
-                rank: rank,
-                login: login,
-              };
-              localStorage.setItem('fetchedUsers', JSON.stringify(cachedUserInfo));
-              resolve({ rank, login });
-            } else {
-              throw new Error('Invalid data format received from the API.');
-            }
-          })
-          .catch(error => {
-            console.error(`Error fetching profile summary for user ${userId}:`, error);
-            reject(error);
-          });
+          const data = await response.json();
+
+          if (data && data.user && data.user.login && data.title) {
+            const rank = data.title; // Use the title directly from the main user object
+            const login = data.user.login;
+
+            cachedUserInfo[userId] = {
+              rank: rank,
+              login: login,
+            };
+
+            localStorage.setItem('fetchedUsers', JSON.stringify(cachedUserInfo));
+            resolve({ rank, login });
+          } else {
+            throw new Error('Invalid data format received from the API.');
+          }
+        } catch (error) {
+          console.error(`Error fetching profile summary for user ${userId}:`, error);
+          reject(error);
+        }
       }
     });
   }
@@ -1088,7 +1088,14 @@
       'Новичок': 'newbie'
     };
 
-    return statusClasses[statusTitle] || 'unknown'; // Default to 'unknown' class if status title not found
+    const defaultClass = 'unknown';
+    const rankClass = statusClasses[statusTitle] || defaultClass;
+
+    if (rankClass === defaultClass) {
+      console.log(`Class not found for status title: ${statusTitle}. Using default class: ${defaultClass}`);
+    }
+
+    return rankClass;
   }
 
   // Function to handle private message
@@ -1192,12 +1199,20 @@
     newAvatarElement.classList.add('avatar');
 
     const avatarContent = document.createElement('img');
-    avatarContent.src = bigAvatarUrl;
 
-    avatarContent.addEventListener('error', function () {
-      // If there's an error loading the avatar, replace with the static SVG
-      newAvatarElement.innerHTML = mehSVG;
-    });
+    // Perform a HEAD request to check the image response status and headers
+    fetch(bigAvatarUrl, { method: 'HEAD' })
+      .then(response => {
+        // Check if the response status is okay (2xx) and the Content-Type header indicates an image
+        if (response.ok && response.headers.get('Content-Type') && response.headers.get('Content-Type').startsWith('image/')) {
+          // If the conditions are met, set the image source
+          avatarContent.src = bigAvatarUrl;
+        }
+      })
+      .catch(() => {
+        // Handle any fetch error (e.g., network error) by assigning mehSVG
+        newAvatarElement.innerHTML = mehSVG;
+      });
 
     // If there's no error, use the img element
     newAvatarElement.appendChild(avatarContent);
@@ -1249,92 +1264,89 @@
     return newUserElement;
   }
 
+  // Function to update users in the custom chat
   async function refreshUserList() {
-    // Get the original user list container
-    const originalUserListContainer = document.querySelector('.userlist-content');
+    try {
+      // Get the original user list container
+      const originalUserListContainer = document.querySelector('.userlist-content');
 
-    // Get or create the user list container
-    let userListContainer = document.querySelector('.chat-user-list');
-    if (!userListContainer) {
-      userListContainer = document.createElement('div');
-      userListContainer.classList.add('chat-user-list');
+      // Get or create the user list container
+      let userListContainer = document.querySelector('.chat-user-list');
+      if (!userListContainer) {
+        userListContainer = document.createElement('div');
+        userListContainer.classList.add('chat-user-list');
 
-      // Find the element with the class "userlist"
-      const userlistElement = document.querySelector('.userlist');
+        // Find the element with the class "userlist"
+        const userlistElement = document.querySelector('.userlist');
 
-      // Append the userListContainer to the userlistElement if found
-      if (userlistElement) {
-        userlistElement.appendChild(userListContainer);
-      }
-    }
-
-    // Define the rank order
-    const rankOrder = ['extra_cyber', 'cyber_racer', 'superman', 'maniac', 'racer', 'pro', 'driver', 'amateur', 'newbie'];
-
-    // Create an object to store subparent elements for each rank class
-    const rankSubparents = {};
-
-    // Check if subparent elements already exist, if not, create them
-    rankOrder.forEach(rankClass => {
-      const existingSubparent = userListContainer.querySelector(`.rank-group-${rankClass}`);
-      if (!existingSubparent) {
-        rankSubparents[rankClass] = document.createElement('div');
-        rankSubparents[rankClass].classList.add(`rank-group-${rankClass}`);
-        userListContainer.appendChild(rankSubparents[rankClass]);
-      } else {
-        rankSubparents[rankClass] = existingSubparent;
-      }
-    });
-
-    // Create a set to store existing user IDs in the updated user list
-    const existingUserIds = new Set();
-
-    // Iterate over each user element in the original user list
-    for (const userElement of originalUserListContainer.querySelectorAll('ins')) {
-      const nameElement = userElement.querySelector('.name');
-      const userId = nameElement.getAttribute('data-user');
-      const userName = nameElement.textContent;
-
-      // Check if the user already exists in the updated user list
-      if (!existingUserIds.has(userId)) {
-        try {
-          // Use getProfileSummary instead of getStatusTitle
-          const { rank: statusTitle, login } = await getProfileSummary(userId);
-
-          if (!fetchedUsers[userId]) {
-            fetchedUsers[userId] = { rank: statusTitle, login };
-            localStorage.setItem('fetchedUsers', JSON.stringify(fetchedUsers));
-          }
-
-          // Pass the new parameter isRevoked to createUserElement
-          const isRevoked = userElement.classList.contains('revoked');
-
-          const rankClass = getRankClass(statusTitle);
-
-          // Check if the user with the same ID already exists in the corresponding rank group
-          const existingUserElement = rankSubparents[rankClass].querySelector(`.user${userId}`);
-          if (!existingUserElement) {
-            const newUserElement = createUserElement(userId, statusTitle, userName, isRevoked);
-
-            // Add the user to the corresponding rank group
-            rankSubparents[rankClass].appendChild(newUserElement);
-          }
-
-          // Update existing user IDs
-          existingUserIds.add(userId);
-        } catch (error) {
-          console.error(`Error fetching profile summary for user ${userId}:`, error);
+        // Append the userListContainer to the userlistElement if found
+        if (userlistElement) {
+          userlistElement.appendChild(userListContainer);
         }
       }
-    }
 
-    // Remove any existing user elements that are not present in the updated user list
-    userListContainer.querySelectorAll('.chat-user-list [class^="user"]').forEach(userElement => {
-      const userId = userElement.querySelector('.name').getAttribute('data-user');
-      if (!existingUserIds.has(userId)) {
-        userElement.remove();
+      // Define the rank order
+      const rankOrder = ['extra_cyber', 'cyber_racer', 'superman', 'maniac', 'racer', 'pro', 'driver', 'amateur', 'newbie'];
+
+      // Create an object to store subparent elements for each rank class
+      const rankSubparents = {};
+
+      // Check if subparent elements already exist, if not, create them
+      rankOrder.forEach(rankClass => {
+        const existingSubparent = userListContainer.querySelector(`.rank-group-${rankClass}`);
+        if (!existingSubparent) {
+          rankSubparents[rankClass] = document.createElement('div');
+          rankSubparents[rankClass].classList.add(`rank-group-${rankClass}`);
+          userListContainer.appendChild(rankSubparents[rankClass]);
+        } else {
+          rankSubparents[rankClass] = existingSubparent;
+        }
+      });
+
+      // Create a set to store existing user IDs in the updated user list
+      const existingUserIds = new Set();
+
+      // Iterate over each user element in the original user list
+      for (const userElement of originalUserListContainer.querySelectorAll('ins')) {
+        const nameElement = userElement.querySelector('.name');
+        const userId = nameElement.getAttribute('data-user');
+        const userName = nameElement.textContent;
+
+        // Check if the user already exists in the updated user list
+        if (!existingUserIds.has(userId)) {
+          try {
+            // Use getProfileSummary instead of getStatusTitle
+            const { rank: statusTitle, login } = await getProfileSummary(userId);
+
+            if (!fetchedUsers[userId]) {
+              fetchedUsers[userId] = { rank: statusTitle, login };
+              localStorage.setItem('fetchedUsers', JSON.stringify(fetchedUsers));
+            }
+
+            // Pass the new parameter isRevoked to createUserElement
+            const isRevoked = userElement.classList.contains('revoked');
+
+            const rankClass = getRankClass(statusTitle);
+
+            // Check if the user with the same ID already exists in the corresponding rank group
+            const existingUserElement = rankSubparents[rankClass].querySelector(`.user${userId}`);
+            if (!existingUserElement) {
+              const newUserElement = createUserElement(userId, statusTitle, userName, isRevoked);
+
+              // Add the user to the corresponding rank group
+              rankSubparents[rankClass].appendChild(newUserElement);
+            }
+
+            // Update existing user IDs
+            existingUserIds.add(userId);
+          } catch (error) {
+            console.error(`Error fetching profile summary for user ${userId}:`, error);
+          }
+        }
       }
-    });
+    } catch (error) {
+      console.error('Error refreshing user list:', error);
+    }
   }
 
   function refreshFetchedUsers() {

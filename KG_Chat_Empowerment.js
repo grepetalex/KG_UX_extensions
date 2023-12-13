@@ -1413,6 +1413,15 @@
           }
         }
       }
+
+      // Additional removal logic based on your provided code
+      userListContainer.querySelectorAll('.chat-user-list [class^="user"]').forEach(userElement => {
+        const userId = userElement.querySelector('.name').getAttribute('data-user');
+        if (!existingUserIds.has(userId)) {
+          userElement.remove();
+        }
+      });
+
     } catch (error) {
       console.error('Error refreshing user list:', error);
     }

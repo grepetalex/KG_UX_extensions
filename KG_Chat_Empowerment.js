@@ -1102,12 +1102,12 @@
   // Function to get rank class based on status title in English
   function getRankClass(statusTitle) {
     const statusClasses = {
-      'Экстракибер': 'extra_cyber',
-      'Кибергонщик': 'cyber_racer',
+      'Экстракибер': 'extra',
+      'Кибергонщик': 'cyber',
       'Супермен': 'superman',
       'Маньяк': 'maniac',
       'Гонщик': 'racer',
-      'Профи': 'pro',
+      'Профи': 'profi',
       'Таксист': 'driver',
       'Любитель': 'amateur',
       'Новичок': 'newbie'
@@ -1355,7 +1355,7 @@
       }
 
       // Define the rank order
-      const rankOrder = ['extra_cyber', 'cyber_racer', 'superman', 'maniac', 'racer', 'pro', 'driver', 'amateur', 'newbie'];
+      const rankOrder = ['extra', 'cyber', 'superman', 'maniac', 'racer', 'profi', 'driver', 'amateur', 'newbie'];
 
       // Create an object to store subparent elements for each rank class
       const rankSubparents = {};

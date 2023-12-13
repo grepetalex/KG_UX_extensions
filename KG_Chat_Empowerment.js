@@ -921,7 +921,8 @@
     }
 
     #chat-general .smile-tab {
-      background-color: #282B2F;
+      background-color: ${((c) => c[0] == '#' ? c : '#' + c.match(/\d+/g).map(Number).map(x => x.toString(16).padStart(2, '0')).join(''))
+      (getComputedStyle(document.querySelector('.chat .messages')).backgroundColor)};
       position: relative;
       z-index: 1;
     }
@@ -935,7 +936,8 @@
         width: 200px;
         height: 94%;
         overflow-y: auto;
-        background-color: #282B2F;
+        background-color: ${((c) => c[0] == '#' ? c : '#' + c.match(/\d+/g).map(Number).map(x => x.toString(16).padStart(2, '0')).join(''))
+      (getComputedStyle(document.querySelector('.chat .messages')).backgroundColor)};
     }
 
     .chat-user-list [class^="rank-group"] {

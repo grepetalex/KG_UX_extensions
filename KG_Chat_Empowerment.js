@@ -985,7 +985,9 @@
         align-items: center;
     }
 
-    .chat-user-list svg.feather-meh {
+    .chat-user-list svg.feather-meh,
+    .chat-user-list svg.feather-smile,
+    .chat-user-list svg.feather-frown {
         stroke: #A47C5E;
     }
 
@@ -1014,6 +1016,27 @@
     .chat-user-list svg.offline {
         stroke: chocolate;
         animation: rotateProfileIconAnimation 2s forwards;
+    }
+    
+    /* Shake Profile Icon Animation for Small Icons */
+    @keyframes shakeProfileIconAnimation {
+        0% { transform: translate(0.5px, 0.5px) rotate(0deg); }
+        10% { transform: translate(-0.5px, -1px) rotate(-1deg); }
+        20% { transform: translate(-1.5px, 0px) rotate(1deg); }
+        30% { transform: translate(1.5px, 1px) rotate(0deg); }
+        40% { transform: translate(0.5px, -0.5px) rotate(1deg); }
+        50% { transform: translate(-0.5px, 1px) rotate(-1deg); }
+        60% { transform: translate(-1.5px, 0.5px) rotate(0deg); }
+        70% { transform: translate(1.5px, 0.5px) rotate(-1deg); }
+        80% { transform: translate(-0.5px, -0.5px) rotate(1deg); }
+        90% { transform: translate(0.5px, 1px) rotate(0deg); }
+        100% { transform: translate(0.5px, -1px) rotate(-1deg); }
+    }
+
+    /* Apply shake animation to sto profile svg iconkwith the class eProfileIconAnimation */
+    .chat-user-list svg.online:hover,
+    .chat-user-list svg.offline:hover {
+      animation: shakeProfileIconAnimation 0.5s linear infinite;
     }
 `;
 
@@ -1135,20 +1158,54 @@
 
   // Inline SVG source for the "meh" icon
   const mehSVG = `
-    <svg xmlns="http://www.w3.org/2000/svg" 
-        width="24" 
-        height="24" 
-        viewBox="0 0 24 24" 
-        fill="none"
-        stroke-width="1.4" 
-        stroke-linecap="round" 
-        stroke-linejoin="round" 
-        class="feather feather-meh">
-        <circle cx="12" cy="12" r="10"></circle>
-        <line x1="8" y1="15" x2="16" y2="15"></line>
-        <line x1="9" y1="9" x2="9.01" y2="9"></line>
-        <line x1="15" y1="9" x2="15.01" y2="9"></line>
-    </svg>`;
+  <svg xmlns="http://www.w3.org/2000/svg" 
+      width="24" 
+      height="24" 
+      viewBox="0 0 24 24" 
+      fill="none"
+      stroke-width="1.4" 
+      stroke-linecap="round" 
+      stroke-linejoin="round" 
+      class="feather feather-meh">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="8" y1="15" x2="16" y2="15"></line>
+      <line x1="9" y1="9" x2="9.01" y2="9"></line>
+      <line x1="15" y1="9" x2="15.01" y2="9"></line>
+  </svg>`;
+
+  // Inline SVG source for the "smile" icon
+  const smileSVG = `
+  <svg xmlns="http://www.w3.org/2000/svg" 
+      width="24" 
+      height="24" 
+      viewBox="0 0 24 24" 
+      fill="none"
+      stroke-width="1.4" 
+      stroke-linecap="round" 
+      stroke-linejoin="round" 
+      class="feather feather-smile">
+      <circle cx="12" cy="12" r="10"></circle>
+      <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+      <line x1="9" y1="9" x2="9.01" y2="9"></line>
+      <line x1="15" y1="9" x2="15.01" y2="9"></line>
+  </svg>`;
+
+  // Inline SVG source for the "frown" icon
+  const frownSVG = `
+  <svg xmlns="http://www.w3.org/2000/svg" 
+      width="24" 
+      height="24" 
+      viewBox="0 0 24 24" 
+      fill="none"
+      stroke-width="1.4" 
+      stroke-linecap="round" 
+      stroke-linejoin="round" 
+      class="feather feather-frown">
+      <circle cx="12" cy="12" r="10"></circle>
+      <path d="M16 16s-1.5-2-4-2-4 2-4 2"></path>
+      <line x1="9" y1="9" x2="9.01" y2="9"></line>
+      <line x1="15" y1="9" x2="15.01" y2="9"></line>
+  </svg>`;
 
   // SVG icon for the moderator with gradient
   const moderatorSVG = `
@@ -1187,6 +1244,13 @@
       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
   </svg>`;
 
+  // Helper function to get a random SVG
+  function getRandomIconSVG() {
+    const svgs = [mehSVG, smileSVG, frownSVG];
+    const randomIndex = Math.floor(Math.random() * svgs.length);
+    return svgs[randomIndex];
+  }
+
   // Array to store user IDs and their status titles
   const fetchedUsers = JSON.parse(localStorage.getItem('fetchedUsers')) || {};
 
@@ -1204,16 +1268,19 @@
 
     // Perform a HEAD request to check the image response status and headers
     fetch(bigAvatarUrl, { method: 'HEAD' })
-      .then(response => {
-        // Check if the response status is okay (2xx) and the Content-Type header indicates an image
+      .then(async (response) => {
+        // Check if the response status is OK (2xx) and the Content-Type header indicates an image
         if (response.ok && response.headers.get('Content-Type') && response.headers.get('Content-Type').startsWith('image/')) {
           // If the conditions are met, set the image source
           avatarContent.src = bigAvatarUrl;
+        } else {
+          // If the response status is not OK or the Content-Type is not an image, assign mehSVG
+          newAvatarElement.innerHTML = getRandomIconSVG();
         }
       })
       .catch(() => {
         // Handle any fetch error (e.g., network error) by assigning mehSVG
-        newAvatarElement.innerHTML = mehSVG;
+        newAvatarElement.innerHTML = getRandomIconSVG();
       });
 
     // If there's no error, use the img element
@@ -1244,7 +1311,7 @@
     newUserElement.appendChild(newProfileElement);
 
     // Check if there is a user in 'usersToTrack' array by their name
-    const userToTrack = usersToTrack.find(user => user.name === userName);
+    const userToTrack = usersToTrack.find((user) => user.name === userName);
 
     if (userToTrack) {
       const trackedIcon = document.createElement('div');

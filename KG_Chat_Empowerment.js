@@ -1083,7 +1083,7 @@
   }
 
   // Function to get rank color based on status title
-  function getRankColor(statusTitle) {
+  function getRankColor(mainTitle) {
     const statusColors = {
       'Экстракибер': '#06B4E9', // Light Blue
       'Кибергонщик': '#5681ff', // Medium Blue
@@ -1096,11 +1096,11 @@
       'Новичок': '#AFAFAF' // Grey
     };
 
-    return statusColors[statusTitle] || '#000000'; // Default to black color if status title not found
+    return statusColors[mainTitle] || '#000000'; // Default to black color if status title not found
   }
 
   // Function to get rank class based on status title in English
-  function getRankClass(statusTitle) {
+  function getRankClass(mainTitle) {
     const statusClasses = {
       'Экстракибер': 'extra',
       'Кибергонщик': 'cyber',
@@ -1114,10 +1114,10 @@
     };
 
     const defaultClass = 'unknown';
-    const rankClass = statusClasses[statusTitle] || defaultClass;
+    const rankClass = statusClasses[mainTitle] || defaultClass;
 
     if (rankClass === defaultClass) {
-      console.log(`Class not found for status title: ${statusTitle}. Using default class: ${defaultClass}`);
+      console.log(`Class not found for status title: ${mainTitle}. Using default class: ${defaultClass}`);
     }
 
     return rankClass;
@@ -1254,37 +1254,27 @@
   // Array to store user IDs and their status titles
   const fetchedUsers = JSON.parse(localStorage.getItem('fetchedUsers')) || {};
 
-  function createUserElement(userId, statusTitle, userName, isRevoked) {
+  function createUserElement(userId, mainTitle, userName, isRevoked) {
     const bigAvatarUrl = `/storage/avatars/${userId}_big.png`;
 
     const newUserElement = document.createElement('div');
-    const rankClass = getRankClass(statusTitle);
+    const rankClass = getRankClass(mainTitle);
     newUserElement.classList.add(`user${userId}`, rankClass); // Assign the rank class
 
     const newAvatarElement = document.createElement('div');
     newAvatarElement.classList.add('avatar');
 
-    const avatarContent = document.createElement('img');
+    // Check if the .name element has the 'style' attribute
+    const userElement = document.querySelector(`.userlist-content .user${userId} .name`);
+    const hasStyle = userElement && userElement.hasAttribute('style');
 
-    // Perform a HEAD request to check the image response status and headers
-    fetch(bigAvatarUrl, { method: 'HEAD' })
-      .then(async (response) => {
-        // Check if the response status is OK (2xx) and the Content-Type header indicates an image
-        if (response.ok && response.headers.get('Content-Type') && response.headers.get('Content-Type').startsWith('image/')) {
-          // If the conditions are met, set the image source
-          avatarContent.src = bigAvatarUrl;
-        } else {
-          // If the response status is not OK or the Content-Type is not an image, assign mehSVG
-          newAvatarElement.innerHTML = getRandomIconSVG();
-        }
-      })
-      .catch(() => {
-        // Handle any fetch error (e.g., network error) by assigning mehSVG
-        newAvatarElement.innerHTML = getRandomIconSVG();
-      });
-
-    // If there's no error, use the img element
-    newAvatarElement.appendChild(avatarContent);
+    if (hasStyle) {
+      const avatarContent = document.createElement('img'); // Create the img element
+      avatarContent.src = bigAvatarUrl;
+      newAvatarElement.appendChild(avatarContent); // Append the img element inside the condition
+    } else {
+      newAvatarElement.innerHTML = getRandomIconSVG();
+    }
 
     const newNameElement = document.createElement('a');
     newNameElement.classList.add('name');
@@ -1292,7 +1282,7 @@
     newNameElement.dataset.user = userId;
     newNameElement.textContent = userName;
 
-    const rankColor = getRankColor(statusTitle);
+    const rankColor = getRankColor(mainTitle);
     newNameElement.style.setProperty('color', rankColor, 'important');
 
     const newProfileElement = document.createElement('a');
@@ -1384,23 +1374,23 @@
         // Check if the user already exists in the updated user list
         if (!existingUserIds.has(userId)) {
           try {
-            // Use getProfileSummary instead of getStatusTitle
-            const { rank: statusTitle, login } = await getProfileSummary(userId);
+            // Use getProfileSummary instead of getMainTitle
+            const { rank: mainTitle, login } = await getProfileSummary(userId);
 
             if (!fetchedUsers[userId]) {
-              fetchedUsers[userId] = { rank: statusTitle, login };
+              fetchedUsers[userId] = { rank: mainTitle, login };
               localStorage.setItem('fetchedUsers', JSON.stringify(fetchedUsers));
             }
 
             // Pass the new parameter isRevoked to createUserElement
             const isRevoked = userElement.classList.contains('revoked');
 
-            const rankClass = getRankClass(statusTitle);
+            const rankClass = getRankClass(mainTitle);
 
             // Check if the user with the same ID already exists in the corresponding rank group
             const existingUserElement = rankSubparents[rankClass].querySelector(`.user${userId}`);
             if (!existingUserElement) {
-              const newUserElement = createUserElement(userId, statusTitle, userName, isRevoked);
+              const newUserElement = createUserElement(userId, mainTitle, userName, isRevoked);
 
               // Add the user to the corresponding rank group
               rankSubparents[rankClass].appendChild(newUserElement);

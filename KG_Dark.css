@@ -4492,23 +4492,19 @@ code {
 #chat-title table .pin,
 #chat-title table .height-btn,
 #chat-title table .height-btn.height-btn-max {
-    background: var(--orange) !important;
-    filter: brightness(0.5) !important;
+    background: #a27d24 !important;
 }
 #chat-title table .pin:hover,
 #chat-title table .height-btn:hover,
 #chat-title table .height-btn.height-btn-max:hover {
-    background: var(--orange) !important;
-    filter: brightness(0.8) !important;
+    filter: brightness(1.2) !important;
 }
 /* chat close button */
 #chat-title table .mostright {
-    background: var(--red) !important;
-    filter: brightness(0.5) !important;
+    background: #a24824 !important;
 }
 #chat-title table .mostright:hover {
-    background: var(--red) !important;
-    filter: brightness(0.7) !important;
+    filter: brightness(1.7) !important;
 }
 #chat-title table .c span {
     padding: 0 !important;

@@ -874,7 +874,7 @@
   empowermentButtonsPanel.appendChild(userCount);
   // Apply positioning styles for the empowerment panel
   empowermentButtonsPanel.style.position = 'fixed';
-  empowermentButtonsPanel.style.top = '120px';
+  empowermentButtonsPanel.style.top = '60px';
   empowermentButtonsPanel.style.right = '12px';
   empowermentButtonsPanel.style.padding = '6px';
   // Append panel element inside the body
@@ -908,6 +908,338 @@
   userCountStylesElement.textContent = userCountStyles;
   document.head.appendChild(userCountStylesElement);
 
+
+  // NEW CHAT CACHE CONTROL PANEL (START)
+
+  // Function to display the cached user list panel
+  function showUserlistCachePanel() {
+    // Check if the panel already exists
+    if (document.querySelector('.cached-users-panel')) {
+      return;
+    }
+
+    // Get data from localStorage
+    const fetchedUsersData = localStorage.getItem('fetchedUsers');
+
+    // Check if data exists
+    if (fetchedUsersData) {
+      // Parse JSON data
+      const users = JSON.parse(fetchedUsersData);
+
+      // Rank order mapping
+      const rankOrder = {
+        'Экстракибер': 1,
+        'Кибергонщик': 2,
+        'Супермен': 3,
+        'Маньяк': 4,
+        'Гонщик': 5,
+        'Профи': 6,
+        'Таксист': 7,
+        'Любитель': 8,
+        'Новичок': 9
+      };
+
+      // Rank color mapping
+      const rankColors = {
+        'Экстракибер': '#06B4E9', // Light Blue
+        'Кибергонщик': '#5681ff', // Medium Blue
+        'Супермен': '#B543F5', // Purple
+        'Маньяк': '#DA0543', // Red
+        'Гонщик': '#FF8C00', // Orange
+        'Профи': '#C1AA00', // Yellow
+        'Таксист': '#2DAB4F', // Green
+        'Любитель': '#61B5B3', // Light Cyan
+        'Новичок': '#AFAFAF' // Grey
+      };
+
+      // Create a container div with class 'cached-users-panel'
+      const cachedUsersPanel = document.createElement('div');
+      cachedUsersPanel.className = 'cached-users-panel';
+      cachedUsersPanel.style.backgroundColor = '#1b1b1b';
+      cachedUsersPanel.style.setProperty('border-radius', '0.6em', 'important');
+      cachedUsersPanel.style.position = 'fixed';
+      cachedUsersPanel.style.top = '100px';
+      cachedUsersPanel.style.left = '50%';
+      cachedUsersPanel.style.transform = 'translateX(-50%)';
+      cachedUsersPanel.style.width = '90vw';
+      cachedUsersPanel.style.height = '80vh';
+      cachedUsersPanel.style.zIndex = '120';
+
+      // Create a container div with class 'panel-header'
+      const panelHeaderContainer = document.createElement('div');
+      panelHeaderContainer.className = 'panel-header';
+      panelHeaderContainer.style.display = 'flex';
+      panelHeaderContainer.style.flexDirection = 'row';
+      panelHeaderContainer.style.justifyContent = 'space-between';
+      panelHeaderContainer.style.padding = '0.6em';
+
+      // Create a container div with class 'drop-time'
+      const dropTime = document.createElement('div');
+      dropTime.className = 'drop-time';
+      dropTime.style.display = 'flex';
+      dropTime.style.justifyContent = 'center';
+      dropTime.style.alignItems = 'center';
+
+      // Create span elements for description and values
+      const dropTimeDescription = document.createElement('span');
+      dropTimeDescription.className = 'drop-time-description';
+      dropTimeDescription.textContent = 'Cache will be cleared in:';
+      dropTimeDescription.style.padding = '0.6em';
+      dropTimeDescription.style.color = 'gray';
+
+      const dropTimeValues = document.createElement('span');
+      dropTimeValues.className = 'drop-time-values';
+      dropTimeValues.style.padding = '0.6em';
+      dropTimeValues.style.color = 'antiquewhite';
+
+      // Append the description and values elements to the drop-time container
+      dropTime.appendChild(dropTimeDescription);
+      dropTime.appendChild(dropTimeValues);
+
+      // Append the drop time element to the panel header container
+      panelHeaderContainer.appendChild(dropTime);
+
+      // Create a container div with class 'panel-control-buttons'
+      const panelControlButtons = document.createElement('div');
+      panelControlButtons.className = 'panel-control-buttons';
+      panelControlButtons.style.display = 'flex';
+
+      // Inline SVG source for the trash icon
+      const trashIconSVG = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+      fill="none" stroke="darkorange" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round" class="feather feather-trash-2">
+      <polyline points="3 6 5 6 21 6"></polyline>
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+      <line x1="10" y1="11" x2="10" y2="17"></line>
+      <line x1="14" y1="11" x2="14" y2="17"></line>
+    </svg>`;
+
+      // Create a clear cache button with the provided SVG icon
+      const clearCacheButton = document.createElement('div');
+      clearCacheButton.className = 'clear-cache-button';
+      clearCacheButton.innerHTML = trashIconSVG;
+      clearCacheButton.style.backgroundColor = 'brown';
+      clearCacheButton.style.width = '48px';
+      clearCacheButton.style.height = '48px';
+      clearCacheButton.style.display = 'flex';
+      clearCacheButton.style.justifyContent = 'center';
+      clearCacheButton.style.alignItems = 'center';
+      clearCacheButton.style.cursor = 'pointer';
+      clearCacheButton.style.setProperty('border-radius', '0.2em', 'important');
+      clearCacheButton.style.marginRight = '16px'; // Adjust the margin as needed
+
+      // Add a hover effect with brightness transition
+      clearCacheButton.style.filter = 'brightness(1)';
+      clearCacheButton.style.transition = 'filter 0.3s ease';
+
+      // Add a mouseover event listener to the clear cache button
+      clearCacheButton.addEventListener('mouseover', () => {
+        clearCacheButton.style.filter = 'brightness(0.8)';
+      });
+
+      // Add a mouseout event listener to the clear cache button
+      clearCacheButton.addEventListener('mouseout', () => {
+        clearCacheButton.style.filter = 'brightness(1)';
+      });
+
+      // Add a click event listener to the clear cache button
+      clearCacheButton.addEventListener('click', () => {
+        // Add your logic to clear the cache here
+        // For example, you can remove the cached data from localStorage
+        localStorage.removeItem('fetchedUsers');
+        localStorage.removeItem('lastClearTime');
+        // You might want to update the UI or perform any other actions after clearing the cache
+
+        // Optionally, you can also remove the cached-users-panel
+        document.body.removeChild(cachedUsersPanel);
+      });
+
+      // Append the clear cache button to the panel header container
+      panelControlButtons.appendChild(clearCacheButton);
+
+      // Inline SVG source for the "x" icon (close button)
+      const closeSVG = `
+    <svg xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="lightgreen"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="feather feather-x">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>`;
+
+      // Create a close button with the provided SVG icon
+      const closePanelButton = document.createElement('div');
+      closePanelButton.className = 'close-panel-button';
+      closePanelButton.innerHTML = closeSVG;
+      closePanelButton.style.backgroundColor = 'darkolivegreen';
+      closePanelButton.style.width = '48px';
+      closePanelButton.style.height = '48px';
+      closePanelButton.style.display = 'flex';
+      closePanelButton.style.justifyContent = 'center';
+      closePanelButton.style.alignItems = 'center';
+      closePanelButton.style.cursor = 'pointer';
+      closePanelButton.style.setProperty('border-radius', '0.2em', 'important');
+
+      // Add a hover effect with brightness transition
+      closePanelButton.style.filter = 'brightness(1)';
+      closePanelButton.style.transition = 'filter 0.3s ease';
+
+      // Add a mouseover event listener to the close panel button
+      closePanelButton.addEventListener('mouseover', () => {
+        closePanelButton.style.filter = 'brightness(0.8)';
+      });
+
+      // Add a mouseout event listener to the close panel button
+      closePanelButton.addEventListener('mouseout', () => {
+        closePanelButton.style.filter = 'brightness(1)';
+      });
+
+      // Add a click event listener to the close panel button
+      closePanelButton.addEventListener('click', () => {
+        // Remove the cached-users-panel when the close button is clicked
+        document.body.removeChild(cachedUsersPanel);
+      });
+
+      // Append the close button to the panel header container
+      panelControlButtons.appendChild(closePanelButton);
+
+      // Append the panel control buttons element inside the panel header container
+      panelHeaderContainer.appendChild(panelControlButtons);
+
+      // Create a container div with class 'fetched-users'
+      const fetchedUsersContainer = document.createElement('div');
+      fetchedUsersContainer.className = 'fetched-users';
+
+      // Add CSS styles for grid layout and centering
+      fetchedUsersContainer.style.display = 'grid';
+      fetchedUsersContainer.style.gridAutoFlow = 'dense'; // Allows items to fill empty spaces
+      fetchedUsersContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(120px, 1fr))';
+      fetchedUsersContainer.style.gridTemplateRows = 'repeat(auto-fill, minmax(60px, 1fr))';
+      fetchedUsersContainer.style.gap = '12px';
+      fetchedUsersContainer.style.padding = '24px';
+      fetchedUsersContainer.style.overflowY = 'auto';
+      fetchedUsersContainer.style.height = 'calc(100% - 64px)';
+
+      // Create an array to hold user elements
+      const userElements = [];
+
+      // Iterate through each user
+      Object.keys(users).forEach((userId) => {
+        const userData = users[userId];
+
+        // Create a div for each user with class 'user'
+        const userElement = document.createElement('div');
+        userElement.className = 'user';
+        userElement.style.padding = '0.2em';
+        userElement.style.margin = '0.2em';
+
+        // Create anchor element for userId
+        const userIdAnchor = document.createElement('a');
+        userIdAnchor.className = 'id';
+        userIdAnchor.textContent = userId;
+        userIdAnchor.href = `https://klavogonki.ru/profile/${userId}`;
+        userIdAnchor.target = '_blank';
+        userIdAnchor.style.setProperty('color', 'skyblue', 'important');
+        userIdAnchor.style.textDecoration = 'none';
+        userIdAnchor.style.transition = 'color 0.3s ease'; // Add smooth transition
+
+        // Add underline on hover and change color to a lighter shade of skyblue
+        userIdAnchor.addEventListener('mouseover', () => {
+          userIdAnchor.style.textDecoration = 'underline';
+          userIdAnchor.style.setProperty('color', 'lightblue', 'important');
+        });
+        userIdAnchor.addEventListener('mouseout', () => {
+          userIdAnchor.style.textDecoration = 'none';
+          userIdAnchor.style.setProperty('color', 'skyblue', 'important');
+        });
+
+        const rankElement = document.createElement('div');
+        rankElement.className = 'rank';
+        rankElement.textContent = userData.rank;
+        rankElement.style.color = rankColors[userData.rank] || 'white';
+
+        const loginElement = document.createElement('div');
+        loginElement.className = 'login';
+        loginElement.textContent = userData.login;
+        loginElement.style.color = 'antiquewhite';
+
+        // Append anchor, rank, and login divs to the user div
+        userElement.appendChild(userIdAnchor);
+        userElement.appendChild(rankElement);
+        userElement.appendChild(loginElement);
+
+        // Append the user div to the userElements array
+        userElements.push({ userElement, order: rankOrder[userData.rank] || 10 });
+      });
+
+      // Sort userElements array based on order
+      userElements.sort((a, b) => a.order - b.order);
+
+      // Append sorted user elements to the fetched-users container
+      userElements.forEach(({ userElement }) => {
+        fetchedUsersContainer.appendChild(userElement);
+      });
+
+      // Append the panel-header container to the cached-users-panel
+      cachedUsersPanel.appendChild(panelHeaderContainer);
+      // Append the fetched-users container to the cached-users-panel
+      cachedUsersPanel.appendChild(fetchedUsersContainer);
+
+      // Append the cached-users-panel to the body
+      document.body.appendChild(cachedUsersPanel);
+
+      // Function to update the remaining time
+      function updateRemainingTime() {
+        const lastClearTime = localStorage.getItem('lastClearTime');
+        const dropTimeValues = document.querySelector('.drop-time-values');
+
+        if (lastClearTime && dropTimeValues) {
+          const currentTime = new Date().getTime();
+          const oneDayInMilliseconds = 24 * 60 * 60 * 1000;
+
+          // Calculate the remaining time until the next cache clear
+          const remainingTime = oneDayInMilliseconds - (currentTime - lastClearTime);
+
+          // If remaining time is zero or less, execute the refreshFetchedUsers function
+          remainingTime <= 0
+            ? refreshFetchedUsers()
+            : updateDropTimeValues(dropTimeValues, remainingTime);
+        }
+      }
+
+      // Function to update the drop-time-values span
+      function updateDropTimeValues(dropTimeValues, remainingTime) {
+        // Calculate hours, minutes, and seconds
+        const hours = String(Math.floor(remainingTime / (60 * 60 * 1000))).padStart(2, '0');
+        const minutes = String(Math.floor((remainingTime % (60 * 60 * 1000)) / (60 * 1000))).padStart(2, '0');
+        const seconds = String(Math.floor((remainingTime % (60 * 1000)) / 1000)).padStart(2, '0');
+
+        // Create a custom formatted string
+        const remainingTimeString = `${hours}:${minutes}:${seconds}`;
+
+        // Update the drop-time-values span using the cached reference
+        dropTimeValues.textContent = remainingTimeString;
+      }
+
+      // Call the function to update the remaining time every second
+      setInterval(updateRemainingTime, 1000);
+
+      // Initial update
+      updateRemainingTime();
+    }
+  }
+
+  // NEW CHAT CACHE CONTROL PANEL (END)
+
+
+  // NEW CHAT USER LIST (START)
 
   // Add styles for hover effects dynamically to the head
   const newChatUserListStyles = document.createElement('style');
@@ -1254,6 +1586,7 @@
   // Array to store user IDs and their status titles
   const fetchedUsers = JSON.parse(localStorage.getItem('fetchedUsers')) || {};
 
+  // Function to create a user element with avatar, name, and profile link based on user details
   function createUserElement(userId, mainTitle, userName, isRevoked) {
     const bigAvatarUrl = `/storage/avatars/${userId}_big.png`;
 
@@ -1424,8 +1757,13 @@
     if (shouldClearCache) {
       localStorage.removeItem('fetchedUsers');
       localStorage.setItem('lastClearTime', new Date().getTime().toString());
+
+      // Reload the current page after 1 second
+      setTimeout(() => location.reload(), 1000);
     }
   }
+
+  // NEW CHAT USER LIST (END)
 
 
   // Define reference for chat user list
@@ -2327,6 +2665,13 @@
       <circle cx="12" cy="12" r="10"></circle>
       <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
       </svg>`;
+  // Icon for userlistCache
+  const iconUserlistCache = `<svg xmlns="${svgUrl}" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="lightcoral" stroke-width="${iconStrokeWidth}"
+      stroke-linecap="round" stroke-linejoin="round" class="feather feather-database">
+      <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+      <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+      <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+      </svg>`;
 
 
   let soundSwitcher, soundSwitcherIcon;
@@ -2475,6 +2820,51 @@
     // Append sound switcher button to chat buttons panel
     empowermentButtonsPanel.appendChild(messageMode);
   } createMessageModeButton();
+
+
+  // Function to create the button for showUserListCachePanel
+  function createShowUserListCacheButton() {
+    // Create a new element with class 'cache-panel-load-button'
+    const showUserListCacheButton = document.createElement('div');
+
+    // Add the class 'cache-panel-load-button' to the button
+    showUserListCacheButton.classList.add('cache-panel-load-button');
+
+    // Append some styles
+    showUserListCacheButton.style.display = 'flex';
+    showUserListCacheButton.style.justifyContent = 'center';
+    showUserListCacheButton.style.alignItems = 'center';
+    showUserListCacheButton.style.width = '48px';
+    showUserListCacheButton.style.height = '48px';
+    showUserListCacheButton.style.cursor = 'pointer';
+    showUserListCacheButton.style.margin = `${empowermentButtonsMargin}px`; // Use the correct margin variable
+    showUserListCacheButton.style.border = '1px solid #27ae60'; // Border color, you can change it
+    showUserListCacheButton.style.backgroundColor = '#212226';
+    showUserListCacheButton.style.border = '1px solid #45474b';
+
+    // Add data base icon to the button
+    showUserListCacheButton.innerHTML = iconUserlistCache;
+
+    // Assign a title to the button
+    showUserListCacheButton.title = 'Show User List Cache Panel';
+
+    // Add a click event listener to the button
+    showUserListCacheButton.addEventListener('click', function () {
+      // Add the 'pulse' class to create a visual effect
+      showUserListCacheButton.classList.add('pulse');
+      // Remove the 'pulse' class after 500ms to stop the visual effect
+      setTimeout(() => {
+        showUserListCacheButton.classList.remove('pulse');
+      }, 500);
+
+      // Call your showUserlistCachePanel function here if needed
+      showUserlistCachePanel();
+    });
+
+    // Append the button to the existing buttons panel
+    empowermentButtonsPanel.appendChild(showUserListCacheButton);
+  } createShowUserListCacheButton();
+
 
   // Add the isAltKeyPressed condition to the messagesMode event listener
   messageMode.addEventListener('click', function (event) {

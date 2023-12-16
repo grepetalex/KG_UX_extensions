@@ -955,6 +955,10 @@
       // Create a container div with class 'cached-users-panel'
       const cachedUsersPanel = document.createElement('div');
       cachedUsersPanel.className = 'cached-users-panel';
+      // Set initial styles
+      cachedUsersPanel.style.opacity = '0';
+      cachedUsersPanel.style.transition = 'opacity 0.6s cubic-bezier(.05,.95,.45,.95)';
+
       cachedUsersPanel.style.backgroundColor = '#1b1b1b';
       cachedUsersPanel.style.setProperty('border-radius', '0.6em', 'important');
       cachedUsersPanel.style.position = 'fixed';
@@ -964,6 +968,18 @@
       cachedUsersPanel.style.width = '90vw';
       cachedUsersPanel.style.height = '80vh';
       cachedUsersPanel.style.zIndex = '120';
+
+      // Helper function to smoothly hide and remove the cachedUsersPanel
+      function hideAndRemoveUserPanel() {
+        // Set the opacity to 0 to smoothly hide the element
+        cachedUsersPanel.style.opacity = '0';
+
+        // After a short delay (or transition duration), remove the element
+        setTimeout(() => {
+          // Remove the cachedUsersPanel from the DOM
+          cachedUsersPanel.parentNode.removeChild(cachedUsersPanel);
+        }, 1000); // You may adjust the delay based on the transition duration
+      }
 
       // Create a container div with class 'panel-header'
       const panelHeaderContainer = document.createElement('div');
@@ -1051,8 +1067,8 @@
         localStorage.removeItem('lastClearTime');
         // You might want to update the UI or perform any other actions after clearing the cache
 
-        // Optionally, you can also remove the cached-users-panel
-        document.body.removeChild(cachedUsersPanel);
+        // Call the helper function to hide and remove the cachedUsersPanel
+        hideAndRemoveUserPanel();
       });
 
       // Append the clear cache button to the panel header container
@@ -1104,7 +1120,7 @@
       // Add a click event listener to the close panel button
       closePanelButton.addEventListener('click', () => {
         // Remove the cached-users-panel when the close button is clicked
-        document.body.removeChild(cachedUsersPanel);
+        hideAndRemoveUserPanel();
       });
 
       // Append the close button to the panel header container
@@ -1194,6 +1210,12 @@
 
       // Append the cached-users-panel to the body
       document.body.appendChild(cachedUsersPanel);
+
+      // Trigger a reflow by accessing offsetHeight to apply the initial styles
+      cachedUsersPanel.offsetHeight;
+
+      // Update the opacity to 1 to smoothly reveal the element
+      cachedUsersPanel.style.opacity = '1';
 
       // Function to update the remaining time
       function updateRemainingTime() {

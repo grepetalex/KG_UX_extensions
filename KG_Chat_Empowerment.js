@@ -1003,10 +1003,27 @@
       dropTimeDescription.style.padding = '0.6em';
       dropTimeDescription.style.color = 'gray';
 
+      // Assign font to apply it for drop-time-values element
+
+      // Check if the font link element with class 'font-orbitron' already exists
+      const existingFontOrbitron = document.querySelector('.font-orbitron');
+
+      // If it doesn't exist, create a new link element and append it to the document head
+      if (!existingFontOrbitron) {
+        var fontLinkOrbitron = document.createElement('link');
+        fontLinkOrbitron.rel = 'stylesheet';
+        fontLinkOrbitron.href = 'https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap';
+        fontLinkOrbitron.classList.add('font-orbitron');
+
+        // Append the Orbitron font link element to the document head
+        document.head.appendChild(fontLinkOrbitron);
+      }
+
       const dropTimeValues = document.createElement('span');
       dropTimeValues.className = 'drop-time-values';
       dropTimeValues.style.padding = '0.6em';
       dropTimeValues.style.color = 'antiquewhite';
+      dropTimeValues.style.fontFamily = "'Orbitron', sans-serif";
 
       // Append the description and values elements to the drop-time container
       dropTime.appendChild(dropTimeDescription);
@@ -1069,6 +1086,7 @@
 
         // Call the helper function to hide and remove the cachedUsersPanel
         hideAndRemoveUserPanel();
+        refreshFetchedUsers();
       });
 
       // Append the clear cache button to the panel header container

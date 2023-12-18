@@ -14,6 +14,8 @@ const itemThreshold = 1; // Number of items
 const timeLimitInSeconds = 3; // Time in seconds
 const showItemInfo = true; // Boolean flag to control element creation and updating
 const maxHiddenElements = 300; // Maximum number of hidden elements before removal
+// Global variable to store the user id what is exceeded the limit 
+let currentUserId;
 
 // Create a single raceItem element if showItemInfo is true
 const raceItem = showItemInfo ? document.createElement('div') : null;
@@ -40,17 +42,29 @@ function updateRaceItem(profileText, exceededLimit) {
       raceItem.style.backgroundColor = 'hsl(0, 50%, 15%)';
       raceItem.style.color = 'hsl(0, 50%, 70%)';
       raceItem.style.setProperty('border', '1px solid hsl(0, 50%, 40%)', 'important');
+      raceItem.style.cursor = 'pointer';
+      raceItem.addEventListener('click', navigateToProfile);
     } else {
       raceItem.classList.remove('removed');
       raceItem.classList.add('saved');
       raceItem.style.backgroundColor = 'hsl(100, 50%, 10%)';
       raceItem.style.color = 'hsl(100, 50%, 50%)';
       raceItem.style.setProperty('border', '1px solid hsl(100, 50%, 25%)', 'important');
+      raceItem.style.cursor = 'default';
+      raceItem.removeEventListener('click', navigateToProfile);
     }
 
     // Set the text content
     raceItem.textContent = profileText;
 
+  }
+}
+
+// Function to navigate to the user's profile
+function navigateToProfile() {
+  if (currentUserId) {
+    const profileUrl = `https://klavogonki.ru/profile/${currentUserId}`;
+    window.open(profileUrl, '_blank');
   }
 }
 
@@ -84,6 +98,16 @@ function processItem(item) {
 
         // Hide the item
         item.style.display = 'none';
+
+        // Get the anchor element within the profileElements context
+        const anchorElement = profileElements[0].querySelector('.profile');
+
+        // Log the user ID and user name
+        const userIdMatch = anchorElement.getAttribute('href').match(/\/profile\/(\d+)\//);
+        const userId = userIdMatch ? userIdMatch[1] : null;
+
+        // Update the globally stored currentUserId
+        currentUserId = userId;
       }
 
       // Update the raceItem element

@@ -12,51 +12,119 @@
 // Constants for the threshold, time limits, and max hidden elements
 const itemThreshold = 1; // Number of items
 const timeLimitInSeconds = 3; // Time in seconds
-const showItemInfo = true; // Boolean flag to control element creation and updating
 const maxHiddenElements = 300; // Maximum number of hidden elements before removal
 // Global variable to store the user id what is exceeded the limit 
 let currentUserId;
 
-// Create a single raceItem element if showItemInfo is true
-const raceItem = showItemInfo ? document.createElement('div') : null;
-if (showItemInfo && raceItem) {
-  raceItem.classList.add('raceItems');
-  document.body.appendChild(raceItem);
+// Exposed settings for info element svg icons
+const xmlns = "http://www.w3.org/2000/svg";
+const svgSize = 16;
+const svgStrokeWidth = 2;
 
-  // Add initial styles to the raceItem element
-  raceItem.style.display = 'flex';
-  raceItem.style.position = 'fixed';
-  raceItem.style.padding = '6px';
-  raceItem.style.bottom = '6px';
-  raceItem.style.left = '6px';
+const eyeSvgOn = `
+<svg xmlns="${xmlns}" width="${svgSize}" height="${svgSize}" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+  stroke-width="${svgStrokeWidth}" stroke-linecap="round" stroke-linejoin="round" class="feather feather-eye-on">
+  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+  <circle cx="12" cy="12" r="3"></circle>
+</svg>
+`;
+
+const eyeSvgOff = `
+<svg xmlns="${xmlns}" width="${svgSize}" height="${svgSize}" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+  stroke-width="${svgStrokeWidth}" stroke-linecap="round" stroke-linejoin="round" class="feather feather-eye-off">
+  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20 c-7 0-11-8-11-8 a18.45 18.45 0 0 1 5.06-5.94 M9.9 4.24A9.12 9.12 0 0 1 12 4
+    c7 0 11 8 11 8 a18.5 18.5 0 0 1-2.16 3.19 m-6.72-1.07 a3 3 0 1 1-4.24-4.24 L17.94 17.94z">
+  </path>
+  <line x1="1" y1="1" x2="23" y2="23"></line>
+</svg>
+`;
+
+// Helper function to toggle visibility icon and update item info visibility state
+function toggleItemInfoVisibility() {
+  let visibilityButton = raceItem.querySelector('.visibility-button');
+  let raceItemNickname = raceItem.querySelector('.race-item-nickname');
+
+  if (visibilityButton && raceItemNickname) {
+    // Check the current state in localStorage
+    const isVisible = localStorage.getItem('raceSpamNicknameVisibility') === 'visible';
+
+    // Toggle the icon and update the localStorage state
+    if (isVisible) {
+      visibilityButton.innerHTML = eyeSvgOff;
+      localStorage.setItem('raceSpamNicknameVisibility', 'hidden');
+      // Set display to 'none' to hide the race item nickname
+      raceItemNickname.style.display = 'none';
+    } else {
+      visibilityButton.innerHTML = eyeSvgOn;
+      localStorage.setItem('raceSpamNicknameVisibility', 'visible');
+      // Set display to 'inline-flex' to show the race item nickname
+      raceItemNickname.style.display = 'inline-flex';
+    }
+  }
 }
 
-// Function to update the raceItem element if showItemInfo is true
-function updateRaceItem(profileText, exceededLimit) {
-  if (showItemInfo && raceItem) {
+// Create a single raceItem element if it doesn't exist 
+let raceItem = document.querySelector('.race-item');
+if (!raceItem) {
+  raceItem = document.createElement('div');
+  raceItem.classList.add('race-item');
+  document.body.appendChild(raceItem);
 
-    // Update the additional classes and background color based on whether it's removed or saved
-    if (exceededLimit) {
-      raceItem.classList.add('removed');
-      raceItem.classList.remove('saved');
-      raceItem.style.backgroundColor = 'hsl(0, 50%, 15%)';
-      raceItem.style.color = 'hsl(0, 50%, 70%)';
-      raceItem.style.setProperty('border', '1px solid hsl(0, 50%, 40%)', 'important');
-      raceItem.style.cursor = 'pointer';
-      raceItem.addEventListener('click', navigateToProfile);
-    } else {
-      raceItem.classList.remove('removed');
-      raceItem.classList.add('saved');
-      raceItem.style.backgroundColor = 'hsl(100, 50%, 10%)';
-      raceItem.style.color = 'hsl(100, 50%, 50%)';
-      raceItem.style.setProperty('border', '1px solid hsl(100, 50%, 25%)', 'important');
-      raceItem.style.cursor = 'default';
-      raceItem.removeEventListener('click', navigateToProfile);
+}
+
+// Function to update the raceItem element
+function updateRaceItem(profileText, exceededLimit) {
+  if (raceItem) {
+    // Check if the localStorage key exists, if not, create it with default value 'visible'
+    if (!localStorage.getItem('raceSpamNicknameVisibility')) {
+      localStorage.setItem('raceSpamNicknameVisibility', 'visible');
     }
 
-    // Set the text content
-    raceItem.textContent = profileText;
+    // Set the current state in localStorage
+    const isVisible = localStorage.getItem('raceSpamNicknameVisibility') === 'visible';
 
+    // Update the classes and background color based on whether it's removed or saved
+    raceItem.classList.toggle('removed-spam-races', exceededLimit);
+    raceItem.classList.toggle('saved-normal-races', !exceededLimit);
+
+    // Create the visibilityButton SVG element only if it doesn't exist
+    let visibilityButton = raceItem.querySelector('.visibility-button');
+    if (!visibilityButton) {
+      visibilityButton = document.createElement('div');
+      visibilityButton.classList.add('visibility-button');
+
+      // Set the initial visibility icon based on the localStorage value
+      visibilityButton.innerHTML = isVisible ? eyeSvgOn : eyeSvgOff;
+
+      raceItem.appendChild(visibilityButton);
+
+      // Set up click event to toggle visibility icon and item info visibility
+      visibilityButton.addEventListener('click', toggleItemInfoVisibility);
+    }
+
+    // Set the text content for profileText
+    let raceItemNickname = raceItem.querySelector('.race-item-nickname');
+    if (!raceItemNickname) {
+      raceItemNickname = document.createElement('div');
+      raceItemNickname.classList.add('race-item-nickname');
+
+      // Set the display property based on the visibility state
+      raceItemNickname.style.display = isVisible ? 'inline-flex' : 'none';
+
+      raceItem.appendChild(raceItemNickname);
+    }
+
+    // Update text content of nickname if already created
+    if (raceItemNickname) {
+      raceItemNickname.textContent = profileText;
+
+      // Add or remove click event listener to/from raceItemNickname based on exceededLimit
+      if (exceededLimit) {
+        raceItemNickname.addEventListener('click', navigateToProfile);
+      } else {
+        raceItemNickname.removeEventListener('click', navigateToProfile);
+      }
+    }
   }
 }
 
@@ -102,12 +170,15 @@ function processItem(item) {
         // Get the anchor element within the profileElements context
         const anchorElement = profileElements[0].querySelector('.profile');
 
-        // Log the user ID and user name
-        const userIdMatch = anchorElement.getAttribute('href').match(/\/profile\/(\d+)\//);
-        const userId = userIdMatch ? userIdMatch[1] : null;
+        // Check if the anchor element exists
+        if (anchorElement) {
+          // Get the user ID and user NAME 
+          const userIdMatch = anchorElement.getAttribute('href').match(/\/profile\/(\d+)\//);
+          const userId = userIdMatch ? userIdMatch[1] : null;
 
-        // Update the globally stored currentUserId
-        currentUserId = userId;
+          // Update the globally stored currentUserId
+          currentUserId = userId;
+        }
       }
 
       // Update the raceItem element
@@ -185,10 +256,34 @@ observer.observe(gamelist, { childList: true, subtree: true });
 
 // Function to inject the CSS style with the removed Race Item Animation into the <head> tag
 function injectCSS() {
-  const head = document.head || document.getElementsByTagName('head')[0];
-  const style = document.createElement('style');
+  const hideSpamRacesStyles = document.createElement('style');
+  // Add the class 'hide-spam-races' to the <style> tag
+  hideSpamRacesStyles.classList.add('hide-spam-races');
 
-  style.textContent = `
+  hideSpamRacesStyles.innerHTML = `
+    .race-item {
+      display: flex;
+      justify-content: space-around';
+      align-items: center;
+      position: fixed;
+      bottom: 6px;
+      left: 6px;
+    }  
+
+    .visibility-button {
+      padding: 6px;
+      cursor: pointer;
+      transition: filter 0.3s;
+    }
+
+    .visibility-button:hover {
+      filter: brightness(1.4);
+    }
+
+    .race-item-nickname {
+      padding: 6px;
+    }
+
     @keyframes removedRaceItemAnimation {
       0%, 20%, 50%, 80%, 100% {
         transform: translateY(0);
@@ -201,15 +296,33 @@ function injectCSS() {
       }
     }
 
-    .removed {
+    .removed-spam-races {
+      background-color: hsl(0, 50%, 15%);
+      color: hsl(0, 50%, 70%);
+      border: 1px solid hsl(0, 50%, 40%) !important;
+      cursor: pointer;
       animation: removedRaceItemAnimation 1s ease-in-out;
+    }
+
+    .removed-spam-races .race-item-nickname {
+      transition: filter 0.3s;
+    }
+
+    .removed-spam-races .race-item-nickname:hover {
+      filter: brightness(1.4);
+    }
+
+    .saved-normal-races {
+      background-color: hsl(100, 50%, 10%);
+      color: hsl(100, 50%, 50%);
+      border: 1px solid hsl(100, 50%, 25%) !important;
+      cursor: default;
     }
   `;
 
-  // Add the class 'removed-race-item-animation' to the <style> tag
-  style.classList.add('removed-race-item-animation');
 
-  head.appendChild(style);
+  // Append the style element to the head
+  document.head.appendChild(hideSpamRacesStyles);
 }
 
 // Call the injectCSS function to inject the CSS

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_HideSpamRaces
 // @namespace    http://klavogonki.ru
-// @version      0.6
+// @version      0.7
 // @description  This script will hide all the races what are created for bad purposes
 // @author       Patcher
 // @match        *://klavogonki.ru/gamelist/

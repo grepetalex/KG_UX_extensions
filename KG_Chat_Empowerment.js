@@ -970,7 +970,7 @@
       cachedUsersPanel.style.zIndex = '120';
 
       // Helper function to smoothly hide and remove the cachedUsersPanel
-      function hideAndRemoveUserPanel() {
+      function hideUserPanel() {
         // Set the opacity to 0 to smoothly hide the element
         cachedUsersPanel.style.opacity = '0';
 
@@ -978,7 +978,7 @@
         setTimeout(() => {
           // Remove the cachedUsersPanel from the DOM
           cachedUsersPanel.parentNode.removeChild(cachedUsersPanel);
-        }, 1000); // You may adjust the delay based on the transition duration
+        }, 300);
       }
 
       // Create a container div with class 'panel-header'
@@ -1078,15 +1078,9 @@
 
       // Add a click event listener to the clear cache button
       clearCacheButton.addEventListener('click', () => {
-        // Add your logic to clear the cache here
-        // For example, you can remove the cached data from localStorage
-        localStorage.removeItem('fetchedUsers');
-        localStorage.removeItem('lastClearTime');
-        // You might want to update the UI or perform any other actions after clearing the cache
-
         // Call the helper function to hide and remove the cachedUsersPanel
-        hideAndRemoveUserPanel();
-        refreshFetchedUsers();
+        hideUserPanel();
+        refreshFetchedUsers(false); // Clears unconditionally
       });
 
       // Append the clear cache button to the panel header container
@@ -1138,7 +1132,7 @@
       // Add a click event listener to the close panel button
       closePanelButton.addEventListener('click', () => {
         // Remove the cached-users-panel when the close button is clicked
-        hideAndRemoveUserPanel();
+        hideUserPanel();
       });
 
       // Append the close button to the panel header container
@@ -1249,7 +1243,7 @@
 
           // If remaining time is zero or less, execute the refreshFetchedUsers function
           remainingTime <= 0
-            ? refreshFetchedUsers()
+            ? refreshFetchedUsers(false) // Clears cache unconditionally
             : updateDropTimeValues(dropTimeValues, remainingTime);
         }
       }
@@ -1790,16 +1784,35 @@
     }
   }
 
-  function refreshFetchedUsers() {
-    const lastClearTime = localStorage.getItem('lastClearTime');
-    const shouldClearCache = !lastClearTime || (new Date().getTime().toString() - lastClearTime) / (1000 * 60 * 60) >= 24;
+  // Function to refresh fetched users with optional conditional behavior
+  // @param {boolean} conditionally - If true, clears the cache conditionally; if false, clears unconditionally (default is true)
+  function refreshFetchedUsers(conditionally = true) {
+    // Check if conditionally is true
+    if (conditionally) {
+      // Retrieve the last clear time from localStorage
+      const lastClearTime = localStorage.getItem('lastClearTime');
 
-    if (shouldClearCache) {
+      // Determine if the cache should be cleared based on the time elapsed
+      const shouldClearCache = !lastClearTime || (new Date().getTime().toString() - lastClearTime) / (1000 * 60 * 60) >= 24;
+
+      // If cache should be cleared, perform the following actions
+      if (shouldClearCache) {
+        // Remove the 'fetchedUsers' item from localStorage
+        localStorage.removeItem('fetchedUsers');
+
+        // Set the 'lastClearTime' to the current time
+        localStorage.setItem('lastClearTime', new Date().getTime().toString());
+
+        // Reload the current page after (N) time conditionally
+        setTimeout(() => location.reload(), 500);
+      }
+    } else {
+      // Unconditionally remove 'fetchedUsers' and set 'lastClearTime'
       localStorage.removeItem('fetchedUsers');
       localStorage.setItem('lastClearTime', new Date().getTime().toString());
 
-      // Reload the current page after 1 second
-      setTimeout(() => location.reload(), 1000);
+      // Reload the current page after (N) time unconditionally
+      setTimeout(() => location.reload(), 500);
     }
   }
 
@@ -3833,7 +3846,7 @@
         scrollMessages();
 
         // Call the function to refresh the user list and clear the cache if needed
-        refreshFetchedUsers();
+        refreshFetchedUsers(true); // Clears cache conditionally
 
         // Refresh experimental custom chat user list on old list changes
         refreshUserList();

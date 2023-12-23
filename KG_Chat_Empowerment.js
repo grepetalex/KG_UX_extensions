@@ -996,38 +996,105 @@
       dropTime.style.justifyContent = 'center';
       dropTime.style.alignItems = 'center';
 
-      // Create span elements for description and values
-      const dropTimeDescription = document.createElement('span');
-      dropTimeDescription.className = 'drop-time-description';
-      dropTimeDescription.textContent = 'Cache will be cleared in:';
-      dropTimeDescription.style.padding = '0.6em';
-      dropTimeDescription.style.color = 'gray';
-
-      // Assign font to apply it for drop-time-values element
-
-      // Check if the font link element with class 'font-orbitron' already exists
-      const existingFontOrbitron = document.querySelector('.font-orbitron');
+      // Check if the font link element with class 'font-roboto-mono' already exists
+      const existingFontRobotoMono = document.querySelector('.font-roboto-mono');
 
       // If it doesn't exist, create a new link element and append it to the document head
-      if (!existingFontOrbitron) {
-        var fontLinkOrbitron = document.createElement('link');
-        fontLinkOrbitron.rel = 'stylesheet';
-        fontLinkOrbitron.href = 'https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap';
-        fontLinkOrbitron.classList.add('font-orbitron');
+      if (!existingFontRobotoMono) {
+        var fontLinkRobotoMono = document.createElement('link');
+        fontLinkRobotoMono.rel = 'stylesheet';
+        fontLinkRobotoMono.href = 'https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&display=swap';
+        fontLinkRobotoMono.classList.add('font-roboto-mono');
 
-        // Append the Orbitron font link element to the document head
-        document.head.appendChild(fontLinkOrbitron);
+        // Append the Roboto Mono font link element to the document head
+        document.head.appendChild(fontLinkRobotoMono);
       }
 
-      const dropTimeValues = document.createElement('span');
-      dropTimeValues.className = 'drop-time-values';
-      dropTimeValues.style.padding = '0.6em';
-      dropTimeValues.style.color = 'antiquewhite';
-      dropTimeValues.style.fontFamily = "'Orbitron', sans-serif";
+      // Create span with description for threshold time element 
+      const dropTimeThresholdDescription = document.createElement('span');
+      dropTimeThresholdDescription.className = 'drop-time-threshold-description';
+      dropTimeThresholdDescription.textContent = 'Threshold time:';
+      dropTimeThresholdDescription.style.padding = '0.6em';
+      dropTimeThresholdDescription.style.color = 'gray';
 
-      // Append the description and values elements to the drop-time container
-      dropTime.appendChild(dropTimeDescription);
-      dropTime.appendChild(dropTimeValues);
+      const dropTimeThreshold = document.createElement('span');
+      dropTimeThreshold.className = 'drop-time-threshold';
+      dropTimeThreshold.style.padding = '0.6em';
+      dropTimeThreshold.style.color = 'chocolate';
+      dropTimeThreshold.style.fontFamily = "'Roboto Mono', monospace";
+      dropTimeThreshold.style.fontSize = '1.1em';
+      dropTimeThreshold.style.cursor = 'pointer';
+      // Get the value from the localStorage key 'cacheRefreshThresholdHours'
+      const storedThresholdTime = localStorage.getItem('cacheRefreshThresholdHours');
+      // Update the innerHTML with the stored value (default to '00:00:00' if the key is not set)
+      dropTimeThreshold.innerHTML = storedThresholdTime || '00:00:00';
+      // Attach click event to the dropTimeThreshold element
+      dropTimeThreshold.addEventListener('click', setCacheRefreshTime);
+
+      // Create span with description for expiration time element
+      const dropTimeExpirationDescription = document.createElement('span');
+      dropTimeExpirationDescription.className = 'drop-time-expiration-description';
+      dropTimeExpirationDescription.textContent = 'Cache will be cleared in:';
+      dropTimeExpirationDescription.style.padding = '0.6em';
+      dropTimeExpirationDescription.style.color = 'gray';
+
+      const dropTimeExpiration = document.createElement('span');
+      dropTimeExpiration.className = 'drop-time-expiration';
+      dropTimeExpiration.style.padding = '0.6em';
+      dropTimeExpiration.style.color = 'antiquewhite';
+      dropTimeExpiration.style.fontFamily = "'Roboto Mono', monospace";
+      dropTimeExpiration.style.fontSize = '1.1em';
+
+      // Function to prompt the user for a cache refresh time and update the content
+      function setCacheRefreshTime() {
+        let isValidInput = false;
+
+        // Keep prompting the user until valid input is provided or they click "Cancel"
+        while (!isValidInput) {
+          // Prompt the user for a time
+          const userInput = prompt('Enter a cache refresh time (e.g., HH, HH:mm, or HH:mm:ss):');
+
+          // Get the dropTimeThreshold element
+          const dropTimeThreshold = document.querySelector('.drop-time-threshold');
+
+          // Validate the user input
+          const timeRegex = /^([01]?[0-9]|2[0-3])(:([0-5]?[0-9])(:([0-5]?[0-9]))?)?$/; // HH, HH:mm, or HH:mm:ss
+          if (userInput === null) {
+            // User clicked "Cancel," exit the loop
+            isValidInput = true;
+          } else if (timeRegex.test(userInput)) {
+            // Valid input, extract hours and set default values for minutes and seconds if not provided
+            const formattedInput = userInput.split(':');
+            const hours = ('0' + formattedInput[0]).slice(-2);
+            const minutes = ('0' + (formattedInput[1] || '00')).slice(-2);
+            const seconds = ('0' + (formattedInput[2] || '00')).slice(-2);
+
+            // Update the content of the dropTimeThreshold element
+            dropTimeThreshold.textContent = `${hours}:${minutes}:${seconds}`;
+
+            // Combine the values and store in localStorage with the key 'cacheRefreshThresholdHours'
+            const formattedTime = `${hours}:${minutes}:${seconds}`;
+            localStorage.setItem('cacheRefreshThresholdHours', formattedTime);
+
+            // Remove fetchedUsers, lastClearTime, and nextClearTime keys
+            localStorage.removeItem('fetchedUsers');
+            localStorage.removeItem('lastClearTime');
+            localStorage.removeItem('nextClearTime');
+
+            // Set isValidInput to true to exit the loop
+            isValidInput = true;
+          } else {
+            // Alert the user for invalid input
+            alert('Invalid time format. Please enter a valid time in the format HH, HH:mm, or HH:mm:ss.');
+          }
+        }
+      }
+
+      // Append the childs to the drop time parent element
+      dropTime.appendChild(dropTimeThresholdDescription);
+      dropTime.appendChild(dropTimeThreshold);
+      dropTime.appendChild(dropTimeExpirationDescription);
+      dropTime.appendChild(dropTimeExpiration);
 
       // Append the drop time element to the panel header container
       panelHeaderContainer.appendChild(dropTime);
@@ -1176,6 +1243,8 @@
         userIdAnchor.target = '_blank';
         userIdAnchor.style.setProperty('color', 'skyblue', 'important');
         userIdAnchor.style.textDecoration = 'none';
+        userIdAnchor.style.fontFamily = "'Roboto Mono', monospace";
+        userIdAnchor.style.fontSize = '1.1em';
         userIdAnchor.style.transition = 'color 0.3s ease'; // Add smooth transition
 
         // Add underline on hover and change color to a lighter shade of skyblue
@@ -1233,9 +1302,9 @@
       function updateRemainingTime() {
         const lastClearTime = localStorage.getItem('lastClearTime');
         const nextClearTime = localStorage.getItem('nextClearTime');
-        const dropTimeValues = document.querySelector('.drop-time-values');
+        const dropTimeExpiration = document.querySelector('.drop-time-expiration');
 
-        if (lastClearTime && nextClearTime && dropTimeValues) {
+        if (lastClearTime && nextClearTime && dropTimeExpiration) {
           const currentTime = new Date().getTime();
 
           // Calculate the remaining time until the next cache clear
@@ -1244,12 +1313,12 @@
           // If remaining time is zero or less, execute the refreshFetchedUsers function
           remainingTime <= 0
             ? refreshFetchedUsers(false, cacheRefreshThresholdHours)
-            : updateDropTimeValues(dropTimeValues, remainingTime);
+            : updatedropTimeExpiration(dropTimeExpiration, remainingTime);
         }
       }
 
-      // Function to update the drop-time-values span
-      function updateDropTimeValues(dropTimeValues, remainingTime) {
+      // Function to update the drop-time-expiration span
+      function updatedropTimeExpiration(dropTimeExpiration, remainingTime) {
         // Calculate hours, minutes, and seconds
         const hours = String(Math.floor(remainingTime / (60 * 60 * 1000))).padStart(2, '0');
         const minutes = String(Math.floor((remainingTime % (60 * 60 * 1000)) / (60 * 1000))).padStart(2, '0');
@@ -1258,8 +1327,8 @@
         // Create a custom formatted string
         const remainingTimeString = `${hours}:${minutes}:${seconds}`;
 
-        // Update the drop-time-values span using the cached reference
-        dropTimeValues.textContent = remainingTimeString;
+        // Update the drop-time-expiration span using the cached reference
+        dropTimeExpiration.textContent = remainingTimeString;
       }
 
       // Call the function to update the remaining time every second
@@ -1784,15 +1853,33 @@
     }
   }
 
+  // Helper function to convert time string to single hours
+  function convertToSingleHours(timeString) {
+    const [hours, minutes = 0, seconds = 0] = timeString.split(':').map(Number);
+    return hours + minutes / 60 + seconds / 3600;
+  }
+
   // Global constant for default cache refresh threshold in hours
-  const cacheRefreshThresholdHours = 8;
+  const defaultCacheRefreshThresholdHours = 8;
+
+  // Get the value from localStorage
+  let storedFresholdTimeKey = localStorage.getItem('cacheRefreshThresholdHours');
+
+  // If the key doesn't exist, set it to the default value
+  if (!storedFresholdTimeKey) {
+    storedFresholdTimeKey = defaultCacheRefreshThresholdHours;
+    localStorage.setItem('cacheRefreshThresholdHours', storedFresholdTimeKey);
+  }
+
+  // Convert the value to single hours
+  let cacheRefreshThresholdHours = convertToSingleHours(storedFresholdTimeKey);
 
   // Function to refresh fetched users with optional conditional behavior
   // @param {boolean} conditionally - If true, clears the cache conditionally; if false, clears unconditionally (default is true)
-  // @param {number} thresholdHours - Time threshold in hours for conditional cache clearing (default is 24 hours)
+  // @param {number} thresholdHours - Time threshold in hours for conditional cache clearing (default is 8 hours)
   function refreshFetchedUsers(conditionally = true, thresholdHours) {
     // Set the default threshold to 24 hours if not provided at the function call
-    thresholdHours = thresholdHours !== undefined ? thresholdHours : 24;
+    thresholdHours = thresholdHours !== undefined ? thresholdHours : 8;
 
     // Retrieve the last clear time from localStorage
     const lastClearTime = localStorage.getItem('lastClearTime');
@@ -1815,10 +1902,10 @@
         localStorage.setItem('nextClearTime', nextClearTime.toString());
 
         // Alert for automatic cache clearing triggered by the function
-        alert(`Automatic cache clearing is triggered by the function. Next clearing time: ${new Date(nextClearTime)}`);
+        // alert(`Automatic cache clearing is triggered by the function. Next clearing time: ${new Date(nextClearTime)}`);
 
         // Reload the current page after (N) time conditionally
-        setTimeout(() => location.reload(), 1000);
+        // setTimeout(() => location.reload(), 1000);
       }
     } else {
       // Unconditionally remove 'fetchedUsers' and set 'lastClearTime'
@@ -1830,10 +1917,10 @@
       localStorage.setItem('nextClearTime', nextClearTime.toString());
 
       // Alert for manual cache clearing triggered by the user
-      alert(`Manual cache clearing is triggered by the user. Next clearing time: ${new Date(nextClearTime)}`);
+      // alert(`Manual cache clearing is triggered by the user. Next clearing time: ${new Date(nextClearTime)}`);
 
       // Reload the current page after (N) time unconditionally
-      setTimeout(() => location.reload(), 1000);
+      // setTimeout(() => location.reload(), 1000);
     }
   }
 

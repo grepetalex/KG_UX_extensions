@@ -1080,7 +1080,7 @@
       clearCacheButton.addEventListener('click', () => {
         // Call the helper function to hide and remove the cachedUsersPanel
         hideUserPanel();
-        refreshFetchedUsers(false); // Clears unconditionally
+        refreshFetchedUsers(false, cacheRefreshThresholdHours);
       });
 
       // Append the clear cache button to the panel header container
@@ -1232,18 +1232,18 @@
       // Function to update the remaining time
       function updateRemainingTime() {
         const lastClearTime = localStorage.getItem('lastClearTime');
+        const nextClearTime = localStorage.getItem('nextClearTime');
         const dropTimeValues = document.querySelector('.drop-time-values');
 
-        if (lastClearTime && dropTimeValues) {
+        if (lastClearTime && nextClearTime && dropTimeValues) {
           const currentTime = new Date().getTime();
-          const oneDayInMilliseconds = 24 * 60 * 60 * 1000;
 
           // Calculate the remaining time until the next cache clear
-          const remainingTime = oneDayInMilliseconds - (currentTime - lastClearTime);
+          const remainingTime = nextClearTime - currentTime;
 
           // If remaining time is zero or less, execute the refreshFetchedUsers function
           remainingTime <= 0
-            ? refreshFetchedUsers(false) // Clears cache unconditionally
+            ? refreshFetchedUsers(false, cacheRefreshThresholdHours)
             : updateDropTimeValues(dropTimeValues, remainingTime);
         }
       }
@@ -1784,16 +1784,23 @@
     }
   }
 
+  // Global constant for default cache refresh threshold in hours
+  const cacheRefreshThresholdHours = 8;
+
   // Function to refresh fetched users with optional conditional behavior
   // @param {boolean} conditionally - If true, clears the cache conditionally; if false, clears unconditionally (default is true)
-  function refreshFetchedUsers(conditionally = true) {
-    // Check if conditionally is true
-    if (conditionally) {
-      // Retrieve the last clear time from localStorage
-      const lastClearTime = localStorage.getItem('lastClearTime');
+  // @param {number} thresholdHours - Time threshold in hours for conditional cache clearing (default is 24 hours)
+  function refreshFetchedUsers(conditionally = true, thresholdHours) {
+    // Set the default threshold to 24 hours if not provided at the function call
+    thresholdHours = thresholdHours !== undefined ? thresholdHours : 24;
 
+    // Retrieve the last clear time from localStorage
+    const lastClearTime = localStorage.getItem('lastClearTime');
+
+    // Check if cache clearing should be done conditionally
+    if (conditionally) {
       // Determine if the cache should be cleared based on the time elapsed
-      const shouldClearCache = !lastClearTime || (new Date().getTime().toString() - lastClearTime) / (1000 * 60 * 60) >= 24;
+      const shouldClearCache = !lastClearTime || (new Date().getTime().toString() - lastClearTime) / (1000 * 60 * 60) >= thresholdHours;
 
       // If cache should be cleared, perform the following actions
       if (shouldClearCache) {
@@ -1803,16 +1810,30 @@
         // Set the 'lastClearTime' to the current time
         localStorage.setItem('lastClearTime', new Date().getTime().toString());
 
+        // Set the 'nextClearTime' in localStorage
+        const nextClearTime = new Date().getTime() + thresholdHours * 60 * 60 * 1000;
+        localStorage.setItem('nextClearTime', nextClearTime.toString());
+
+        // Alert for automatic cache clearing triggered by the function
+        alert(`Automatic cache clearing is triggered by the function. Next clearing time: ${new Date(nextClearTime)}`);
+
         // Reload the current page after (N) time conditionally
-        setTimeout(() => location.reload(), 500);
+        setTimeout(() => location.reload(), 1000);
       }
     } else {
       // Unconditionally remove 'fetchedUsers' and set 'lastClearTime'
       localStorage.removeItem('fetchedUsers');
       localStorage.setItem('lastClearTime', new Date().getTime().toString());
 
+      // Set the 'nextClearTime' in localStorage
+      const nextClearTime = new Date().getTime() + thresholdHours * 60 * 60 * 1000;
+      localStorage.setItem('nextClearTime', nextClearTime.toString());
+
+      // Alert for manual cache clearing triggered by the user
+      alert(`Manual cache clearing is triggered by the user. Next clearing time: ${new Date(nextClearTime)}`);
+
       // Reload the current page after (N) time unconditionally
-      setTimeout(() => location.reload(), 500);
+      setTimeout(() => location.reload(), 1000);
     }
   }
 
@@ -3846,7 +3867,7 @@
         scrollMessages();
 
         // Call the function to refresh the user list and clear the cache if needed
-        refreshFetchedUsers(true); // Clears cache conditionally
+        refreshFetchedUsers(true, cacheRefreshThresholdHours);
 
         // Refresh experimental custom chat user list on old list changes
         refreshUserList();

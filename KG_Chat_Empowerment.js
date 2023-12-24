@@ -2881,6 +2881,9 @@
   // Set the maximum number of popup messages to display globally
   const maxPopupMessagesCount = 10;
 
+  // Define an object to store the hue for each username
+  const usernameHueMap = {};
+
   // Define the function to show popup messages when the main chat is hidden by hotkeys Ctrl + Space (only)
   function showPopupMessage() {
     // Check if the key 'shouldShowPopupMessage' exists and has a value of true
@@ -2905,6 +2908,16 @@
 
       // Remove specific symbols from the username textContent
       const cleanUsername = username.textContent.replace(/[<>]/g, '');
+
+      // Check if the hue for this username is already stored
+      let hueForUsername = usernameHueMap[cleanUsername];
+
+      // If the hue is not stored, generate a new random hue
+      if (!hueForUsername) {
+        hueForUsername = Math.floor(Math.random() * 360);
+        // Store the generated hue for this username
+        usernameHueMap[cleanUsername] = hueForUsername;
+      }
 
       // Remove specific symbols from the time textContent
       const cleanTime = time.textContent.replace(/[\[\]]/g, '');
@@ -2935,6 +2948,8 @@
         // Create a container div for each message
         const popupChatMessage = document.createElement('div');
         popupChatMessage.classList.add('popup-chat-message');
+        // Apply the hue-rotate filter to the entire message container
+        popupChatMessage.style.filter = `hue-rotate(${hueForUsername}deg)`;
 
         // Append time SVG icon before the time
         const timeIcon = document.createElement('div');

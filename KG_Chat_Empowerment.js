@@ -912,7 +912,7 @@
   // NEW CHAT CACHE CONTROL PANEL (START)
 
   // Function to display the cached user list panel
-  function showUserlistCachePanel() {
+  function showCachePanel() {
     // Check if the panel already exists
     if (document.querySelector('.cached-users-panel')) {
       return;
@@ -970,7 +970,7 @@
       cachedUsersPanel.style.zIndex = '120';
 
       // Helper function to smoothly hide and remove the cachedUsersPanel
-      function hideUserPanel() {
+      function hideCachePanel() {
         // Set the opacity to 0 to smoothly hide the element
         cachedUsersPanel.style.opacity = '0';
 
@@ -1013,7 +1013,7 @@
       // Create span with description for threshold time element 
       const dropTimeThresholdDescription = document.createElement('span');
       dropTimeThresholdDescription.className = 'drop-time-threshold-description';
-      dropTimeThresholdDescription.textContent = 'Threshold time:';
+      dropTimeThresholdDescription.textContent = 'Threshold';
       dropTimeThresholdDescription.style.padding = '0.6em';
       dropTimeThresholdDescription.style.color = 'gray';
 
@@ -1034,7 +1034,7 @@
       // Create span with description for expiration time element
       const dropTimeExpirationDescription = document.createElement('span');
       dropTimeExpirationDescription.className = 'drop-time-expiration-description';
-      dropTimeExpirationDescription.textContent = 'Cache will be cleared in:';
+      dropTimeExpirationDescription.textContent = 'Countdown';
       dropTimeExpirationDescription.style.padding = '0.6em';
       dropTimeExpirationDescription.style.color = 'gray';
 
@@ -1080,6 +1080,9 @@
             localStorage.removeItem('fetchedUsers');
             localStorage.removeItem('lastClearTime');
             localStorage.removeItem('nextClearTime');
+
+            // Reload the current page after (N) time after changing the cache threshold
+            setTimeout(() => location.reload(), 1000);
 
             // Set isValidInput to true to exit the loop
             isValidInput = true;
@@ -1146,7 +1149,8 @@
       // Add a click event listener to the clear cache button
       clearCacheButton.addEventListener('click', () => {
         // Call the helper function to hide and remove the cachedUsersPanel
-        hideUserPanel();
+        hideCachePanel();
+        // Call refreshFetchedUsers with conditionally set to false and cacheRefreshThresholdHours
         refreshFetchedUsers(false, cacheRefreshThresholdHours);
       });
 
@@ -1199,7 +1203,7 @@
       // Add a click event listener to the close panel button
       closePanelButton.addEventListener('click', () => {
         // Remove the cached-users-panel when the close button is clicked
-        hideUserPanel();
+        hideCachePanel();
       });
 
       // Append the close button to the panel header container
@@ -1220,7 +1224,7 @@
       fetchedUsersContainer.style.gap = '12px';
       fetchedUsersContainer.style.padding = '24px';
       fetchedUsersContainer.style.overflowY = 'auto';
-      fetchedUsersContainer.style.height = 'calc(100% - 64px)';
+      fetchedUsersContainer.style.height = 'calc(100% - (64px + 0.6em))';
 
       // Create an array to hold user elements
       const userElements = [];
@@ -1444,13 +1448,13 @@
     /* Animation for online status */
     .chat-user-list svg.online {
         stroke: lightgreen;
-        animation: rotateProfileIconAnimation 2s forwards;
+        animation: rotateProfileIconAnimation 1s forwards;
     }
 
     /* Animation for offline status */
     .chat-user-list svg.offline {
         stroke: chocolate;
-        animation: rotateProfileIconAnimation 2s forwards;
+        animation: rotateProfileIconAnimation 1s forwards;
     }
     
     /* Shake Profile Icon Animation for Small Icons */
@@ -1664,19 +1668,28 @@
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
     </svg>`;
 
-  // SVG icon for the tracked
+  // SVG icon for the tracked with gradient stroke
   const trackedSVG = `
   <svg xmlns="http://www.w3.org/2000/svg" 
-       width="14" 
-       height="14" 
+       width="16" 
+       height="16" 
        viewBox="0 0 24 24" 
-       fill="none"
-       stroke="LightSkyBlue" 
-       stroke-width="2" 
-       stroke-linecap="round" 
-       stroke-linejoin="round" 
+       fill="url(#trackedGradient)"  <!-- Use a gradient fill -->
        class="feather feather-star">
-      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+      <!-- Define the gradient for the fill -->
+      <defs>
+        <linearGradient id="trackedGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color: LightSkyBlue; stop-opacity: 1" />
+            <stop offset="100%" style="stop-color: DeepSkyBlue; stop-opacity: 1" />
+        </linearGradient>
+      </defs>
+      <!-- Use the gradient for the fill -->
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" 
+               stroke="url(#trackedGradient)"
+               stroke-width="2"
+               stroke-linecap="round" 
+               stroke-linejoin="round"
+      ></polygon>
   </svg>`;
 
   // Helper function to get a random SVG
@@ -1878,6 +1891,19 @@
   // @param {boolean} conditionally - If true, clears the cache conditionally; if false, clears unconditionally (default is true)
   // @param {number} thresholdHours - Time threshold in hours for conditional cache clearing (default is 8 hours)
   function refreshFetchedUsers(conditionally = true, thresholdHours) {
+
+    const shouldShowCachePanel = JSON.parse(localStorage.getItem('shouldShowCachePanel')) ??
+      (() => { localStorage.setItem('shouldShowCachePanel', false); return false; })();
+
+    // Check if shouldShowCachePanel is true, then call the showCachePanel function
+    if (shouldShowCachePanel) {
+      // Call showCachePanel function to show the cache panel
+      setTimeout(() => showCachePanel(), 2000);
+
+      // Set shouldShowCachePanel to false after calling showCachePanel
+      localStorage.setItem('shouldShowCachePanel', false);
+    }
+
     // Set the default threshold to 24 hours if not provided at the function call
     thresholdHours = thresholdHours !== undefined ? thresholdHours : 8;
 
@@ -1891,21 +1917,22 @@
 
       // If cache should be cleared, perform the following actions
       if (shouldClearCache) {
-        // Remove the 'fetchedUsers' item from localStorage
+        // Conditionally remove 'fetchedUsers' and set 'lastClearTime'
         localStorage.removeItem('fetchedUsers');
-
-        // Set the 'lastClearTime' to the current time
         localStorage.setItem('lastClearTime', new Date().getTime().toString());
 
         // Set the 'nextClearTime' in localStorage
         const nextClearTime = new Date().getTime() + thresholdHours * 60 * 60 * 1000;
         localStorage.setItem('nextClearTime', nextClearTime.toString());
 
+        // Set shouldShowCachePanel to true after performing automatic cache clearing
+        localStorage.setItem('shouldShowCachePanel', true);
+
         // Alert for automatic cache clearing triggered by the function
-        // alert(`Automatic cache clearing is triggered by the function. Next clearing time: ${new Date(nextClearTime)}`);
+        alert(`Automatic cache clearing is triggered by the function. Next clearing time: ${new Date(nextClearTime)}`);
 
         // Reload the current page after (N) time conditionally
-        // setTimeout(() => location.reload(), 1000);
+        setTimeout(() => location.reload(), 1000);
       }
     } else {
       // Unconditionally remove 'fetchedUsers' and set 'lastClearTime'
@@ -1916,11 +1943,14 @@
       const nextClearTime = new Date().getTime() + thresholdHours * 60 * 60 * 1000;
       localStorage.setItem('nextClearTime', nextClearTime.toString());
 
+      // Set shouldShowCachePanel to true after performing manual cache clearing
+      localStorage.setItem('shouldShowCachePanel', true);
+
       // Alert for manual cache clearing triggered by the user
-      // alert(`Manual cache clearing is triggered by the user. Next clearing time: ${new Date(nextClearTime)}`);
+      alert(`Manual cache clearing is triggered by the user. Next clearing time: ${new Date(nextClearTime)}`);
 
       // Reload the current page after (N) time unconditionally
-      // setTimeout(() => location.reload(), 1000);
+      setTimeout(() => location.reload(), 1000);
     }
   }
 
@@ -2983,7 +3013,7 @@
   } createMessageModeButton();
 
 
-  // Function to create the button for showUserListCachePanel
+  // Function to create the button for showCachePanel
   function createShowUserListCacheButton() {
     // Create a new element with class 'cache-panel-load-button'
     const showUserListCacheButton = document.createElement('div');
@@ -3018,8 +3048,8 @@
         showUserListCacheButton.classList.remove('pulse');
       }, 500);
 
-      // Call your showUserlistCachePanel function here if needed
-      showUserlistCachePanel();
+      // Call showCachePanel function to show the cache panel
+      showCachePanel();
     });
 
     // Append the button to the existing buttons panel

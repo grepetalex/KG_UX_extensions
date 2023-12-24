@@ -15,6 +15,33 @@
   // Your actual nickname to use it as an exclusion for the message beep and voice notifications
   const myNickname = document.querySelector('.userpanel .user-block .user-dropdown .name span').textContent;
 
+  // Function to dynamically append font link to the head
+  function appendFontLink(fontFamily, fontWeights) {
+    // Check if the font link element with the specified class already exists
+    const existingFont = document.querySelector(`.font-${fontFamily}`);
+
+    // If it doesn't exist, create a new link element and append it to the document head
+    if (!existingFont) {
+      const fontLink = document.createElement('link');
+      fontLink.rel = 'stylesheet';
+      fontLink.href = `https://fonts.googleapis.com/css2?family=${fontFamily}:wght@${fontWeights.join(';')}&display=swap`;
+      fontLink.classList.add(`font-${fontFamily}`);
+
+      // Append the font link element to the document head
+      document.head.appendChild(fontLink);
+    }
+  }
+
+  // Specify the font weights you want to include
+  const montserratFontWeights = ['100', '200', '300', '400', '500', '600', '700', '800', '900'];
+  const orbitronFontWeights = ['400', '500', '600', '700', '800', '900'];
+
+  // Call the function to append Montserrat font link
+  appendFontLink('Montserrat', montserratFontWeights);
+
+  // Call the function to append Orbitron font link
+  appendFontLink('Orbitron', orbitronFontWeights);
+
   // Define voice speed limits
   const minVoiceSpeed = 0;
   const maxVoiceSpeed = 2.5;
@@ -816,33 +843,6 @@
 
   } // end convertYoutubeLinkToIframe
 
-  // // Function to highlight users from 'usersToTrack' array in the userlist
-  // function highlightTrackingUsers() {
-  //   // Select all ins elements from the userlist
-  //   const insElements = document.querySelectorAll('.userlist-content ins');
-
-  //   // Iterate over the ins elements and check if they contain an anchor element
-  //   for (const ins of insElements) {
-  //     const anchor = ins.querySelector('a.name');
-  //     if (anchor) {
-  //       // Retrieve the username from the anchor textContent
-  //       const name = anchor.textContent.trim();
-  //       // Find the user in 'usersToTrack' array by their name
-  //       const userToTrack = usersToTrack.find(user => user.name === name);
-  //       // If the user is found and not revoked, set their anchor text color to green
-  //       if (userToTrack && !ins.classList.contains('revoked')) {
-  //         anchor.style.setProperty('color', '#83cf40', 'important');
-  //         anchor.style.setProperty('text-shadow', '0 0 1px #83cf40', 'important');
-  //       }
-  //       // If the user is found and is revoked, set their anchor text color to a red
-  //       else if (userToTrack && ins.classList.contains('revoked')) {
-  //         anchor.style.setProperty('color', '#ff8080', 'important');
-  //         anchor.style.setProperty('text-shadow', '0 0 1px #ff8080', 'important');
-  //       }
-  //     }
-  //   }
-  // }
-
   const empowermentButtonsMargin = 2;
 
   // Retrieve body element to inject this beast elements
@@ -856,7 +856,7 @@
   userCount.classList.add('user-count-indicator');
   userCount.style.filter = 'grayscale(100%)';
   userCount.style.transition = '0.2s ease-in-out';
-  userCount.style.fontFamily = 'Orbitron';
+  userCount.style.fontFamily = "'Orbitron', sans-serif";
   userCount.style.fontSize = '24px';
   userCount.style.color = '#83cf40';
   userCount.style.backgroundColor = '#2b4317';
@@ -881,8 +881,6 @@
   bodyElement.appendChild(empowermentButtonsPanel);
 
   const userCountStyles = `
-  @import url('https://fonts.googleapis.com/css2?family=Orbitron&display=swap');
-
   .pulse {
     animation-name: pulse;
     animation-duration: 0.5s;
@@ -2099,43 +2097,93 @@
   // Start observing the chat user list for changes to notify about them
   chatUsersObserver.observe(userList, { childList: true });
 
-  // // Create a separate MutationObserver to watch for changes to the tracking user list
-  // const trackingUsersObserver = new MutationObserver(() => {
-  //   // Whenever the tracking user list changes, call the highlightTrackingUsers function
-  //   highlightTrackingUsers();
-  // });
-
-  // // Start observing the tracking user list for changes to highlight them
-  // trackingUsersObserver.observe(userList, { childList: true });
-
   // Button to close the chat
   const chatCloseButton = document.querySelector('.mostright');
+
+  // Event listener for mostright click event
+  chatCloseButton.addEventListener('click', () => {
+    // Trigger the logic you want to perform when the mostright button is clicked
+    setTimeout(() => {
+      // Check if the chat is not closed
+      const chatHidden = document.querySelector('#chat-wrapper.chat-hidden');
+      if (chatHidden) {
+        // Avoid "newMessagesObserver" run the call functions multiple times when the chat opens again
+        isInitialized = false;
+      } else {
+        // Call the function to assign all the removing functionality again after the chat was closed
+        executeMessageRemover();
+        // Set chat field focus
+        setChatFieldFocus();
+        // Allow after "N" delay to run the "newMessagesObserver" call functions safely without repeating
+        isInitialized = false;
+        setTimeout(() => (isInitialized = false), 3000);
+      }
+    }, 300);
+  });
+
+  // Function to restore the chat state based on 'shouldShowPopupMessage' key in localStorage
+  function restoreChatState() {
+    // Main chat parent wrap element
+    const chatMainWrapper = document.querySelector('#chat-fixed-placeholder');
+
+    // Check if the key exists in localStorage
+    if ('shouldShowPopupMessage' in localStorage) {
+      // Retrieve the value from localStorage
+      const shouldShowPopupMessage = JSON.parse(localStorage.getItem('shouldShowPopupMessage'));
+
+      // Set the display property based on the retrieved value
+      chatMainWrapper.style.display = shouldShowPopupMessage ? 'none' : 'unset';
+    } else {
+      // Default to 'none' if the key doesn't exist
+      chatMainWrapper.style.display = 'none';
+    }
+  }
+
+  // Call restoreChatState when needed, for example, on page load
+  restoreChatState();
+
+  // Check if the key exists in localStorage
+  if (!('shouldShowPopupMessage' in localStorage)) {
+    localStorage.setItem('shouldShowPopupMessage', false);
+  }
 
   // Event listener for keydown event
   document.addEventListener('keydown', (event) => {
     // Check if Ctrl key and Space key are pressed simultaneously
-    if (event.ctrlKey && event.key === ' ') {
-      // Trigger click event on chatCloseButton
-      chatCloseButton.click();
-      setTimeout(() => {
-        // Check if the chat is not closed
-        const chatHidden = document.querySelector('#chat-wrapper.chat-hidden');
-        if (chatHidden) {
-          // Avoid "newMessagesObserver" run the call functions multiple times when the chat opens again
-          isInitialized = false;
+    if (event.ctrlKey && event.code === 'Space') {
+      // Main chat parent wrap element
+      const chatMainWrapper = document.querySelector('#chat-fixed-placeholder');
+      // Check if the 'style' attribute is present
+      const hasStyleAttribute = chatMainWrapper.hasAttribute('style');
+      // Check if the 'display' property is set on chatMainWrapper element
+      const isDisplayUnset = chatMainWrapper.style.display === 'unset';
+      // Popup messages container element
+      const popupMessagesContainer = document.querySelector('.popup-messages-container');
+
+      // Toggle the display property
+      if (hasStyleAttribute) {
+        if (isDisplayUnset) {
+          // Set the display property to 'none'
+          chatMainWrapper.style.display = 'none';
+          localStorage.setItem('shouldShowPopupMessage', true);
         } else {
-          // Call the function to assign all the removing functionality again after the chat was closed
-          executeMessageRemover();
-          // Set chat field focus
-          setChatFieldFocus();
-          // Allow after "N" delay to run the "newMessagesObserver" call functions safely without repeating
-          isInitialized = false;
-          setTimeout(() => (isInitialized = false), 3000);
+          // Set the display property to 'unset'
+          chatMainWrapper.style.display = 'unset';
+          localStorage.setItem('shouldShowPopupMessage', false);
         }
-      }, 300);
+      } else {
+        // Initial case: Set the display property to 'none'
+        chatMainWrapper.style.display = 'none';
+        localStorage.setItem('shouldShowPopupMessage', true);
+      }
+
+      // Remove the element with class 'popup-messages-container' if it exists and display is 'unset'
+      if (popupMessagesContainer && hasStyleAttribute && isDisplayUnset) {
+        popupMessagesContainer.remove();
+      }
+
     }
   });
-
 
   // EVERY NEW MESSAGE READER
 
@@ -2702,6 +2750,227 @@
     }
   }
 
+
+  // POPUP MESSAGES START
+
+  const popupMessageIconSize = 16;
+
+  // SVG markup for a clock icon
+  const clockSVG = `
+  <svg xmlns="http://www.w3.org/2000/svg"
+       width="${popupMessageIconSize - 2}"
+       height="${popupMessageIconSize - 2}"
+       viewBox="0 0 24 24"
+       fill="none"
+       stroke="currentColor"
+       stroke-width="2"
+       stroke-linecap="round"
+       stroke-linejoin="round"
+       class="feather feather-clock">
+    <circle cx="12" cy="12" r="10"></circle>
+    <polyline points="12 6 12 12 16 14"></polyline>
+  </svg>
+`;
+
+  // SVG markup for a user icon
+  const userSVG = `
+  <svg xmlns="http://www.w3.org/2000/svg"
+       width="${popupMessageIconSize - 2}"
+       height="${popupMessageIconSize - 2}"
+       viewBox="0 0 24 24"
+       fill="none"
+       stroke="currentColor"
+       stroke-width="2"
+       stroke-linecap="round"
+       stroke-linejoin="round"
+       class="feather feather-user">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+    <circle cx="12" cy="7" r="4"></circle>
+  </svg>
+`;
+
+  // SVG markup for a chevrons-right icon
+  const chevronRightSVG = `
+  <svg xmlns="http://www.w3.org/2000/svg"
+       width="${popupMessageIconSize}"
+       height="${popupMessageIconSize}"
+       viewBox="0 0 24 24"
+       fill="none"
+       stroke="currentColor"
+       stroke-width="2"
+       stroke-linecap="round"
+       stroke-linejoin="round">
+    <polyline points="9 18 15 12 9 6"></polyline>
+  </svg>
+`;
+
+  const popupChatMessageStyles = document.createElement('style');
+  popupChatMessageStyles.textContent = `
+.popup-messages-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  user-select: none;
+  pointer-events: none;
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 50px;
+  bottom: 0;
+}
+
+.popup-chat-message {
+  display: flex;
+  background-color: hsl(100, 50%, 10%);
+  position: relative;
+  max-width: 70vw;
+  border-radius: 0.2em !important;
+  color: hsl(100, 50%, 50%);
+  border: 1px solid hsl(100, 50%, 25%);
+  padding: 4px;
+  margin: 4px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+  animation: fadeInUp 0.3s ease-in-out forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.popup-chat-message > div {
+  padding: 2px;
+  display: flex;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.popup-chat-message .time,
+.popup-chat-message .time-icon {
+  opacity: 0.7;
+}
+
+.popup-chat-message .username {
+  /* No need to explicitly set grid-column for username */
+}
+
+.popup-chat-message .action {
+  /* No need to explicitly set grid-column for action */
+}
+
+.popup-chat-message .message {
+  /* No need to explicitly set grid-column for message */
+}
+`;
+
+  popupChatMessageStyles.classList.add('popup-chat-message-styles');
+
+  document.head.appendChild(popupChatMessageStyles);
+
+  // Set the maximum number of popup messages to display globally
+  const maxPopupMessagesCount = 10;
+
+  // Define the function to show popup messages when the main chat is hidden by hotkeys Ctrl + Space (only)
+  function showPopupMessage() {
+    // Check if the key 'shouldShowPopupMessage' exists and has a value of true
+    const shouldShowPopupMessage = localStorage.getItem('shouldShowPopupMessage');
+
+    // Stop execution if shouldShowPopupMessage is false
+    if (shouldShowPopupMessage !== 'true') {
+      return;
+    }
+
+    const latestMessage = document.querySelector('.messages-content p:last-child');
+
+    if (latestMessage) {
+      const time = latestMessage.querySelector('.time');
+      const username = latestMessage.querySelector('.username');
+
+      // Get all text nodes and concatenate their values
+      const textContent = Array.from(latestMessage.childNodes)
+        .filter(node => node.nodeType === Node.TEXT_NODE)
+        .map(node => node.nodeValue.trim())
+        .join(' ');
+
+      // Remove specific symbols from the username textContent
+      const cleanUsername = username.textContent.replace(/[<>]/g, '');
+
+      // Remove specific symbols from the time textContent
+      const cleanTime = time.textContent.replace(/[\[\]]/g, '');
+
+      if (cleanTime && cleanUsername && textContent) {
+        // Create a main container for all messages
+        let popupMessagesContainer = document.querySelector('.popup-messages-container');
+        if (!popupMessagesContainer) {
+          popupMessagesContainer = document.createElement('div');
+          popupMessagesContainer.classList.add('popup-messages-container');
+          document.body.appendChild(popupMessagesContainer);
+        }
+
+        // Check if the total number of messages in the container exceeds the maximum
+        if (popupMessagesContainer.childElementCount >= maxPopupMessagesCount) {
+          // Remove the oldest message
+          const oldestMessage = popupMessagesContainer.firstChild;
+          popupMessagesContainer.removeChild(oldestMessage);
+        }
+
+        // Create a container div for each message
+        const popupChatMessage = document.createElement('div');
+        popupChatMessage.classList.add('popup-chat-message');
+
+        // Append time SVG icon before the time
+        const timeIcon = document.createElement('div');
+        timeIcon.classList.add('time-icon');
+        timeIcon.innerHTML = clockSVG;
+
+        // Append spans for each part with respective classes
+        const time = document.createElement('div');
+        time.classList.add('time');
+        time.textContent = cleanTime;
+
+        // Append user SVG icon after the time
+        const userIcon = document.createElement('div');
+        userIcon.classList.add('user-icon');
+        userIcon.innerHTML = userSVG;
+
+        const username = document.createElement('div');
+        username.classList.add('username');
+        username.textContent = cleanUsername;
+
+        // Append action SVG icon after the username
+        const actionIcon = document.createElement('div');
+        actionIcon.classList.add('action-icon');
+        actionIcon.innerHTML = chevronRightSVG;
+
+        const message = document.createElement('div');
+        message.classList.add('message');
+        message.textContent = textContent;
+
+        // Append elements to the message container
+        popupChatMessage.appendChild(timeIcon);
+        popupChatMessage.appendChild(time);
+        popupChatMessage.appendChild(userIcon)
+        popupChatMessage.appendChild(username);
+        popupChatMessage.appendChild(actionIcon);
+        popupChatMessage.appendChild(message);
+
+        // Append the message container to the main container
+        popupMessagesContainer.appendChild(popupChatMessage);
+      }
+    }
+  }
+
+  // POPUP MESSAGES END
+
+
   // Skip reading the messages on page load to read them normally when the user is present and the page is stable
   let isInitialized = false;
 
@@ -2798,6 +3067,8 @@
               scrollMessages();
               // Call the banSpammer function to track and handle potential spam messages
               banSpammer();
+              // Call the function to show the latest popup message
+              showPopupMessage();
             }
 
           }

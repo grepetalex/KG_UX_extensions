@@ -2810,7 +2810,7 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  align-items: center;
+  align-items: start;
   user-select: none;
   pointer-events: none;
   position: fixed;
@@ -2829,7 +2829,7 @@
   color: hsl(100, 50%, 50%);
   border: 1px solid hsl(100, 50%, 25%);
   padding: 4px;
-  margin: 4px;
+  margin: 6px 15vw;
   opacity: 0;
   transform: translateY(20px);
   transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;

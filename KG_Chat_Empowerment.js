@@ -2883,6 +2883,8 @@
 
   // Define an object to store the hue for each username
   const usernameHueMap = {};
+  // Increase step for noticeable color changes
+  const hueStep = 15;
 
   // Define the function to show popup messages when the main chat is hidden by hotkeys Ctrl + Space (only)
   function showPopupMessage() {
@@ -2912,9 +2914,9 @@
       // Check if the hue for this username is already stored
       let hueForUsername = usernameHueMap[cleanUsername];
 
-      // If the hue is not stored, generate a new random hue
+      // If the hue is not stored, generate a new random hue with the specified step
       if (!hueForUsername) {
-        hueForUsername = Math.floor(Math.random() * 360);
+        hueForUsername = Math.floor(Math.random() * (360 / hueStep)) * hueStep;
         // Store the generated hue for this username
         usernameHueMap[cleanUsername] = hueForUsername;
       }

@@ -2806,69 +2806,72 @@
 
   const popupChatMessageStyles = document.createElement('style');
   popupChatMessageStyles.textContent = `
-.popup-messages-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  align-items: start;
-  user-select: none;
-  pointer-events: none;
-  position: fixed;
-  left: 0;
-  right: 0;
-  top: 50px;
-  bottom: 0;
-}
+    .popup-messages-container {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: start;
+      user-select: none;
+      pointer-events: none;
+      position: fixed;
+      left: 0;
+      right: 0;
+      top: 50px;
+      bottom: 0;
+    }
 
-.popup-chat-message {
-  display: flex;
-  background-color: hsl(100, 50%, 10%);
-  position: relative;
-  max-width: 70vw;
-  border-radius: 0.2em !important;
-  color: hsl(100, 50%, 50%);
-  border: 1px solid hsl(100, 50%, 25%);
-  padding: 4px;
-  margin: 6px 15vw;
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
-  animation: fadeInUp 0.3s ease-in-out forwards;
-}
+    .popup-chat-message {
+      display: flex;
+      background-color: hsl(100, 50%, 10%);
+      position: relative;
+      max-width: 70vw;
+      border-radius: 0.2em !important;
+      color: hsl(100, 50%, 50%);
+      border: 1px solid hsl(100, 50%, 25%);
+      padding: 4px;
+      margin: 6px 15vw;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+      animation: fadeIn 0.3s ease-in-out forwards;
+    }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
 
-.popup-chat-message > div {
-  padding: 2px;
-  display: flex;
-  font-family: 'Montserrat', sans-serif;
-}
+    .popup-chat-message.fade-out {
+      animation: fadeOut 0.3s ease-in-out forwards;
+    }
 
-.popup-chat-message .time,
-.popup-chat-message .time-icon {
-  opacity: 0.7;
-}
+    @keyframes fadeOut {
+      from {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      to {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+    }
 
-.popup-chat-message .username {
-  /* No need to explicitly set grid-column for username */
-}
+    .popup-chat-message > div {
+      padding: 2px;
+      display: flex;
+      font-family: 'Montserrat', sans-serif;
+    }
 
-.popup-chat-message .action {
-  /* No need to explicitly set grid-column for action */
-}
-
-.popup-chat-message .message {
-  /* No need to explicitly set grid-column for message */
-}
+    .popup-chat-message .time,
+    .popup-chat-message .time-icon {
+      opacity: 0.7;
+    }
 `;
 
   popupChatMessageStyles.classList.add('popup-chat-message-styles');
@@ -2917,9 +2920,16 @@
 
         // Check if the total number of messages in the container exceeds the maximum
         if (popupMessagesContainer.childElementCount >= maxPopupMessagesCount) {
-          // Remove the oldest message
+          // Get the oldest message
           const oldestMessage = popupMessagesContainer.firstChild;
-          popupMessagesContainer.removeChild(oldestMessage);
+
+          // Apply a CSS class to initiate the fade-out animation
+          oldestMessage.classList.add('fade-out');
+
+          // After the animation duration, remove the message from the DOM
+          setTimeout(() => {
+            popupMessagesContainer.removeChild(oldestMessage);
+          }, 300); // Adjust the time to match your CSS animation duration
         }
 
         // Create a container div for each message

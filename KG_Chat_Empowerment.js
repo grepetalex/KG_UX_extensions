@@ -320,7 +320,9 @@
 
   // SVG icon for entering
   const enterIcon = `
-  <svg xmlns="http://www.w3.org/2000/svg" width="${actionIconWidth}" height="${actionIconHeight}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${actionStrokeWidth}" stroke-linecap="round" stroke-linejoin="round" class="icon-enter icon-feather icon-log-in">
+  <svg xmlns="http://www.w3.org/2000/svg" width="${actionIconWidth}" height="${actionIconHeight}"
+      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${actionStrokeWidth}"
+      stroke-linecap="round" stroke-linejoin="round" class="icon-enter icon-feather icon-log-in">
     <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
     <polyline points="10 17 15 12 10 7"></polyline>
     <line x1="15" y1="12" x2="3" y2="12"></line>
@@ -329,7 +331,9 @@
 
   // SVG icon for leaving
   const leaveIcon = `
-  <svg xmlns="http://www.w3.org/2000/svg" width="${actionIconWidth}" height="${actionIconHeight}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${actionStrokeWidth}" stroke-linecap="round" stroke-linejoin="round" class="icon-leave icon-feather icon-log-out">
+  <svg xmlns="http://www.w3.org/2000/svg" width="${actionIconWidth}" height="${actionIconHeight}"
+      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${actionStrokeWidth}"
+      stroke-linecap="round" stroke-linejoin="round" class="icon-leave icon-feather icon-log-out">
     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
     <polyline points="16 17 21 12 16 7"></polyline>
     <line x1="21" y1="12" x2="9" y2="12"></line>
@@ -2928,19 +2932,32 @@
       return;
     }
 
+    // Get the last message in the chat
     const latestMessage = document.querySelector('.messages-content p:last-child');
 
     if (latestMessage) {
+      // Extract elements for time and username from the latest message
       const time = latestMessage.querySelector('.time');
       const username = latestMessage.querySelector('.username');
 
-      // Get all text nodes and concatenate their values
-      const textContent = Array.from(latestMessage.childNodes)
-        .filter(node => node.nodeType === Node.TEXT_NODE)
-        .map(node => node.nodeValue.trim())
-        .join(' ');
+      // Get all nodes and concatenate their values
+      const nodes = Array.from(latestMessage.childNodes);
+      const elements = nodes.map(node => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          return { type: 'text', value: node.nodeValue.trim() };
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+          if (node.tagName.toLowerCase() === 'img') {
+            const imgTitle = node.getAttribute('title');
+            return { type: 'img', title: imgTitle };
+          } else if (node.tagName.toLowerCase() === 'a') {
+            const anchorHref = node.getAttribute('href');
+            return { type: 'anchor', href: anchorHref };
+          }
+        }
+      }).filter(Boolean);
 
-      // Remove specific symbols from the username textContent
+      // Extract relevant data from the time and username elements
+      const cleanTime = time.textContent.replace(/[\[\]]/g, '');
       const cleanUsername = username.textContent.replace(/[<>]/g, '');
 
       // Check if the hue for this username is already stored
@@ -2953,77 +2970,86 @@
         usernameHueMap[cleanUsername] = hueForUsername;
       }
 
-      // Remove specific symbols from the time textContent
-      const cleanTime = time.textContent.replace(/[\[\]]/g, '');
-
-      if (cleanTime && cleanUsername && textContent) {
-        // Create a main container for all messages
-        let popupMessagesContainer = document.querySelector('.popup-messages-container');
-        if (!popupMessagesContainer) {
-          popupMessagesContainer = document.createElement('div');
-          popupMessagesContainer.classList.add('popup-messages-container');
-          document.body.appendChild(popupMessagesContainer);
-        }
-
-        // Check if the total number of messages in the container exceeds the maximum
-        if (popupMessagesContainer.childElementCount >= maxPopupMessagesCount) {
-          // Get the oldest message
-          const oldestMessage = popupMessagesContainer.firstChild;
-
-          // Apply a CSS class to initiate the fade-out animation
-          oldestMessage.classList.add('fade-out');
-
-          // After the animation duration, remove the message from the DOM
-          setTimeout(() => {
-            popupMessagesContainer.removeChild(oldestMessage);
-          }, 300); // Adjust the time to match your CSS animation duration
-        }
-
-        // Create a container div for each message
-        const popupChatMessage = document.createElement('div');
-        popupChatMessage.classList.add('popup-chat-message');
-        // Apply the hue-rotate filter to the entire message container
-        popupChatMessage.style.filter = `hue-rotate(${hueForUsername}deg)`;
-
-        // Append time SVG icon before the time
-        const timeIcon = document.createElement('div');
-        timeIcon.classList.add('time-icon');
-        timeIcon.innerHTML = clockSVG;
-
-        // Append spans for each part with respective classes
-        const time = document.createElement('div');
-        time.classList.add('time');
-        time.textContent = cleanTime;
-
-        // Append user SVG icon after the time
-        const userIcon = document.createElement('div');
-        userIcon.classList.add('user-icon');
-        userIcon.innerHTML = userSVG;
-
-        const username = document.createElement('div');
-        username.classList.add('username');
-        username.textContent = cleanUsername;
-
-        // Append action SVG icon after the username
-        const actionIcon = document.createElement('div');
-        actionIcon.classList.add('action-icon');
-        actionIcon.innerHTML = chevronRightSVG;
-
-        const message = document.createElement('div');
-        message.classList.add('message');
-        message.textContent = textContent;
-
-        // Append elements to the message container
-        popupChatMessage.appendChild(timeIcon);
-        popupChatMessage.appendChild(time);
-        popupChatMessage.appendChild(userIcon)
-        popupChatMessage.appendChild(username);
-        popupChatMessage.appendChild(actionIcon);
-        popupChatMessage.appendChild(message);
-
-        // Append the message container to the main container
-        popupMessagesContainer.appendChild(popupChatMessage);
+      // Create or get the main container for all messages
+      let popupMessagesContainer = document.querySelector('.popup-messages-container');
+      if (!popupMessagesContainer) {
+        popupMessagesContainer = document.createElement('div');
+        popupMessagesContainer.classList.add('popup-messages-container');
+        document.body.appendChild(popupMessagesContainer);
       }
+
+      // Check if the total number of messages in the container exceeds the maximum
+      if (popupMessagesContainer.childElementCount >= maxPopupMessagesCount) {
+        // Get the oldest message
+        const oldestMessage = popupMessagesContainer.firstChild;
+
+        // Apply a CSS class to initiate the fade-out animation
+        oldestMessage.classList.add('fade-out');
+
+        // After the animation duration, remove the message from the DOM
+        setTimeout(() => {
+          popupMessagesContainer.removeChild(oldestMessage);
+        }, 300); // Adjust the time to match your CSS animation duration
+      }
+
+      // Create a container div for each message
+      const popupChatMessage = document.createElement('div');
+      popupChatMessage.classList.add('popup-chat-message');
+      // Apply the hue-rotate filter to the entire message container
+      popupChatMessage.style.filter = `hue-rotate(${hueForUsername}deg)`;
+
+      // Append time SVG icon before the time
+      const timeIcon = document.createElement('div');
+      timeIcon.classList.add('time-icon');
+      timeIcon.innerHTML = clockSVG;
+
+      // Append spans for each part with respective classes
+      const timeElement = document.createElement('div');
+      timeElement.classList.add('time');
+      timeElement.textContent = cleanTime;
+
+      // Append user SVG icon after the time
+      const userIcon = document.createElement('div');
+      userIcon.classList.add('user-icon');
+      userIcon.innerHTML = userSVG;
+
+      const usernameElement = document.createElement('div');
+      usernameElement.classList.add('username');
+      usernameElement.textContent = cleanUsername;
+
+      // Append action SVG icon after the username
+      const actionIcon = document.createElement('div');
+      actionIcon.classList.add('action-icon');
+      actionIcon.innerHTML = chevronRightSVG;
+
+      const messageElement = document.createElement('div');
+      messageElement.classList.add('message');
+
+      // Append elements to the message container
+      popupChatMessage.appendChild(timeIcon);
+      popupChatMessage.appendChild(timeElement);
+      popupChatMessage.appendChild(userIcon);
+      popupChatMessage.appendChild(usernameElement);
+      popupChatMessage.appendChild(actionIcon);
+      popupChatMessage.appendChild(messageElement);
+
+      // Fill the message container with text, images, and anchors
+      elements.forEach(element => {
+        const elementContainer = document.createElement('div');
+
+        if (element.type === 'text') {
+          elementContainer.textContent = element.value;
+        } else if (element.type === 'img') {
+          elementContainer.innerHTML = `&nbsp;${element.title}&nbsp;`;
+        } else if (element.type === 'anchor') {
+          elementContainer.innerHTML = `&nbsp;${element.href}&nbsp;`;
+        }
+
+        messageElement.appendChild(elementContainer);
+      });
+
+      // Append the message container to the main container
+      popupMessagesContainer.appendChild(popupChatMessage);
     }
   }
 

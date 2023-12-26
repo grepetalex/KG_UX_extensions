@@ -94,7 +94,8 @@
     { name: 'Razmontana', gender: 'male', pronunciation: 'Размонтана' }, // ------ 11
     { name: 'un4given', gender: 'male', pronunciation: 'Унч' }, // --------------- 12
     { name: 'iChessKnock', gender: 'male', pronunciation: 'Чеснок' }, // --------- 13
-    { name: 'TolikWorkaholic', gender: 'male', pronunciation: 'Анатолий' } // ---- 14
+    { name: 'TolikWorkaholic', gender: 'male', pronunciation: 'Анатолий' }, // --- 14
+    { name: 'elasez_uyefot_2', gender: 'male', pronunciation: 'Тестировщик' } // - 15
   ];
 
   // Notify me if someone is addressing to me using such aliases
@@ -312,23 +313,52 @@
     return `hsl(${hue},${saturation}%,${lightness}%)`;
   }
 
+  // Constants for SVG icon properties
+  const actionIconWidth = 16;
+  const actionIconHeight = 16;
+  const actionStrokeWidth = 2;
+
+  // SVG icon for entering
+  const enterIcon = `
+  <svg xmlns="http://www.w3.org/2000/svg" width="${actionIconWidth}" height="${actionIconHeight}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${actionStrokeWidth}" stroke-linecap="round" stroke-linejoin="round" class="icon-enter icon-feather icon-log-in">
+    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+    <polyline points="10 17 15 12 10 7"></polyline>
+    <line x1="15" y1="12" x2="3" y2="12"></line>
+  </svg>
+`;
+
+  // SVG icon for leaving
+  const leaveIcon = `
+  <svg xmlns="http://www.w3.org/2000/svg" width="${actionIconWidth}" height="${actionIconHeight}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${actionStrokeWidth}" stroke-linecap="round" stroke-linejoin="round" class="icon-leave icon-feather icon-log-out">
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+    <polyline points="16 17 21 12 16 7"></polyline>
+    <line x1="21" y1="12" x2="9" y2="12"></line>
+  </svg>
+`;
+
   // Reference for the existing popup
   let previousPopup = null;
+  // Timeout before the popup user action notification should be removed
+  const popupVisibilityTime = 5000; // 5 seconds
 
-  function showUserAction(user, action, presence) {
+  function showUserAction(user, iconType, presence) {
     // Make sure if the user is tracked to notify about presence in the chat to leave static stamps
     const isTrackedUser = usersToTrack.some((trackedUser) => trackedUser.name === user);
+    // Get current time in format "[hour:minutes:seconds]"
+    const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+    // Determine the icon based on the action type (enter/leave)
+    const actionIcon = document.createElement('div');
+    actionIcon.classList.add('action-icon');
+    actionIcon.style.margin = '0 4px';
+    actionIcon.innerHTML = iconType;
 
     if (isTrackedUser) {
-      // Get current time in format "[hour:minutes:seconds]"
-      const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-
       // Create a new div element for the chat notification
       const chatNotification = document.createElement('div');
 
-      // Set the text content of the chat notification to include the user, action, and time
-      chatNotification.innerText = `${user} ${action} в ${time}`;
+      // Set the text content of the chat notification to include the user and time
+      chatNotification.innerHTML = `${user} ${actionIcon.outerHTML} ${time}`;
 
       // Check if the presence is true or false
       if (presence) {
@@ -348,10 +378,10 @@
       }
 
       // Set the padding, display, and margin for the chat notification
-      chatNotification.style.padding = '4px';
+      chatNotification.style.padding = '8px';
       chatNotification.style.display = 'inline-flex';
       chatNotification.style.margin = '4px 2px';
-      chatNotification.style.fontSize = '0.8em';
+      chatNotification.style.fontSize = '1em';
 
       // Get the container for all chat messages
       const messagesContainer = document.querySelector('.messages-content div');
@@ -366,7 +396,9 @@
     // Create the userPopup element
     const userPopup = document.createElement('div');
     userPopup.classList.add('userPopup');
-    userPopup.innerText = `${user} ${action}`;
+
+    // Set the text content of the userPopup to include the user and append the icon
+    userPopup.insertAdjacentHTML('beforeend', `${user}${actionIcon.outerHTML}${time}`);
 
     // Set the initial styles for the user popup
     userPopup.style.position = 'fixed';
@@ -377,7 +409,7 @@
     userPopup.style.backgroundColor = presence ? getHSLColor(100, 50, 10) : getHSLColor(0, 50, 15); // backgroundColor green && red
     userPopup.style.border = presence ? `1px solid ${getHSLColor(100, 50, 25)}` : `1px solid ${getHSLColor(0, 50, 40)}`; // borderColor green && red
     userPopup.style.setProperty('border-radius', '4px 0 0 4px', 'important');
-    userPopup.style.padding = '8px 16px';
+    userPopup.style.padding = '8px 12px 8px 16px';
     userPopup.style.display = 'flex';
     userPopup.style.alignItems = 'center';
 
@@ -418,7 +450,7 @@
           previousPopup = null;
         }
       }, 300);
-    }, 5000);
+    }, popupVisibilityTime);
   }
 
 
@@ -2055,8 +2087,8 @@
           newUsers.forEach((newUser) => {
             if (!previousUsers.includes(newUser)) {
               const userGender = getUserGender(newUser) || 'male'; // use 'male' as default
-              const action = verbs[userGender].enter;
-              showUserAction(newUser, action, true);
+              const iconType = enterIcon;
+              showUserAction(newUser, iconType, true);
               // Prevent voice notification if mode is silence
               if (!isSilence && usersToTrack.some(user => user.name === newUser)) {
                 userAction(newUser, "enter", userGender);
@@ -2066,8 +2098,8 @@
 
           leftUsers.forEach((leftUser) => {
             const userGender = getUserGender(leftUser) || 'male'; // use 'male' as default
-            const action = verbs[userGender].leave;
-            showUserAction(leftUser, action, false);
+            const iconType = leaveIcon;
+            showUserAction(leftUser, iconType, false);
             // Prevent voice notification if mode is silence
             if (!isSilence && usersToTrack.some(user => user.name === leftUser)) {
               userAction(leftUser, "leave", userGender);

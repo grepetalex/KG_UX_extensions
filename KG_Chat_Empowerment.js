@@ -3759,13 +3759,7 @@
   ** This method is helpful in storing only necessary unwanted messages, preventing an overgrowth of values over time.
   */
 
-  // Set messages initially as empty variable
-  let messages;
-
   function executeMessageRemover() {
-    // Store let messages with data
-    messages = document.querySelectorAll('.messages-content div p');
-
     attachEventsToMessages();
     createToggleButton();
     wipeDeletedMessages();
@@ -3826,6 +3820,7 @@
   }
   // Clear the selection
   function clearMessageSelection(message) {
+    const messages = document.querySelectorAll('.messages-content div p');
     messages.forEach(message => {
       message.style.removeProperty('background-color');
       message.style.removeProperty('box-shadow');
@@ -3841,28 +3836,42 @@
 
   // Function to attach events on every message what doesn't have any event assigned
   function attachEventsToMessages() {
-    // Assign empty variable with data
-    messages = document.querySelectorAll('.messages-content div p');
+    // Retrieve all messages in the chat
+    const messages = document.querySelectorAll('.messages-content div p');
     // Store timeoutID to regulate it by multiple events
     let timeoutId = null;
 
+    // Loop through each message
     messages.forEach(message => {
       // Check if the element has the 'contextmenu' id before adding a new event listener
       if (!message.hasAttribute('id') || message.getAttribute('id') !== 'contextmenu') {
 
+        // Event listener for mouse down to handle right-click for message selection
         message.addEventListener('mousedown', event => {
           isRightMouseButton = event.button === 2;
           if (isRightMouseButton) {
             isDragging = true;
             clearTimeout(timeoutId);
-            if (!selectedMessages.has(message.textContent)) {
-              selectedMessages.add(message.textContent);
-              console.log('Added new message inside the selectedMessages Set:', message.textContent);
+
+            // Extract time and username from the message
+            const time = message.querySelector('.time').innerText;
+            const username = message.querySelector('.username').innerText;
+
+            // Create an object with time and username for message identification
+            const messageData = { time, username };
+
+            // Add the message to the selectedMessages Set if not already present
+            if (!selectedMessages.has(messageData)) {
+              selectedMessages.add(messageData);
+              console.log('Added new message inside the selectedMessages Set:', messageData);
             }
+
+            // Visual indication of the selected message
             assignMessageSelection(message);
           }
         });
 
+        // Event listener for mouse up to handle right-click dragging
         message.addEventListener('mouseup', event => {
           isRightMouseButton = event.button === 2;
           if (isRightMouseButton) {
@@ -3870,131 +3879,164 @@
           }
         });
 
+        // Event listener for mouse over to handle dragging and selection
         message.addEventListener('mouseover', event => {
           if (isDragging && isRightMouseButton) {
-            if (!selectedMessages.has(message.textContent)) {
-              selectedMessages.add(message.textContent);
-              console.log('Added new message inside the selectedMessages Set:', message.textContent);
+            // Extract time and username from the message
+            const time = message.querySelector('.time').innerText;
+            const username = message.querySelector('.username').innerText;
+
+            // Create an object with time and username for message identification
+            const messageData = { time, username };
+
+            // Add the message to the selectedMessages Set if not already present
+            if (!selectedMessages.has(messageData)) {
+              selectedMessages.add(messageData);
+              console.log('Added new message inside the selectedMessages Set:', messageData);
             }
+
+            // Visual indication of the selected message
             assignMessageSelection(message);
           }
         });
 
-        // Add id contextmenu to check in the future if the element has the event
-        message.setAttribute('id', 'contextmenu');
-        // Add an event listener for right-clicks on messages
-        message.addEventListener('contextmenu', event => {
-          // Prevent the default context menu from appearing
-          event.preventDefault();
-          // Wrap the message into visible selection to visually know what message will be deleted
-          assignMessageSelection(message);
+        // Check if the element has the 'id' attribute before adding a new event listener
+        if (!message.hasAttribute('id') || message.getAttribute('id') !== 'contextmenu') {
 
-          // Check if a delete-message button already exists in the document
-          const deleteButton = document.querySelector('.delete-message');
+          // Event listener for the contextmenu event (right-click)
+          message.addEventListener('contextmenu', event => {
+            // Prevent the default context menu from appearing
+            event.preventDefault();
 
-          if (deleteButton) {
-            // If it exists, remove it
-            deleteButton.remove();
-          }
+            // Visual indication of the selected message
+            assignMessageSelection(message);
 
-          // Create a new delete-message button
-          const newDeleteButton = document.createElement('button');
-          newDeleteButton.innerText = 'Delete';
-          newDeleteButton.classList.add('delete-message');
+            // Check if a delete-message button already exists in the document
+            const deleteButton = document.querySelector('.delete-message');
 
-          // Attach event click to new delete-message button
-          newDeleteButton.addEventListener('click', () => {
-            deleteSelectedMessages(message);
-            newDeleteButton.remove();
-            createToggleButton();
-            selectedMessages.clear();
-          });
+            // Remove the existing delete button if it exists
+            if (deleteButton) {
+              deleteButton.remove();
+            }
 
-          // Style the delete button
-          assignDeleteButtonStyles(newDeleteButton, event);
+            // Create a new delete-message button
+            const newDeleteButton = document.createElement('button');
+            newDeleteButton.innerText = 'Delete';
+            newDeleteButton.classList.add('delete-message');
 
-          // Set the hover styles
-          newDeleteButton.addEventListener('mouseenter', () => {
-            newDeleteButton.style.filter = 'brightness(1.5)';
-          });
+            // Event listener for the delete button click
+            newDeleteButton.addEventListener('click', () => {
+              // Delete selected messages
+              deleteSelectedMessages(message);
+              // Remove the delete button
+              newDeleteButton.remove();
+              // Create a toggle button (not defined in the provided code)
+              createToggleButton();
+              // Clear the selectedMessages Set
+              selectedMessages.clear();
+            });
 
-          // Set the mouse leave styles
-          newDeleteButton.addEventListener('mouseleave', () => {
-            newDeleteButton.style.filter = 'brightness(1)';
-          });
+            // Style the delete button
+            assignDeleteButtonStyles(newDeleteButton, event);
 
-          // Append the new delete-message button to the document body
-          document.body.appendChild(newDeleteButton);
+            // Set hover styles for the delete button
+            newDeleteButton.addEventListener('mouseenter', () => {
+              newDeleteButton.style.filter = 'brightness(1.5)';
+            });
 
-          function hideDeleteButton() {
-            // Set a new timeout to remove the delete button
-            timeoutId = setTimeout(() => {
-              if (!newDeleteButton.matches(':hover')) {
-                newDeleteButton.remove();
-                clearMessageSelection(message);
-                selectedMessages.clear();
-              }
-            }, 1000);
-          }
+            // Set mouse leave styles for the delete button
+            newDeleteButton.addEventListener('mouseleave', () => {
+              newDeleteButton.style.filter = 'brightness(1)';
+            });
 
-          hideDeleteButton();
+            // Append the new delete-message button to the document body
+            document.body.appendChild(newDeleteButton);
 
-          // Add event listener for the mouseleave event on the delete button
-          newDeleteButton.addEventListener('mouseleave', () => {
+            // Function to hide the delete button after a timeout
+            function hideDeleteButton() {
+              timeoutId = setTimeout(() => {
+                if (!newDeleteButton.matches(':hover')) {
+                  newDeleteButton.remove();
+                  clearMessageSelection(message);
+                  selectedMessages.clear();
+                }
+              }, 1000);
+            }
+
             hideDeleteButton();
-          });
 
-          // Add event listener for the mouseenter event on the delete button to clear the previous timeout
-          newDeleteButton.addEventListener('mouseenter', () => {
-            clearTimeout(timeoutId);
-          });
+            // Event listener for the mouseleave event on the delete button
+            newDeleteButton.addEventListener('mouseleave', () => {
+              hideDeleteButton();
+            });
 
-        }); // contextmenu Event END
+            // Event listener for the mouseenter event on the delete button to clear the previous timeout
+            newDeleteButton.addEventListener('mouseenter', () => {
+              clearTimeout(timeoutId);
+            });
+
+          }); // contextmenu Event END
+        }
       }
-    }); // messages addEventListener END
+    }); // messages forEach END
   } // attachEventsToMessages function END
 
+  // Function to delete selected messages
   function deleteSelectedMessages(messageSelection) {
-    // Retrieve and backup all current selectedMessages and convert into Array
+    // Retrieve and backup all currently selected messages and convert into an Array
     const messagesToDelete = [...selectedMessages];
 
-    // Loop over each selected message elements
-    messagesToDelete.forEach((message) => {
-      // Get the message text content
-      const messageContent = message;
-      // Retrieve the stored deleted messages array, or create an empty array if none exist
-      const deletedMessages = JSON.parse(localStorage.getItem('deletedChatMessagesContent') || '[]');
-      // Add the deleted message content to the array if it doesn't already exist
-      if (!deletedMessages.includes(messageContent)) {
-        deletedMessages.push(messageContent);
-      }
-      // Store the updated deleted messages array in localStorage
-      localStorage.setItem('deletedChatMessagesContent', JSON.stringify(deletedMessages));
+    // Retrieve the current deleted messages array from localStorage
+    const existingDeletedMessages = JSON.parse(localStorage.getItem('deletedChatMessagesContent') || '[]');
+
+    // Create an array to store arrays of time and username pairs
+    const deletedMessages = existingDeletedMessages.slice(); // Copy the existing array
+
+    // Loop over each selected message element
+    messagesToDelete.forEach(({ time, username }) => {
+      // Add the time and username as an array to the outer array
+      deletedMessages.push([time, username]);
+
       // Remove the message from the selectedMessages Set
-      selectedMessages.delete(message);
+      selectedMessages.delete({ time, username });
     });
 
-    // Hide all the messages what are matching the localStorage value
+    // Store the updated deleted messages array in localStorage
+    localStorage.setItem('deletedChatMessagesContent', JSON.stringify(deletedMessages));
+
+    // Hide all the messages that match the localStorage value
     wipeDeletedMessages();
   }
 
-  // Function to remove from localStorage deleted messages values what are not anymore matching the chat message
-  // And also make messages in the chat to be invisible only for whose what are matching the localStorage message
+  // Function to remove from localStorage deleted messages values that no longer match the chat message
+  // Also make messages in the chat invisible only for those that match the localStorage message
   function wipeDeletedMessages() {
+    // Retrieve all the messages from the chat 
+    const messages = document.querySelectorAll('.messages-content div p');
+
     // Retrieve the stored deleted messages array
     const deletedMessages = JSON.parse(localStorage.getItem('deletedChatMessagesContent') || '[]');
+
     // Remove any deleted messages from the array that no longer exist in the chat messages container
-    const newDeletedMessages = deletedMessages.filter(content => {
-      return Array.from(messages).some(message => message.innerText === content);
+    const newDeletedMessages = deletedMessages.filter(([time, username]) => {
+      return Array.from(messages).some(message => {
+        const messageTime = message.querySelector('.time').innerText;
+        const messageUsername = message.querySelector('.username').innerText;
+        return messageTime === time && messageUsername === username;
+      });
     });
+
     // Remove messages from the chat that match the deleted messages in localStorage
-    deletedMessages.forEach(deletedMessage => {
+    deletedMessages.forEach(([time, username]) => {
       messages.forEach(message => {
-        if (message.innerText === deletedMessage) {
+        const messageTime = message.querySelector('.time').innerText;
+        const messageUsername = message.querySelector('.username').innerText;
+        if (messageTime === time && messageUsername === username) {
           message.style.display = 'none';
         }
       });
     });
+
     // Store the updated deleted messages array in localStorage
     localStorage.setItem('deletedChatMessagesContent', JSON.stringify(newDeletedMessages));
   } // wipeDeletedMessages END
@@ -4051,11 +4093,12 @@
         messagesContainer.appendChild(toggleButton);
       }
     }
-  }
-
+  } // createToggleButton function END
 
   // Function to toggle messages display state from "NONE" to "BLOCK" and reverse
   function toggleHiddenMessages() {
+    // Retrieve all the messages from the chat 
+    const messages = document.querySelectorAll('.messages-content div p');
     // Retrieve the stored deleted messages array
     const deletedMessages = JSON.parse(localStorage.getItem('deletedChatMessagesContent') || '[]');
 
@@ -4075,7 +4118,6 @@
     }
 
     if (!isCtrlKeyPressed) {
-
       // Check if there are any deleted messages in the local storage
       if (deletedMessages.length === 0) {
         // Hide the toggle button if there are no deleted messages
@@ -4088,7 +4130,11 @@
 
       // Toggle the display of each message that matches the key "deletedChatMessagesContent" data
       messages.forEach(message => {
-        if (deletedMessages.includes(message.innerText)) {
+        const time = message.querySelector('.time').innerText;
+        const username = message.querySelector('.username').innerText;
+        const messageData = [time, username];
+
+        if (deletedMessages.some(deletedMessage => JSON.stringify(deletedMessage) === JSON.stringify(messageData))) {
           // Show hidden messages if innerText is "Hidden" and display equal "NONE"
           if (toggleButton.innerText === 'Hidden') {
             if (message.style.display === 'none') {
@@ -4127,11 +4173,8 @@
         toggleButton.innerText = 'Hide';
         assignHideButtonStyle(toggleButton);
       }
-
     }
-
   } // toggleHiddenMessages function END
-
 
   // Icon for the disabled chat button
   const iconDenied = `<svg xmlns="${svgUrl}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgb(255, 100, 100)" stroke-width="2"

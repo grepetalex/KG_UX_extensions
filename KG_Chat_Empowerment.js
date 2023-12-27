@@ -313,6 +313,40 @@
     return `hsl(${hue},${saturation}%,${lightness}%)`;
   }
 
+  // Function to purge chat user actions with a smooth step-by-step animation
+  // Parameters:
+  //   - delayBetweenAnimations: Delay between each animation step (default: 300ms)
+  function purgeChatUserActions(delayBetweenAnimations = 300) {
+    // Get all elements with the class .user-action
+    const userActions = document.querySelectorAll('.user-action');
+
+    // Convert NodeList to an array and reverse it
+    const reversedUserActions = Array.from(userActions).reverse();
+
+    // Function to apply the animation to an element
+    function animateOut(element, index) {
+      // Calculate the delay for each element
+      const delay = index * delayBetweenAnimations;
+
+      // Apply opacity and translation animation with delay
+      setTimeout(() => {
+        element.style.transition = `opacity 0.3s ease, transform 0.3s ease`;
+        element.style.opacity = 0;
+        element.style.transform = `translateX(10px)`; // Adjust the value as needed
+
+        // After the animation duration, remove the element
+        setTimeout(() => {
+          element.remove();
+        }, 300); // Assuming the animation duration is 300ms
+      }, delay);
+    }
+
+    // Use forEach on the reversed array and apply animations
+    reversedUserActions.forEach((element, index) => {
+      animateOut(element, index);
+    });
+  }
+
   // Constants for SVG icon properties
   const actionIconWidth = 16;
   const actionIconHeight = 16;
@@ -361,8 +395,17 @@
       // Create a new div element for the chat notification
       const chatNotification = document.createElement('div');
 
+      // Add a double-click event listener to initiate the removal of chat user actions
+      chatNotification.addEventListener('dblclick', () => {
+        // Initiating the removal of chat user actions with a smooth step-by-step animation
+        // The animation introduces a delay of 300ms between each step
+        purgeChatUserActions(300);
+      });
+
       // Set the text content of the chat notification to include the user and time
       chatNotification.innerHTML = `${user} ${actionIcon.outerHTML} ${time}`;
+      // Add main class for chat notifications
+      chatNotification.classList.add('user-action');
 
       // Check if the presence is true or false
       if (presence) {

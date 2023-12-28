@@ -2760,13 +2760,20 @@
   const geometricShapes = '\\u25A0-\\u25FF';
 
   const combiningAcuteAccent = '\\u0301';
+  const copyrightSymbol = '\\u00A9';
+  const trademarkSymbol = '\\u2122';
+  const registeredSymbol = '\\u00AE';
+  const leftDoubleAngleQuote = '\\u00AB';
+  const rightDoubleAngleQuote = '\\u00BB';
 
   const emojiRanges = '\\uD83C-\\uDBFF\\uDC00-\\uDFFF';
 
   function messageContainsAllowedChars(message, userId) {
     const allowedCharsRegex = new RegExp(
-      `[${digits}${latinChars}${cyrillicChars}${whitespaceAndSymbols}${generalPunctuation}${currencySymbols}${letterlikeSymbols}` +
-      `${numberForms}${arrows}${mathematicalOperators}${miscellaneousTechnical}${geometricShapes}${combiningAcuteAccent}${emojiRanges}]+`, 'g'
+      `[${digits}${latinChars}${cyrillicChars}${whitespaceChars}${symbols}` +
+      `${copyrightSymbol}${trademarkSymbol}${registeredSymbol}${leftDoubleAngleQuote}${rightDoubleAngleQuote}` +
+      `${generalPunctuation}${currencySymbols}${letterlikeSymbols}${numberForms}${arrows}` +
+      `${mathematicalOperators}${miscellaneousTechnical}${geometricShapes}${combiningAcuteAccent}${emojiRanges}]+`, 'g'
     );
 
     const allowedChars = message.match(allowedCharsRegex);

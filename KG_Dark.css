@@ -2487,7 +2487,7 @@ body img[src*=rte-youtube]:hover {
 }
 
 /* main menu */
-.right .menu {
+#head .right .menu {
     width: auto !important;
     position: fixed !important;
     top: 45px !important;
@@ -2503,15 +2503,21 @@ body img[src*=rte-youtube]:hover {
     z-index: 110 !important;
 }
 
-.right .menu:hover {
+#head .right .menu:hover {
     opacity: 1 !important;
 }
 
-.right .menu a {
+#head .right .menu a,
+#head .right .menu a.active {
     width: 100px !important;
+    height: 45px !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
     font-size: 12px !important;
     font-family: Arial !important;
     text-transform: uppercase !important;
+    text-decoration: none !important;
     color: var(--black) !important;
     background: var(--middlegray) !important;
     border-right: 1px solid var(--darkgray) !important;
@@ -2519,8 +2525,8 @@ body img[src*=rte-youtube]:hover {
     transition: all 0.2s !important;
 }
 
-.right .menu a:hover,
-.right .menu a.active {
+#head .right .menu a:hover,
+#head .right .menu a.active {
     text-decoration: none !important;
     background: var(--middlegray) !important;
     color: var(--black) !important;
@@ -2532,16 +2538,9 @@ body img[src*=rte-youtube]:hover {
     filter: brightness(1.1) !important;
 }
 
-.right .menu a[href="/wiki/"] {
+/* remove wiki link */
+#head .right .menu a[href="/wiki/"] {
     display: none !important;
-}
-
-.right .menu a,
-.right .menu a.active {
-    line-height: 30px !important;
-    text-decoration: none !important;
-    display: block !important;
-    height: 45px !important;
 }
 
 /* hide header and main container separator */

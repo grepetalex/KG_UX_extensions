@@ -2780,6 +2780,16 @@
     }
   }
 
+  // Helper function to handle threshold check
+  function handleThresholdExceeded(userId, generateLogUserInfo) {
+    if (userChatData[userId].thresholdMaxTries >= thresholdMaxTries) {
+      // Set 'banned' to true after passing the max thresholdMaxTries to remove user messages passing the messages limit checking
+      userChatData[userId].banned = true;
+      console.log(generateLogUserInfo(), 'color: pink');
+      console.log(`%c${userChatData[userId].userName} cannot send messages anymore`, 'color: pink');
+    }
+  }
+
   // Function to track and handle spam messages
   function banSpammer() {
     // Get the current timestamp
@@ -2819,13 +2829,13 @@
       }
 
       // Check if the message contains not allowed chars
-      if (!messageContainsAllowedChars(latestMessage.textContent, userId)) {
+      if (!messageContainsAllowedChars(latestMessage.textContent, userId) && !userChatData[userId].banned) {
         // Increase thresholdMaxTries on every limit pass
         userChatData[userId].thresholdMaxTries++;
-        // Remove all the messages by that user continuously until not allowed characters found
-        removeUserMessages(userId);
         // If the message contains not allowed chars, log the information
-        // console.log(`User ID: ${userId} has sent a message with not allowed characters. Threshold Max Tries increased to ${userChatData[userId].thresholdMaxTries}.`);
+        console.log(`User ID: ${userId} has sent a message with not allowed characters. Threshold Max Tries increased to ${userChatData[userId].thresholdMaxTries}.`);
+
+        handleThresholdExceeded(userId, generateLogUserInfo);
       }
 
       // Special handling for the first interaction
@@ -2850,13 +2860,10 @@
             // Increase thresholdMaxTries on every limit pass
             userChatData[userId].thresholdMaxTries++;
 
-            if (userChatData[userId].thresholdMaxTries >= thresholdMaxTries) {
-              // Set 'banned' to true after passing the max thresholdMaxTries to remove user messages passing the messages limit checking
-              userChatData[userId].banned = true;
-              console.log(generateLogUserInfo(), 'color: pink');
-              console.log(`%c${userChatData[userId].userName} cannot send messages anymore`, 'color: pink');
-            } else {
-              // Log the information immediately after updating the values if not banned
+            handleThresholdExceeded(userId, generateLogUserInfo);
+
+            // Log the information immediately after updating the values if not banned
+            if (!userChatData[userId].banned) {
               console.log(generateLogUserInfo(), 'color: red');
             }
           } else {

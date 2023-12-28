@@ -4807,8 +4807,7 @@ body #index #live #discussing_forum li .time {
 }
 
 .gamelist-create form input#create_game,
-.gamelist-create form input#delete,
-.gamelist-create form span input[type=button] {
+.gamelist-create form input#delete {
     color: transparent !important;
     border: none !important;
     background-color: rgba(200, 200, 200, 0.3) !important;
@@ -4827,10 +4826,6 @@ body #index #live #discussing_forum li .time {
 
 .gamelist-create form input#delete:hover {
     background-color: rgba(240, 52, 52, 0.5) !important;
-}
-
-.gamelist-create form span input[type=button]:hover {
-    background-color: rgba(245, 215, 110, 0.5) !important;
 }
 
 .gamelist-create form input#create_game {

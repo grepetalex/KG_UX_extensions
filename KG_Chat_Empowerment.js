@@ -2746,34 +2746,55 @@
   }
 
   const digits = '0-9';
+  const whitespaces = '\\s';
   const latinChars = 'a-zA-Z';
   const cyrillicChars = 'а-яА-Яё';
-  const whitespaceAndSymbols = '\\s!@#$%^&*()-_=+[\\]{}|;:\'",.<>/?`~';
+  const commonSymbols = '!@#$%^&*()-_=+[\\]{}|;:\'",.<>/?`~';
 
-  const generalPunctuation = '\\u2000-\\u206F';
-  const currencySymbols = '\\u20A0-\\u20CF';
-  const letterlikeSymbols = '\\u2100-\\u214F';
-  const numberForms = '\\u2150-\\u218F';
-  const arrows = '\\u2190-\\u21FF';
-  const mathematicalOperators = '\\u2200-\\u22FF';
-  const miscellaneousTechnical = '\\u2300-\\u23FF';
-  const geometricShapes = '\\u25A0-\\u25FF';
+  // Special symbols as characters
+  const copyrightSymbol = '\\u00A9'; // ©
+  const trademarkSymbol = '\\u2122'; // ™
+  const registeredSymbol = '\\u00AE'; // ®
+  const leftDoubleAngleQuote = '\\u00AB'; // «
+  const rightDoubleAngleQuote = '\\u00BB'; // »
+  const plusMinus = '\\u00B1'; // ±
+  const multiplication = '\\u00D7'; // ×
+  const division = '\\u00F7'; // ÷
+  const degreeSymbol = '\\u00B0'; // °
+  const notEqual = '\\u2260'; // ≠
+  const lessThanOrEqual = '\\u2264'; // ≤
+  const greaterThanOrEqual = '\\u2265'; // ≥
+  const infinity = '\\u221E'; // ∞
+  const euroSymbol = '\\u20AC'; // €
+  const poundSymbol = '\\u00A3'; // £
+  const yenSymbol = '\\u00A5'; // ¥
+  const sectionSymbol = '\\u00A7'; // §
+  const bulletPoint = '\\u2022'; // •
+  const ellipsis = '\\u2026'; // …
 
-  const combiningAcuteAccent = '\\u0301';
-  const copyrightSymbol = '\\u00A9';
-  const trademarkSymbol = '\\u2122';
-  const registeredSymbol = '\\u00AE';
-  const leftDoubleAngleQuote = '\\u00AB';
-  const rightDoubleAngleQuote = '\\u00BB';
+  // Arrow and Mathematical symbols as Unicode escape sequences
+  const leftArrow = '\\u2190'; // ←
+  const rightArrow = '\\u2192'; // →
+  const upArrow = '\\u2191'; // ↑
+  const downArrow = '\\u2193'; // ↓
+
+  const half = '\\u00BD'; // ½
+  const oneThird = '\\u2153'; // ⅓
+  const twoThirds = '\\u2154'; // ⅔
+
+  const summation = '\\u2211'; // ∑
+  const acuteAccent = '\\u00B4'; // ´
 
   const emojiRanges = '\\uD83C-\\uDBFF\\uDC00-\\uDFFF';
 
   function messageContainsAllowedChars(message, userId) {
     const allowedCharsRegex = new RegExp(
-      `[${digits}${latinChars}${cyrillicChars}${whitespaceAndSymbols}` +
+      `[${digits}${latinChars}${cyrillicChars}${whitespaces}${commonSymbols}` +
       `${copyrightSymbol}${trademarkSymbol}${registeredSymbol}${leftDoubleAngleQuote}${rightDoubleAngleQuote}` +
-      `${generalPunctuation}${currencySymbols}${letterlikeSymbols}${numberForms}${arrows}` +
-      `${mathematicalOperators}${miscellaneousTechnical}${geometricShapes}${combiningAcuteAccent}${emojiRanges}]+`, 'g'
+      `${plusMinus}${multiplication}${division}${degreeSymbol}${notEqual}${lessThanOrEqual}${greaterThanOrEqual}` +
+      `${infinity}${euroSymbol}${poundSymbol}${yenSymbol}${sectionSymbol}${bulletPoint}${ellipsis}` +
+      `${leftArrow}${rightArrow}${upArrow}${downArrow}${half}${oneThird}${twoThirds}${summation}` +
+      `${acuteAccent}${emojiRanges}]+`, 'g'
     );
 
     const allowedChars = message.match(allowedCharsRegex);

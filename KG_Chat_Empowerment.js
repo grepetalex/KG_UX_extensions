@@ -2770,7 +2770,7 @@
 
   function messageContainsAllowedChars(message, userId) {
     const allowedCharsRegex = new RegExp(
-      `[${digits}${latinChars}${cyrillicChars}${whitespaceChars}${symbols}` +
+      `[${digits}${latinChars}${cyrillicChars}${whitespaceAndSymbols}` +
       `${copyrightSymbol}${trademarkSymbol}${registeredSymbol}${leftDoubleAngleQuote}${rightDoubleAngleQuote}` +
       `${generalPunctuation}${currencySymbols}${letterlikeSymbols}${numberForms}${arrows}` +
       `${mathematicalOperators}${miscellaneousTechnical}${geometricShapes}${combiningAcuteAccent}${emojiRanges}]+`, 'g'

@@ -2745,6 +2745,20 @@
     });
   }
 
+  function messageContainsAllowedChars(message, userId) {
+    const allowedCharsRegex = /[a-zA-Z0-9а-яА-Яё\s!@#$%^&*()-_=+[\]{}|;:'",.<>/?`~\u2000-\u206F\u20A0-\u20CF\u2100-\u214F\u2150-\u218F\u2190-\u21FF\u2200-\u22FF\u2300-\u23FF\u25A0-\u25FF\uD83C-\uDBFF\uDC00-\uDFFF]+/g;
+
+    const allowedChars = message.match(allowedCharsRegex);
+
+    if (allowedChars && allowedChars.join('') === message) {
+      return true;
+    } else {
+      const disallowedChars = message.replace(allowedCharsRegex, '');
+      console.log(`User ID: ${userId}, Message contains not allowed characters: ${disallowedChars}`);
+      return false;
+    }
+  }
+
   // Function to track and handle spam messages
   function banSpammer() {
     // Get the current timestamp
@@ -2783,6 +2797,16 @@
           `Banned: ${userChatData[userId].banned}`;
       }
 
+      // Check if the message contains not allowed chars
+      if (!messageContainsAllowedChars(latestMessage.textContent, userId)) {
+        // Increase thresholdMaxTries on every limit pass
+        userChatData[userId].thresholdMaxTries++;
+        // Remove all the messages by that user continuously until not allowed characters found 
+        removeUserMessages(userId);
+        // If the message contains not allowed chars, log the information
+        // console.log(`User ID: ${userId} has sent a message with not allowed characters. Threshold Max Tries increased to ${userChatData[userId].thresholdMaxTries}.`);
+      }
+
       // Special handling for the first interaction
       if (userChatData[userId].firstInteraction) {
         console.log(`%c${userChatData[userId].userName} posted the first message for the current chat session.`, 'color: yellow');
@@ -2802,7 +2826,7 @@
             // Remove all messages by that user if messages limit was exceeded
             removeUserMessages(userId);
 
-            // Check if the thresholdMaxTries is equal or more than the limit
+            // Increase thresholdMaxTries on every limit pass
             userChatData[userId].thresholdMaxTries++;
 
             if (userChatData[userId].thresholdMaxTries >= thresholdMaxTries) {

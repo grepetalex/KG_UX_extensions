@@ -2745,40 +2745,31 @@
     });
   }
 
+  const digits = '0-9';
+  const latinChars = 'a-zA-Z';
+  const cyrillicChars = 'а-яА-Яё';
+  const whitespaceAndSymbols = '\\s!@#$%^&*()-_=+[\\]{}|;:\'",.<>/?`~';
+
+  const generalPunctuation = '\\u2000-\\u206F';
+  const currencySymbols = '\\u20A0-\\u20CF';
+  const letterlikeSymbols = '\\u2100-\\u214F';
+  const numberForms = '\\u2150-\\u218F';
+  const arrows = '\\u2190-\\u21FF';
+  const mathematicalOperators = '\\u2200-\\u22FF';
+  const miscellaneousTechnical = '\\u2300-\\u23FF';
+  const geometricShapes = '\\u25A0-\\u25FF';
+
+  const combiningAcuteAccent = '\\u0301';
+
+  const emojiRanges = '\\uD83C-\\uDBFF\\uDC00-\\uDFFF';
+
   function messageContainsAllowedChars(message, userId) {
-    const digits = '0-9';
-    const latinChars = 'a-zA-Z';
-    const cyrillicChars = 'а-яА-Яё';
-    const whitespaceAndSymbols = '\\s!@#$%^&*()-_=+[\\]{}|;:\'",.<>/?`~';
-
-    const generalPunctuation = '\\u2000-\\u206F';
-    const currencySymbols = '\\u20A0-\\u20CF';
-    const letterlikeSymbols = '\\u2100-\\u214F';
-    const numberForms = '\\u2150-\\u218F';
-    const arrows = '\\u2190-\\u21FF';
-    const mathematicalOperators = '\\u2200-\\u22FF';
-    const miscellaneousTechnical = '\\u2300-\\u23FF';
-    const geometricShapes = '\\u25A0-\\u25FF';
-
-    const combiningAcuteAccent = '\\u0301';
-
-    const emojiRanges = '\\uD83C-\\uDBFF\\uDC00-\\uDFFF';
-
     const allowedCharsRegex = new RegExp(
-      // Digits, Latin characters, Cyrillic characters
-      `${digits}${latinChars}${cyrillicChars}` +
-
-      // Whitespace and symbols
-      `${whitespaceAndSymbols}` +
-
-      // Various Unicode ranges
-      `${generalPunctuation}${currencySymbols}${letterlikeSymbols}${numberForms}` +
-      `${arrows}${mathematicalOperators}${miscellaneousTechnical}${geometricShapes}` +
-
-      // Combining Acute Accent and Emoji ranges
-      `${combiningAcuteAccent}${emojiRanges}]+`,
-      'g'
+      `[${digits}${latinChars}${cyrillicChars}${whitespaceAndSymbols}${generalPunctuation}${currencySymbols}${letterlikeSymbols}` +
+      `${numberForms}${arrows}${mathematicalOperators}${miscellaneousTechnical}${geometricShapes}${combiningAcuteAccent}${emojiRanges}]+`, 'g'
     );
+
+    const allowedChars = message.match(allowedCharsRegex);
 
     if (allowedChars && allowedChars.join('') === message) {
       return true;

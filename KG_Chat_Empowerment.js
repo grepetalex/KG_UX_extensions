@@ -2745,20 +2745,6 @@
     });
   }
 
-  // // Function to check if a message contains allowed characters
-  // function messageContainsAllowedChars(message, userId) {
-  //   const allowedCharsRegex = /[a-zA-Z0-9а-яА-Яё\s!@#$%^&*()-_=+[\]{}|;:'",.<>/?`~\u2000-\u206F\u20A0-\u20CF\u2100-\u214F\u2150-\u218F\u2190-\u21FF\u2200-\u22FF\u2300-\u23FF\u25A0-\u25FF\uD83C-\uDBFF\uDC00-\uDFFF]+/g;
-
-  //   const allowedChars = message.match(allowedCharsRegex);
-
-  //   if (allowedChars && allowedChars.join('') === message) {
-  //     return true;
-  //   } else {
-  //     console.log(`User ID: ${userId}, Message: "${message}" contains not allowed characters.`);
-  //     return false;
-  //   }
-  // }
-
   function messageContainsAllowedChars(message, userId) {
     const allowedCharsRegex = /[a-zA-Z0-9а-яА-Яё\s!@#$%^&*()-_=+[\]{}|;:'",.<>/?`~\u2000-\u206F\u20A0-\u20CF\u2100-\u214F\u2150-\u218F\u2190-\u21FF\u2200-\u22FF\u2300-\u23FF\u25A0-\u25FF\uD83C-\uDBFF\uDC00-\uDFFF]+/g;
 

@@ -2706,7 +2706,7 @@
   // Object to track user-specific data
   let userChatData = {};
   // Maximum number of consecutive times a user is allowed to exceed the message limit
-  const thresholdMaxTries = 5;
+  const thresholdMaxTries = 10;
 
   // Function to format time difference
   function formatTimeDifference(difference) {

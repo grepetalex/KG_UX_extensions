@@ -1089,7 +1089,7 @@
         document.head.appendChild(fontLinkRobotoMono);
       }
 
-      // Create span with description for threshold time element 
+      // Create span with description for threshold time element
       const dropTimeThresholdDescription = document.createElement('span');
       dropTimeThresholdDescription.className = 'drop-time-threshold-description';
       dropTimeThresholdDescription.textContent = 'Threshold';
@@ -1535,7 +1535,7 @@
         stroke: chocolate;
         animation: rotateProfileIconAnimation 1s forwards;
     }
-    
+
     /* Shake Profile Icon Animation for Small Icons */
     @keyframes shakeProfileIconAnimation {
         0% { transform: translate(0.5px, 0.5px) rotate(0deg); }
@@ -1659,14 +1659,14 @@
     const statusClass = isRevoked ? 'offline' : 'online';
 
     return `
-        <svg xmlns="http://www.w3.org/2000/svg" 
-            width="14" 
-            height="14" 
-            viewBox="0 0 24 24" 
+        <svg xmlns="http://www.w3.org/2000/svg"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
             fill="none"
-            stroke-width="2" 
-            stroke-linecap="round" 
-            stroke-linejoin="round" 
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
             class="feather feather-info ${statusClass}">
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="12" y1="16" x2="12" y2="12"></line>
@@ -1676,14 +1676,14 @@
 
   // Inline SVG source for the "meh" icon
   const mehSVG = `
-  <svg xmlns="http://www.w3.org/2000/svg" 
-      width="24" 
-      height="24" 
-      viewBox="0 0 24 24" 
+  <svg xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
       fill="none"
-      stroke-width="1.4" 
-      stroke-linecap="round" 
-      stroke-linejoin="round" 
+      stroke-width="1.4"
+      stroke-linecap="round"
+      stroke-linejoin="round"
       class="feather feather-meh">
       <circle cx="12" cy="12" r="10"></circle>
       <line x1="8" y1="15" x2="16" y2="15"></line>
@@ -1693,14 +1693,14 @@
 
   // Inline SVG source for the "smile" icon
   const smileSVG = `
-  <svg xmlns="http://www.w3.org/2000/svg" 
-      width="24" 
-      height="24" 
-      viewBox="0 0 24 24" 
+  <svg xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
       fill="none"
-      stroke-width="1.4" 
-      stroke-linecap="round" 
-      stroke-linejoin="round" 
+      stroke-width="1.4"
+      stroke-linecap="round"
+      stroke-linejoin="round"
       class="feather feather-smile">
       <circle cx="12" cy="12" r="10"></circle>
       <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
@@ -1710,14 +1710,14 @@
 
   // Inline SVG source for the "frown" icon
   const frownSVG = `
-  <svg xmlns="http://www.w3.org/2000/svg" 
-      width="24" 
-      height="24" 
-      viewBox="0 0 24 24" 
+  <svg xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
       fill="none"
-      stroke-width="1.4" 
-      stroke-linecap="round" 
-      stroke-linejoin="round" 
+      stroke-width="1.4"
+      stroke-linecap="round"
+      stroke-linejoin="round"
       class="feather feather-frown">
       <circle cx="12" cy="12" r="10"></circle>
       <path d="M16 16s-1.5-2-4-2-4 2-4 2"></path>
@@ -1727,15 +1727,15 @@
 
   // SVG icon for the moderator with gradient
   const moderatorSVG = `
-    <svg xmlns="http://www.w3.org/2000/svg" 
-        width="18" 
-        height="18" 
-        viewBox="0 0 24 24" 
+    <svg xmlns="http://www.w3.org/2000/svg"
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
         fill="url(#moderatorGradient)"  <!-- Use a gradient fill -->
-        stroke="none" 
-        stroke-width="2" 
-        stroke-linecap="round" 
-        stroke-linejoin="round" 
+        stroke="none"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
         class="feather feather-shield">
         <!-- Define the gradient -->
         <defs>
@@ -1749,10 +1749,10 @@
 
   // SVG icon for the tracked with gradient stroke
   const trackedSVG = `
-  <svg xmlns="http://www.w3.org/2000/svg" 
-       width="16" 
-       height="16" 
-       viewBox="0 0 24 24" 
+  <svg xmlns="http://www.w3.org/2000/svg"
+       width="16"
+       height="16"
+       viewBox="0 0 24 24"
        fill="url(#trackedGradient)"  <!-- Use a gradient fill -->
        class="feather feather-star">
       <!-- Define the gradient for the fill -->
@@ -1763,10 +1763,10 @@
         </linearGradient>
       </defs>
       <!-- Use the gradient for the fill -->
-      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" 
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
                stroke="url(#trackedGradient)"
                stroke-width="2"
-               stroke-linecap="round" 
+               stroke-linecap="round"
                stroke-linejoin="round"
       ></polygon>
   </svg>`;
@@ -2745,6 +2745,20 @@
     });
   }
 
+  // // Function to check if a message contains allowed characters
+  // function messageContainsAllowedChars(message, userId) {
+  //   const allowedCharsRegex = /[a-zA-Z0-9а-яА-Яё\s!@#$%^&*()-_=+[\]{}|;:'",.<>/?`~\u2000-\u206F\u20A0-\u20CF\u2100-\u214F\u2150-\u218F\u2190-\u21FF\u2200-\u22FF\u2300-\u23FF\u25A0-\u25FF\uD83C-\uDBFF\uDC00-\uDFFF]+/g;
+
+  //   const allowedChars = message.match(allowedCharsRegex);
+
+  //   if (allowedChars && allowedChars.join('') === message) {
+  //     return true;
+  //   } else {
+  //     console.log(`User ID: ${userId}, Message: "${message}" contains not allowed characters.`);
+  //     return false;
+  //   }
+  // }
+
   function messageContainsAllowedChars(message, userId) {
     const allowedCharsRegex = /[a-zA-Z0-9а-яА-Яё\s!@#$%^&*()-_=+[\]{}|;:'",.<>/?`~\u2000-\u206F\u20A0-\u20CF\u2100-\u214F\u2150-\u218F\u2190-\u21FF\u2200-\u22FF\u2300-\u23FF\u25A0-\u25FF\uD83C-\uDBFF\uDC00-\uDFFF]+/g;
 
@@ -2801,7 +2815,7 @@
       if (!messageContainsAllowedChars(latestMessage.textContent, userId)) {
         // Increase thresholdMaxTries on every limit pass
         userChatData[userId].thresholdMaxTries++;
-        // Remove all the messages by that user continuously until not allowed characters found 
+        // Remove all the messages by that user continuously until not allowed characters found
         removeUserMessages(userId);
         // If the message contains not allowed chars, log the information
         // console.log(`User ID: ${userId} has sent a message with not allowed characters. Threshold Max Tries increased to ${userChatData[userId].thresholdMaxTries}.`);

@@ -2746,9 +2746,39 @@
   }
 
   function messageContainsAllowedChars(message, userId) {
-    const allowedCharsRegex = /[a-zA-Z0-9а-яА-Яё\s!@#$%^&*()-_=+[\]{}|;:'",.<>/?`~\u2000-\u206F\u20A0-\u20CF\u2100-\u214F\u2150-\u218F\u2190-\u21FF\u2200-\u22FF\u2300-\u23FF\u25A0-\u25FF\uD83C-\uDBFF\uDC00-\uDFFF]+/g;
+    const digits = '0-9';
+    const latinChars = 'a-zA-Z';
+    const cyrillicChars = 'а-яА-Яё';
+    const whitespaceAndSymbols = '\\s!@#$%^&*()-_=+[\\]{}|;:\'",.<>/?`~';
 
-    const allowedChars = message.match(allowedCharsRegex);
+    const generalPunctuation = '\\u2000-\\u206F';
+    const currencySymbols = '\\u20A0-\\u20CF';
+    const letterlikeSymbols = '\\u2100-\\u214F';
+    const numberForms = '\\u2150-\\u218F';
+    const arrows = '\\u2190-\\u21FF';
+    const mathematicalOperators = '\\u2200-\\u22FF';
+    const miscellaneousTechnical = '\\u2300-\\u23FF';
+    const geometricShapes = '\\u25A0-\\u25FF';
+
+    const combiningAcuteAccent = '\\u0301';
+
+    const emojiRanges = '\\uD83C-\\uDBFF\\uDC00-\\uDFFF';
+
+    const allowedCharsRegex = new RegExp(
+      // Digits, Latin characters, Cyrillic characters
+      `${digits}${latinChars}${cyrillicChars}` +
+
+      // Whitespace and symbols
+      `${whitespaceAndSymbols}` +
+
+      // Various Unicode ranges
+      `${generalPunctuation}${currencySymbols}${letterlikeSymbols}${numberForms}` +
+      `${arrows}${mathematicalOperators}${miscellaneousTechnical}${geometricShapes}` +
+
+      // Combining Acute Accent and Emoji ranges
+      `${combiningAcuteAccent}${emojiRanges}]+`,
+      'g'
+    );
 
     if (allowedChars && allowedChars.join('') === message) {
       return true;

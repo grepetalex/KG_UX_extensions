@@ -1137,7 +1137,8 @@
           const dropTimeThreshold = document.querySelector('.drop-time-threshold');
 
           // Validate the user input
-          const timeRegex = /^([01]?[0-9]|2[0-3])(:([0-5]?[0-9])(:([0-5]?[0-9]))?)?$/; // HH, HH:mm, or HH:mm:ss
+          const timeRegex = /^([0-9]+|[01][0-9]|2[0-4])(:([0-5]?[0-9])(:([0-5]?[0-9]))?)?$/; // HH, HH:mm, or HH:mm:ss
+
           if (userInput === null) {
             // User clicked "Cancel," exit the loop
             isValidInput = true;

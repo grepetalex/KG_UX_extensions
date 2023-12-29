@@ -357,7 +357,7 @@
           if (nextElement && !isElementVisible(nextElement)) {
             const closestContainer = nextElement.closest('.chat-notifications-container');
             const containerHeight = closestContainer ? closestContainer.offsetHeight : 0;
-            const extraSpace = 100;
+            const extraSpace = 200;
 
             // Calculate the distance to scroll, including containerHeight
             const distanceToTop = nextElement.offsetTop - chatContainer.offsetTop - containerHeight - extraSpace;
@@ -387,8 +387,8 @@
                 }, smoothScrollDuration); // Use smoothScrollDuration here
               }
             }, delayBetweenAnimations);
-          } else {
-            // If there is no next element, smooth scroll back to the bottom
+          } else if (nextIndex === userActions.length - 1) {
+            // If there is no next element, and it's the last one, smooth scroll back to the bottom
             chatContainer.scrollTop = chatContainer.scrollHeight;
 
             // Set a longer delay before resetting scroll behavior to default

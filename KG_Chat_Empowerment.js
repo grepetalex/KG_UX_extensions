@@ -387,8 +387,8 @@
                 }, smoothScrollDuration); // Use smoothScrollDuration here
               }
             }, delayBetweenAnimations);
-          } else if (nextIndex === userActions.length - 1) {
-            // If there is no next element, and it's the last one, smooth scroll back to the bottom
+          } else {
+            // If there is no next element, smooth scroll back to the bottom
             chatContainer.scrollTop = chatContainer.scrollHeight;
 
             // Set a longer delay before resetting scroll behavior to default

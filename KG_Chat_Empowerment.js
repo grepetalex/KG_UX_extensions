@@ -323,6 +323,20 @@
     // Convert NodeList to an array and reverse it
     const reversedUserActions = Array.from(userActions).reverse();
 
+    // Get the chat container
+    const chatContainer = document.querySelector(".messages-content");
+
+    // Function to check if an element is visible in the viewport
+    function isElementVisible(element) {
+      const rect = element.getBoundingClientRect();
+      return (
+        rect.top >= 0 &&
+        rect.left >= 0 &&
+        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+        rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+      );
+    }
+
     // Function to apply the animation to an element
     function animateOut(element, index) {
       // Calculate the delay for each element
@@ -330,14 +344,39 @@
 
       // Apply opacity and translation animation with delay
       setTimeout(() => {
-        element.style.transition = `opacity 0.3s ease, transform 0.3s ease`;
+        element.style.transition = `opacity ${delayBetweenAnimations / 1000}s ease, transform ${delayBetweenAnimations / 1000}s ease`;
         element.style.opacity = 0;
         element.style.transform = `translateX(10px)`; // Adjust the value as needed
 
-        // After the animation duration, remove the element
+        // After the animation duration, scroll the chat if the next notification is not visible
         setTimeout(() => {
           element.remove();
-        }, 300); // Assuming the animation duration is 300ms
+
+          // Check if the next notification is visible
+          const nextIndex = index + 1;
+          const nextElement = reversedUserActions[nextIndex];
+
+          if (nextElement && !isElementVisible(nextElement)) {
+            const extraSpace = nextElement.offsetHeight * 2;
+            const distanceToTop = nextElement.offsetTop - chatContainer.offsetTop - extraSpace;
+
+            // Smooth scroll to the next notification
+            chatContainer.style.scrollBehavior = 'smooth';
+            chatContainer.scrollTop = distanceToTop;
+
+            // Add an extra delay before removing the element
+            setTimeout(() => {
+              if (nextIndex === reversedUserActions.length - 1) {
+                // If it's the last element, smooth scroll back to the bottom
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                setTimeout(() => {
+                  // After the smooth scroll duration, reset scroll behavior to default
+                  chatContainer.style.scrollBehavior = 'auto';
+                }, delayBetweenAnimations);
+              }
+            }, delayBetweenAnimations); // Use the provided delay value
+          }
+        }, delayBetweenAnimations); // Use the provided delay value
       }, delay);
     }
 

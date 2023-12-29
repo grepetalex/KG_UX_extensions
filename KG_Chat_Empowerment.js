@@ -316,12 +316,10 @@
   // Function to purge chat user actions with a smooth step-by-step animation
   // Parameters:
   //   - delayBetweenAnimations: Delay between each animation step (default: 300ms)
-  function purgeChatUserActions(delayBetweenAnimations = 300) {
+  //   - smoothScrollDuration: Duration of smooth scrolling (default: 500ms)
+  function purgeChatUserActions(delayBetweenAnimations = 300, smoothScrollDuration = 500) {
     // Get all elements with the class .user-action
-    const userActions = document.querySelectorAll('.user-action');
-
-    // Convert NodeList to an array and reverse it
-    const reversedUserActions = Array.from(userActions).reverse();
+    const userActions = Array.from(document.querySelectorAll('.user-action')).reverse();
 
     // Get the chat container
     const chatContainer = document.querySelector(".messages-content");
@@ -346,7 +344,7 @@
       setTimeout(() => {
         element.style.transition = `opacity ${delayBetweenAnimations / 1000}s ease, transform ${delayBetweenAnimations / 1000}s ease`;
         element.style.opacity = 0;
-        element.style.transform = `translateX(10px)`; // Adjust the value as needed
+        element.style.transform = `translateX(1em)`;
 
         // After the animation duration, scroll the chat if the next notification is not visible
         setTimeout(() => {
@@ -354,11 +352,15 @@
 
           // Check if the next notification is visible
           const nextIndex = index + 1;
-          const nextElement = reversedUserActions[nextIndex];
+          const nextElement = userActions[nextIndex];
 
           if (nextElement && !isElementVisible(nextElement)) {
-            const extraSpace = nextElement.offsetHeight * 2;
-            const distanceToTop = nextElement.offsetTop - chatContainer.offsetTop - extraSpace;
+            const closestContainer = nextElement.closest('.chat-notifications-container');
+            const containerHeight = closestContainer ? closestContainer.offsetHeight : 0;
+            const extraSpace = 100;
+
+            // Calculate the distance to scroll, including containerHeight
+            const distanceToTop = nextElement.offsetTop - chatContainer.offsetTop - containerHeight - extraSpace;
 
             // Smooth scroll to the next notification
             chatContainer.style.scrollBehavior = 'smooth';
@@ -366,22 +368,45 @@
 
             // Add an extra delay before removing the element
             setTimeout(() => {
-              if (nextIndex === reversedUserActions.length - 1) {
+              // Remove the element after scrolling to the next notification
+              nextElement.remove();
+
+              // Continue only if the next element is the last one
+              if (nextIndex === userActions.length - 1) {
                 // If it's the last element, smooth scroll back to the bottom
                 chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                // Set a longer delay before resetting scroll behavior to default
                 setTimeout(() => {
                   // After the smooth scroll duration, reset scroll behavior to default
                   chatContainer.style.scrollBehavior = 'auto';
-                }, delayBetweenAnimations);
+
+                  // Remove all .chat-notifications-container after all notifications are removed
+                  const containers = document.querySelectorAll('.chat-notifications-container');
+                  containers.forEach(container => container.remove());
+                }, smoothScrollDuration); // Use smoothScrollDuration here
               }
-            }, delayBetweenAnimations); // Use the provided delay value
+            }, delayBetweenAnimations);
+          } else if (nextIndex === userActions.length - 1) {
+            // If there is no next element, and it's the last one, smooth scroll back to the bottom
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            // Set a longer delay before resetting scroll behavior to default
+            setTimeout(() => {
+              // After the smooth scroll duration, reset scroll behavior to default
+              chatContainer.style.scrollBehavior = 'auto';
+
+              // Remove all .chat-notifications-container after all notifications are removed
+              const containers = document.querySelectorAll('.chat-notifications-container');
+              containers.forEach(container => container.remove());
+            }, smoothScrollDuration); // Use smoothScrollDuration here
           }
-        }, delayBetweenAnimations); // Use the provided delay value
+        }, delayBetweenAnimations);
       }, delay);
     }
 
     // Use forEach on the reversed array and apply animations
-    reversedUserActions.forEach((element, index) => {
+    userActions.forEach((element, index) => {
       animateOut(element, index);
     });
   }
@@ -432,15 +457,33 @@
     actionIcon.style.setProperty('border', 'none', 'important');
     actionIcon.innerHTML = iconType;
 
+    // Append containers with notifications inside the chat only for the tracked users
     if (isTrackedUser) {
+      // Get the container for all chat messages
+      const messagesContainer = document.querySelector('.messages-content div');
+
+      // Get the last child of messagesContainer
+      const latestChild = messagesContainer.lastElementChild;
+
+      // Check if the latest child is a chat-notifications-container
+      const isLatestContainer = latestChild && latestChild.classList.contains('chat-notifications-container');
+
+      // If the latest child is not a container or the container doesn't exist, create a new one
+      if (!isLatestContainer) {
+        // Create a new container for chat notifications
+        const chatNotificationsContainer = document.createElement('div');
+        chatNotificationsContainer.classList.add('chat-notifications-container');
+        // Append the container to the messages container
+        messagesContainer.appendChild(chatNotificationsContainer);
+      }
+
       // Create a new div element for the chat notification
       const chatNotification = document.createElement('div');
 
       // Add a double-click event listener to initiate the removal of chat user actions
       chatNotification.addEventListener('dblclick', () => {
-        // Initiating the removal of chat user actions with a smooth step-by-step animation
-        // The animation introduces a delay of 300ms between each step
-        purgeChatUserActions(300);
+        // Call the function to purge chat user actions with a delay of (N)ms between animations and (N) scroll speed
+        purgeChatUserActions(150, 100);
       });
 
       // Set the text content of the chat notification to include the user and time
@@ -471,11 +514,8 @@
       chatNotification.style.margin = '4px 2px';
       chatNotification.style.fontSize = '1em';
 
-      // Get the container for all chat messages
-      const messagesContainer = document.querySelector('.messages-content div');
-
-      // Append the chat notification to the messages container
-      messagesContainer.appendChild(chatNotification);
+      // Append the chat notification to the latest chat notifications container
+      messagesContainer.lastElementChild.appendChild(chatNotification);
 
       // Call the function to scroll to the bottom of the chat
       scrollMessages();

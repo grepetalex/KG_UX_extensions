@@ -318,9 +318,9 @@
   // Parameters:
   //   - delayBetweenAnimations: Delay between each animation step (default: 300ms)
   //   - smoothScrollDuration: Duration of smooth scrolling (default: 500ms)
-  function purgeChatUserActions(delayBetweenAnimations = 300, smoothScrollDuration = 500) {
-    // Get all elements with the class .user-action
-    const userActions = Array.from(document.querySelectorAll('.user-action')).reverse();
+  function purgeStaticChatNotifications(delayBetweenAnimations = 300, smoothScrollDuration = 500) {
+    // Get all elements with the class .static-chat-notification
+    const staticChatNotifications = Array.from(document.querySelectorAll('.static-chat-notification')).reverse();
 
     // Get the chat container
     const chatContainer = document.querySelector(".messages-content");
@@ -353,10 +353,10 @@
 
           // Check if the next notification is visible
           const nextIndex = index + 1;
-          const nextElement = userActions[nextIndex];
+          const nextElement = staticChatNotifications[nextIndex];
 
           if (nextElement && !isElementVisible(nextElement)) {
-            const closestContainer = nextElement.closest('.chat-notifications-container');
+            const closestContainer = nextElement.closest('.static-chat-notifications-container');
             const containerHeight = closestContainer ? closestContainer.offsetHeight : 0;
             const extraSpace = 200;
 
@@ -373,7 +373,7 @@
               nextElement.remove();
 
               // Continue only if the next element is the last one
-              if (nextIndex === userActions.length - 1) {
+              if (nextIndex === staticChatNotifications.length - 1) {
                 // If it's the last element, smooth scroll back to the bottom
                 chatContainer.scrollTop = chatContainer.scrollHeight;
 
@@ -382,13 +382,13 @@
                   // After the smooth scroll duration, reset scroll behavior to default
                   chatContainer.style.scrollBehavior = 'auto';
 
-                  // Remove all .chat-notifications-container after all notifications are removed
-                  const containers = document.querySelectorAll('.chat-notifications-container');
+                  // Remove all .static-chat-notifications-container after all notifications are removed
+                  const containers = document.querySelectorAll('.static-chat-notifications-container');
                   containers.forEach(container => container.remove());
                 }, smoothScrollDuration); // Use smoothScrollDuration here
               }
             }, delayBetweenAnimations);
-          } else if (nextIndex === userActions.length - 1) {
+          } else if (nextIndex === staticChatNotifications.length - 1) {
             // If there is no next element, and it's the last one, smooth scroll back to the bottom
             chatContainer.scrollTop = chatContainer.scrollHeight;
 
@@ -397,8 +397,8 @@
               // After the smooth scroll duration, reset scroll behavior to default
               chatContainer.style.scrollBehavior = 'auto';
 
-              // Remove all .chat-notifications-container after all notifications are removed
-              const containers = document.querySelectorAll('.chat-notifications-container');
+              // Remove all .static-chat-notifications-container after all notifications are removed
+              const containers = document.querySelectorAll('.static-chat-notifications-container');
               containers.forEach(container => container.remove());
             }, smoothScrollDuration); // Use smoothScrollDuration here
           }
@@ -407,7 +407,7 @@
     }
 
     // Use forEach on the reversed array and apply animations
-    userActions.forEach((element, index) => {
+    staticChatNotifications.forEach((element, index) => {
       animateOut(element, index);
     });
   }
@@ -439,10 +439,10 @@
   </svg>
 `;
 
-  // Reference for the existing popup
-  let previousPopup = null;
-  // Timeout before the popup user action notification should be removed
-  const popupVisibilityTime = 5000; // 5 seconds
+  // Timeout before the dynamicChatNotification should be removed
+  const dynamicChatNotificationTimeout = 5000;
+  // Set the initial top distance for the first dynamicChatNotification
+  const dynamicChatNotificationTopOffset = 160;
 
   function showUserAction(user, iconType, presence) {
     // Make sure if the user is tracked to notify about presence in the chat to leave static stamps
@@ -466,120 +466,126 @@
       // Get the last child of messagesContainer
       const latestChild = messagesContainer.lastElementChild;
 
-      // Check if the latest child is a chat-notifications-container
-      const isLatestContainer = latestChild && latestChild.classList.contains('chat-notifications-container');
+      // Check if the latest child is a static-chat-notifications-container
+      const isLatestContainer = latestChild && latestChild.classList.contains('static-chat-notifications-container');
 
       // If the latest child is not a container or the container doesn't exist, create a new one
       if (!isLatestContainer) {
         // Create a new container for chat notifications
-        const chatNotificationsContainer = document.createElement('div');
-        chatNotificationsContainer.classList.add('chat-notifications-container');
+        const staticChatNotificationsContainer = document.createElement('div');
+        staticChatNotificationsContainer.classList.add('static-chat-notifications-container');
         // Append the container to the messages container
-        messagesContainer.appendChild(chatNotificationsContainer);
+        messagesContainer.appendChild(staticChatNotificationsContainer);
       }
 
       // Create a new div element for the chat notification
-      const chatNotification = document.createElement('div');
+      const staticChatNotification = document.createElement('div');
 
       // Add a double-click event listener to initiate the removal of chat user actions
-      chatNotification.addEventListener('dblclick', () => {
+      staticChatNotification.addEventListener('dblclick', () => {
         // Call the function to purge chat user actions with a delay of (N)ms between animations and (N) scroll speed
-        purgeChatUserActions(150, 100);
+        purgeStaticChatNotifications(150, 100);
       });
 
       // Set the text content of the chat notification to include the user and time
-      chatNotification.innerHTML = `${user} ${actionIcon.outerHTML} ${time}`;
+      staticChatNotification.innerHTML = `${user} ${actionIcon.outerHTML} ${time}`;
       // Add main class for chat notifications
-      chatNotification.classList.add('user-action');
+      staticChatNotification.classList.add('static-chat-notification');
 
       // Check if the presence is true or false
       if (presence) {
         // Add the 'user-entered' class to the chat notification
-        chatNotification.classList.add('user-entered');
+        staticChatNotification.classList.add('user-entered');
         // Set the background color, font color, and border color for the chat notification
-        chatNotification.style.color = getHSLColor(100, 50, 50);
-        chatNotification.style.backgroundColor = getHSLColor(100, 50, 10);
-        chatNotification.style.setProperty('border', `1px solid ${getHSLColor(100, 50, 25)}`, 'important');
+        staticChatNotification.style.color = getHSLColor(100, 50, 50);
+        staticChatNotification.style.backgroundColor = getHSLColor(100, 50, 10);
+        staticChatNotification.style.setProperty('border', `1px solid ${getHSLColor(100, 50, 25)}`, 'important');
       } else {
         // Add the 'user-left' class to the chat notification
-        chatNotification.classList.add('user-left');
+        staticChatNotification.classList.add('user-left');
         // Set the background color, font color, and border color for the chat notification
-        chatNotification.style.color = getHSLColor(0, 50, 70);
-        chatNotification.style.backgroundColor = getHSLColor(0, 50, 15);
-        chatNotification.style.setProperty('border', `1px solid ${getHSLColor(0, 50, 40)}`, 'important');
+        staticChatNotification.style.color = getHSLColor(0, 50, 70);
+        staticChatNotification.style.backgroundColor = getHSLColor(0, 50, 15);
+        staticChatNotification.style.setProperty('border', `1px solid ${getHSLColor(0, 50, 40)}`, 'important');
       }
 
       // Set the padding, display, and margin for the chat notification
-      chatNotification.style.padding = '8px';
-      chatNotification.style.display = 'inline-flex';
-      chatNotification.style.margin = '4px 2px';
-      chatNotification.style.fontSize = '1em';
+      staticChatNotification.style.padding = '8px';
+      staticChatNotification.style.display = 'inline-flex';
+      staticChatNotification.style.margin = '4px 2px';
+      staticChatNotification.style.fontSize = '1em';
 
       // Append the chat notification to the latest chat notifications container
-      messagesContainer.lastElementChild.appendChild(chatNotification);
+      messagesContainer.lastElementChild.appendChild(staticChatNotification);
 
       // Call the function to scroll to the bottom of the chat
       scrollMessages();
     }
 
-    // Create the userPopup element
-    const userPopup = document.createElement('div');
-    userPopup.classList.add('userPopup');
+    // Check dynamicChatNotificationsContainer for accessibility
+    let dynamicChatNotificationsContainer = document.querySelector('.dynamic-chat-notifications-container');
+    // Create container for dynamic chat notifications if not exist in DOM
+    if (!dynamicChatNotificationsContainer) {
+      // Container doesn't exist, so create it
+      dynamicChatNotificationsContainer = document.createElement('div');
+      dynamicChatNotificationsContainer.classList.add('dynamic-chat-notifications-container');
+      dynamicChatNotificationsContainer.style.position = 'absolute';
+      dynamicChatNotificationsContainer.style.display = 'flex';
+      dynamicChatNotificationsContainer.style.flexDirection = 'column';
+      dynamicChatNotificationsContainer.style.top = '0';
+      dynamicChatNotificationsContainer.style.bottom = '0';
+      dynamicChatNotificationsContainer.style.left = '0';
+      dynamicChatNotificationsContainer.style.right = '0';
+      dynamicChatNotificationsContainer.style.paddingTop = dynamicChatNotificationTopOffset + 'px';
 
-    // Set the text content of the userPopup to include the user and append the icon
-    userPopup.insertAdjacentHTML('beforeend', `${user}${actionIcon.outerHTML}${time}`);
-
-    // Set the initial styles for the user popup
-    userPopup.style.position = 'fixed';
-    userPopup.style.right = '-100%';
-    userPopup.style.transform = 'translateY(-50%)';
-    userPopup.style.opacity = '0';
-    userPopup.style.color = presence ? getHSLColor(100, 50, 50) : getHSLColor(0, 50, 70); // fontColor green && red
-    userPopup.style.backgroundColor = presence ? getHSLColor(100, 50, 10) : getHSLColor(0, 50, 15); // backgroundColor green && red
-    userPopup.style.border = presence ? `1px solid ${getHSLColor(100, 50, 25)}` : `1px solid ${getHSLColor(0, 50, 40)}`; // borderColor green && red
-    userPopup.style.setProperty('border-radius', '4px 0 0 4px', 'important');
-    userPopup.style.padding = '8px 12px 8px 16px';
-    userPopup.style.display = 'flex';
-    userPopup.style.alignItems = 'center';
-
-    // Append the user popup to the body
-    document.body.appendChild(userPopup);
-
-    // Calculate the width and height of the user popup
-    const popupWidth = userPopup.offsetWidth;
-    const popupHeight = userPopup.offsetHeight;
-    const verticalOffset = 2;
-
-    // Set the position of the user popup relative to the previous popup
-    let topPosition = '30vh';
-    if (previousPopup !== null) {
-      const previousPopupPosition = previousPopup.getBoundingClientRect();
-      topPosition = `calc(${previousPopupPosition.bottom}px + ${popupHeight}px / 2 + ${verticalOffset}px)`;
+      // Append the container to the body
+      document.body.appendChild(dynamicChatNotificationsContainer);
     }
-    userPopup.style.top = topPosition;
-    userPopup.style.right = `-${popupWidth}px`;
 
-    // Animate the user popup onto the screen
-    userPopup.style.transition = 'all 0.3s ease-in-out';
-    userPopup.style.right = '0';
-    userPopup.style.opacity = '1';
+    // Create dynamicChatNotification element
+    const dynamicChatNotification = document.createElement('div');
+    dynamicChatNotification.classList.add('dynamic-chat-notification');
 
-    // Store a reference to the current popup
-    previousPopup = userPopup;
+    // Set the text content of the dynamicChatNotification to include the user and append the icon
+    dynamicChatNotification.insertAdjacentHTML('beforeend', `${user}${actionIcon.outerHTML}${time}`);
 
-    // Hide the user popup after a short delay
+    // Set the initial static styles for the dynamicChatNotification
+    dynamicChatNotification.style.position = 'relative';
+    dynamicChatNotification.style.width = 'fit-content';
+    dynamicChatNotification.style.display = 'flex';
+    dynamicChatNotification.style.marginBottom = '0.2em';
+    dynamicChatNotification.style.padding = '8px 16px 8px 12px';
+    dynamicChatNotification.style.alignItems = 'center';
+    dynamicChatNotification.style.left = '0';
+    // Set the initial dynamicChatNotification transform beyond the screen of its 100% width
+    dynamicChatNotification.style.transform = 'translateX(-100%)';
+    dynamicChatNotification.style.opacity = '1';
+    dynamicChatNotification.style.transition = 'transform 0.3s ease-in-out, opacity 0.3s ease-in-out';
+    // Set the dynamic colorization of the dynamicChatNotification
+    dynamicChatNotification.style.color = presence ? getHSLColor(100, 50, 50) : getHSLColor(0, 50, 70); // fontColor green && red
+    dynamicChatNotification.style.backgroundColor = presence ? getHSLColor(100, 50, 10) : getHSLColor(0, 50, 15); // backgroundColor green && red
+    dynamicChatNotification.style.border = presence ? `1px solid ${getHSLColor(100, 50, 25)}` : `1px solid ${getHSLColor(0, 50, 40)}`; // borderColor green && red
+    dynamicChatNotification.style.setProperty('border-radius', '0 4px 4px 0', 'important');
+
+    // Append dynamicChatNotification to dynamicChatNotificationsContainer
+    dynamicChatNotificationsContainer.appendChild(dynamicChatNotification);
+
+    // Animate dynamicChatNotification
     setTimeout(() => {
-      userPopup.style.transition = 'all 0.3s ease-in-out';
-      userPopup.style.right = `-${popupWidth}px`;
-      userPopup.style.opacity = '0';
+      // Initiate the animation by showing the dynamicChatNotification
+      dynamicChatNotification.style.transform = 'translateX(0)';
+
       setTimeout(() => {
-        document.body.removeChild(userPopup);
-        // Clear the reference to the previous popup
-        if (previousPopup === userPopup) {
-          previousPopup = null;
-        }
-      }, 300);
-    }, popupVisibilityTime);
+        // After (N) seconds, hide it beyond the screen
+        dynamicChatNotification.style.transform = 'translateX(-100%)';
+
+        setTimeout(() => {
+          // Remove the dynamicChatNotification from DOM after 300ms
+          dynamicChatNotificationsContainer.removeChild(dynamicChatNotification);
+        }, 300); // Remove
+      }, dynamicChatNotificationTimeout); // Hide
+    }, 300); // show
+
   }
 
 

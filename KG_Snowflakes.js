@@ -10,7 +10,7 @@
 // ==/UserScript==
 
 // Constants
-const snowflakesCount = 500; // Total number of snowflakes
+const snowflakesCount = 200; // Total number of snowflakes
 const snowFallDuration = 10; // Duration of the snowfall animation in seconds
 const maxMovementX = 30; // Maximum horizontal movement of snowflakes in percentage of window width
 const incrementDuration = 300; // Time between each increment in milliseconds
@@ -54,7 +54,7 @@ function startSnowfall() {
   function animateSnowflake(snowflake, startX, speedFactor) {
     // Calculate the end position for the snowflake
     const endY = window.innerHeight;
-    const maxXMovement = Math.min(window.innerWidth * maxMovementX / 100, window.innerWidth);
+    const maxXMovement = (window.innerWidth * maxMovementX) / 100;
     const endX = startX + (Math.random() * maxXMovement * 2 - maxXMovement);
 
     // Calculate the total duration for the animation based on speed factor
@@ -75,7 +75,7 @@ function startSnowfall() {
         const y = (endY * progress) / window.innerHeight * 100;
 
         // Apply the transformation to move the snowflake
-        snowflake.style.transform = `translate(${x}px, ${y}vh)`;
+        snowflake.style.transform = `translate(${(x / window.innerWidth) * 100}vw, ${y}vh)`;
 
         // Continue the animation by requesting the next frame
         requestAnimationFrame(animate);

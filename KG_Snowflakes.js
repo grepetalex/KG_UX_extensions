@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_Snowflakes
 // @namespace    http://tampermonkey.net/
-// @version      2023-12-29
+// @version      2023-12-30
 // @description  Add some snow particles
 // @author       Patcher
 // @match        *://klavogonki.ru/*

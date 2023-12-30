@@ -25,6 +25,13 @@ function startSnowfall() {
   // Initialize the count of currently created snowflakes
   let currentSnowflakesCount = 0;
 
+  // Snowflake characters
+  const snowflake = "&#10052"; // ❄
+  const tightSnowflake = "&#10053"; // ❅
+  const heavySnowflake = "&#10054"; // ❆
+
+  const snowflakeCharacters = [snowflake, tightSnowflake, heavySnowflake];
+
   // Function to create a single snowflake
   function createSnowflake() {
     const snowflake = document.createElement("div");
@@ -37,21 +44,24 @@ function startSnowfall() {
     const size = Math.random() * 0.2 + 0.2;
     const startX = Math.random() * window.innerWidth;
 
+    // Get a random snowflake character
+    const randomCharacter = snowflakeCharacters[Math.floor(Math.random() * snowflakeCharacters.length)];
+
     // Apply styles to the snowflake
+    snowflake.innerHTML = randomCharacter;
+    snowflake.style.color = `rgba(255, 255, 255, ${opacity})`;
     snowflake.style.width = size + "em";
     snowflake.style.height = size + "em";
-    snowflake.style.background = `rgba(255, 255, 255, ${opacity})`;
-    snowflake.style.setProperty("border-radius", "50%", "important");
     snowflake.style.position = "absolute";
     snowflake.style.top = "0";
     snowflake.style.left = "0";
 
     // Start animation for the snowflake
-    animateSnowflake(snowflake, startX, speedFactor);
+    animateSnowflake(snowflake, startX, speedFactor, opacity);
   }
 
   // Function to animate a single snowflake
-  function animateSnowflake(snowflake, startX, speedFactor) {
+  function animateSnowflake(snowflake, startX, speedFactor, initialOpacity) {
     // Calculate the end position for the snowflake
     const endY = window.innerHeight;
     const maxXMovement = (window.innerWidth * maxMovementX) / 100;
@@ -62,6 +72,16 @@ function startSnowfall() {
 
     // Record the start time of the animation
     const startTime = Date.now();
+
+    // Function to smoothly decrease opacity as snowflake descends
+    function decreaseOpacity(currentY, initialOpacity) {
+      const startOpacity = initialOpacity;
+      const endOpacity = 0;
+      const opacityProgress = (currentY - 70) / (100 - 70); // Opacity change between 70vh to 100vh
+
+      const currentOpacity = startOpacity - opacityProgress * (startOpacity - endOpacity);
+      snowflake.style.color = `rgba(255, 255, 255, ${currentOpacity})`;
+    }
 
     // Recursive function to animate the snowflake
     function animate() {
@@ -76,6 +96,11 @@ function startSnowfall() {
 
         // Apply the transformation to move the snowflake
         snowflake.style.transform = `translate(${(x / window.innerWidth) * 100}vw, ${y}vh)`;
+
+        // Decrease opacity when the snowflake is in the specified range
+        if (y >= 70 && y <= 100) {
+          decreaseOpacity(y, initialOpacity);
+        }
 
         // Continue the animation by requesting the next frame
         requestAnimationFrame(animate);

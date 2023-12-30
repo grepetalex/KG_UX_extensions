@@ -529,6 +529,7 @@
       // Container doesn't exist, so create it
       dynamicChatNotificationsContainer = document.createElement('div');
       dynamicChatNotificationsContainer.classList.add('dynamic-chat-notifications-container');
+      dynamicChatNotificationsContainer.style.pointerEvents = 'none';
       dynamicChatNotificationsContainer.style.position = 'absolute';
       dynamicChatNotificationsContainer.style.display = 'flex';
       dynamicChatNotificationsContainer.style.flexDirection = 'column';

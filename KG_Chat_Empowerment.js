@@ -343,7 +343,10 @@
 
       // Apply opacity and translation animation with delay
       setTimeout(() => {
-        element.style.transition = `opacity ${delayBetweenAnimations / 1000}s ease, transform ${delayBetweenAnimations / 1000}s ease`;
+        element.style.transition = `
+          opacity ${delayBetweenAnimations / 1000}s cubic-bezier(0.83, 0, 0.17, 1),
+          transform ${delayBetweenAnimations / 1000}s cubic-bezier(0.83, 0, 0.17, 1)
+        `;
         element.style.opacity = 0;
         element.style.transform = `translateX(1em)`;
 
@@ -561,7 +564,7 @@
     // Set the initial dynamicChatNotification transform beyond the screen of its 100% width
     dynamicChatNotification.style.transform = 'translateX(-100%)';
     dynamicChatNotification.style.opacity = '1';
-    dynamicChatNotification.style.transition = 'transform 0.3s ease-in-out, opacity 0.3s ease-in-out';
+    dynamicChatNotification.style.transition = 'transform 0.3s cubic-bezier(0.83, 0, 0.17, 1), opacity 0.3s cubic-bezier(0.83, 0, 0.17, 1)';
     // Set the dynamic colorization of the dynamicChatNotification
     dynamicChatNotification.style.color = presence ? getHSLColor(100, 50, 50) : getHSLColor(0, 50, 70); // fontColor green && red
     dynamicChatNotification.style.backgroundColor = presence ? getHSLColor(100, 50, 10) : getHSLColor(0, 50, 15); // backgroundColor green && red

@@ -15,6 +15,24 @@ const snowFallDuration = 10; // Duration of the snowfall animation in seconds
 const maxMovementX = 30; // Maximum horizontal movement of snowflakes in percentage of window width
 const incrementDuration = 300; // Time between each increment in milliseconds
 
+// Get the computed style of the body and extract the backgroundColor
+const { backgroundColor } = getComputedStyle(document.body),
+
+  // Define a function to calculate the lightness of a color
+  backgroundLightness = color =>
+    color
+      .match(/\d+/g)
+      .map(Number)
+      .reduce((a, b) => a + b) / 3;
+
+// Calculate the lightness of the background color
+const snowflakeHSL =
+  backgroundLightness(backgroundColor) > 50
+    // If background is light
+    ? "200, 200, 200,"
+    // If background is dark
+    : "255, 255, 255,";
+
 // Function to start the snowfall animation
 function startSnowfall() {
   // Create a container for the snowflakes
@@ -49,7 +67,7 @@ function startSnowfall() {
 
     // Apply styles to the snowflake
     snowflake.innerHTML = randomCharacter;
-    snowflake.style.color = `rgba(255, 255, 255, ${opacity})`;
+    snowflake.style.color = `rgba(${snowflakeHSL} ${opacity})`;
     snowflake.style.width = size + "em";
     snowflake.style.height = size + "em";
     snowflake.style.position = "absolute";

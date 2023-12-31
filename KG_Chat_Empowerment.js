@@ -1545,6 +1545,7 @@
         width: 200px;
         height: 94%;
         overflow-y: auto;
+        overflow-x: hidden;
         background-color: ${((c) => c[0] == '#' ? c : '#' + c.match(/\d+/g).map(Number).map(x => x.toString(16).padStart(2, '0')).join(''))
       (getComputedStyle(document.querySelector('.chat .messages')).backgroundColor)};
     }
@@ -1579,6 +1580,9 @@
         height: 24px;
         line-height: 24px;
         padding: 0 8px;
+        max-width: 124px;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
     .chat-user-list .name:hover {
         text-decoration: underline;

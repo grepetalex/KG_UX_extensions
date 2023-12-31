@@ -2839,7 +2839,7 @@
   const digits = '0-9';
   const whitespaces = '\\s';
   const latinChars = 'a-zA-Z';
-  const cyrillicChars = 'а-яА-Яё';
+  const cyrillicChars = 'а-яА-ЯёЁ';
   const commonSymbols = '!@#$%^&*()-_=+[\\]{}|;:\'",.<>/?`~';
 
   // Special symbols as characters
@@ -2878,7 +2878,10 @@
 
   const emojiRanges = '\\uD83C-\\uDBFF\\uDC00-\\uDFFF';
 
-  function messageContainsAllowedChars(message, userId) {
+  // Initialized to store characters found in a message that are not allowed
+  let disallowedChars = null;
+
+  function messageContainsAllowedChars(message) {
     const allowedCharsRegex = new RegExp(
       `[${digits}${latinChars}${cyrillicChars}${whitespaces}${commonSymbols}` +
       `${copyrightSymbol}${trademarkSymbol}${registeredSymbol}${leftDoubleAngleQuote}${rightDoubleAngleQuote}` +
@@ -2893,8 +2896,7 @@
     if (allowedChars && allowedChars.join('') === message) {
       return true;
     } else {
-      const disallowedChars = message.replace(allowedCharsRegex, '');
-      console.log(`User ID: ${userId}, Message contains not allowed characters: ${disallowedChars}`);
+      disallowedChars = message.replace(allowedCharsRegex, '');
       return false;
     }
   }
@@ -2952,8 +2954,11 @@
         // Increase thresholdMaxTries on every limit pass
         userChatData[userId].thresholdMaxTries++;
         // If the message contains not allowed chars, log the information
-        console.log(`User ID: ${userId} has sent a message with not allowed characters. Threshold Max Tries increased to ${userChatData[userId].thresholdMaxTries}.`);
-
+        console.log(
+          `%c${userChatData[userId].userName} has sent a message with not allowed characters ${disallowedChars}. 
+          Threshold: ${userChatData[userId].thresholdMaxTries}.`,
+          'color: orange;'
+        );
         handleThresholdExceeded(userId, generateLogUserInfo);
       }
 

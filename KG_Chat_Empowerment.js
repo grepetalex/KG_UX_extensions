@@ -96,7 +96,7 @@
     { name: 'un4given', gender: 'male', pronunciation: 'Унч' }, // --------------- 12
     { name: 'iChessKnock', gender: 'male', pronunciation: 'Чеснок' }, // --------- 13
     { name: 'TolikWorkaholic', gender: 'male', pronunciation: 'Анатолий' }, // --- 14
-    { name: 'elasez_uyefot_2', gender: 'male', pronunciation: 'Тестировщик' } // - 15
+    { name: 'Солнцеликий', gender: 'male', pronunciation: 'Солнцеликий' } // ----- 15
   ];
 
   // Notify me if someone is addressing to me using such aliases
@@ -596,12 +596,12 @@
   // FUNCTIONALITY
 
   /*
-   * Converts links to images in chat messages by creating a thumbnail and a big image on click.
-   * Looks for links that contain ".jpg" or ".jpeg" or ".png" or ".gif" or "webp" extension and creates a thumbnail with the image.
-   * If a thumbnail already exists, it skips the link and looks for the next one.
-   * When a thumbnail is clicked, it creates a dimming layer and a big image that can be closed by clicking on the dimming layer or the big image itself.
-   * Allows navigation through images using the left (<) and right (>) arrow keys.
-   */
+     * Converts links to images in chat messages by creating a thumbnail and a big image on click.
+     * Looks for links that contain ".jpg" or ".jpeg" or ".png" or ".gif" or "webp" extension and creates a thumbnail with the image.
+     * If a thumbnail already exists, it skips the link and looks for the next one.
+     * When a thumbnail is clicked, it creates a dimming layer and a big image that can be closed by clicking on the dimming layer or the big image itself.
+     * Allows navigation through images using the left (<) and right (>) arrow keys.
+     */
 
   // Define global variables for the current big image and dimming background
   let bigImage = null;
@@ -613,6 +613,31 @@
   const imageChangeDelay = 50; // Prevent double slide by single press adding slight delay
   let isChangingImage = false; // Flag to track if an image change is in progress
 
+  // List of trusted domains
+  const trustedDomains = [
+    'imgur.com'
+  ];
+
+  // Function to check if a given URL's domain is trusted
+  function isTrustedDomain(url) {
+    // Parse the URL
+    const parsedURL = new URL(url);
+    // Split the lowercase hostname into parts
+    const hostnameParts = parsedURL.hostname.toLowerCase().split('.');
+    // Get the last two parts of the hostname if there are more than two, otherwise, use all parts
+    const lastTwoHostnameParts = hostnameParts.length > 2 ? hostnameParts.slice(-2) : hostnameParts;
+    // Join the last two parts to form the domain
+    const domain = lastTwoHostnameParts.join('.');
+    // Check if the domain is trusted
+    return trustedDomains.includes(domain);
+  }
+
+  function isSafeImageExtension(url) {
+    // List of allowed image file extensions
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+    return imageExtensions.some(ext => url.includes(ext));
+  }
+
   function convertImageLinkToImage() {
     // get the container for all chat messages
     const messagesContainer = document.querySelector('.messages-content div');
@@ -623,17 +648,10 @@
     for (let i = 0; i < links.length; i++) {
       const link = links[i];
 
-      // List of allowed image file extensions
-      const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-
-      // Check if the link's href ends with any of the specified image extensions
-      if (imageExtensions.some(ext => link.href.includes(ext))) {
-        const url = new URL(link.href);
-        const imageExtension = url.pathname.split('.').pop().toLowerCase();
-
-        // Change the text content of the link to image.extension
-        const imageTextContent = 'image.' + imageExtension;
-        link.textContent = imageTextContent;
+      // Check if the link's href ends with a safe image extension and the domain is trusted
+      if (isSafeImageExtension(link.href) && isTrustedDomain(link.href)) {
+        // Change the text content of the link to indicate it's an image
+        link.textContent = 'Image';
 
         // Assign the href value as the title
         link.title = link.href;
@@ -653,124 +671,109 @@
           thumbnail.style.padding = '2px';
           thumbnail.style.margin = '6px';
 
-
           // create an image inside the thumbnail
           const img = document.createElement('img');
+          img.src = link.href; // Assign the src directly
 
           // Add an onload event to check if the image is loaded successfully
           img.onload = function () {
-            // Make an HTTP request to the image URL to check headers
-            fetch(link.href, { method: 'HEAD' })
-              .then(response => {
-                // Check if the response content type corresponds to an image
-                if (response.headers.get('content-type') && response.headers.get('content-type').startsWith('image/')) {
-                  thumbnail.appendChild(img);
+            // Check if the domain is trusted
+            if (isTrustedDomain(link.href)) {
+              thumbnail.appendChild(img);
 
-                  // insert the thumbnail after the link
-                  link.parentNode.insertBefore(thumbnail, link.nextSibling);
+              // insert the thumbnail after the link
+              link.parentNode.insertBefore(thumbnail, link.nextSibling);
 
-                  // Store the thumbnail link and its corresponding image URL
-                  thumbnailLinks.push({ link, imgSrc: link.href });
+              // Store the thumbnail link and its corresponding image URL
+              thumbnailLinks.push({ link, imgSrc: link.href });
 
-                  // add click event to thumbnail to create a big image and dimming layer
-                  thumbnail.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
+              // add click event to thumbnail to create a big image and dimming layer
+              thumbnail.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
 
-                    currentImageIndex = thumbnailLinks.findIndex((item) => item.imgSrc === link.href); // Set the currentImageIndex directly
+                currentImageIndex = thumbnailLinks.findIndex((item) => item.imgSrc === link.href);
 
-                    const clickedImageURL = link.href; // Store the clicked image URL
-                    const currentIndex = thumbnailLinks.findIndex((item) => item.imgSrc === clickedImageURL); // Find the index of the clicked image in thumbnailLinks
+                // Check if bigImage and dimming are already created
+                if (!bigImage && !dimming) {
+                  dimming = document.createElement('div');
+                  dimming.classList.add('dimming-background');
+                  dimming.style.background = 'black';
+                  dimming.style.top = '0';
+                  dimming.style.left = '0';
+                  dimming.style.right = '0';
+                  dimming.style.bottom = '0';
+                  dimming.style.position = 'fixed';
+                  dimming.style.opacity = '0';
+                  dimming.style.zIndex = '998';
 
-                    // Check if bigImage and dimming are already created
-                    if (!bigImage && !dimming) {
-                      dimming = document.createElement('div');
-                      dimming.classList.add('dimming-background');
-                      dimming.style.background = 'black';
-                      dimming.style.top = '0';
-                      dimming.style.left = '0';
-                      dimming.style.right = '0';
-                      dimming.style.bottom = '0';
-                      dimming.style.position = 'fixed';
-                      dimming.style.opacity = '0';
-                      dimming.style.zIndex = '998';
+                  document.body.appendChild(dimming);
 
-                      document.body.appendChild(dimming);
+                  bigImage = createBigImage(img.src, dimming);
 
-                      bigImage = createBigImage(img.src, dimming);
+                  bigImage.style.top = '50%';
+                  bigImage.style.left = '50%';
+                  bigImage.style.transform = 'translate(-50%, -50%) scale(1)';
+                  bigImage.style.position = 'fixed';
+                  bigImage.style.opacity = '0';
+                  bigImage.style.zIndex = '999';
+                  bigImage.style.transformOrigin = 'center center';
 
-                      bigImage.style.top = '50%';
-                      bigImage.style.left = '50%';
-                      bigImage.style.transform = 'translate(-50%, -50%) scale(1)';
-                      bigImage.style.position = 'fixed';
-                      bigImage.style.opacity = '0';
-                      bigImage.style.zIndex = '999';
-                      bigImage.style.transformOrigin = 'center center';
-
-                      // Gradually increase the opacity of the dimming background and bigImage
-                      let opacity = 0;
-                      const interval = setInterval(() => {
-                        opacity += 0.05;
-                        // Change the opacity from 0 up to 0.5
-                        if (opacity <= 0.5) {
-                          dimming.style.opacity = opacity.toString();
-                        }
-                        bigImage.style.opacity = opacity.toString();
-
-                        // Change the opacity from 0 up to 1
-                        if (opacity >= 1) {
-                          clearInterval(interval);
-                        }
-                      }, 10);
-
-                      // Attach a keydown event listener to the document object
-                      document.addEventListener('keydown', function (event) {
-                        // Check if the key pressed was the "Escape" key
-                        if (event.key === 'Escape') {
-                          removeDimmingContainer();
-                        }
-                        // Check if the key pressed was the left arrow key (<)
-                        else if (event.key === 'ArrowLeft') {
-                          // Navigate to the previous image
-                          navigateImages(-1);
-                        }
-                        // Check if the key pressed was the right arrow key (>)
-                        else if (event.key === 'ArrowRight') {
-                          // Navigate to the next image
-                          navigateImages(1);
-                        }
-                      });
+                  // Gradually increase the opacity of the dimming background and bigImage
+                  let opacity = 0;
+                  const interval = setInterval(() => {
+                    opacity += 0.05;
+                    // Change the opacity from 0 up to 0.5
+                    if (opacity <= 0.5) {
+                      dimming.style.opacity = opacity.toString();
                     }
-                  }); // thumbnail event end
+                    bigImage.style.opacity = opacity.toString();
 
-                  // add mouseover and mouseout event listeners to the thumbnail
-                  thumbnail.addEventListener('mouseover', function () {
-                    img.style.opacity = 0.7;
-                    img.style.transition = 'opacity 0.3s';
+                    // Change the opacity from 0 up to 1
+                    if (opacity >= 1) {
+                      clearInterval(interval);
+                    }
+                  }, 10);
+
+                  // Attach a keydown event listener to the document object
+                  document.addEventListener('keydown', function (event) {
+                    // Check if the key pressed was the "Escape" key
+                    if (event.key === 'Escape') {
+                      removeDimmingContainer();
+                    }
+                    // Check if the key pressed was the left arrow key (<)
+                    else if (event.key === 'ArrowLeft') {
+                      // Navigate to the previous image
+                      navigateImages(-1);
+                    }
+                    // Check if the key pressed was the right arrow key (>)
+                    else if (event.key === 'ArrowRight') {
+                      // Navigate to the next image
+                      navigateImages(1);
+                    }
                   });
-
-                  thumbnail.addEventListener('mouseout', function () {
-                    img.style.opacity = 1;
-                  });
-
-                  // Call the function to scroll to the bottom of the chat
-                  scrollMessages();
-
-                } else {
-                  // Handle the case where the fetched content is not an image
-                  console.error("Not an image:", link.href);
-
-                  // Add a class to the link to skip future conversion attempts
-                  link.classList.add('skipped');
                 }
-              })
-              .catch(error => {
-                // Handle fetch errors
-                console.error("Error fetching image:", error);
+              }); // thumbnail event end
 
-                // Add a class to the link to skip future conversion attempts
-                link.classList.add('skipped');
+              // add mouseover and mouseout event listeners to the thumbnail
+              thumbnail.addEventListener('mouseover', function () {
+                img.style.opacity = 0.7;
+                img.style.transition = 'opacity 0.3s';
               });
+
+              thumbnail.addEventListener('mouseout', function () {
+                img.style.opacity = 1;
+              });
+
+              // Call the function to scroll to the bottom of the chat
+              scrollMessages();
+            } else {
+              // Handle the case where the domain is not trusted
+              console.error("Not a trusted domain:", link.href);
+
+              // Add a class to the link to skip future conversion attempts
+              link.classList.add('skipped');
+            }
           };
 
           // Add an onerror event to handle cases where the image fails to load
@@ -782,14 +785,12 @@
             link.classList.add('skipped');
           };
 
-          img.src = link.href;
           img.style.maxHeight = '100%';
           img.style.maxWidth = '100%';
           img.style.backgroundColor = 'transparent';
         }
       }
     }
-
   } // end convertImageLinkToImage
 
   // Function to create a big image with a dimming layer
@@ -824,7 +825,7 @@
     let translateX = -50; // Initial translation in percentage
     let translateY = -50; // Initial translation in percentage
 
-    // Define the movement speed (adjust this as needed)
+    // Define the movement speed
     const movementSpeed = 5;
 
     // Function to handle zooming
@@ -867,8 +868,8 @@
     function updateImagePosition(event) {
       if (isDragging) {
         // Calculate the distance moved since the last mousemove event
-        const deltaX = (event.clientX - startX) / zoomScale; // Adjusted for zoomScale
-        const deltaY = (event.clientY - startY) / zoomScale; // Adjusted for zoomScale
+        const deltaX = (event.clientX - startX) / zoomScale * movementSpeed;
+        const deltaY = (event.clientY - startY) / zoomScale * movementSpeed;
 
         // Update the translate values in percentages
         translateX += (deltaX / bigImage.clientWidth) * 100;

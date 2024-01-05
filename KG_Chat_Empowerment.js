@@ -2794,9 +2794,9 @@
     });
   }
 
-  // Time difference threshold (in milliseconds) to identify spam (increased to 1 second)
-  const timeDifferenceThreshold = 2000;
-  // Message limit within a specific time frame (set this value to 2 for more than 2 messages in 1 second)
+  // Time difference threshold (in milliseconds) to identify spam
+  const timeDifferenceThreshold = 1500;
+  // Message limit per timeDifferenceThreshold
   const messageLimit = 1;
   // Object to track user-specific data
   let userChatData = {};

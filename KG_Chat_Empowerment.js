@@ -615,7 +615,8 @@
 
   // List of trusted domains
   const trustedDomains = [
-    'imgur.com'
+    'imgur.com',
+    'pikabu.ru'
   ];
 
   // Function to check if a given URL's domain is trusted
@@ -650,9 +651,11 @@
 
       // Check if the link's href ends with a safe image extension and the domain is trusted
       if (isSafeImageExtension(link.href) && isTrustedDomain(link.href)) {
-        // Change the text content of the link to indicate it's an image
-        link.textContent = 'Image';
 
+        // Get the file extension from the URL
+        const fileExtension = link.href.split('.').pop().toLowerCase();
+        // Change the text content of the link to indicate it's an image with extension
+        link.textContent = `Image (${fileExtension.toUpperCase()})`;
         // Assign the href value as the title
         link.title = link.href;
 

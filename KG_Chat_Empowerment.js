@@ -613,6 +613,11 @@
   const imageChangeDelay = 50; // Prevent double slide by single press adding slight delay
   let isChangingImage = false; // Flag to track if an image change is in progress
 
+  // Emoji for the image extension
+  const imageExtensionEmoji = '📸';
+  // Emoji for the web domain
+  const webDomainEmoji = '🖥️';
+
   // List of trusted domains
   const trustedDomains = [
     'imgur.com',
@@ -652,10 +657,12 @@
       // Check if the link's href ends with a safe image extension and the domain is trusted
       if (isSafeImageExtension(link.href) && isTrustedDomain(link.href)) {
 
+        // Extract the domain from the link using URL parsing
+        const linkDomain = new URL(link.href).hostname.toLowerCase();
         // Get the file extension from the URL
         const fileExtension = link.href.split('.').pop().toLowerCase();
-        // Change the text content of the link to indicate it's an image with extension
-        link.textContent = `Image (${fileExtension.toUpperCase()})`;
+        // Change the text content of the link to indicate it's an image with extension and trusted domain
+        link.textContent = `${imageExtensionEmoji} Image (${fileExtension.toUpperCase()}) ${webDomainEmoji} Hostname (${linkDomain})`;
         // Assign the href value as the title
         link.title = link.href;
 

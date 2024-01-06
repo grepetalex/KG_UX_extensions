@@ -621,10 +621,15 @@
   // List of trusted domains
   const trustedDomains = [
     'imgur.com',
-    'pikabu.ru'
+    'pikabu.ru',
+    'userapi.com' // VK images
   ];
 
-  // Function to check if a given URL's domain is trusted
+  /**
+   * Checks if a given URL's domain is trusted.
+   * @param {string} url - The URL to check.
+   * @returns {{isTrusted: boolean, domain: string}} - Result and the extracted domain.
+   */
   function isTrustedDomain(url) {
     // Parse the URL
     const parsedURL = new URL(url);
@@ -635,13 +640,28 @@
     // Join the last two parts to form the domain
     const domain = lastTwoHostnameParts.join('.');
     // Check if the domain is trusted
-    return trustedDomains.includes(domain);
+    const isTrusted = trustedDomains.includes(domain);
+
+    // Return an object with the result and the domain
+    return { isTrusted, domain };
   }
 
-  function isSafeImageExtension(url) {
+  /**
+   * Function to check if a given URL has an allowed image extension
+   * @param {string} url - The URL to check
+   * @returns {Object} - An object with properties 'allowed' (boolean) and 'extension' (string)
+   */
+  function isAllowedImageExtension(url) {
+    // Use URL API to get pathname
+    const extensionMatch = new URL(url).pathname.match(/\.([^.]+)$/);
+    // Extract the file extension from the pathname (if any)
+    const extension = extensionMatch ? extensionMatch[1].toLowerCase() : '';
     // List of allowed image file extensions
-    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-    return imageExtensions.some(ext => url.includes(ext));
+    const allowedImageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+    // Check if the extracted extension is in the list of allowed extensions
+    const allowed = allowedImageExtensions.includes(`.${extension}`);
+    // Return an object with the result and the extracted extension
+    return { allowed, extension };
   }
 
   function convertImageLinkToImage() {
@@ -655,14 +675,17 @@
       const link = links[i];
 
       // Check if the link's href ends with a safe image extension and the domain is trusted
-      if (isSafeImageExtension(link.href) && isTrustedDomain(link.href)) {
+      const { allowed, extension } = isAllowedImageExtension(link.href);
 
-        // Extract the domain from the link using URL parsing
-        const linkDomain = new URL(link.href).hostname.toLowerCase();
-        // Get the file extension from the URL
-        const fileExtension = link.href.split('.').pop().toLowerCase();
+      // Check if the URL's domain is trusted
+      const { isTrusted, domain } = isTrustedDomain(link.href);
+
+      // Check if the link's href ends with the allowed image extension and the domain is trusted
+      if (allowed && isTrusted) {
+
         // Change the text content of the link to indicate it's an image with extension and trusted domain
-        link.textContent = `${imageExtensionEmoji} Image (${fileExtension.toUpperCase()}) ${webDomainEmoji} Hostname (${linkDomain})`;
+        link.textContent = `${imageExtensionEmoji} Image (${extension.toUpperCase()}) ${webDomainEmoji} Hostname (${domain})`;
+
         // Assign the href value as the title
         link.title = link.href;
 

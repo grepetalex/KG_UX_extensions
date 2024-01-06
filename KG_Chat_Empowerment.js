@@ -243,7 +243,7 @@
           // Set the "lang" property of the utterance object to 'ru-RU'
           utterance.lang = 'ru-RU';
           // Set the "voice" property of the utterance object to Pavel's voice
-          utterance.voice = pavelVoice;
+          utterance.voice = irinaVoice;
           // Resolve the promise
           resolve({ synth, utterance, voices, pavelVoice, irinaVoice });
         }

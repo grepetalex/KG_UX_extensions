@@ -19,14 +19,14 @@
   // Function to dynamically append font link to the head
   function appendFontLink(fontFamily, fontWeights) {
     // Check if the font link element with the specified class already exists
-    const existingFont = document.querySelector(`.font-${fontFamily}`);
+    const existingFont = document.querySelector(`.font-${fontFamily.replace(/\s/g, '-')}`);
 
     // If it doesn't exist, create a new link element and append it to the document head
     if (!existingFont) {
       const fontLink = document.createElement('link');
       fontLink.rel = 'stylesheet';
-      fontLink.href = `https://fonts.googleapis.com/css2?family=${fontFamily}:wght@${fontWeights.join(';')}&display=swap`;
-      fontLink.classList.add(`font-${fontFamily}`);
+      fontLink.href = `https://fonts.googleapis.com/css2?family=${fontFamily.replace(/\s/g, '+')}:wght@${fontWeights.join(';')}&display=swap`;
+      fontLink.classList.add(`font-${fontFamily.replace(/\s/g, '-')}`);
 
       // Append the font link element to the document head
       document.head.appendChild(fontLink);
@@ -36,12 +36,16 @@
   // Specify the font weights you want to include
   const montserratFontWeights = ['100', '200', '300', '400', '500', '600', '700', '800', '900'];
   const orbitronFontWeights = ['400', '500', '600', '700', '800', '900'];
+  const robotoMonoFontWeights = ['100', '200', '300', '400', '500', '600', '700'];
 
   // Call the function to append Montserrat font link
   appendFontLink('Montserrat', montserratFontWeights);
 
   // Call the function to append Orbitron font link
   appendFontLink('Orbitron', orbitronFontWeights);
+
+  // Call the function to append Roboto Mono font link
+  appendFontLink('Roboto Mono', robotoMonoFontWeights);
 
   // Define voice speed limits
   const minVoiceSpeed = 0;
@@ -1208,20 +1212,6 @@
       dropTime.style.justifyContent = 'center';
       dropTime.style.alignItems = 'center';
 
-      // Check if the font link element with class 'font-roboto-mono' already exists
-      const existingFontRobotoMono = document.querySelector('.font-roboto-mono');
-
-      // If it doesn't exist, create a new link element and append it to the document head
-      if (!existingFontRobotoMono) {
-        var fontLinkRobotoMono = document.createElement('link');
-        fontLinkRobotoMono.rel = 'stylesheet';
-        fontLinkRobotoMono.href = 'https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&display=swap';
-        fontLinkRobotoMono.classList.add('font-roboto-mono');
-
-        // Append the Roboto Mono font link element to the document head
-        document.head.appendChild(fontLinkRobotoMono);
-      }
-
       // Create span with description for threshold time element
       const dropTimeThresholdDescription = document.createElement('span');
       dropTimeThresholdDescription.className = 'drop-time-threshold-description';
@@ -1455,7 +1445,15 @@
         // Create anchor element for userId
         const userIdAnchor = document.createElement('a');
         userIdAnchor.className = 'id';
-        userIdAnchor.textContent = userId;
+
+        let userIdForConcatenation = userId;
+
+        if (userData.visits !== undefined) {
+          userIdForConcatenation += ` <span style="color: cornsilk;">${userData.visits}</span>`;
+        }
+
+        userIdAnchor.innerHTML = userIdForConcatenation;
+
         userIdAnchor.href = `https://klavogonki.ru/profile/${userId}`;
         userIdAnchor.target = '_blank';
         userIdAnchor.style.setProperty('color', 'skyblue', 'important');
@@ -1466,11 +1464,9 @@
 
         // Add underline on hover and change color to a lighter shade of skyblue
         userIdAnchor.addEventListener('mouseover', () => {
-          userIdAnchor.style.textDecoration = 'underline';
-          userIdAnchor.style.setProperty('color', 'lightblue', 'important');
+          userIdAnchor.style.setProperty('color', 'cornsilk', 'important');
         });
         userIdAnchor.addEventListener('mouseout', () => {
-          userIdAnchor.style.textDecoration = 'none';
           userIdAnchor.style.setProperty('color', 'skyblue', 'important');
         });
 
@@ -1990,7 +1986,7 @@
   }
 
   // Function to update users in the custom chat
-  async function refreshUserList() {
+  async function refreshUserList(retrievedLogin, actionType) {
     try {
       // Get the original user list container
       const originalUserListContainer = document.querySelector('.userlist-content');
@@ -2044,22 +2040,25 @@
             const { rank: mainTitle, login } = await getProfileSummary(userId);
 
             if (!fetchedUsers[userId]) {
+              // If user is not already in fetchedUsers, only set rank and login
               fetchedUsers[userId] = { rank: mainTitle, login };
-              localStorage.setItem('fetchedUsers', JSON.stringify(fetchedUsers));
+            } else {
+              // If user is already in fetchedUsers, update the rank and login
+              fetchedUsers[userId].rank = mainTitle;
+              fetchedUsers[userId].login = login;
             }
 
-            // Pass the new parameter isRevoked to createUserElement
-            const isRevoked = userElement.classList.contains('revoked');
-
-            const rankClass = getRankClass(mainTitle);
+            // If actionType is 'enter' and retrievedLogin === userName, multiply the visits for the entered user
+            if (actionType === 'enter' && retrievedLogin === userName) {
+              fetchedUsers[userId].visits = (fetchedUsers[userId].visits || 0) + 1;
+            }
 
             // Check if the user with the same ID already exists in the corresponding rank group
-            const existingUserElement = rankSubparents[rankClass].querySelector(`.user${userId}`);
+            const existingUserElement = rankSubparents[getRankClass(mainTitle)].querySelector(`.user${userId}`);
             if (!existingUserElement) {
-              const newUserElement = createUserElement(userId, mainTitle, userName, isRevoked);
-
+              const newUserElement = createUserElement(userId, mainTitle, userName, userElement.classList.contains('revoked'));
               // Add the user to the corresponding rank group
-              rankSubparents[rankClass].appendChild(newUserElement);
+              rankSubparents[getRankClass(mainTitle)].appendChild(newUserElement);
             }
 
             // Update existing user IDs
@@ -2078,10 +2077,13 @@
         }
       });
 
+      // Update localStorage outside the if conditions
+      localStorage.setItem('fetchedUsers', JSON.stringify(fetchedUsers));
+
     } catch (error) {
       console.error('Error refreshing user list:', error);
     }
-  }
+  } // refreshUserList END
 
   // Helper function to convert time string to single hours
   function convertToSingleHours(timeString) {
@@ -2276,6 +2278,8 @@
               const userGender = getUserGender(newUser) || 'male'; // use 'male' as default
               const iconType = enterIcon;
               showUserAction(newUser, iconType, true);
+              // Pass 'enter' as the action type and the user's login to refreshUserList
+              refreshUserList(newUser, 'enter');
               // Prevent voice notification if mode is silence
               if (!isSilence && usersToTrack.some(user => user.name === newUser)) {
                 userAction(newUser, "enter", userGender);
@@ -2287,6 +2291,8 @@
             const userGender = getUserGender(leftUser) || 'male'; // use 'male' as default
             const iconType = leaveIcon;
             showUserAction(leftUser, iconType, false);
+            // Pass 'leave' as the action type and the user's login to refreshUserList
+            refreshUserList(leftUser, 'leave');
             // Prevent voice notification if mode is silence
             if (!isSilence && usersToTrack.some(user => user.name === leftUser)) {
               userAction(leftUser, "leave", userGender);
@@ -2294,7 +2300,7 @@
           });
 
           // Refresh experimental custom chat user list on old list changes
-          refreshUserList();
+          // refreshUserList();
 
         } else {
           // Indicator should look deactivated after the chat is closed

@@ -219,24 +219,33 @@
     const synth = window.speechSynthesis;
     // Retrieve the list of available voices
     let voices = synth.getVoices();
-    // Define the voice for text to speech as Pavel
-    let voice = voices.find(voice => voice.name === 'Microsoft Pavel - Russian (Russia)');
 
-    // If the voices list is empty, wait for it to populate
-    if (voices.length === 0) {
+    // Define the voice names for Pavel and Irina
+    const pavelVoiceName = 'Microsoft Pavel - Russian (Russia)';
+    const irinaVoiceName = 'Microsoft Irina - Russian (Russia)';
+
+    // Find and store Pavel's voice
+    let pavelVoice = voices.find(voice => voice.name === pavelVoiceName);
+    // Find and store Irina's voice
+    let irinaVoice = voices.find(voice => voice.name === irinaVoiceName);
+
+    // If either voice is not found or the voices list is empty, wait for it to populate
+    if (!pavelVoice || !irinaVoice || voices.length === 0) {
       synth.addEventListener('voiceschanged', () => {
         voices = synth.getVoices();
-        voice = voices.find(voice => voice.name === 'Microsoft Pavel - Russian (Russia)');
-        // If the voice is found, continue with the initialization
-        if (voice) {
+        pavelVoice = voices.find(voice => voice.name === pavelVoiceName);
+        irinaVoice = voices.find(voice => voice.name === irinaVoiceName);
+
+        // If both voices are found, continue with the initialization
+        if (pavelVoice && irinaVoice) {
           // Define the utterance object as a global variable
           const utterance = new SpeechSynthesisUtterance();
           // Set the "lang" property of the utterance object to 'ru-RU'
           utterance.lang = 'ru-RU';
-          // Set the "voice" property of the utterance object to the Russian voice
-          utterance.voice = voice;
+          // Set the "voice" property of the utterance object to Pavel's voice
+          utterance.voice = pavelVoice;
           // Resolve the promise
-          resolve({ synth, utterance, voices, voice });
+          resolve({ synth, utterance, voices, pavelVoice, irinaVoice });
         }
       });
     } else {
@@ -244,10 +253,10 @@
       const utterance = new SpeechSynthesisUtterance();
       // Set the "lang" property of the utterance object to 'ru-RU'
       utterance.lang = 'ru-RU';
-      // Set the "voice" property of the utterance object to the Russian voice
-      utterance.voice = voice;
+      // Set the "voice" property of the utterance object to (Needed) voice
+      utterance.voice = irinaVoice;
       // Resolve the promise
-      resolve({ synth, utterance, voices, voice });
+      resolve({ synth, utterance, voices, pavelVoice, irinaVoice });
     }
   });
 

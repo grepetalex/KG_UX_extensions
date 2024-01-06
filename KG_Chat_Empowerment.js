@@ -674,13 +674,13 @@
     for (let i = 0; i < links.length; i++) {
       const link = links[i];
 
-      // Check if the link's href ends with a safe image extension and the domain is trusted
+      // Check if the link's href includes allowed image extension
       const { allowed, extension } = isAllowedImageExtension(link.href);
 
-      // Check if the URL's domain is trusted
+      // Check if the link's href includes trusted domain
       const { isTrusted, domain } = isTrustedDomain(link.href);
 
-      // Check if the link's href ends with the allowed image extension and the domain is trusted
+      // Check if the link's href includes the allowed image extension and the domain is trusted
       if (allowed && isTrusted) {
 
         // Change the text content of the link to indicate it's an image with extension and trusted domain

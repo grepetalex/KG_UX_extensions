@@ -2915,6 +2915,9 @@
   const sectionSymbol = '\\u00A7'; // §
   const bulletPoint = '\\u2022'; // •
   const ellipsis = '\\u2026'; // …
+  const minus = '\\u2212'; // −
+  const enDash = '\\u2013'; // –
+  const emDash = '\\u2014'; // —
 
   // Arrow and Mathematical symbols as Unicode escape sequences
   const leftArrow = '\\u2190'; // ←
@@ -2939,7 +2942,7 @@
       `[${digits}${latinChars}${cyrillicChars}${whitespaces}${commonSymbols}` +
       `${copyrightSymbol}${trademarkSymbol}${registeredSymbol}${leftDoubleAngleQuote}${rightDoubleAngleQuote}` +
       `${plusMinus}${multiplication}${division}${degreeSymbol}${notEqual}${lessThanOrEqual}${greaterThanOrEqual}` +
-      `${infinity}${euroSymbol}${poundSymbol}${yenSymbol}${sectionSymbol}${bulletPoint}${ellipsis}` +
+      `${infinity}${euroSymbol}${poundSymbol}${yenSymbol}${sectionSymbol}${bulletPoint}${ellipsis}${minus}${enDash}${emDash}` +
       `${leftArrow}${rightArrow}${upArrow}${downArrow}${half}${oneThird}${twoThirds}${summation}` +
       `${acuteAccent}${emojiRanges}]+`, 'g'
     );

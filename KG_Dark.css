@@ -4211,8 +4211,9 @@ body .voclist .left-col {
 body .gamelist-create #recent-games-container {
     margin-top: 0 !important;
     overflow-y: auto !important;
-    height: 20vh !important;
+    height: auto !important;
     padding-top: 15px !important;
+    max-height: 20vh !important;
 }
 
 #recent-games-container {

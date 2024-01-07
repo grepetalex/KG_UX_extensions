@@ -1448,8 +1448,22 @@
 
         let userIdForConcatenation = userId;
 
+        const trackedStyles = {
+          color: 'greenyellow',
+          fontWeight: 'bold'
+        };
+
+        const untrackedStyles = {
+          color: 'orange',
+          fontWeight: 'normal'
+        };
+
+        // Choose styles based on whether the user is tracked or untracked
+        const styles = userData.tracked ? trackedStyles : untrackedStyles;
+
+        // Concatenate user ID with visits, applying the chosen styles
         if (userData.visits !== undefined) {
-          userIdForConcatenation += ` <span style="color: cornsilk;">${userData.visits}</span>`;
+          userIdForConcatenation += ` <span style="color: ${styles.color}; font-weight: ${styles.fontWeight};">${userData.visits}</span>`;
         }
 
         userIdAnchor.innerHTML = userIdForConcatenation;
@@ -2051,6 +2065,8 @@
             // If actionType is 'enter' and retrievedLogin === userName, multiply the visits for the entered user
             if (actionType === 'enter' && retrievedLogin === userName) {
               fetchedUsers[userId].visits = (fetchedUsers[userId].visits || 0) + 1;
+              // Check if the user is in the usersToTrack array and add additional properties if needed
+              fetchedUsers[userId].tracked = usersToTrack.some(userToTrack => userToTrack.name === retrievedLogin);
             }
 
             // Check if the user with the same ID already exists in the corresponding rank group
@@ -2276,12 +2292,14 @@
           newUsers.forEach((newUser) => {
             if (!previousUsers.includes(newUser)) {
               const userGender = getUserGender(newUser) || 'male'; // use 'male' as default
+              // Check if the user is in the usersToTrack array for 'enter'
+              const isUserToTrackEnter = usersToTrack.some(user => user.name === newUser);
               const iconType = enterIcon;
               showUserAction(newUser, iconType, true);
               // Pass 'enter' as the action type and the user's login to refreshUserList
-              refreshUserList(newUser, 'enter');
+              refreshUserList(newUser, "enter");
               // Prevent voice notification if mode is silence
-              if (!isSilence && usersToTrack.some(user => user.name === newUser)) {
+              if (!isSilence && isUserToTrackEnter) {
                 userAction(newUser, "enter", userGender);
               }
             }
@@ -2289,18 +2307,17 @@
 
           leftUsers.forEach((leftUser) => {
             const userGender = getUserGender(leftUser) || 'male'; // use 'male' as default
+            // Check if the user is in the usersToTrack array for 'leave'
+            const isUserToTrackLeave = usersToTrack.some(user => user.name === leftUser);
             const iconType = leaveIcon;
             showUserAction(leftUser, iconType, false);
             // Pass 'leave' as the action type and the user's login to refreshUserList
-            refreshUserList(leftUser, 'leave');
+            refreshUserList(leftUser, "leave");
             // Prevent voice notification if mode is silence
-            if (!isSilence && usersToTrack.some(user => user.name === leftUser)) {
+            if (!isSilence && isUserToTrackLeave) {
               userAction(leftUser, "leave", userGender);
             }
           });
-
-          // Refresh experimental custom chat user list on old list changes
-          // refreshUserList();
 
         } else {
           // Indicator should look deactivated after the chat is closed

@@ -5364,7 +5364,7 @@ ins.revoked a {
     font-size: 14px !important;
     background: var(--deepgray) !important;
     border: 1px solid rgba(225, 20, 0, .5) !important;
-    padding: 0 10px !important;
+    padding: 8px !important;
 }
 
 /* code tag preview in chat */

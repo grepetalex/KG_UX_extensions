@@ -1448,22 +1448,41 @@
 
         let userIdForConcatenation = userId;
 
-        const trackedStyles = {
-          color: 'greenyellow',
-          fontWeight: 'bold'
-        };
-
-        const untrackedStyles = {
-          color: 'orange',
-          fontWeight: 'normal'
+        // Define styles for tracked and untracked users
+        const styles = {
+          tracked: {
+            color: 'greenyellow',
+            backgroundColor: 'darkgreen',
+            fontWeight: 'bold',
+            padding: '0 6px'
+          },
+          untracked: {
+            color: 'orange',
+            fontWeight: 'normal'
+          }
         };
 
         // Choose styles based on whether the user is tracked or untracked
-        const styles = userData.tracked ? trackedStyles : untrackedStyles;
+        const chosenStyles = userData.tracked ? styles.tracked : styles.untracked;
+
+        // Function to generate the styles string
+        const generateStylesString = (styles) => {
+          return Object.entries(styles)
+            .map(([key, value]) => {
+              // Convert camelCase to kebab-case for CSS property names
+              const cssProperty = key.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+              return `${cssProperty}: ${value}`;
+            })
+            .join('; ');
+        };
+
+        // Generate the styles string for the chosen styles
+        const decidedStyles = generateStylesString(chosenStyles);
 
         // Concatenate user ID with visits, applying the chosen styles
         if (userData.visits !== undefined) {
-          userIdForConcatenation += ` <span style="color: ${styles.color}; font-weight: ${styles.fontWeight};">${userData.visits}</span>`;
+          // Concatenate the user ID with a span element containing the styles and visits data
+          userIdForConcatenation += ` <span style="${decidedStyles}">${userData.visits}</span>`;
         }
 
         userIdAnchor.innerHTML = userIdForConcatenation;

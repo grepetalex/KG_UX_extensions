@@ -111,15 +111,13 @@
     return url;
   }
 
-  let replay = createGameLink();
   const gameList = 'https://klavogonki.ru/gamelist/';
-
 
   const handleKeyDown = (event) => {
     if (event.ctrlKey && event.key === 'Enter') {
       console.log('Ctrl + Enter was pressed. Creating next race.');
       setTimeout(() => {
-        window.location.href = replay;
+        window.location.href = createGameLink();
       }, 100);
     } else if (event.key === 'Escape') {
       console.log('Esc was pressed. Moving on gamelist page.');
@@ -182,7 +180,7 @@
         // wait for a delay after the game ends before replaying
         setTimeout(() => {
           console.log('Game over. Creating new race.');
-          window.location.href = replay;
+          window.location.href = createGameLink();
         }, timerDelay);
       }
       else if (racing.style.display !== 'none' && finished.style.display == 'none') {
@@ -199,7 +197,7 @@
             // Simple replay with the initial timerDelay
             setTimeout(() => {
               console.log(`Retrying in ${timerDelay / 1000} seconds...`);
-              window.location.href = replay;
+              window.location.href = createGameLink();
 
               // Trigger the double replay and increase retry delay if needed
               let currentRetryDelay = timerDelay; // Initial retry delay
@@ -209,7 +207,7 @@
                 // First replay
                 await new Promise(resolve => setTimeout(resolve, currentRetryDelay));
                 console.log(`Retrying in ${currentRetryDelay / 1000} seconds...`);
-                window.location.href = replay;
+                window.location.href = createGameLink();
 
                 // Exponentially increase the retry delay but capped at the maximum
                 currentRetryDelay *= 2;

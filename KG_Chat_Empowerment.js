@@ -3728,6 +3728,25 @@
 
   // CREATING PANEL CHAT FIELD SYMBOLS COUNT INDICATOR
 
+  // Function to retrieve the chat input field and length popup container based on the current URL
+  function retrieveChatElementsByRoomType() {
+    const currentURL = window.location.href; // Get the current URL
+    let inputField, lengthPopupContainer;
+
+    if (currentURL.includes('gamelist')) {
+      inputField = document.querySelector('#chat-general .text'); // Selector for the general chat input
+      lengthPopupContainer = document.querySelector('#chat-general .messages'); // Selector for the general chat messages
+    } else if (currentURL.includes('gmid')) {
+      inputField = document.querySelector('[id^="chat-game"] .text'); // Selector for the game chat input
+      lengthPopupContainer = document.querySelector('[id^="chat-game"] .messages'); // Selector for the game chat messages
+    } else {
+      console.error('No matching room type found in the URL.');
+      return null; // Return null if no matching type is found
+    }
+
+    return { inputField, lengthPopupContainer }; // Return both the input field and the length popup container
+  }
+
   // Timeout ID for reverting the opacity of the typed symbols count element after 3 seconds of no user input
   let revertOpacityTimeout;
 
@@ -3759,7 +3778,9 @@
 
     // Append the digital indicator to the existing panel
     empowermentButtonsPanel.appendChild(typedSymbolsCount);
-  } initializeTypedSymbolsCount();
+  }
+
+  initializeTypedSymbolsCount();
 
   // Function to update the color and font size of the typed symbols count
   function updateTypedSymbolsCountStyle() {
@@ -3778,56 +3799,39 @@
 
     // Determine color based on count
     if (count === 0) {
-      // Default dark blue color
       textColor = 'hsl(200, 20%, 50%)'; // Light Blue
-      borderColor = 'hsl(200, 20%, 30%)'; // Dark Blue (20% less lightness)
+      borderColor = 'hsl(200, 20%, 30%)'; // Dark Blue
     } else if (count >= 1 && count <= 90) {
-      // Full bright green
       textColor = 'hsl(120, 100%, 40%)'; // Bright Green
-      borderColor = 'hsl(120, 100%, 20%)'; // Darker green for border (20% less lightness)
+      borderColor = 'hsl(120, 100%, 20%)'; // Darker green for border
     } else if (count > 90 && count <= 100) {
-      // Transition from bright green to bright yellow
       const factor = (count - 90) / 10;
       const h = Math.round(120 + factor * (60 - 120)); // Interpolating hue
-      const s = Math.round(100 + factor * (100 - 100)); // Saturation remains 100%
-      const l = Math.round(40 + factor * (50 - 40)); // Interpolating lightness
+      const s = Math.round(100 + factor * (100 - 100));
+      const l = Math.round(40 + factor * (50 - 40));
       textColor = `hsl(${h}, ${s}%, ${l}%)`;
-      borderColor = `hsl(${h}, ${s}%, ${Math.max(0, l - 20)}%)`; // Darker color for border
+      borderColor = `hsl(${h}, ${s}%, ${Math.max(0, l - 20)}%)`;
     } else if (count > 100 && count <= 190) {
-      // Full bright yellow
       textColor = 'hsl(60, 100%, 50%)'; // Bright Yellow
-      borderColor = 'hsl(60, 100%, 30%)'; // Darker yellow for border (20% less lightness)
+      borderColor = 'hsl(60, 100%, 30%)'; // Darker yellow for border
     } else if (count > 190 && count <= 200) {
-      // Transition from bright yellow to orange
       const factor = (count - 190) / 10;
-      const h = Math.round(60 + factor * (30 - 60)); // Interpolating hue
-      const s = 100; // Saturation remains 100%
-      const l = Math.round(50 + factor * (50 - 50)); // Lightness remains 50%
-      textColor = `hsl(${h}, ${s}%, ${l}%)`;
-      borderColor = `hsl(${h}, ${s}%, ${Math.max(0, l - 20)}%)`; // Darker color for border
+      const h = Math.round(60 + factor * (30 - 60));
+      textColor = `hsl(${h}, 100%, 50%)`;
+      borderColor = `hsl(${h}, 100%, ${Math.max(0, 50 - 20)}%)`;
     } else if (count > 200 && count <= 250) {
-      // Full orange
       textColor = 'hsl(30, 100%, 50%)'; // Orange
-      borderColor = 'hsl(30, 100%, 30%)'; // Darker orange for border (20% less lightness)
-    } else if (count > 250 && count <= 300) {
-      // Transition from orange to red
-      const factor = (count - 250) / 50;
-      const h = Math.round(30 + factor * (0 - 30)); // Interpolating hue
-      const s = 100; // Saturation remains 100%
-      const l = Math.round(50 + factor * (50 - 50)); // Lightness remains 50%
-      textColor = `hsl(${h}, ${s}%, ${l}%)`;
-      borderColor = `hsl(${h}, ${s}%, ${Math.max(0, l - 20)}%)`; // Darker color for border
+      borderColor = 'hsl(30, 100%, 30%)'; // Darker orange for border
     } else {
-      // Stay red
       textColor = 'hsl(10, 100%, 70%)'; // Red
-      borderColor = 'hsl(10, 100%, 40%)'; // Darker red for border (20% less lightness)
+      borderColor = 'hsl(10, 100%, 40%)'; // Darker red for border
     }
 
-    // Adjust background color to have fixed saturation of 20% and lightness of 10%, using the hue from textColor
-    const [hue] = textColor.match(/\d+/g).map(Number); // Extract hue from textColor
+    // Adjust background color
+    const [hue] = textColor.match(/\d+/g).map(Number);
     backgroundColor = `hsl(${hue}, 20%, 10%)`; // Fixed saturation and lightness
 
-    // Apply the colors and font size to the element
+    // Apply styles
     typedSymbolsCount.style.borderColor = borderColor;
     typedSymbolsCount.style.color = textColor;
     typedSymbolsCount.style.backgroundColor = backgroundColor;
@@ -3837,7 +3841,7 @@
   // Function to update the typed symbols count and manage opacity
   function updateTypedSymbolsCount() {
     const typedSymbolsCount = document.querySelector('.typed-symbols-count');
-    const chatText = document.querySelector('.chat .text');
+    const { inputField: chatText } = retrieveChatElementsByRoomType() || {}; // Get chat text input field
 
     if (!typedSymbolsCount || !chatText) {
       console.error('typedSymbolsCount or chatText is not defined');
@@ -3854,7 +3858,7 @@
       clearTimeout(revertOpacityTimeout);
     }
 
-    // Set a timeout to revert opacity to 0.4 after 3 seconds of inactivity
+    // Revert opacity after 3 seconds of inactivity
     revertOpacityTimeout = setTimeout(() => {
       typedSymbolsCount.style.opacity = '0.4';
     }, 3000);
@@ -3862,7 +3866,7 @@
 
   // Function to set up the event listener for updating the typed symbols count
   function setupTypedSymbolsCountListener() {
-    const chatTextElement = document.querySelector('.chat .text');
+    const { inputField: chatTextElement } = retrieveChatElementsByRoomType() || {}; // Get the chat text input
 
     if (!chatTextElement) {
       console.error('chatTextElement is not defined');
@@ -3871,80 +3875,79 @@
 
     chatTextElement.addEventListener('input', updateTypedSymbolsCount);
 
-    // Add event listener for keydown to handle Enter key press
+    // Add event listener for Enter key press
     chatTextElement.addEventListener('keydown', (event) => {
       if (event.key === 'Enter') {
-        // Set the opacity of the typed symbols count element to 0.4 immediately
         const typedSymbolsCount = document.querySelector('.typed-symbols-count');
         if (typedSymbolsCount) {
-          typedSymbolsCount.style.opacity = '0.4'; // Reset opacity to default
+          typedSymbolsCount.style.opacity = '0.4'; // Reset opacity
           typedSymbolsCount.innerHTML = '0'; // Reset content to 0
-          updateTypedSymbolsCountStyle(); // Reset colors and font size to default
+          updateTypedSymbolsCountStyle(); // Reset styles
         }
-        // Clear the timeout to prevent unintended opacity change
+        // Clear timeout
         if (revertOpacityTimeout) {
           clearTimeout(revertOpacityTimeout);
         }
       }
     });
   }
+
   setupTypedSymbolsCountListener();
   // PANEL INDICATOR LENGTH END
 
 
   // CREATING CHAT FIELD SYMBOLS COUNT POPUP INDICATOR
 
-  // Select the input element and length popup container
-  const chatField = document.querySelector('.text');
-  const lengthPopupContainer = document.querySelector('.messages');
+  // Select the input element and length popup container using the helper function
+  const { inputField: chatField, lengthPopupContainer } = retrieveChatElementsByRoomType();
 
   // Create a style element for animations
   const lengthPopupAnimations = document.createElement('style');
   lengthPopupAnimations.textContent = `
-@keyframes bounceIn {
-    0% {
-        transform: translateY(0);
-        opacity: 0;
-    }
-    50% {
-        transform: translateY(-10px);
-        opacity: 1;
-    }
-    100% {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
+  @keyframes bounceIn {
+      0% {
+          transform: translateY(0);
+          opacity: 0;
+      }
+      50% {
+          transform: translateY(-10px);
+          opacity: 1;
+      }
+      100% {
+          transform: translateY(0);
+          opacity: 1;
+      }
+  }
 
-@keyframes bounceOut {
-    0% {
-        transform: translateY(0);
-        opacity: 1;
-    }
-    50% {
-        transform: translateY(-10px);
-        opacity: 1;
-    }
-    100% {
-        transform: translateY(0);
-        opacity: 0;
-    }
-}
+  @keyframes bounceOut {
+      0% {
+          transform: translateY(0);
+          opacity: 1;
+      }
+      50% {
+          transform: translateY(-10px);
+          opacity: 1;
+      }
+      100% {
+          transform: translateY(0);
+          opacity: 0;
+      }
+  }
 
-.length-field-popup {
-    position: absolute;
-    font: 12px Montserrat;
-    bottom: 40px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2px 4px;
-    margin: 2px;
-    line-height: 20px;
-    opacity: 0;
-}
-`;
+  .length-field-popup {
+      position: absolute;
+      font: 12px Montserrat;
+      bottom: 40px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2px 4px;
+      margin: 2px;
+      line-height: 20px;
+      opacity: 0;
+  }
+  `;
 
   document.head.appendChild(lengthPopupAnimations);
 
@@ -4039,6 +4042,7 @@
     }
   });
   // POPUP INDICATOR LENGTH END
+
 
   // Add the isAltKeyPressed condition to the messagesMode event listener
   messageMode.addEventListener('click', function (event) {

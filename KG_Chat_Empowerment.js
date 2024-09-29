@@ -3056,7 +3056,7 @@
         userChatData[userId].thresholdMaxTries++;
         // If the message contains not allowed chars, log the information
         console.log(
-          `%c${userChatData[userId].userName} has sent a message with not allowed characters ${disallowedChars}. 
+          `%c${userChatData[userId].userName} has sent a message with not allowed characters ${disallowedChars}.
           Threshold: ${userChatData[userId].thresholdMaxTries}.`,
           'color: orange;'
         );
@@ -3913,50 +3913,21 @@
   // Create a style element for animations
   const lengthPopupAnimations = document.createElement('style');
   lengthPopupAnimations.textContent = `
-  @keyframes bounceIn {
-      0% {
-          transform: translateY(0);
-          opacity: 0;
-      }
-      50% {
-          transform: translateY(-10px);
-          opacity: 1;
-      }
-      100% {
-          transform: translateY(0);
-          opacity: 1;
-      }
-  }
-
-  @keyframes bounceOut {
-      0% {
-          transform: translateY(0);
-          opacity: 1;
-      }
-      50% {
-          transform: translateY(-10px);
-          opacity: 1;
-      }
-      100% {
-          transform: translateY(0);
-          opacity: 0;
-      }
-  }
-
-  .length-field-popup {
-      position: absolute;
-      font: 12px Montserrat;
-      bottom: 40px;
-      height: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 2px 4px;
-      margin: 2px;
-      line-height: 20px;
-      opacity: 0;
-  }
-  `;
+    @keyframes bounceIn {
+      0% { transform: translateY(0); opacity: 0; }
+      50% { transform: translateY(-10px); opacity: 1; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes bounceOut {
+      0% { transform: translateY(0); opacity: 1; }
+      50% { transform: translateY(-10px); opacity: 1; }
+      100% { transform: translateY(0); opacity: 0; }
+    }
+    .length-field-popup {
+      position: absolute; font: bold 12px Montserrat; bottom: 40px; height: 20px;
+      display: flex; align-items: center; justify-content: center; padding: 2px 4px; margin: 2px;
+      line-height: 20px; opacity: 0;
+    }`;
 
   document.head.appendChild(lengthPopupAnimations);
 
@@ -3966,6 +3937,9 @@
 
   // Rename the timeout variable to be more descriptive
   let hidePopupTimeout;
+
+  // Track the previous input length
+  let previousLength = 0;
 
   // Function to update the color of the length popup
   function updateLengthPopupColor(length) {
@@ -4005,12 +3979,26 @@
     lengthPopup.style.color = textColor;
   }
 
-  // Function to show the length popup with updated color
+  // Function to show the length popup with updated color and arrow direction
   function showLengthPopup(length) {
-    lengthPopup.textContent = length; // Update the length display
+    let displayText;
+
+    // Check if a symbol is added (→) or removed (←)
+    if (length > previousLength) {
+      displayText = `${length} 🡆`; // Typing: Right arrow after the length
+    } else if (length < previousLength) {
+      displayText = `🡄 ${length}`; // Deleting: Left arrow before the length
+    } else {
+      displayText = `${length}`; // No change: No arrows
+    }
+
+    lengthPopup.textContent = displayText; // Display the length and arrow
     lengthPopup.style.opacity = '1'; // Ensure it's visible
     updateLengthPopupColor(length); // Update the text color based on length
-    lengthPopup.style.animation = 'bounceIn 0.5s forwards'; // Apply bounce in animation
+    lengthPopup.style.animation = 'bounceIn 0.5s forwards'; // Apply bounce-in animation
+
+    // Update the previous length
+    previousLength = length;
   }
 
   function hideLengthPopup() {
@@ -4020,12 +4008,14 @@
     }, 500);
   }
 
+  // Event listener for input
   chatField.addEventListener('input', function () {
     clearTimeout(hidePopupTimeout);
 
     const length = chatField.value.length;
-    showLengthPopup(length); // Show the length popup with updated length
+    showLengthPopup(length); // Show the length popup with updated length and arrow
 
+    // Calculate position of the popup
     const fieldTextWidthCalculator = document.createElement('span');
     fieldTextWidthCalculator.style.visibility = 'hidden';
     fieldTextWidthCalculator.style.whiteSpace = 'nowrap';
@@ -4044,9 +4034,10 @@
     hidePopupTimeout = setTimeout(hideLengthPopup, 1000);
   });
 
+  // Event listener for keydown (Enter key)
   chatField.addEventListener('keydown', function (event) {
     if (event.key === 'Enter') {
-      showLengthPopup('0');
+      showLengthPopup(0);
       lengthPopup.style.left = '0px';
       lengthPopup.style.color = 'hsl(200, 20%, 50%)'; // Light Blue
     }

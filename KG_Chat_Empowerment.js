@@ -3726,6 +3726,8 @@
   } createShowUserListCacheButton();
 
 
+  // CREATING PANEL CHAT FIELD SYMBOLS COUNT INDICATOR
+
   // Timeout ID for reverting the opacity of the typed symbols count element after 3 seconds of no user input
   let revertOpacityTimeout;
 
@@ -3817,8 +3819,8 @@
       borderColor = `hsl(${h}, ${s}%, ${Math.max(0, l - 20)}%)`; // Darker color for border
     } else {
       // Stay red
-      textColor = 'hsl(10, 100%, 50%)'; // Red
-      borderColor = 'hsl(10, 100%, 30%)'; // Darker red for border (20% less lightness)
+      textColor = 'hsl(10, 100%, 70%)'; // Red
+      borderColor = 'hsl(10, 100%, 40%)'; // Darker red for border (20% less lightness)
     }
 
     // Adjust background color to have fixed saturation of 20% and lightness of 10%, using the hue from textColor
@@ -3885,7 +3887,158 @@
         }
       }
     });
-  } setupTypedSymbolsCountListener();
+  }
+  setupTypedSymbolsCountListener();
+  // PANEL INDICATOR LENGTH END
+
+
+  // CREATING CHAT FIELD SYMBOLS COUNT POPUP INDICATOR
+
+  // Select the input element and length popup container
+  const chatField = document.querySelector('.text');
+  const lengthPopupContainer = document.querySelector('.messages');
+
+  // Create a style element for animations
+  const lengthPopupAnimations = document.createElement('style');
+  lengthPopupAnimations.textContent = `
+@keyframes bounceIn {
+    0% {
+        transform: translateY(0);
+        opacity: 0;
+    }
+    50% {
+        transform: translateY(-10px);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes bounceOut {
+    0% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    50% {
+        transform: translateY(-10px);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 0;
+    }
+}
+
+.length-field-popup {
+    position: absolute;
+    font: 12px Montserrat;
+    bottom: 40px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 4px;
+    margin: 2px;
+    line-height: 20px;
+    opacity: 0;
+}
+`;
+
+  document.head.appendChild(lengthPopupAnimations);
+
+  const lengthPopup = document.createElement('div');
+  lengthPopup.className = 'length-field-popup';
+  lengthPopupContainer.appendChild(lengthPopup);
+
+  // Rename the timeout variable to be more descriptive
+  let hidePopupTimeout;
+
+  // Function to update the color of the length popup
+  function updateLengthPopupColor(length) {
+    if (!lengthPopup) {
+      console.error('lengthPopup is not defined');
+      return;
+    }
+
+    let textColor;
+
+    // Determine color based on the length
+    if (length === 0) {
+      textColor = 'hsl(200, 20%, 50%)'; // Light Blue
+    } else if (length >= 1 && length <= 90) {
+      textColor = 'hsl(120, 100%, 40%)'; // Bright Green
+    } else if (length > 90 && length <= 100) {
+      const factor = (length - 90) / 10;
+      const h = Math.round(120 + factor * (60 - 120)); // Interpolating hue
+      textColor = `hsl(${h}, 100%, 40%)`;
+    } else if (length > 100 && length <= 190) {
+      textColor = 'hsl(60, 100%, 50%)'; // Bright Yellow
+    } else if (length > 190 && length <= 200) {
+      const factor = (length - 190) / 10;
+      const h = Math.round(60 + factor * (30 - 60)); // Interpolating hue
+      textColor = `hsl(${h}, 100%, 50%)`;
+    } else if (length > 200 && length <= 250) {
+      textColor = 'hsl(40, 100%, 50%)'; // Orange (Updated)
+    } else if (length > 250 && length <= 300) {
+      const factor = (length - 250) / 50;
+      const h = Math.round(40 + factor * (0 - 40)); // Interpolating hue
+      textColor = `hsl(${h}, 100%, 70%)`;
+    } else {
+      textColor = 'hsl(0, 100%, 70%)'; // Red (Updated)
+    }
+
+    // Apply the text color to the length popup
+    lengthPopup.style.color = textColor;
+  }
+
+  // Function to show the length popup with updated color
+  function showLengthPopup(length) {
+    lengthPopup.textContent = length; // Update the length display
+    lengthPopup.style.opacity = '1'; // Ensure it's visible
+    updateLengthPopupColor(length); // Update the text color based on length
+    lengthPopup.style.animation = 'bounceIn 0.5s forwards'; // Apply bounce in animation
+  }
+
+  function hideLengthPopup() {
+    lengthPopup.style.animation = 'bounceOut 0.5s forwards';
+    setTimeout(() => {
+      lengthPopup.style.opacity = '0';
+    }, 500);
+  }
+
+  chatField.addEventListener('input', function () {
+    clearTimeout(hidePopupTimeout);
+
+    const length = chatField.value.length;
+    showLengthPopup(length); // Show the length popup with updated length
+
+    const fieldTextWidthCalculator = document.createElement('span');
+    fieldTextWidthCalculator.style.visibility = 'hidden';
+    fieldTextWidthCalculator.style.whiteSpace = 'nowrap';
+    fieldTextWidthCalculator.style.font = getComputedStyle(chatField).font;
+    fieldTextWidthCalculator.textContent = chatField.value;
+    document.body.appendChild(fieldTextWidthCalculator);
+
+    const inputWidth = fieldTextWidthCalculator.offsetWidth;
+    const newLeft = chatField.offsetLeft + inputWidth + 5;
+    const maxLeft = chatField.offsetLeft + chatField.offsetWidth - lengthPopup.offsetWidth;
+    lengthPopup.style.left = `${Math.min(newLeft, maxLeft)}px`;
+
+    document.body.removeChild(fieldTextWidthCalculator);
+
+    // Reset the timeout for hiding the popup
+    hidePopupTimeout = setTimeout(hideLengthPopup, 3000);
+  });
+
+  chatField.addEventListener('keydown', function (event) {
+    if (event.key === 'Enter') {
+      showLengthPopup('0');
+      lengthPopup.style.left = '0px';
+    }
+  });
+  // POPUP INDICATOR LENGTH END
 
   // Add the isAltKeyPressed condition to the messagesMode event listener
   messageMode.addEventListener('click', function (event) {

@@ -4039,6 +4039,7 @@
     if (event.key === 'Enter') {
       showLengthPopup('0');
       lengthPopup.style.left = '0px';
+      lengthPopup.style.color = 'hsl(200, 20%, 50%)'; // Light Blue
     }
   });
   // POPUP INDICATOR LENGTH END

@@ -4032,7 +4032,7 @@
     document.body.removeChild(fieldTextWidthCalculator);
 
     // Reset the timeout for hiding the popup
-    hidePopupTimeout = setTimeout(hideLengthPopup, 3000);
+    hidePopupTimeout = setTimeout(hideLengthPopup, 1000);
   });
 
   chatField.addEventListener('keydown', function (event) {

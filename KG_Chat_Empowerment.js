@@ -2408,7 +2408,7 @@
     localStorage.setItem('shouldShowPopupMessage', false);
   }
 
-  // Event listener for keydown event
+  // Custom chat hider with hotkeys Ctr + Space
   document.addEventListener('keydown', (event) => {
     // Check if Ctrl key and Space key are pressed simultaneously
     if (event.ctrlKey && event.code === 'Space') {
@@ -2431,6 +2431,16 @@
           // Set the display property to 'unset'
           chatMainWrapper.style.display = 'unset';
           localStorage.setItem('shouldShowPopupMessage', false);
+
+          // Retrieve the chat input field and length popup container based on the current URL
+          const { inputField } = retrieveChatElementsByRoomType(); // Use your helper function
+
+          // Check if inputField is valid before focusing
+          if (inputField) {
+            inputField.focus(); // Set focus to the chat input field
+          } else {
+            console.error('Input field not found. Cannot set focus.');
+          }
         }
       } else {
         // Initial case: Set the display property to 'none'
@@ -2442,7 +2452,6 @@
       if (popupMessagesContainer && hasStyleAttribute && isDisplayUnset) {
         popupMessagesContainer.remove();
       }
-
     }
   });
 

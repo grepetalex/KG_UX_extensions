@@ -1422,8 +1422,8 @@
       // Add CSS styles for grid layout and centering
       fetchedUsersContainer.style.display = 'grid';
       fetchedUsersContainer.style.gridAutoFlow = 'dense'; // Allows items to fill empty spaces
-      fetchedUsersContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(120px, 1fr))';
-      fetchedUsersContainer.style.gridTemplateRows = 'repeat(auto-fill, minmax(60px, 1fr))';
+      fetchedUsersContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(140px, 1fr))';
+      fetchedUsersContainer.style.gridTemplateRows = 'repeat(auto-fill, minmax(80px, 1fr))';
       fetchedUsersContainer.style.gap = '12px';
       fetchedUsersContainer.style.padding = '24px';
       fetchedUsersContainer.style.overflowY = 'auto';
@@ -1432,8 +1432,11 @@
       // Create an array to hold user elements
       const userElements = [];
 
+      // Retrieve the cached users from localStorage
+      const cachedUsers = JSON.parse(localStorage.getItem('fetchedUsers')) || {}; // Ensure this is initialized
+
       // Iterate through each user
-      Object.keys(users).forEach((userId) => {
+      Object.keys(users).forEach(async (userId) => {
         const userData = users[userId];
 
         // Create a div for each user with class 'user'
@@ -1441,6 +1444,7 @@
         userElement.className = 'user';
         userElement.style.padding = '0.2em';
         userElement.style.margin = '0.2em';
+        userElement.style.display = 'grid';
 
         // Create anchor element for userId
         const userIdAnchor = document.createElement('a');
@@ -1448,15 +1452,23 @@
 
         let userIdForConcatenation = userId;
 
+        // Base styles shared by both tracked and untracked users
+        const baseStyle = {
+          marginLeft: '8px', // Shared margin-left
+          borderRadius: '2px !important'
+        };
+
         // Define styles for tracked and untracked users
         const styles = {
           tracked: {
+            ...baseStyle, // Spread the base styles
             color: 'greenyellow',
             backgroundColor: 'darkgreen',
             fontWeight: 'bold',
             padding: '0 6px'
           },
           untracked: {
+            ...baseStyle, // Spread the base styles
             color: 'orange',
             fontWeight: 'normal'
           }
@@ -1481,8 +1493,7 @@
 
         // Concatenate user ID with visits, applying the chosen styles
         if (userData.visits !== undefined) {
-          // Concatenate the user ID with a span element containing the styles and visits data
-          userIdForConcatenation += ` <span style="${decidedStyles}">${userData.visits}</span>`;
+          userIdForConcatenation += `<span style="${decidedStyles}">${userData.visits}</span>`;
         }
 
         userIdAnchor.innerHTML = userIdForConcatenation;
@@ -1513,13 +1524,45 @@
         loginElement.textContent = userData.login;
         loginElement.style.color = 'antiquewhite';
 
-        // Append anchor, rank, and login divs to the user div
+        // Updated registeredElement with new styles
+        const registeredElement = document.createElement('div');
+        registeredElement.className = 'registered';
+        registeredElement.textContent = 'Loading...'; // Set a loading text initially
+        registeredElement.style.color = 'cadetblue'; // Updated color
+        registeredElement.style.fontSize = '12px'; // Updated font size
+
+        // Append anchor, rank, login, registered divs to the user div
         userElement.appendChild(userIdAnchor);
         userElement.appendChild(rankElement);
         userElement.appendChild(loginElement);
+        userElement.appendChild(registeredElement);
 
         // Append the user div to the userElements array
         userElements.push({ userElement, order: rankOrder[userData.rank] || 10 });
+
+        // Check if registered date exists for the current userId in cachedUsers
+        if (cachedUsers[userId] && cachedUsers[userId].registered) {
+          // If the registered date exists, set it in the registered element
+          registeredElement.textContent = cachedUsers[userId].registered;
+        } else {
+          // Fetch registered data if it doesn't exist in localStorage
+          try {
+            const registeredDate = await getProfileData(userId); // Wait for the data
+
+            // Store the registered date inside fetchedUsers in localStorage
+            cachedUsers[userId] = {
+              ...cachedUsers[userId], // Preserve existing data
+              registered: registeredDate // Add registered date
+            };
+
+            localStorage.setItem('fetchedUsers', JSON.stringify(cachedUsers)); // Save updated cachedUsers
+
+            registeredElement.textContent = registeredDate; // Set the fetched date
+          } catch (error) {
+            registeredElement.textContent = 'Error loading date'; // Handle error case
+            console.error(`Failed to load registered date for user ${userId}:`, error);
+          }
+        }
       });
 
       // Sort userElements array based on order
@@ -1726,6 +1769,63 @@
 `;
 
   document.head.appendChild(newChatUserListStyles);
+
+  // Function to get registered data from API or local storage cache
+  async function getProfileData(userId) {
+    return new Promise(async (resolve, reject) => {
+      // Retrieve cached user info from localStorage
+      const cachedUserInfo = JSON.parse(localStorage.getItem('fetchedUsers')) || {};
+
+      if (cachedUserInfo[userId] && cachedUserInfo[userId].registered) {
+        // If we have cached data, resolve with the human-readable date
+        resolve(convertSecondsToDate(cachedUserInfo[userId].registered.sec));
+      } else {
+        try {
+          const apiUrl = `https://klavogonki.ru/api/profile/get-index-data?userId=${userId}`;
+          const response = await fetch(apiUrl);
+
+          if (!response.ok) {
+            throw new Error('Network response was not ok.');
+          }
+
+          const data = await response.json();
+
+          if (data && data.stats && data.stats.registered) {
+            // Get the registered sec value
+            const registeredSec = data.stats.registered.sec;
+
+            // Convert the seconds to a human-readable date
+            const registeredDate = convertSecondsToDate(registeredSec);
+
+            // Store the registered data in the cached user info
+            cachedUserInfo[userId] = {
+              ...cachedUserInfo[userId], // Preserve existing data
+              registered: { sec: registeredSec } // Add registered data
+            };
+
+            // Update localStorage with the new cached data
+            localStorage.setItem('fetchedUsers', JSON.stringify(cachedUserInfo));
+
+            // Resolve with the human-readable date
+            resolve(registeredDate);
+          } else {
+            throw new Error('Invalid data format received from the API.');
+          }
+        } catch (error) {
+          console.error(`Error fetching registered data for user ${userId}:`, error);
+          reject(error);
+        }
+      }
+    });
+  }
+
+  // Function to convert seconds to a human-readable date format
+  function convertSecondsToDate(seconds) {
+    // Create a new Date object using the seconds value multiplied by 1000 (to convert to milliseconds)
+    const date = new Date(seconds * 1000);
+    // Format the date to a human-readable string (e.g., "YYYY-MM-DD HH:MM:SS")
+    return date.toISOString().slice(0, 19).replace('T', ' ');
+  }
 
   // Function to get profile summary from API or local storage cache
   async function getProfileSummary(userId) {

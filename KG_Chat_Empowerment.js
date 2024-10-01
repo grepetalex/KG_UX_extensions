@@ -1553,9 +1553,9 @@
       userDataElement.appendChild(rankElement);
       userDataElement.appendChild(registeredElement);
 
-      // Create user results container
-      const userResults = document.createElement('div');
-      userResults.className = 'user-results';
+      // Create user metrics container
+      const userMetrics = document.createElement('div');
+      userMetrics.className = 'user-metrics';
 
       const doubleSpace = '&nbsp;&nbsp;'; // Constant for double space
 
@@ -1592,14 +1592,14 @@
         element.style.cursor = 'pointer'; // Setting cursor type to help
       });
 
-      // Append all elements to userResults
-      userResults.appendChild(bestSpeedElement);
-      userResults.appendChild(ratingLevelElement);
-      userResults.appendChild(carsElement);
-      userResults.appendChild(friendsElement);
+      // Append all elements to userMetrics
+      userMetrics.appendChild(bestSpeedElement);
+      userMetrics.appendChild(ratingLevelElement);
+      userMetrics.appendChild(carsElement);
+      userMetrics.appendChild(friendsElement);
 
-      // Add a single click event listener to userResults
-      userResults.addEventListener('click', (event) => {
+      // Add a single click event listener to userMetrics
+      userMetrics.addEventListener('click', (event) => {
         const target = event.target; // Get the clicked element
 
         if (target.classList.contains('best-speed')) {
@@ -1613,9 +1613,9 @@
         }
       });
 
-      // Append user-data and user-results to the main userElement
+      // Append user-data and user-metrics to the main userElement
       userElement.appendChild(userDataElement);
-      userElement.appendChild(userResults);
+      userElement.appendChild(userMetrics);
 
       // Append the user div to the userElements array
       userElements.push({ userElement, order: rankOrder[userData.rank] || 10 });

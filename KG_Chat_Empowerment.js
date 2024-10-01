@@ -1139,180 +1139,170 @@
     const fetchedUsersData = localStorage.getItem('fetchedUsers');
 
     // Check if data exists
-    if (fetchedUsersData) {
-      // Parse JSON data
-      const users = JSON.parse(fetchedUsersData);
+    // if (fetchedUsersData) {
+    // // Parse JSON data
+    // const users = JSON.parse(fetchedUsersData);
+    // Initialize users by parsing fetched data or setting as empty object
+    let users = JSON.parse(fetchedUsersData) || {};
 
-      // Rank order mapping
-      const rankOrder = {
-        'Экстракибер': 1,
-        'Кибергонщик': 2,
-        'Супермен': 3,
-        'Маньяк': 4,
-        'Гонщик': 5,
-        'Профи': 6,
-        'Таксист': 7,
-        'Любитель': 8,
-        'Новичок': 9
-      };
+    // Rank order mapping
+    const rankOrder = {
+      'Экстракибер': 1,
+      'Кибергонщик': 2,
+      'Супермен': 3,
+      'Маньяк': 4,
+      'Гонщик': 5,
+      'Профи': 6,
+      'Таксист': 7,
+      'Любитель': 8,
+      'Новичок': 9
+    };
 
-      // Rank color mapping
-      const rankColors = {
-        'Экстракибер': '#06B4E9', // Light Blue
-        'Кибергонщик': '#5681ff', // Medium Blue
-        'Супермен': '#B543F5', // Purple
-        'Маньяк': '#DA0543', // Red
-        'Гонщик': '#FF8C00', // Orange
-        'Профи': '#C1AA00', // Yellow
-        'Таксист': '#2DAB4F', // Green
-        'Любитель': '#61B5B3', // Light Cyan
-        'Новичок': '#AFAFAF' // Grey
-      };
+    // Rank color mapping
+    const rankColors = {
+      'Экстракибер': '#06B4E9', // Light Blue
+      'Кибергонщик': '#5681ff', // Medium Blue
+      'Супермен': '#B543F5', // Purple
+      'Маньяк': '#DA0543', // Red
+      'Гонщик': '#FF8C00', // Orange
+      'Профи': '#C1AA00', // Yellow
+      'Таксист': '#2DAB4F', // Green
+      'Любитель': '#61B5B3', // Light Cyan
+      'Новичок': '#AFAFAF' // Grey
+    };
 
-      // Create a container div with class 'cached-users-panel'
-      const cachedUsersPanel = document.createElement('div');
-      cachedUsersPanel.className = 'cached-users-panel';
-      // Set initial styles
-      cachedUsersPanel.style.opacity = '0';
-      cachedUsersPanel.style.transition = 'opacity 0.6s cubic-bezier(.05,.95,.45,.95)';
+    // Create a container div with class 'cached-users-panel'
+    const cachedUsersPanel = document.createElement('div');
+    cachedUsersPanel.className = 'cached-users-panel';
+    // Set initial styles
+    cachedUsersPanel.style.opacity = '0';
+    cachedUsersPanel.style.transition = 'opacity 0.6s cubic-bezier(.05,.95,.45,.95)';
 
-      cachedUsersPanel.style.backgroundColor = '#1b1b1b';
-      cachedUsersPanel.style.setProperty('border-radius', '0.6em', 'important');
-      cachedUsersPanel.style.position = 'fixed';
-      cachedUsersPanel.style.top = '100px';
-      cachedUsersPanel.style.left = '50%';
-      cachedUsersPanel.style.transform = 'translateX(-50%)';
-      cachedUsersPanel.style.width = '90vw';
-      cachedUsersPanel.style.height = '80vh';
-      cachedUsersPanel.style.zIndex = '120';
+    cachedUsersPanel.style.backgroundColor = '#1b1b1b';
+    cachedUsersPanel.style.setProperty('border-radius', '0.6em', 'important');
+    cachedUsersPanel.style.position = 'fixed';
+    cachedUsersPanel.style.top = '100px';
+    cachedUsersPanel.style.left = '50%';
+    cachedUsersPanel.style.transform = 'translateX(-50%)';
+    cachedUsersPanel.style.width = '90vw';
+    cachedUsersPanel.style.height = '80vh';
+    cachedUsersPanel.style.zIndex = '120';
 
-      // Helper function to smoothly hide and remove the cachedUsersPanel
-      function hideCachePanel() {
-        // Set the opacity to 0 to smoothly hide the element
-        cachedUsersPanel.style.opacity = '0';
+    // Create a container div with class 'panel-header'
+    const panelHeaderContainer = document.createElement('div');
+    panelHeaderContainer.className = 'panel-header';
+    panelHeaderContainer.style.display = 'flex';
+    panelHeaderContainer.style.flexDirection = 'row';
+    panelHeaderContainer.style.justifyContent = 'space-between';
+    panelHeaderContainer.style.padding = '0.6em';
 
-        // After a short delay (or transition duration), remove the element
-        setTimeout(() => {
-          // Remove the cachedUsersPanel from the DOM
-          cachedUsersPanel.parentNode.removeChild(cachedUsersPanel);
-        }, 300);
-      }
+    // Create a container div with class 'drop-time'
+    const dropTime = document.createElement('div');
+    dropTime.className = 'drop-time';
+    dropTime.style.display = 'flex';
+    dropTime.style.justifyContent = 'center';
+    dropTime.style.alignItems = 'center';
 
-      // Create a container div with class 'panel-header'
-      const panelHeaderContainer = document.createElement('div');
-      panelHeaderContainer.className = 'panel-header';
-      panelHeaderContainer.style.display = 'flex';
-      panelHeaderContainer.style.flexDirection = 'row';
-      panelHeaderContainer.style.justifyContent = 'space-between';
-      panelHeaderContainer.style.padding = '0.6em';
+    // Create span with description for threshold time element
+    const dropTimeThresholdDescription = document.createElement('span');
+    dropTimeThresholdDescription.className = 'drop-time-threshold-description';
+    dropTimeThresholdDescription.textContent = 'Threshold';
+    dropTimeThresholdDescription.style.padding = '0.6em';
+    dropTimeThresholdDescription.style.color = 'gray';
 
-      // Create a container div with class 'drop-time'
-      const dropTime = document.createElement('div');
-      dropTime.className = 'drop-time';
-      dropTime.style.display = 'flex';
-      dropTime.style.justifyContent = 'center';
-      dropTime.style.alignItems = 'center';
+    const dropTimeThreshold = document.createElement('span');
+    dropTimeThreshold.className = 'drop-time-threshold';
+    dropTimeThreshold.style.padding = '0.6em';
+    dropTimeThreshold.style.color = 'chocolate';
+    dropTimeThreshold.style.fontFamily = "'Roboto Mono', monospace";
+    dropTimeThreshold.style.fontSize = '1.1em';
+    dropTimeThreshold.style.cursor = 'pointer';
+    // Get the value from the localStorage key 'cacheRefreshThresholdHours'
+    const storedThresholdTime = localStorage.getItem('cacheRefreshThresholdHours');
+    // Update the innerHTML with the stored value (default to '00:00:00' if the key is not set)
+    dropTimeThreshold.innerHTML = storedThresholdTime || '00:00:00';
+    // Attach click event to the dropTimeThreshold element
+    dropTimeThreshold.addEventListener('click', setCacheRefreshTime);
 
-      // Create span with description for threshold time element
-      const dropTimeThresholdDescription = document.createElement('span');
-      dropTimeThresholdDescription.className = 'drop-time-threshold-description';
-      dropTimeThresholdDescription.textContent = 'Threshold';
-      dropTimeThresholdDescription.style.padding = '0.6em';
-      dropTimeThresholdDescription.style.color = 'gray';
+    // Create span with description for expiration time element
+    const dropTimeExpirationDescription = document.createElement('span');
+    dropTimeExpirationDescription.className = 'drop-time-expiration-description';
+    dropTimeExpirationDescription.textContent = 'Countdown';
+    dropTimeExpirationDescription.style.padding = '0.6em';
+    dropTimeExpirationDescription.style.color = 'gray';
 
-      const dropTimeThreshold = document.createElement('span');
-      dropTimeThreshold.className = 'drop-time-threshold';
-      dropTimeThreshold.style.padding = '0.6em';
-      dropTimeThreshold.style.color = 'chocolate';
-      dropTimeThreshold.style.fontFamily = "'Roboto Mono', monospace";
-      dropTimeThreshold.style.fontSize = '1.1em';
-      dropTimeThreshold.style.cursor = 'pointer';
-      // Get the value from the localStorage key 'cacheRefreshThresholdHours'
-      const storedThresholdTime = localStorage.getItem('cacheRefreshThresholdHours');
-      // Update the innerHTML with the stored value (default to '00:00:00' if the key is not set)
-      dropTimeThreshold.innerHTML = storedThresholdTime || '00:00:00';
-      // Attach click event to the dropTimeThreshold element
-      dropTimeThreshold.addEventListener('click', setCacheRefreshTime);
+    const dropTimeExpiration = document.createElement('span');
+    dropTimeExpiration.className = 'drop-time-expiration';
+    dropTimeExpiration.style.padding = '0.6em';
+    dropTimeExpiration.style.color = 'antiquewhite';
+    dropTimeExpiration.style.fontFamily = "'Roboto Mono', monospace";
+    dropTimeExpiration.style.fontSize = '1.1em';
 
-      // Create span with description for expiration time element
-      const dropTimeExpirationDescription = document.createElement('span');
-      dropTimeExpirationDescription.className = 'drop-time-expiration-description';
-      dropTimeExpirationDescription.textContent = 'Countdown';
-      dropTimeExpirationDescription.style.padding = '0.6em';
-      dropTimeExpirationDescription.style.color = 'gray';
+    // Function to prompt the user for a cache refresh time and update the content
+    function setCacheRefreshTime() {
+      let isValidInput = false;
 
-      const dropTimeExpiration = document.createElement('span');
-      dropTimeExpiration.className = 'drop-time-expiration';
-      dropTimeExpiration.style.padding = '0.6em';
-      dropTimeExpiration.style.color = 'antiquewhite';
-      dropTimeExpiration.style.fontFamily = "'Roboto Mono', monospace";
-      dropTimeExpiration.style.fontSize = '1.1em';
+      // Keep prompting the user until valid input is provided or they click "Cancel"
+      while (!isValidInput) {
+        // Prompt the user for a time
+        const userInput = prompt('Enter a cache refresh time (e.g., HH, HH:mm, or HH:mm:ss):');
 
-      // Function to prompt the user for a cache refresh time and update the content
-      function setCacheRefreshTime() {
-        let isValidInput = false;
+        // Get the dropTimeThreshold element
+        const dropTimeThreshold = document.querySelector('.drop-time-threshold');
 
-        // Keep prompting the user until valid input is provided or they click "Cancel"
-        while (!isValidInput) {
-          // Prompt the user for a time
-          const userInput = prompt('Enter a cache refresh time (e.g., HH, HH:mm, or HH:mm:ss):');
+        // Validate the user input
+        const timeRegex = /^([0-9]+|[01][0-9]|2[0-4])(:([0-5]?[0-9])(:([0-5]?[0-9]))?)?$/; // HH, HH:mm, or HH:mm:ss
 
-          // Get the dropTimeThreshold element
-          const dropTimeThreshold = document.querySelector('.drop-time-threshold');
+        if (userInput === null) {
+          // User clicked "Cancel," exit the loop
+          isValidInput = true;
+        } else if (timeRegex.test(userInput)) {
+          // Valid input, extract hours and set default values for minutes and seconds if not provided
+          const formattedInput = userInput.split(':');
+          const hours = ('0' + formattedInput[0]).slice(-2);
+          const minutes = ('0' + (formattedInput[1] || '00')).slice(-2);
+          const seconds = ('0' + (formattedInput[2] || '00')).slice(-2);
 
-          // Validate the user input
-          const timeRegex = /^([0-9]+|[01][0-9]|2[0-4])(:([0-5]?[0-9])(:([0-5]?[0-9]))?)?$/; // HH, HH:mm, or HH:mm:ss
+          // Update the content of the dropTimeThreshold element
+          dropTimeThreshold.textContent = `${hours}:${minutes}:${seconds}`;
 
-          if (userInput === null) {
-            // User clicked "Cancel," exit the loop
-            isValidInput = true;
-          } else if (timeRegex.test(userInput)) {
-            // Valid input, extract hours and set default values for minutes and seconds if not provided
-            const formattedInput = userInput.split(':');
-            const hours = ('0' + formattedInput[0]).slice(-2);
-            const minutes = ('0' + (formattedInput[1] || '00')).slice(-2);
-            const seconds = ('0' + (formattedInput[2] || '00')).slice(-2);
+          // Combine the values and store in localStorage with the key 'cacheRefreshThresholdHours'
+          const formattedTime = `${hours}:${minutes}:${seconds}`;
+          localStorage.setItem('cacheRefreshThresholdHours', formattedTime);
 
-            // Update the content of the dropTimeThreshold element
-            dropTimeThreshold.textContent = `${hours}:${minutes}:${seconds}`;
+          // Remove fetchedUsers, lastClearTime, and nextClearTime keys
+          localStorage.removeItem('fetchedUsers');
+          localStorage.removeItem('lastClearTime');
+          localStorage.removeItem('nextClearTime');
 
-            // Combine the values and store in localStorage with the key 'cacheRefreshThresholdHours'
-            const formattedTime = `${hours}:${minutes}:${seconds}`;
-            localStorage.setItem('cacheRefreshThresholdHours', formattedTime);
+          // Reload the current page after (N) time after changing the cache threshold
+          setTimeout(() => location.reload(), 1000);
 
-            // Remove fetchedUsers, lastClearTime, and nextClearTime keys
-            localStorage.removeItem('fetchedUsers');
-            localStorage.removeItem('lastClearTime');
-            localStorage.removeItem('nextClearTime');
-
-            // Reload the current page after (N) time after changing the cache threshold
-            setTimeout(() => location.reload(), 1000);
-
-            // Set isValidInput to true to exit the loop
-            isValidInput = true;
-          } else {
-            // Alert the user for invalid input
-            alert('Invalid time format. Please enter a valid time in the format HH, HH:mm, or HH:mm:ss.');
-          }
+          // Set isValidInput to true to exit the loop
+          isValidInput = true;
+        } else {
+          // Alert the user for invalid input
+          alert('Invalid time format. Please enter a valid time in the format HH, HH:mm, or HH:mm:ss.');
         }
       }
+    }
 
-      // Append the childs to the drop time parent element
-      dropTime.appendChild(dropTimeThresholdDescription);
-      dropTime.appendChild(dropTimeThreshold);
-      dropTime.appendChild(dropTimeExpirationDescription);
-      dropTime.appendChild(dropTimeExpiration);
+    // Append the childs to the drop time parent element
+    dropTime.appendChild(dropTimeThresholdDescription);
+    dropTime.appendChild(dropTimeThreshold);
+    dropTime.appendChild(dropTimeExpirationDescription);
+    dropTime.appendChild(dropTimeExpiration);
 
-      // Append the drop time element to the panel header container
-      panelHeaderContainer.appendChild(dropTime);
+    // Append the drop time element to the panel header container
+    panelHeaderContainer.appendChild(dropTime);
 
-      // Create a container div with class 'panel-control-buttons'
-      const panelControlButtons = document.createElement('div');
-      panelControlButtons.className = 'panel-control-buttons';
-      panelControlButtons.style.display = 'flex';
+    // Create a container div with class 'panel-control-buttons'
+    const panelControlButtons = document.createElement('div');
+    panelControlButtons.className = 'panel-control-buttons';
+    panelControlButtons.style.display = 'flex';
 
-      // Inline SVG source for the trash icon
-      const trashIconSVG = `
+    // Inline SVG source for the trash icon
+    const trashIconSVG = `
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
       fill="none" stroke="darkorange" stroke-width="2" stroke-linecap="round"
       stroke-linejoin="round" class="feather feather-trash-2">
@@ -1322,47 +1312,47 @@
       <line x1="14" y1="11" x2="14" y2="17"></line>
     </svg>`;
 
-      // Create a clear cache button with the provided SVG icon
-      const clearCacheButton = document.createElement('div');
-      clearCacheButton.className = 'clear-cache-button';
-      clearCacheButton.innerHTML = trashIconSVG;
-      clearCacheButton.style.backgroundColor = 'brown';
-      clearCacheButton.style.width = '48px';
-      clearCacheButton.style.height = '48px';
-      clearCacheButton.style.display = 'flex';
-      clearCacheButton.style.justifyContent = 'center';
-      clearCacheButton.style.alignItems = 'center';
-      clearCacheButton.style.cursor = 'pointer';
-      clearCacheButton.style.setProperty('border-radius', '0.2em', 'important');
-      clearCacheButton.style.marginRight = '16px'; // Adjust the margin as needed
+    // Create a clear cache button with the provided SVG icon
+    const clearCacheButton = document.createElement('div');
+    clearCacheButton.className = 'clear-cache-button';
+    clearCacheButton.innerHTML = trashIconSVG;
+    clearCacheButton.style.backgroundColor = 'brown';
+    clearCacheButton.style.width = '48px';
+    clearCacheButton.style.height = '48px';
+    clearCacheButton.style.display = 'flex';
+    clearCacheButton.style.justifyContent = 'center';
+    clearCacheButton.style.alignItems = 'center';
+    clearCacheButton.style.cursor = 'pointer';
+    clearCacheButton.style.setProperty('border-radius', '0.2em', 'important');
+    clearCacheButton.style.marginRight = '16px'; // Adjust the margin as needed
 
-      // Add a hover effect with brightness transition
+    // Add a hover effect with brightness transition
+    clearCacheButton.style.filter = 'brightness(1)';
+    clearCacheButton.style.transition = 'filter 0.3s ease';
+
+    // Add a mouseover event listener to the clear cache button
+    clearCacheButton.addEventListener('mouseover', () => {
+      clearCacheButton.style.filter = 'brightness(0.8)';
+    });
+
+    // Add a mouseout event listener to the clear cache button
+    clearCacheButton.addEventListener('mouseout', () => {
       clearCacheButton.style.filter = 'brightness(1)';
-      clearCacheButton.style.transition = 'filter 0.3s ease';
+    });
 
-      // Add a mouseover event listener to the clear cache button
-      clearCacheButton.addEventListener('mouseover', () => {
-        clearCacheButton.style.filter = 'brightness(0.8)';
-      });
+    // Add a click event listener to the clear cache button
+    clearCacheButton.addEventListener('click', () => {
+      // Call the helper function to hide and remove the cachedUsersPanel
+      hideCachePanel();
+      // Clear the cache manually and reset the timer
+      refreshFetchedUsers(true, cacheRefreshThresholdHours);
+    });
 
-      // Add a mouseout event listener to the clear cache button
-      clearCacheButton.addEventListener('mouseout', () => {
-        clearCacheButton.style.filter = 'brightness(1)';
-      });
+    // Append the clear cache button to the panel header container
+    panelControlButtons.appendChild(clearCacheButton);
 
-      // Add a click event listener to the clear cache button
-      clearCacheButton.addEventListener('click', () => {
-        // Call the helper function to hide and remove the cachedUsersPanel
-        hideCachePanel();
-        // Call refreshFetchedUsers with conditionally set to false and cacheRefreshThresholdHours
-        refreshFetchedUsers(false, cacheRefreshThresholdHours);
-      });
-
-      // Append the clear cache button to the panel header container
-      panelControlButtons.appendChild(clearCacheButton);
-
-      // Inline SVG source for the "x" icon (close button)
-      const closeSVG = `
+    // Inline SVG source for the "x" icon (close button)
+    const closeSVG = `
     <svg xmlns="http://www.w3.org/2000/svg"
         width="24"
         height="24"
@@ -1377,251 +1367,338 @@
         <line x1="6" y1="6" x2="18" y2="18"></line>
     </svg>`;
 
-      // Create a close button with the provided SVG icon
-      const closePanelButton = document.createElement('div');
-      closePanelButton.className = 'close-panel-button';
-      closePanelButton.innerHTML = closeSVG;
-      closePanelButton.style.backgroundColor = 'darkolivegreen';
-      closePanelButton.style.width = '48px';
-      closePanelButton.style.height = '48px';
-      closePanelButton.style.display = 'flex';
-      closePanelButton.style.justifyContent = 'center';
-      closePanelButton.style.alignItems = 'center';
-      closePanelButton.style.cursor = 'pointer';
-      closePanelButton.style.setProperty('border-radius', '0.2em', 'important');
+    // Create a close button with the provided SVG icon
+    const closePanelButton = document.createElement('div');
+    closePanelButton.className = 'close-panel-button';
+    closePanelButton.innerHTML = closeSVG;
+    closePanelButton.style.backgroundColor = 'darkolivegreen';
+    closePanelButton.style.width = '48px';
+    closePanelButton.style.height = '48px';
+    closePanelButton.style.display = 'flex';
+    closePanelButton.style.justifyContent = 'center';
+    closePanelButton.style.alignItems = 'center';
+    closePanelButton.style.cursor = 'pointer';
+    closePanelButton.style.setProperty('border-radius', '0.2em', 'important');
 
-      // Add a hover effect with brightness transition
+    // Add a hover effect with brightness transition
+    closePanelButton.style.filter = 'brightness(1)';
+    closePanelButton.style.transition = 'filter 0.3s ease';
+
+    // Add a mouseover event listener to the close panel button
+    closePanelButton.addEventListener('mouseover', () => {
+      closePanelButton.style.filter = 'brightness(0.8)';
+    });
+
+    // Add a mouseout event listener to the close panel button
+    closePanelButton.addEventListener('mouseout', () => {
       closePanelButton.style.filter = 'brightness(1)';
-      closePanelButton.style.transition = 'filter 0.3s ease';
+    });
 
-      // Add a mouseover event listener to the close panel button
-      closePanelButton.addEventListener('mouseover', () => {
-        closePanelButton.style.filter = 'brightness(0.8)';
+    // Add a click event listener to the close panel button
+    closePanelButton.addEventListener('click', () => {
+      // Remove the cached-users-panel when the close button is clicked
+      hideCachePanel();
+    });
+
+    // Append the close button to the panel header container
+    panelControlButtons.appendChild(closePanelButton);
+
+    // Append the panel control buttons element inside the panel header container
+    panelHeaderContainer.appendChild(panelControlButtons);
+
+    // Create a container div with class 'fetched-users'
+    const fetchedUsersContainer = document.createElement('div');
+    fetchedUsersContainer.className = 'fetched-users';
+
+    // Add CSS styles for grid layout and centering
+    fetchedUsersContainer.style.display = 'grid';
+    fetchedUsersContainer.style.gridAutoFlow = 'dense'; // Allows items to fill empty spaces
+    fetchedUsersContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(180px, 1fr))';
+    fetchedUsersContainer.style.gridTemplateRows = 'repeat(auto-fill, minmax(80px, 1fr))';
+    fetchedUsersContainer.style.gap = '12px';
+    fetchedUsersContainer.style.padding = '24px';
+    fetchedUsersContainer.style.overflowY = 'auto';
+    fetchedUsersContainer.style.height = 'calc(100% - (64px + 0.6em))';
+
+    // Create an array to hold user elements
+    const userElements = [];
+
+    // Function to create clickable user link elements
+    const createUserLinkElement = (label, url) => {
+      const linkElement = document.createElement('div');
+      linkElement.innerHTML = label;
+      linkElement.style.cursor = 'pointer'; // Change cursor to pointer for clickability
+      linkElement.style.padding = '0.2em'; // Optional: add some padding
+      linkElement.style.margin = '0.2em'; // Optional: add some margin
+      linkElement.style.display = 'inline-block'; // Optional: keep them inline
+      linkElement.title = `Click to go to ${label}`; // Add tooltip
+
+      linkElement.addEventListener('click', () => {
+        window.open(url, '_blank'); // Open the URL in a new tab
       });
 
-      // Add a mouseout event listener to the close panel button
-      closePanelButton.addEventListener('mouseout', () => {
-        closePanelButton.style.filter = 'brightness(1)';
-      });
+      return linkElement;
+    };
 
-      // Add a click event listener to the close panel button
-      closePanelButton.addEventListener('click', () => {
-        // Remove the cached-users-panel when the close button is clicked
-        hideCachePanel();
-      });
+    // Iterate through each user
+    Object.keys(users).forEach(async (userId) => {
+      const userData = users[userId];
 
-      // Append the close button to the panel header container
-      panelControlButtons.appendChild(closePanelButton);
+      // Create a div for each user with class 'user'
+      const userElement = document.createElement('div');
+      userElement.className = 'user';
+      userElement.style.padding = '0.2em';
+      userElement.style.margin = '0.2em';
+      userElement.style.display = 'grid';
 
-      // Append the panel control buttons element inside the panel header container
-      panelHeaderContainer.appendChild(panelControlButtons);
+      // Base styles shared by both tracked and untracked users
+      const baseStyle = {
+        marginLeft: '8px', // Shared margin-left
+        borderRadius: '2px !important'
+      };
 
-      // Create a container div with class 'fetched-users'
-      const fetchedUsersContainer = document.createElement('div');
-      fetchedUsersContainer.className = 'fetched-users';
-
-      // Add CSS styles for grid layout and centering
-      fetchedUsersContainer.style.display = 'grid';
-      fetchedUsersContainer.style.gridAutoFlow = 'dense'; // Allows items to fill empty spaces
-      fetchedUsersContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(180px, 1fr))';
-      fetchedUsersContainer.style.gridTemplateRows = 'repeat(auto-fill, minmax(80px, 1fr))';
-      fetchedUsersContainer.style.gap = '12px';
-      fetchedUsersContainer.style.padding = '24px';
-      fetchedUsersContainer.style.overflowY = 'auto';
-      fetchedUsersContainer.style.height = 'calc(100% - (64px + 0.6em))';
-
-      // Create an array to hold user elements
-      const userElements = [];
-
-      // Iterate through each user
-      Object.keys(users).forEach(async (userId) => {
-        const userData = users[userId];
-
-        // Create a div for each user with class 'user'
-        const userElement = document.createElement('div');
-        userElement.className = 'user';
-        userElement.style.padding = '0.2em';
-        userElement.style.margin = '0.2em';
-        userElement.style.display = 'grid';
-
-        // Base styles shared by both tracked and untracked users
-        const baseStyle = {
-          marginLeft: '8px', // Shared margin-left
-          borderRadius: '2px !important'
-        };
-
-        // Define styles for tracked and untracked users
-        const styles = {
-          tracked: {
-            ...baseStyle, // Spread the base styles
-            color: 'greenyellow',
-            backgroundColor: 'darkgreen',
-            fontWeight: 'bold',
-            padding: '0 6px'
-          },
-          untracked: {
-            ...baseStyle, // Spread the base styles
-            color: 'orange',
-            fontWeight: 'normal'
-          }
-        };
-
-        // Choose styles based on whether the user is tracked or untracked
-        const chosenStyles = userData.tracked ? styles.tracked : styles.untracked;
-
-        // Function to generate the styles string
-        const generateStylesString = (styles) => {
-          return Object.entries(styles)
-            .map(([key, value]) => {
-              // Convert camelCase to kebab-case for CSS property names
-              const cssProperty = key.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-              return `${cssProperty}: ${value}`;
-            })
-            .join('; ');
-        };
-
-        const loginElement = document.createElement('a');
-        loginElement.className = 'login';
-        loginElement.textContent = userData.login;
-
-        // Concatenate visits if they exist
-        if (userData.visits !== undefined) {
-          loginElement.innerHTML += `<span style="${generateStylesString(chosenStyles)}">${userData.visits}</span>`;
+      // Define styles for tracked and untracked users
+      const styles = {
+        tracked: {
+          ...baseStyle, // Spread the base styles
+          color: 'greenyellow',
+          backgroundColor: 'darkgreen',
+          fontWeight: 'bold',
+          padding: '0 6px'
+        },
+        untracked: {
+          ...baseStyle, // Spread the base styles
+          color: 'orange',
+          fontWeight: 'normal'
         }
+      };
 
-        loginElement.href = `https://klavogonki.ru/profile/${userId}`;
-        loginElement.target = '_blank';
+      // Choose styles based on whether the user is tracked or untracked
+      const chosenStyles = userData.tracked ? styles.tracked : styles.untracked;
+
+      // Function to generate the styles string
+      const generateStylesString = (styles) => {
+        return Object.entries(styles)
+          .map(([key, value]) => {
+            // Convert camelCase to kebab-case for CSS property names
+            const cssProperty = key.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+            return `${cssProperty}: ${value}`;
+          })
+          .join('; ');
+      };
+
+      const loginElement = document.createElement('a');
+      loginElement.className = 'login';
+      loginElement.textContent = userData.login;
+
+      // Concatenate visits if they exist
+      if (userData.visits !== undefined) {
+        loginElement.innerHTML += `<span style="${generateStylesString(chosenStyles)}">${userData.visits}</span>`;
+      }
+
+      loginElement.href = `https://klavogonki.ru/profile/${userId}`;
+      loginElement.target = '_blank';
+      loginElement.style.setProperty('color', 'skyblue', 'important');
+      loginElement.style.textDecoration = 'none';
+      loginElement.style.fontFamily = "Montserrat";
+      loginElement.style.transition = 'color 0.3s ease'; // Add smooth transition
+
+      // Add underline on hover and change color to a lighter shade of skyblue
+      loginElement.addEventListener('mouseover', () => {
+        loginElement.style.setProperty('color', 'cornsilk', 'important');
+      });
+      loginElement.addEventListener('mouseout', () => {
         loginElement.style.setProperty('color', 'skyblue', 'important');
-        loginElement.style.textDecoration = 'none';
-        loginElement.style.fontFamily = "Montserrat";
-        loginElement.style.transition = 'color 0.3s ease'; // Add smooth transition
-
-        // Add underline on hover and change color to a lighter shade of skyblue
-        loginElement.addEventListener('mouseover', () => {
-          loginElement.style.setProperty('color', 'cornsilk', 'important');
-        });
-        loginElement.addEventListener('mouseout', () => {
-          loginElement.style.setProperty('color', 'skyblue', 'important');
-        });
-
-        const rankElement = document.createElement('div');
-        rankElement.className = 'rank';
-        rankElement.textContent = userData.rank;
-        rankElement.style.color = rankColors[userData.rank] || 'white';
-
-        const userResults = document.createElement('div');
-        userResults.className = 'user-results';
-
-        // Create elements for best speed and rating level
-        const bestSpeedElement = document.createElement('span');
-        bestSpeedElement.style.color = 'cyan';
-        bestSpeedElement.innerHTML = `🚀${userData.bestSpeed || 0} `;
-
-        const ratingLevelElement = document.createElement('span');
-        ratingLevelElement.style.color = 'gold';
-        ratingLevelElement.innerHTML = `⭐${userData.ratingLevel || 0} `;
-
-        // Append both elements to userResults
-        userResults.appendChild(bestSpeedElement);
-        userResults.appendChild(ratingLevelElement);
-
-        const registeredElement = document.createElement('div');
-        registeredElement.className = 'registered';
-        registeredElement.textContent = userData.registered;
-        registeredElement.style.color = 'cadetblue';
-        registeredElement.style.fontSize = '12px';
-
-        // Store original content
-        const originalContent = registeredElement.textContent;
-        let hoverTimer; // Timer for managing mouse hover delay
-
-        // Add mouseover event with 300ms delay
-        registeredElement.addEventListener('mouseover', () => {
-          // Clear any existing timer
-          clearTimeout(hoverTimer);
-          // Set a timer to show the time after 300 ms
-          hoverTimer = setTimeout(() => {
-            registeredElement.textContent = calculateTimeOnSite(userData.registered); // Show time after delay
-          }, 300);
-        });
-
-        // Add mouseout event to revert back to the original content
-        registeredElement.addEventListener('mouseout', () => {
-          // Clear the timer if mouse leaves before the time is displayed
-          clearTimeout(hoverTimer);
-          registeredElement.textContent = originalContent; // Restore original content
-        });
-
-        // Append all elements to userElement
-        userElement.appendChild(loginElement);
-        userElement.appendChild(rankElement);
-        userElement.appendChild(userResults);
-        userElement.appendChild(registeredElement);
-
-        // Append the user div to the userElements array
-        userElements.push({ userElement, order: rankOrder[userData.rank] || 10 });
       });
 
-      // Sort userElements array based on order
-      userElements.sort((a, b) => a.order - b.order);
+      const rankElement = document.createElement('div');
+      rankElement.className = 'rank';
+      rankElement.textContent = userData.rank;
+      rankElement.style.color = rankColors[userData.rank] || 'white';
 
-      // Append sorted user elements to the fetched-users container
-      userElements.forEach(({ userElement }) => {
-        fetchedUsersContainer.appendChild(userElement);
+      // Create user-data container
+      const userDataElement = document.createElement('div');
+      userDataElement.className = 'user-data';
+
+      // Append login, rank, and registered elements to user-data
+      const registeredElement = document.createElement('div');
+      registeredElement.className = 'registered';
+      registeredElement.textContent = userData.registered;
+      registeredElement.style.color = 'cadetblue';
+      registeredElement.style.fontSize = '12px';
+
+      // Store original content for registered element
+      const originalContent = registeredElement.textContent;
+      let hoverTimer; // Timer for managing mouse hover delay
+
+      // Add mouseover event with 300ms delay
+      registeredElement.addEventListener('mouseover', () => {
+        // Clear any existing timer
+        clearTimeout(hoverTimer);
+        // Set a timer to show the time after 300 ms
+        hoverTimer = setTimeout(() => {
+          registeredElement.textContent = calculateTimeOnSite(userData.registered); // Show time after delay
+        }, 300);
       });
 
-      // Append the panel-header container to the cached-users-panel
-      cachedUsersPanel.appendChild(panelHeaderContainer);
-      // Append the fetched-users container to the cached-users-panel
-      cachedUsersPanel.appendChild(fetchedUsersContainer);
+      // Add mouseout event to revert back to the original content
+      registeredElement.addEventListener('mouseout', () => {
+        // Clear the timer if mouse leaves before the time is displayed
+        clearTimeout(hoverTimer);
+        registeredElement.textContent = originalContent; // Restore original content
+      });
 
-      // Append the cached-users-panel to the body
-      document.body.appendChild(cachedUsersPanel);
+      // Append login, rank, and registered to userDataElement
+      userDataElement.appendChild(loginElement);
+      userDataElement.appendChild(rankElement);
+      userDataElement.appendChild(registeredElement);
 
-      // Trigger a reflow by accessing offsetHeight to apply the initial styles
-      cachedUsersPanel.offsetHeight;
+      // Create user results container
+      const userResults = document.createElement('div');
+      userResults.className = 'user-results';
 
-      // Update the opacity to 1 to smoothly reveal the element
-      cachedUsersPanel.style.opacity = '1';
+      const doubleSpace = '&nbsp;&nbsp;'; // Constant for double space
 
-      // Function to update the remaining time
-      function updateRemainingTime() {
-        const lastClearTime = localStorage.getItem('lastClearTime');
-        const nextClearTime = localStorage.getItem('nextClearTime');
-        const dropTimeExpiration = document.querySelector('.drop-time-expiration');
+      // Create elements for best speed, rating level, cars count, and friends count
+      const bestSpeedElement = document.createElement('span');
+      bestSpeedElement.style.color = 'cyan';
+      bestSpeedElement.innerHTML = `🚀${userData.bestSpeed || 0}${doubleSpace}`; // Adding rocket icon for speed with double space
+      bestSpeedElement.title = 'Best speed';
+      bestSpeedElement.className = 'best-speed'; // Assigning class
 
-        if (lastClearTime && nextClearTime && dropTimeExpiration) {
-          const currentTime = new Date().getTime();
+      const ratingLevelElement = document.createElement('span');
+      ratingLevelElement.style.color = 'gold';
+      ratingLevelElement.innerHTML = `⭐${userData.ratingLevel || 0}${doubleSpace}`; // Adding star icon for rating
+      ratingLevelElement.title = 'Rating level';
+      ratingLevelElement.className = 'rating-level'; // Assigning class
 
-          // Calculate the remaining time until the next cache clear
-          const remainingTime = nextClearTime - currentTime;
+      const carsElement = document.createElement('span');
+      carsElement.style.color = 'lightblue';
+      carsElement.innerHTML = `🚖${userData.cars || 0}${doubleSpace}`; // Adding car icon for cars with double space
+      carsElement.title = 'Cars count';
+      carsElement.className = 'cars-count'; // Assigning class
 
-          // If remaining time is zero or less, execute the refreshFetchedUsers function
-          remainingTime <= 0
-            ? refreshFetchedUsers(false, cacheRefreshThresholdHours)
-            : updatedropTimeExpiration(dropTimeExpiration, remainingTime);
+      const friendsElement = document.createElement('span');
+      friendsElement.style.color = 'lightgreen';
+      friendsElement.innerHTML = `🤝${userData.friends || 0}${doubleSpace}`; // Adding friends icon with double space
+      friendsElement.title = 'Friends count';
+      friendsElement.className = 'friends-count'; // Assigning class
+
+      // Array of elements
+      const elements = [bestSpeedElement, ratingLevelElement, carsElement, friendsElement];
+
+      // Apply cursor style to all elements
+      elements.forEach(element => {
+        element.style.cursor = 'pointer'; // Setting cursor type to help
+      });
+
+      // Append all elements to userResults
+      userResults.appendChild(bestSpeedElement);
+      userResults.appendChild(ratingLevelElement);
+      userResults.appendChild(carsElement);
+      userResults.appendChild(friendsElement);
+
+      // Add a single click event listener to userResults
+      userResults.addEventListener('click', (event) => {
+        const target = event.target; // Get the clicked element
+
+        if (target.classList.contains('best-speed')) {
+          window.open(`https://klavogonki.ru/u/#/${userId}/stats/normal/`, '_blank'); // Use actual userId
+        } else if (target.classList.contains('rating-level')) {
+          window.open(`https://klavogonki.ru/top/rating/today?s=${userData.login}`, '_blank'); // Use userData.login
+        } else if (target.classList.contains('cars-count')) {
+          window.open(`https://klavogonki.ru/u/#/${userId}/car/`, '_blank'); // Use actual userId
+        } else if (target.classList.contains('friends-count')) {
+          window.open(`https://klavogonki.ru/u/#/${userId}/friends/list/`, '_blank'); // Use actual userId
         }
+      });
+
+      // Append user-data and user-results to the main userElement
+      userElement.appendChild(userDataElement);
+      userElement.appendChild(userResults);
+
+      // Append the user div to the userElements array
+      userElements.push({ userElement, order: rankOrder[userData.rank] || 10 });
+    });
+
+    // Sort userElements array based on order
+    userElements.sort((a, b) => a.order - b.order);
+
+    // Append sorted user elements to the fetched-users container
+    userElements.forEach(({ userElement }) => {
+      fetchedUsersContainer.appendChild(userElement);
+    });
+
+    // Append the panel-header container to the cached-users-panel
+    cachedUsersPanel.appendChild(panelHeaderContainer);
+    // Append the fetched-users container to the cached-users-panel
+    cachedUsersPanel.appendChild(fetchedUsersContainer);
+
+    // Append the cached-users-panel to the body
+    document.body.appendChild(cachedUsersPanel);
+
+    // Trigger a reflow by accessing offsetHeight to apply the initial styles
+    cachedUsersPanel.offsetHeight;
+
+    // Update the opacity to 1 to smoothly reveal the element
+    cachedUsersPanel.style.opacity = '1';
+
+    // Function to update the remaining time
+    function updateRemainingTime() {
+      const lastClearTime = localStorage.getItem('lastClearTime');
+      const nextClearTime = localStorage.getItem('nextClearTime');
+      const dropTimeExpiration = document.querySelector('.drop-time-expiration');
+
+      if (lastClearTime && nextClearTime && dropTimeExpiration) {
+        const currentTime = new Date().getTime();
+
+        // Calculate the remaining time until the next cache clear
+        const remainingTime = nextClearTime - currentTime;
+
+        // If remaining time is zero or less, execute the refreshFetchedUsers function
+        remainingTime <= 0
+          ? refreshFetchedUsers(true, cacheRefreshThresholdHours)
+          : updatedropTimeExpiration(dropTimeExpiration, remainingTime);
       }
+    }
 
-      // Function to update the drop-time-expiration span
-      function updatedropTimeExpiration(dropTimeExpiration, remainingTime) {
-        // Calculate hours, minutes, and seconds
-        const hours = String(Math.floor(remainingTime / (60 * 60 * 1000))).padStart(2, '0');
-        const minutes = String(Math.floor((remainingTime % (60 * 60 * 1000)) / (60 * 1000))).padStart(2, '0');
-        const seconds = String(Math.floor((remainingTime % (60 * 1000)) / 1000)).padStart(2, '0');
+    // Function to update the drop-time-expiration span
+    function updatedropTimeExpiration(dropTimeExpiration, remainingTime) {
+      // Calculate hours, minutes, and seconds
+      const hours = String(Math.floor(remainingTime / (60 * 60 * 1000))).padStart(2, '0');
+      const minutes = String(Math.floor((remainingTime % (60 * 60 * 1000)) / (60 * 1000))).padStart(2, '0');
+      const seconds = String(Math.floor((remainingTime % (60 * 1000)) / 1000)).padStart(2, '0');
 
-        // Create a custom formatted string
-        const remainingTimeString = `${hours}:${minutes}:${seconds}`;
+      // Create a custom formatted string
+      const remainingTimeString = `${hours}:${minutes}:${seconds}`;
 
-        // Update the drop-time-expiration span using the cached reference
-        dropTimeExpiration.textContent = remainingTimeString;
-      }
+      // Update the drop-time-expiration span using the cached reference
+      dropTimeExpiration.textContent = remainingTimeString;
+    }
 
-      // Call the function to update the remaining time every second
-      setInterval(updateRemainingTime, 1000);
+    // Call the function to update the remaining time every second
+    setInterval(updateRemainingTime, 1000);
 
-      // Initial update
-      updateRemainingTime();
+    // Initial update
+    updateRemainingTime();
+    // }
+  }
+
+  // Global function to smoothly hide and remove the cachedUsersPanel
+  function hideCachePanel() {
+    const cachedUsersPanel = document.querySelector('.cached-users-panel');
+
+    if (cachedUsersPanel) {
+      // Set the opacity to 0 to smoothly hide the element
+      cachedUsersPanel.style.opacity = '0';
+
+      // After a short delay (or transition duration), remove the element
+      setTimeout(() => {
+        if (cachedUsersPanel.parentNode) {
+          // Remove the cachedUsersPanel from the DOM
+          cachedUsersPanel.parentNode.removeChild(cachedUsersPanel);
+        }
+      }, 300); // Adjust the delay as needed
     }
   }
 
@@ -1769,7 +1846,7 @@
 
   // Function to validate required user data
   function validateUserData(user) {
-    const requiredFields = ['rank', 'login', 'registered', 'bestSpeed', 'ratingLevel'];
+    const requiredFields = ['rank', 'login', 'registered', 'bestSpeed', 'ratingLevel', 'friends', 'cars'];
     return user && typeof user === 'object' && requiredFields.every(field => user?.[field] !== undefined);
   }
 
@@ -1788,6 +1865,8 @@
           registeredDate: user.registered,
           bestSpeed: user.bestSpeed,
           ratingLevel: user.ratingLevel,
+          friends: user.friends, // Use cached friends count
+          cars: user.cars, // Use cached cars count
         });
       } else {
         try {
@@ -1822,8 +1901,10 @@
               : 'Invalid Date';
 
             // Extract new fields
-            const bestSpeed = profileData.stats.best_speed;
-            const ratingLevel = profileData.stats.rating_level;
+            const bestSpeed = profileData.stats.best_speed || 0; // Default to 0 if undefined
+            const ratingLevel = profileData.stats.rating_level || 0; // Default to 0 if undefined
+            const friends = profileData.stats.friends_cnt || 0; // Extract friends count
+            const cars = profileData.stats.cars_cnt || 0; // Extract cars count
 
             // Cache the fetched data with the converted registered date
             cachedUserInfo[userId] = {
@@ -1832,6 +1913,8 @@
               registered: registered,
               bestSpeed: bestSpeed,
               ratingLevel: ratingLevel,
+              friends: friends, // Cache friends count
+              cars: cars, // Cache cars count
             };
 
             // Update localStorage with the new cached data
@@ -1844,6 +1927,8 @@
               registeredDate: registered,
               bestSpeed: bestSpeed,
               ratingLevel: ratingLevel,
+              friends: friends,
+              cars: cars,
             });
           } else {
             throw new Error('Invalid data format received from the API.');
@@ -2199,27 +2284,36 @@
         // Check if the user already exists in the updated user list
         if (!existingUserIds.has(userId)) {
           try {
-            // Retrieve the user's profile data (rank, login, registered date, best speed, rating level)
-            const { rank: mainTitle, login, registeredDate, bestSpeed, ratingLevel } = await getUserProfileData(userId);
+            // Retrieve the user's profile data (rank, login, registered date, best speed, rating level, friends, cars)
+            const { rank: mainTitle, login, registeredDate, bestSpeed, ratingLevel, friends, cars } = await getUserProfileData(userId);
 
-            // If the user data is not already stored in the fetchedUsers object (i.e., it's the first time we're fetching this user's data),
-            // initialize the user entry with the fetched rank and login information.
+            // If the user data is not already stored in the fetchedUsers object
             if (!fetchedUsers[userId]) {
-              // If user is not already in fetchedUsers, set rank, login, registeredDate, bestSpeed, and ratingLevel
-              fetchedUsers[userId] = { rank: mainTitle, login, registered: registeredDate, bestSpeed, ratingLevel };
+              // Set rank, login, registeredDate, bestSpeed, ratingLevel, friends, and cars
+              fetchedUsers[userId] = {
+                rank: mainTitle,
+                login,
+                registered: registeredDate,
+                bestSpeed,
+                ratingLevel,
+                friends,
+                cars
+              };
             } else {
-              // If user is already in fetchedUsers, update the rank, login, registeredDate, bestSpeed, and ratingLevel
+              // Update the user's data
               fetchedUsers[userId].rank = mainTitle;
               fetchedUsers[userId].login = login;
               fetchedUsers[userId].registered = registeredDate;
               fetchedUsers[userId].bestSpeed = bestSpeed;
               fetchedUsers[userId].ratingLevel = ratingLevel;
+              fetchedUsers[userId].friends = friends;
+              fetchedUsers[userId].cars = cars;
             }
 
             // If actionType is 'enter' and retrievedLogin === userName, multiply the visits for the entered user
             if (actionType === 'enter' && retrievedLogin === userName) {
               fetchedUsers[userId].visits = (fetchedUsers[userId].visits || 0) + 1;
-              // Check if the user is in the usersToTrack array and add additional properties if needed
+              // Check if the user is in the usersToTrack array
               fetchedUsers[userId].tracked = usersToTrack.some(userToTrack => userToTrack.name === retrievedLogin);
             }
 
@@ -2253,7 +2347,7 @@
     } catch (error) {
       console.error('Error refreshing user list:', error);
     }
-  } // refreshUserList END
+  }
 
   // Helper function to convert time string to single hours
   function convertToSingleHours(timeString) {
@@ -2276,70 +2370,28 @@
   // Convert the value to single hours
   let cacheRefreshThresholdHours = convertToSingleHours(storedFresholdTimeKey);
 
-  // Function to refresh fetched users with optional conditional behavior
-  // @param {boolean} conditionally - If true, clears the cache conditionally; if false, clears unconditionally (default is true)
-  // @param {number} thresholdHours - Time threshold in hours for conditional cache clearing (default is 8 hours)
-  function refreshFetchedUsers(conditionally = true, thresholdHours) {
-
-    const shouldShowCachePanel = JSON.parse(localStorage.getItem('shouldShowCachePanel')) ??
-      (() => { localStorage.setItem('shouldShowCachePanel', false); return false; })();
-
-    // Check if shouldShowCachePanel is true, then call the showCachePanel function
-    if (shouldShowCachePanel) {
-      // Call showCachePanel function to show the cache panel
-      setTimeout(() => showCachePanel(), 2000);
-
-      // Set shouldShowCachePanel to false after calling showCachePanel
-      localStorage.setItem('shouldShowCachePanel', false);
-    }
-
-    // Set the default threshold to 24 hours if not provided at the function call
-    thresholdHours = thresholdHours !== undefined ? thresholdHours : 8;
-
+  // Function to refresh or manually clear fetched users and reset the timer
+  // @param {boolean} isManual - If true, clears cache unconditionally; if false, clears based on threshold (default is false)
+  // @param {number} thresholdHours - Time threshold in hours for automatic cache clearing (default is 8 hours)
+  function refreshFetchedUsers(isManual = false, thresholdHours = 8) {
     // Retrieve the last clear time from localStorage
     const lastClearTime = localStorage.getItem('lastClearTime');
+    const timeElapsed = lastClearTime ? (new Date().getTime() - lastClearTime) / (1000 * 60 * 60) : Infinity;
 
-    // Check if cache clearing should be done conditionally
-    if (conditionally) {
-      // Determine if the cache should be cleared based on the time elapsed
-      const shouldClearCache = !lastClearTime || (new Date().getTime().toString() - lastClearTime) / (1000 * 60 * 60) >= thresholdHours;
-
-      // If cache should be cleared, perform the following actions
-      if (shouldClearCache) {
-        // Conditionally remove 'fetchedUsers' and set 'lastClearTime'
-        localStorage.removeItem('fetchedUsers');
-        localStorage.setItem('lastClearTime', new Date().getTime().toString());
-
-        // Set the 'nextClearTime' in localStorage
-        const nextClearTime = new Date().getTime() + thresholdHours * 60 * 60 * 1000;
-        localStorage.setItem('nextClearTime', nextClearTime.toString());
-
-        // Set shouldShowCachePanel to true after performing automatic cache clearing
-        localStorage.setItem('shouldShowCachePanel', true);
-
-        // Alert for automatic cache clearing triggered by the function
-        alert(`Automatic cache clearing is triggered by the function. Next clearing time: ${new Date(nextClearTime)}`);
-
-        // Reload the current page after (N) time conditionally
-        setTimeout(() => location.reload(), 1000);
-      }
-    } else {
-      // Unconditionally remove 'fetchedUsers' and set 'lastClearTime'
+    // If clearing manually or the time threshold has been reached, clear the cache
+    if (isManual || timeElapsed >= thresholdHours) {
       localStorage.removeItem('fetchedUsers');
-      localStorage.setItem('lastClearTime', new Date().getTime().toString());
 
-      // Set the 'nextClearTime' in localStorage
+      // Reset the timer by updating 'lastClearTime' and 'nextClearTime'
       const nextClearTime = new Date().getTime() + thresholdHours * 60 * 60 * 1000;
+      localStorage.setItem('lastClearTime', new Date().getTime().toString());
       localStorage.setItem('nextClearTime', nextClearTime.toString());
 
-      // Set shouldShowCachePanel to true after performing manual cache clearing
-      localStorage.setItem('shouldShowCachePanel', true);
+      // const message = isManual
+      //   ? `Cache manually cleared. Next clearing time: ${new Date(nextClearTime)}`
+      //   : `Cache automatically cleared. Next clearing time: ${new Date(nextClearTime)}`;
 
-      // Alert for manual cache clearing triggered by the user
-      alert(`Manual cache clearing is triggered by the user. Next clearing time: ${new Date(nextClearTime)}`);
-
-      // Reload the current page after (N) time unconditionally
-      setTimeout(() => location.reload(), 1000);
+      // alert(message);
     }
   }
 
@@ -5147,7 +5199,7 @@
         scrollMessages();
 
         // Call the function to refresh the user list and clear the cache if needed
-        refreshFetchedUsers(true, cacheRefreshThresholdHours);
+        refreshFetchedUsers(false, cacheRefreshThresholdHours);
 
         // Refresh experimental custom chat user list on old list changes
         refreshUserList();

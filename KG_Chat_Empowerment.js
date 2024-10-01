@@ -635,7 +635,8 @@
   const trustedDomains = [
     'imgur.com',
     'pikabu.ru',
-    'userapi.com' // VK images
+    'userapi.com', // vk.com
+    'ibb.co' // imgbb.com
   ];
 
   /**

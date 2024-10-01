@@ -1422,7 +1422,7 @@
       // Add CSS styles for grid layout and centering
       fetchedUsersContainer.style.display = 'grid';
       fetchedUsersContainer.style.gridAutoFlow = 'dense'; // Allows items to fill empty spaces
-      fetchedUsersContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(140px, 1fr))';
+      fetchedUsersContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(180px, 1fr))';
       fetchedUsersContainer.style.gridTemplateRows = 'repeat(auto-fill, minmax(80px, 1fr))';
       fetchedUsersContainer.style.gap = '12px';
       fetchedUsersContainer.style.padding = '24px';
@@ -1431,9 +1431,6 @@
 
       // Create an array to hold user elements
       const userElements = [];
-
-      // Retrieve the cached users from localStorage
-      const cachedUsers = JSON.parse(localStorage.getItem('fetchedUsers')) || {}; // Ensure this is initialized
 
       // Iterate through each user
       Object.keys(users).forEach(async (userId) => {
@@ -1445,12 +1442,6 @@
         userElement.style.padding = '0.2em';
         userElement.style.margin = '0.2em';
         userElement.style.display = 'grid';
-
-        // Create anchor element for userId
-        const userIdAnchor = document.createElement('a');
-        userIdAnchor.className = 'id';
-
-        let userIdForConcatenation = userId;
 
         // Base styles shared by both tracked and untracked users
         const baseStyle = {
@@ -1488,30 +1479,28 @@
             .join('; ');
         };
 
-        // Generate the styles string for the chosen styles
-        const decidedStyles = generateStylesString(chosenStyles);
+        const loginElement = document.createElement('a');
+        loginElement.className = 'login';
+        loginElement.textContent = userData.login;
 
-        // Concatenate user ID with visits, applying the chosen styles
+        // Concatenate visits if they exist
         if (userData.visits !== undefined) {
-          userIdForConcatenation += `<span style="${decidedStyles}">${userData.visits}</span>`;
+          loginElement.innerHTML += `<span style="${generateStylesString(chosenStyles)}">${userData.visits}</span>`;
         }
 
-        userIdAnchor.innerHTML = userIdForConcatenation;
-
-        userIdAnchor.href = `https://klavogonki.ru/profile/${userId}`;
-        userIdAnchor.target = '_blank';
-        userIdAnchor.style.setProperty('color', 'skyblue', 'important');
-        userIdAnchor.style.textDecoration = 'none';
-        userIdAnchor.style.fontFamily = "'Roboto Mono', monospace";
-        userIdAnchor.style.fontSize = '1.1em';
-        userIdAnchor.style.transition = 'color 0.3s ease'; // Add smooth transition
+        loginElement.href = `https://klavogonki.ru/profile/${userId}`;
+        loginElement.target = '_blank';
+        loginElement.style.setProperty('color', 'skyblue', 'important');
+        loginElement.style.textDecoration = 'none';
+        loginElement.style.fontFamily = "Montserrat";
+        loginElement.style.transition = 'color 0.3s ease'; // Add smooth transition
 
         // Add underline on hover and change color to a lighter shade of skyblue
-        userIdAnchor.addEventListener('mouseover', () => {
-          userIdAnchor.style.setProperty('color', 'cornsilk', 'important');
+        loginElement.addEventListener('mouseover', () => {
+          loginElement.style.setProperty('color', 'cornsilk', 'important');
         });
-        userIdAnchor.addEventListener('mouseout', () => {
-          userIdAnchor.style.setProperty('color', 'skyblue', 'important');
+        loginElement.addEventListener('mouseout', () => {
+          loginElement.style.setProperty('color', 'skyblue', 'important');
         });
 
         const rankElement = document.createElement('div');
@@ -1519,50 +1508,57 @@
         rankElement.textContent = userData.rank;
         rankElement.style.color = rankColors[userData.rank] || 'white';
 
-        const loginElement = document.createElement('div');
-        loginElement.className = 'login';
-        loginElement.textContent = userData.login;
-        loginElement.style.color = 'antiquewhite';
+        const userResults = document.createElement('div');
+        userResults.className = 'user-results';
 
-        // Updated registeredElement with new styles
+        // Create elements for best speed and rating level
+        const bestSpeedElement = document.createElement('span');
+        bestSpeedElement.style.color = 'cyan';
+        bestSpeedElement.innerHTML = `🚀${userData.bestSpeed || 0} `;
+
+        const ratingLevelElement = document.createElement('span');
+        ratingLevelElement.style.color = 'gold';
+        ratingLevelElement.innerHTML = `⭐${userData.ratingLevel || 0} `;
+
+        // Append both elements to userResults
+        userResults.appendChild(bestSpeedElement);
+        userResults.appendChild(ratingLevelElement);
+
         const registeredElement = document.createElement('div');
         registeredElement.className = 'registered';
-        registeredElement.textContent = 'Loading...'; // Set a loading text initially
-        registeredElement.style.color = 'cadetblue'; // Updated color
-        registeredElement.style.fontSize = '12px'; // Updated font size
+        registeredElement.textContent = userData.registered;
+        registeredElement.style.color = 'cadetblue';
+        registeredElement.style.fontSize = '12px';
 
-        // Append anchor, rank, login, registered divs to the user div
-        userElement.appendChild(userIdAnchor);
-        userElement.appendChild(rankElement);
+        // Store original content
+        const originalContent = registeredElement.textContent;
+        let hoverTimer; // Timer for managing mouse hover delay
+
+        // Add mouseover event with 300ms delay
+        registeredElement.addEventListener('mouseover', () => {
+          // Clear any existing timer
+          clearTimeout(hoverTimer);
+          // Set a timer to show the time after 300 ms
+          hoverTimer = setTimeout(() => {
+            registeredElement.textContent = calculateTimeOnSite(userData.registered); // Show time after delay
+          }, 300);
+        });
+
+        // Add mouseout event to revert back to the original content
+        registeredElement.addEventListener('mouseout', () => {
+          // Clear the timer if mouse leaves before the time is displayed
+          clearTimeout(hoverTimer);
+          registeredElement.textContent = originalContent; // Restore original content
+        });
+
+        // Append all elements to userElement
         userElement.appendChild(loginElement);
+        userElement.appendChild(rankElement);
+        userElement.appendChild(userResults);
         userElement.appendChild(registeredElement);
 
         // Append the user div to the userElements array
         userElements.push({ userElement, order: rankOrder[userData.rank] || 10 });
-
-        // Check if registered date exists for the current userId in cachedUsers
-        if (cachedUsers[userId] && cachedUsers[userId].registered) {
-          // If the registered date exists, set it in the registered element
-          registeredElement.textContent = cachedUsers[userId].registered;
-        } else {
-          // Fetch registered data if it doesn't exist in localStorage
-          try {
-            const registeredDate = await getProfileData(userId); // Wait for the data
-
-            // Store the registered date inside fetchedUsers in localStorage
-            cachedUsers[userId] = {
-              ...cachedUsers[userId], // Preserve existing data
-              registered: registeredDate // Add registered date
-            };
-
-            localStorage.setItem('fetchedUsers', JSON.stringify(cachedUsers)); // Save updated cachedUsers
-
-            registeredElement.textContent = registeredDate; // Set the fetched date
-          } catch (error) {
-            registeredElement.textContent = 'Error loading date'; // Handle error case
-            console.error(`Failed to load registered date for user ${userId}:`, error);
-          }
-        }
       });
 
       // Sort userElements array based on order
@@ -1770,49 +1766,89 @@
 
   document.head.appendChild(newChatUserListStyles);
 
-  // Function to get registered data from API or local storage cache
-  async function getProfileData(userId) {
-    return new Promise(async (resolve, reject) => {
-      // Retrieve cached user info from localStorage
-      const cachedUserInfo = JSON.parse(localStorage.getItem('fetchedUsers')) || {};
+  // Function to validate required user data
+  function validateUserData(user) {
+    const requiredFields = ['rank', 'login', 'registered', 'bestSpeed', 'ratingLevel'];
+    return user && typeof user === 'object' && requiredFields.every(field => user?.[field] !== undefined);
+  }
 
-      if (cachedUserInfo[userId] && cachedUserInfo[userId].registered) {
-        // If we have cached data, resolve with the human-readable date
-        resolve(convertSecondsToDate(cachedUserInfo[userId].registered.sec));
+  // Function to get profile summary and registration data
+  async function getUserProfileData(userId) {
+    return new Promise(async (resolve, reject) => {
+      const cachedUserInfo = JSON.parse(localStorage.getItem('fetchedUsers')) || {};
+      const user = cachedUserInfo[userId];
+
+      // Validate if user data exists and has the required properties
+      if (validateUserData(user)) {
+        // If all data is cached, resolve with the cached data
+        resolve({
+          rank: user.rank,
+          login: user.login,
+          registeredDate: user.registered,
+          bestSpeed: user.bestSpeed,
+          ratingLevel: user.ratingLevel,
+        });
       } else {
         try {
-          const apiUrl = `https://klavogonki.ru/api/profile/get-index-data?userId=${userId}`;
-          const response = await fetch(apiUrl);
+          // Fetch profile summary and registered date
+          const summaryApiUrl = `https://klavogonki.ru/api/profile/get-summary?id=${userId}`;
+          const profileApiUrl = `https://klavogonki.ru/api/profile/get-index-data?userId=${userId}`;
 
-          if (!response.ok) {
-            throw new Error('Network response was not ok.');
+          // Fetch both profile summary and registration data in parallel
+          const [summaryResponse, profileResponse] = await Promise.all([
+            fetch(summaryApiUrl),
+            fetch(profileApiUrl),
+          ]);
+
+          // Check if both responses are successful
+          if (!summaryResponse.ok || !profileResponse.ok) {
+            throw new Error('Failed to fetch data from one of the APIs.');
           }
 
-          const data = await response.json();
+          const summaryData = await summaryResponse.json();
+          const profileData = await profileResponse.json();
 
-          if (data && data.stats && data.stats.registered) {
-            // Get the registered sec value
-            const registeredSec = data.stats.registered.sec;
+          if (
+            summaryData?.user?.login &&
+            summaryData.title &&
+            profileData?.stats?.registered
+          ) {
+            // Extract the relevant data
+            const rank = summaryData.title;
+            const login = summaryData.user.login;
+            const registered = profileData.stats.registered.sec
+              ? convertSecondsToDate(profileData.stats.registered.sec)
+              : 'Invalid Date';
 
-            // Convert the seconds to a human-readable date
-            const registeredDate = convertSecondsToDate(registeredSec);
+            // Extract new fields
+            const bestSpeed = profileData.stats.best_speed;
+            const ratingLevel = profileData.stats.rating_level;
 
-            // Store the registered data in the cached user info
+            // Cache the fetched data with the converted registered date
             cachedUserInfo[userId] = {
-              ...cachedUserInfo[userId], // Preserve existing data
-              registered: { sec: registeredSec } // Add registered data
+              rank: rank,
+              login: login,
+              registered: registered,
+              bestSpeed: bestSpeed,
+              ratingLevel: ratingLevel,
             };
 
             // Update localStorage with the new cached data
             localStorage.setItem('fetchedUsers', JSON.stringify(cachedUserInfo));
 
-            // Resolve with the human-readable date
-            resolve(registeredDate);
+            // Resolve with the combined data
+            resolve({
+              rank: rank,
+              login: login,
+              registeredDate: registered,
+              bestSpeed: bestSpeed,
+              ratingLevel: ratingLevel,
+            });
           } else {
             throw new Error('Invalid data format received from the API.');
           }
         } catch (error) {
-          console.error(`Error fetching registered data for user ${userId}:`, error);
+          console.error(`Error fetching user profile data for ${userId}:`, error);
           reject(error);
         }
       }
@@ -1821,50 +1857,43 @@
 
   // Function to convert seconds to a human-readable date format
   function convertSecondsToDate(seconds) {
-    // Create a new Date object using the seconds value multiplied by 1000 (to convert to milliseconds)
     const date = new Date(seconds * 1000);
-    // Format the date to a human-readable string (e.g., "YYYY-MM-DD HH:MM:SS")
-    return date.toISOString().slice(0, 19).replace('T', ' ');
+    return date.toISOString().slice(0, 19).replace('T', ' '); // Converts to 'YYYY-MM-DD HH:mm:ss' format
   }
 
-  // Function to get profile summary from API or local storage cache
-  async function getProfileSummary(userId) {
-    return new Promise(async (resolve, reject) => {
-      const cachedUserInfo = JSON.parse(localStorage.getItem('fetchedUsers')) || {};
+  // Function to calculate time spent on the site
+  function calculateTimeOnSite(registeredDate) {
+    const totalSeconds = Math.floor((new Date() - new Date(registeredDate)) / 1000);
+    const years = Math.floor(totalSeconds / (365 * 24 * 60 * 60));
+    const months = Math.floor((totalSeconds % (365 * 24 * 60 * 60)) / (30.44 * 24 * 60 * 60));
+    const days = Math.floor((totalSeconds % (30.44 * 24 * 60 * 60)) / (24 * 60 * 60));
+    const hours = Math.floor((totalSeconds % (24 * 60 * 60)) / (60 * 60));
+    const minutes = Math.floor((totalSeconds % (60 * 60)) / 60);
+    const seconds = totalSeconds % 60;
 
-      if (cachedUserInfo[userId]) {
-        resolve({ rank: cachedUserInfo[userId].rank, login: cachedUserInfo[userId].login });
-      } else {
-        try {
-          const apiUrl = `https://klavogonki.ru/api/profile/get-summary?id=${userId}`;
-          const response = await fetch(apiUrl);
+    const timeComponents = [];
 
-          if (!response.ok) {
-            throw new Error('Network response was not ok.');
-          }
+    if (years > 0) {
+      timeComponents.push(`${years} year${years > 1 ? 's' : ''}`);
+      if (months > 0) timeComponents.push(`${months} month${months > 1 ? 's' : ''}`);
+    } else if (months > 1 || (months === 1 && days > 0)) {
+      timeComponents.push(`${months} month${months > 1 ? 's' : ''}`);
+      if (days > 0) timeComponents.push(`${days} day${days > 1 ? 's' : ''}`);
+    } else if (days > 0) {
+      timeComponents.push(`${days} day${days > 1 ? 's' : ''}`);
+      if (hours > 0) timeComponents.push(`${hours} hour${hours > 1 ? 's' : ''}`);
+      if (minutes > 0) timeComponents.push(`${minutes} minute${minutes > 1 ? 's' : ''}`);
+    } else if (hours > 0) {
+      timeComponents.push(`${hours} hour${hours > 1 ? 's' : ''}`);
+      if (minutes > 0) timeComponents.push(`${minutes} minute${minutes > 1 ? 's' : ''}`);
+    } else if (minutes > 0) {
+      timeComponents.push(`${minutes} minute${minutes > 1 ? 's' : ''}`);
+      if (seconds > 0) timeComponents.push(`${seconds} second${seconds > 1 ? 's' : ''}`);
+    } else {
+      timeComponents.push(`${seconds} second${seconds > 1 ? 's' : ''}`);
+    }
 
-          const data = await response.json();
-
-          if (data && data.user && data.user.login && data.title) {
-            const rank = data.title; // Use the title directly from the main user object
-            const login = data.user.login;
-
-            cachedUserInfo[userId] = {
-              rank: rank,
-              login: login,
-            };
-
-            localStorage.setItem('fetchedUsers', JSON.stringify(cachedUserInfo));
-            resolve({ rank, login });
-          } else {
-            throw new Error('Invalid data format received from the API.');
-          }
-        } catch (error) {
-          console.error(`Error fetching profile summary for user ${userId}:`, error);
-          reject(error);
-        }
-      }
-    });
+    return timeComponents.filter(Boolean).join(' '); // Filter out empty strings and join components
   }
 
   // Function to get rank color based on status title
@@ -2169,16 +2198,21 @@
         // Check if the user already exists in the updated user list
         if (!existingUserIds.has(userId)) {
           try {
-            // Use getProfileSummary instead of getMainTitle
-            const { rank: mainTitle, login } = await getProfileSummary(userId);
+            // Retrieve the user's profile data (rank, login, registered date, best speed, rating level)
+            const { rank: mainTitle, login, registeredDate, bestSpeed, ratingLevel } = await getUserProfileData(userId);
 
+            // If the user data is not already stored in the fetchedUsers object (i.e., it's the first time we're fetching this user's data),
+            // initialize the user entry with the fetched rank and login information.
             if (!fetchedUsers[userId]) {
-              // If user is not already in fetchedUsers, only set rank and login
-              fetchedUsers[userId] = { rank: mainTitle, login };
+              // If user is not already in fetchedUsers, set rank, login, registeredDate, bestSpeed, and ratingLevel
+              fetchedUsers[userId] = { rank: mainTitle, login, registered: registeredDate, bestSpeed, ratingLevel };
             } else {
-              // If user is already in fetchedUsers, update the rank and login
+              // If user is already in fetchedUsers, update the rank, login, registeredDate, bestSpeed, and ratingLevel
               fetchedUsers[userId].rank = mainTitle;
               fetchedUsers[userId].login = login;
+              fetchedUsers[userId].registered = registeredDate;
+              fetchedUsers[userId].bestSpeed = bestSpeed;
+              fetchedUsers[userId].ratingLevel = ratingLevel;
             }
 
             // If actionType is 'enter' and retrievedLogin === userName, multiply the visits for the entered user

@@ -1342,6 +1342,10 @@
       hideCachePanel();
       // Clear the cache manually and reset the timer
       refreshFetchedUsers(true, cacheRefreshThresholdHours);
+
+      // Set the user count element to 0
+      const userCountElement = document.querySelector('.cache-panel-load-button .user-count');
+      if (userCountElement) userCountElement.textContent = '0'; // Set the user count to 0
     });
 
     // Append the clear cache button to the panel header container
@@ -1511,6 +1515,7 @@
       rankElement.className = 'rank';
       rankElement.textContent = userData.rank;
       rankElement.style.color = rankColors[userData.rank] || 'white';
+      rankElement.style.padding = '2px 0';
 
       // Create user-data container
       const userDataElement = document.createElement('div');
@@ -1552,6 +1557,7 @@
       // Create user metrics container
       const userMetrics = document.createElement('div');
       userMetrics.className = 'user-metrics';
+      userMetrics.style.marginTop = '4px';
 
       const doubleSpace = '&nbsp;&nbsp;'; // Constant for double space
 

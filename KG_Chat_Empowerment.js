@@ -2433,6 +2433,9 @@
   const chatUsersObserver = new MutationObserver(debounce((mutations) => {
     mutations.forEach((mutation) => {
       if (mutation.type === 'childList') {
+        // Update user count text based on localStorage
+        updateUserCountText();
+
         // Get the sound switcher element and check which option is selected
         const soundSwitcher = document.querySelector('#voice, #beep, #silence');
         const isSilence = soundSwitcher && soundSwitcher.id === 'silence';
@@ -3888,6 +3891,7 @@
 
     // Append some styles
     showUserListCacheButton.style.display = 'flex';
+    showUserListCacheButton.style.position = 'relative';
     showUserListCacheButton.style.justifyContent = 'center';
     showUserListCacheButton.style.alignItems = 'center';
     showUserListCacheButton.style.width = '48px';
@@ -3900,6 +3904,33 @@
 
     // Add data base icon to the button
     showUserListCacheButton.innerHTML = iconUserlistCache;
+
+    // Create the small indicator for user count
+    const userCount = document.createElement('div');
+    userCount.classList.add('user-count');
+    userCount.style.display = 'flex';
+    userCount.style.position = 'absolute';
+    userCount.style.justifyContent = 'center';
+    userCount.style.alignItems = 'center';
+    userCount.style.left = '0';
+    userCount.style.bottom = '0';
+    userCount.style.transform = 'translate(-50%, 50%)';
+    userCount.style.zIndex = '1';
+    userCount.style.height = '20px';
+    userCount.style.padding = '0 4px';
+    userCount.style.setProperty('border-radius', '2px', 'important');
+    userCount.style.backgroundColor = 'rgb(160, 180, 130)';
+    userCount.style.color = 'rgb(2, 2, 2)';
+    userCount.style.fontSize = '12px';
+    userCount.style.fontFamily = 'Roboto';
+    userCount.style.fontWeight = 'bold';
+
+    // Initially set the count based on localStorage
+    const fetchedUsers = JSON.parse(localStorage.getItem('fetchedUsers')) || {};
+    const userCountValue = Object.keys(fetchedUsers).length;
+    userCount.textContent = userCountValue;
+
+    showUserListCacheButton.appendChild(userCount);
 
     // Assign a title to the button
     showUserListCacheButton.title = 'Show User List Cache Panel';
@@ -3921,6 +3952,16 @@
     empowermentButtonsPanel.appendChild(showUserListCacheButton);
   } createShowUserListCacheButton();
 
+  // Function to update the user count displayed near the cache button based on localStorage
+  function updateUserCountText() {
+    const userCountElement = document.querySelector('.cache-panel-load-button .user-count'); // Select the element
+    if (!userCountElement) return; // Ensure the element exists
+
+    const fetchedUsers = JSON.parse(localStorage.getItem('fetchedUsers')) || {};
+
+    // Update the text content based on the number of users
+    userCountElement.textContent = Object.keys(fetchedUsers).length.toString();
+  }
 
   // CREATING PANEL CHAT FIELD SYMBOLS COUNT INDICATOR
 

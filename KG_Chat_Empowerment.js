@@ -1138,10 +1138,6 @@
     // Get data from localStorage
     const fetchedUsersData = localStorage.getItem('fetchedUsers');
 
-    // Check if data exists
-    // if (fetchedUsersData) {
-    // // Parse JSON data
-    // const users = JSON.parse(fetchedUsersData);
     // Initialize users by parsing fetched data or setting as empty object
     let users = JSON.parse(fetchedUsersData) || {};
 
@@ -1681,7 +1677,6 @@
 
     // Initial update
     updateRemainingTime();
-    // }
   }
 
   // Global function to smoothly hide and remove the cachedUsersPanel
@@ -2344,6 +2339,9 @@
       // Update localStorage outside the if conditions
       localStorage.setItem('fetchedUsers', JSON.stringify(fetchedUsers));
 
+      // Call updateUserCountText to refresh user count display
+      updateUserCountText();
+
     } catch (error) {
       console.error('Error refreshing user list:', error);
     }
@@ -2433,9 +2431,6 @@
   const chatUsersObserver = new MutationObserver(debounce((mutations) => {
     mutations.forEach((mutation) => {
       if (mutation.type === 'childList') {
-        // Update user count text based on localStorage
-        updateUserCountText();
-
         // Get the sound switcher element and check which option is selected
         const soundSwitcher = document.querySelector('#voice, #beep, #silence');
         const isSilence = soundSwitcher && soundSwitcher.id === 'silence';

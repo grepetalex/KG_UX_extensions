@@ -1413,7 +1413,7 @@
     // Add CSS styles for grid layout and centering
     fetchedUsersContainer.style.display = 'grid';
     fetchedUsersContainer.style.gridAutoFlow = 'dense'; // Allows items to fill empty spaces
-    fetchedUsersContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(180px, 1fr))';
+    fetchedUsersContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(200px, 1fr))';
     fetchedUsersContainer.style.gridTemplateRows = 'repeat(auto-fill, minmax(80px, 1fr))';
     fetchedUsersContainer.style.gap = '12px';
     fetchedUsersContainer.style.padding = '24px';

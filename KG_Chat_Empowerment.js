@@ -2360,7 +2360,7 @@
   }
 
   // Global constant for default cache refresh threshold in hours
-  const defaultCacheRefreshThresholdHours = 8;
+  const defaultCacheRefreshThresholdHours = 24;
 
   // Get the value from localStorage
   let storedFresholdTimeKey = localStorage.getItem('cacheRefreshThresholdHours');

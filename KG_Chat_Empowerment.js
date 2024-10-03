@@ -2150,7 +2150,7 @@
   }
 
   // Array to store user IDs and their status titles
-  const fetchedUsers = JSON.parse(localStorage.getItem('fetchedUsers')) || {};
+  let fetchedUsers = JSON.parse(localStorage.getItem('fetchedUsers')) || {};
 
   // Function to create a user element with avatar, name, and profile link based on user details
   function createUserElement(userId, mainTitle, userName, isRevoked) {
@@ -2364,21 +2364,26 @@
 
   // Function to refresh or manually clear fetched users and reset the timer
   // @param {boolean} isManual - If true, clears cache unconditionally; if false, clears based on threshold (default is false)
-  // @param {number} thresholdHours - Time threshold in hours for automatic cache clearing (default is 8 hours)
-  function refreshFetchedUsers(isManual = false, thresholdHours = 8) {
+  // @param {number} thresholdHours - Time threshold in hours for automatic cache clearing (default is 24 hours)
+  function refreshFetchedUsers(isManual = false, thresholdHours = 24) {
     // Retrieve the last clear time from localStorage
     const lastClearTime = localStorage.getItem('lastClearTime');
     const timeElapsed = lastClearTime ? (new Date().getTime() - lastClearTime) / (1000 * 60 * 60) : Infinity;
 
     // If clearing manually or the time threshold has been reached, clear the cache
     if (isManual || timeElapsed >= thresholdHours) {
+      // Clear the fetchedUsers from localStorage
       localStorage.removeItem('fetchedUsers');
+
+      // Reset the in-memory fetchedUsers object
+      fetchedUsers = {};
 
       // Reset the timer by updating 'lastClearTime' and 'nextClearTime'
       const nextClearTime = new Date().getTime() + thresholdHours * 60 * 60 * 1000;
       localStorage.setItem('lastClearTime', new Date().getTime().toString());
       localStorage.setItem('nextClearTime', nextClearTime.toString());
 
+      // Optional: Notify the user about the cache clearing
       // const message = isManual
       //   ? `Cache manually cleared. Next clearing time: ${new Date(nextClearTime)}`
       //   : `Cache automatically cleared. Next clearing time: ${new Date(nextClearTime)}`;
@@ -2386,6 +2391,7 @@
       // alert(message);
     }
   }
+
 
   // NEW CHAT USER LIST (END)
 

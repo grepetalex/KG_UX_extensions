@@ -5042,27 +5042,74 @@
       <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
       </svg>`;
 
-  // Define the checkForAccessibility function
-  function checkForAccessibility() {
-    // Get references to the chat text and send elements
-    let chatText = document.querySelector('.chat .text');
-    let chatSend = document.querySelector('.chat .send');
+  /**
+   * Monitors the state of the chat field and manages its behavior based on specific conditions.
+   * - Enables or disables the chat field and send button based on certain messages.
+   * - Reloads the page if a connection issue occurs while the tab is active or if it was lost while hidden.
+   */
+  function checkForChatState() {
+    // Get references to the chat field and send button elements
+    const chatField = document.querySelector('.chat .text');
+    const chatSend = document.querySelector('.chat .send');
 
-    // If either element is disabled, enable them and set send button background color to red with 50% transparency
-    if (chatText.disabled || chatSend.disabled) {
-      chatText.disabled = false;
-      chatSend.disabled = false;
-      chatSend.style.setProperty('background-color', 'rgb(160, 35, 35)', 'important');
-      chatSend.style.setProperty('background-image', `url("data:image/svg+xml,${encodeURIComponent(iconDenied)}")`, 'important');
-      chatSend.style.setProperty('background-repeat', 'no-repeat', 'important');
-      chatSend.style.setProperty('background-position', 'center', 'important');
-      chatSend.style.setProperty('color', 'transparent', 'important');
-      chatText.value = null;
+    // Define the text patterns to check for in the chatField value
+    const blockedChatMessage = 'Вы не можете отправлять сообщения'; // Message indicating sending is blocked
+    const lostConnectionMessage = 'Связь с сервером потеряна'; // Message indicating connection loss
+
+    // Flag to track if connection was lost while the tab was hidden
+    let connectionLostWhileHidden = false;
+
+    // Flag to prevent rapid reloads when the connection is lost
+    let debounceReload = false;
+
+    // Function to handle changes when the chatField gets disabled
+    const handleChatStateChange = () => {
+      // Check if the chatField is disabled
+      if (!chatField.disabled) return; // Exit if the chatField is not disabled
+
+      // Get the current value of chatField
+      const chatFieldValue = chatField.value;
+
+      // If the chatField contains the blocked message
+      if (chatFieldValue.includes(blockedChatMessage)) {
+        // Enable the chatField and send button, applying styles to indicate the state
+        chatField.disabled = chatSend.disabled = false; // Enable chatField and send button
+        // Apply styles to the chatSend button with !important
+        chatSend.style.setProperty('background-color', 'rgb(160, 35, 35)', 'important');
+        chatSend.style.setProperty('background-image', `url("data:image/svg+xml,${encodeURIComponent(iconDenied)}")`, 'important');
+        chatSend.style.setProperty('background-repeat', 'no-repeat', 'important');
+        chatSend.style.setProperty('background-position', 'center', 'important');
+        chatSend.style.setProperty('color', 'transparent', 'important');
+        chatField.value = null; // Clear the chatField content
+      }
+      // If the chatField contains the lost connection message
+      else if (chatFieldValue.includes(lostConnectionMessage)) {
+        // Reload the page if the tab is active; otherwise, set a flag to reload later
+        document.hidden ? connectionLostWhileHidden = true : window.location.reload();
+      }
+    };
+
+    // Listen for tab visibility changes
+    document.addEventListener('visibilitychange', () => {
+      // Reload the page when the tab becomes visible if a connection was lost while hidden
+      if (!document.hidden && connectionLostWhileHidden) window.location.reload();
+    });
+
+    // Monitor changes in the disabled attribute of chatField
+    if (chatField) {
+      const observer = new MutationObserver(mutations => {
+        // For each mutation, check if the 'disabled' attribute has changed
+        mutations.forEach(mutation => {
+          if (mutation.attributeName === 'disabled') handleChatStateChange(); // Handle state change
+        });
+      });
+      // Start observing the chatField for changes to its attributes
+      observer.observe(chatField, { attributes: true });
     }
   }
 
-  // Create a debounced version of the checkForAccessibility function
-  const debouncedCheckForAccessibility = debounce(checkForAccessibility, debounceTimeout);
+  // Create a debounced version of the checkForChatState function
+  const debouncedCheckForChatState = debounce(checkForChatState, debounceTimeout);
 
 
   // CHAT SWITCHER
@@ -5234,8 +5281,8 @@
         // Call the function to apply the chat message grouping
         applyChatMessageGrouping();
 
-        // Enable chat if blocked
-        debouncedCheckForAccessibility();
+        // Check for chat state
+        debouncedCheckForChatState();
 
         // Call the function to scroll to the bottom of the chat
         scrollMessages();

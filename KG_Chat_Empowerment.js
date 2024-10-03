@@ -1423,23 +1423,6 @@
     // Create an array to hold user elements
     const userElements = [];
 
-    // Function to create clickable user link elements
-    const createUserLinkElement = (label, url) => {
-      const linkElement = document.createElement('div');
-      linkElement.innerHTML = label;
-      linkElement.style.cursor = 'pointer'; // Change cursor to pointer for clickability
-      linkElement.style.padding = '0.2em'; // Optional: add some padding
-      linkElement.style.margin = '0.2em'; // Optional: add some margin
-      linkElement.style.display = 'inline-block'; // Optional: keep them inline
-      linkElement.title = `Click to go to ${label}`; // Add tooltip
-
-      linkElement.addEventListener('click', () => {
-        window.open(url, '_blank'); // Open the URL in a new tab
-      });
-
-      return linkElement;
-    };
-
     // Iterate through each user
     Object.keys(users).forEach(async (userId) => {
       const userData = users[userId];
@@ -1620,11 +1603,16 @@
       userElement.appendChild(userMetrics);
 
       // Append the user div to the userElements array
-      userElements.push({ userElement, order: rankOrder[userData.rank] || 10 });
+      userElements.push({ userElement, order: rankOrder[userData.rank] || 10, bestSpeed: userData.bestSpeed || 0 });
     });
 
-    // Sort userElements array based on order
-    userElements.sort((a, b) => a.order - b.order);
+    // Sort userElements array based on rank order and best speed
+    userElements.sort((a, b) => {
+      // First compare by rank order
+      const rankComparison = a.order - b.order;
+      // If ranks are equal, compare by best speed in descending order
+      return rankComparison !== 0 ? rankComparison : b.bestSpeed - a.bestSpeed;
+    });
 
     // Append sorted user elements to the fetched-users container
     userElements.forEach(({ userElement }) => {

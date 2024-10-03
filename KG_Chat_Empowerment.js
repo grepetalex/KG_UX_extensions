@@ -98,9 +98,10 @@
     { name: 'инфо-пчелы', gender: 'male', pronunciation: 'Инфо-Пчёлы' }, // ------ 10
     { name: 'Razmontana', gender: 'male', pronunciation: 'Размонтана' }, // ------ 11
     { name: 'un4given', gender: 'male', pronunciation: 'Унч' }, // --------------- 12
-    { name: 'iChessKnock', gender: 'male', pronunciation: 'Чеснок' }, // --------- 13
-    { name: 'TolikWorkaholic', gender: 'male', pronunciation: 'Анатолий' }, // --- 14
-    { name: 'Солнцеликий', gender: 'male', pronunciation: 'Солнцеликий' } // ----- 15
+    { name: 'oonch', gender: 'male', pronunciation: 'Клонец унча' }, // ---------- 13
+    { name: 'iChessKnock', gender: 'male', pronunciation: 'Чеснок' }, // --------- 14
+    { name: 'Anatolysov', gender: 'male', pronunciation: 'Анатолий' }, // -------- 15
+    { name: 'Солнцеликий', gender: 'male', pronunciation: 'Солнцеликий' } // ----- 16
   ];
 
   // Notify me if someone is addressing to me using such aliases

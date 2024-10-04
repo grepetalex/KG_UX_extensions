@@ -1836,7 +1836,7 @@
 
   // Function to validate required user data
   function validateUserData(user) {
-    const requiredFields = ['rank', 'login', 'registered', 'bestSpeed', 'ratingLevel', 'friends', 'cars'];
+    const requiredFields = ['rank', 'login', 'registered', 'bestSpeed', 'ratingLevel', 'friends', 'cars', 'avatarTimestamp'];
     return user && typeof user === 'object' && requiredFields.every(field => user?.[field] !== undefined);
   }
 
@@ -1857,6 +1857,7 @@
           ratingLevel: user.ratingLevel,
           friends: user.friends, // Use cached friends count
           cars: user.cars, // Use cached cars count
+          avatarTimestamp: user.avatarTimestamp // Cached avatar timestamp
         });
       } else {
         try {
@@ -1896,7 +1897,12 @@
             const friends = profileData.stats.friends_cnt || 0; // Extract friends count
             const cars = profileData.stats.cars_cnt || 0; // Extract cars count
 
-            // Cache the fetched data with the converted registered date
+            // Extract sec and usec from user.avatar, with null check
+            const sec = summaryData.user.avatar?.sec || 0; // Default to 0 if undefined or null
+            const usec = summaryData.user.avatar?.usec || 0; // Default to 0 if undefined or null
+            const avatarTimestamp = convertToUpdatedTimestamp(sec, usec); // Combine sec and usec to get avatar timestamp
+
+            // Cache the fetched data with the converted registered date and avatar timestamp
             cachedUserInfo[userId] = {
               rank: rank,
               login: login,
@@ -1905,6 +1911,7 @@
               ratingLevel: ratingLevel,
               friends: friends, // Cache friends count
               cars: cars, // Cache cars count
+              avatarTimestamp: avatarTimestamp // Cache avatar timestamp
             };
 
             // Update localStorage with the new cached data
@@ -1919,6 +1926,7 @@
               ratingLevel: ratingLevel,
               friends: friends,
               cars: cars,
+              avatarTimestamp: avatarTimestamp // Include avatar timestamp in the result
             });
           } else {
             throw new Error('Invalid data format received from the API.');
@@ -1935,6 +1943,12 @@
   function convertSecondsToDate(seconds) {
     const date = new Date(seconds * 1000);
     return date.toISOString().slice(0, 19).replace('T', ' '); // Converts to 'YYYY-MM-DD HH:mm:ss' format
+  }
+
+  // Function to convert sec and usec to the 'updated' timestamp
+  function convertToUpdatedTimestamp(sec, usec) {
+    // Create the full timestamp by combining sec and usec (in microseconds)
+    return sec.toString() + Math.floor(usec / 1000).toString();
   }
 
   // Function to calculate time spent on the site
@@ -2155,7 +2169,8 @@
 
   // Function to create a user element with avatar, name, and profile link based on user details
   function createUserElement(userId, mainTitle, userName, isRevoked) {
-    const bigAvatarUrl = `/storage/avatars/${userId}_big.png`;
+    const avatarTimestamp = fetchedUsers[userId]?.avatarTimestamp;
+    const bigAvatarUrl = `/storage/avatars/${userId}_big.png${avatarTimestamp && avatarTimestamp !== '00' ? `?updated=${avatarTimestamp}` : ''}`;
 
     const newUserElement = document.createElement('div');
     const rankClass = getRankClass(mainTitle);
@@ -2274,12 +2289,12 @@
         // Check if the user already exists in the updated user list
         if (!existingUserIds.has(userId)) {
           try {
-            // Retrieve the user's profile data (rank, login, registered date, best speed, rating level, friends, cars)
-            const { rank: mainTitle, login, registeredDate, bestSpeed, ratingLevel, friends, cars } = await getUserProfileData(userId);
+            // Retrieve the user's profile data
+            const { rank: mainTitle, login, registeredDate, bestSpeed, ratingLevel, friends, cars, avatarTimestamp } = await getUserProfileData(userId);
 
             // If the user data is not already stored in the fetchedUsers object
             if (!fetchedUsers[userId]) {
-              // Set rank, login, registeredDate, bestSpeed, ratingLevel, friends, and cars
+              // Set rank, login, registeredDate, bestSpeed, ratingLevel, friends, cars, and avatarTimestamp
               fetchedUsers[userId] = {
                 rank: mainTitle,
                 login,
@@ -2287,7 +2302,8 @@
                 bestSpeed,
                 ratingLevel,
                 friends,
-                cars
+                cars,
+                avatarTimestamp
               };
             } else {
               // Update the user's data
@@ -2298,6 +2314,7 @@
               fetchedUsers[userId].ratingLevel = ratingLevel;
               fetchedUsers[userId].friends = friends;
               fetchedUsers[userId].cars = cars;
+              fetchedUsers[userId].avatarTimestamp = avatarTimestamp;
             }
 
             // If actionType is 'enter' and retrievedLogin === userName, multiply the visits for the entered user

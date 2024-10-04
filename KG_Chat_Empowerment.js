@@ -1434,6 +1434,8 @@
       userElement.style.padding = '0.2em';
       userElement.style.margin = '0.2em';
       userElement.style.display = 'grid';
+      userElement.style.gridTemplateColumns = 'auto 1fr';
+      userElement.style.alignItems = 'center';
 
       // Base styles shared by both tracked and untracked users
       const baseStyle = {
@@ -1470,6 +1472,37 @@
           })
           .join('; ');
       };
+
+      // Create the avatar div container
+      const avatarElement = document.createElement('div');
+      avatarElement.className = 'avatar'; // Assign a class name for styling
+      avatarElement.style.marginRight = '8px';
+
+      // Retrieve the avatar timestamp for the user
+      const avatarTimestamp = fetchedUsers[userId]?.avatarTimestamp;
+
+      // Construct the base avatar URL
+      const bigAvatarUrl = `/storage/avatars/${userId}_big.png`;
+
+      // Check if avatarTimestamp is defined and not '00'
+      if (avatarTimestamp && avatarTimestamp !== '00') {
+        // Append the timestamp to the URL if it's valid
+        const finalAvatarUrl = `${bigAvatarUrl}?updated=${avatarTimestamp}`;
+
+        // Create the avatar image element
+        const imgElement = document.createElement('img');
+        imgElement.src = finalAvatarUrl; // Use the constructed avatar URL
+        imgElement.alt = `${userData.login}'s avatar`; // Set alt attribute for accessibility
+        imgElement.style.height = '24px'; // Set height for the avatar
+        imgElement.style.width = '24px'; // Set width for the avatar (optional)
+        imgElement.style.objectFit = 'cover'; // Ensure the image covers the area without stretching
+
+        // Append the image to the avatar container
+        avatarElement.appendChild(imgElement);
+      } else {
+        // Set innerHTML to random SVG icon when timestamp is '00' or undefined
+        avatarElement.innerHTML = getRandomIconSVG();
+      }
 
       const loginElement = document.createElement('a');
       loginElement.className = 'login';
@@ -1542,6 +1575,7 @@
       const userMetrics = document.createElement('div');
       userMetrics.className = 'user-metrics';
       userMetrics.style.marginTop = '4px';
+      userMetrics.style.gridColumn = 'span 2';
 
       const doubleSpace = '&nbsp;&nbsp;'; // Constant for double space
 
@@ -1600,6 +1634,7 @@
       });
 
       // Append user-data and user-metrics to the main userElement
+      userElement.appendChild(avatarElement);
       userElement.appendChild(userDataElement);
       userElement.appendChild(userMetrics);
 
@@ -1744,11 +1779,15 @@
         height: 24px;
         display: inline-flex;
     }
-    .chat-user-list .avatar img {
+
+    .chat-user-list .avatar img,
+    .fetched-users .avatar img {
         transition: transform 0.3s;
         transform-origin: left;
     }
-    .chat-user-list .avatar img:hover {
+
+    .chat-user-list .avatar img:hover,
+    .fetched-users .avatar img:hover {
         transform: scale(2);
     }
 
@@ -1763,6 +1802,7 @@
         overflow: hidden;
         text-overflow: ellipsis;
     }
+
     .chat-user-list .name:hover {
         text-decoration: underline;
     }
@@ -1777,9 +1817,9 @@
         align-items: center;
     }
 
-    .chat-user-list svg.feather-meh,
-    .chat-user-list svg.feather-smile,
-    .chat-user-list svg.feather-frown {
+    svg.feather-meh,
+    svg.feather-smile,
+    svg.feather-frown {
         stroke: #A47C5E;
     }
 

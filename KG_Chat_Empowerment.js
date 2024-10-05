@@ -5301,6 +5301,89 @@
     }
   }
 
+  // Function to break text into pieces of a maximum length
+  function breakSentence(text) {
+    const maxLength = 300; // Maximum length of each piece
+    const words = text.split(' '); // Split the text into words
+    const pieces = []; // Array to hold the final pieces
+    let currentPiece = ''; // Variable to build the current piece
+
+    words.forEach((word) => {
+      // Check if adding the next word would exceed maxLength
+      if ((currentPiece + word).length > maxLength) {
+        // Push the current piece to pieces and reset currentPiece
+        pieces.push(currentPiece.trim());
+        currentPiece = word + ' '; // Start a new piece with the current word
+      } else {
+        currentPiece += word + ' '; // Add the word to the current piece
+      }
+    });
+
+    // Push the last piece if it exists
+    if (currentPiece) {
+      pieces.push(currentPiece.trim());
+    }
+
+    return pieces;
+  }
+
+  // Function to send the message in parts
+  async function sendMessageInParts(message) {
+    const pieces = breakSentence(message); // Break the message into pieces
+    const inputField = document.querySelector('.text'); // Get the input field element
+    const sendButton = document.querySelector('.send'); // Get the send button element
+
+    // Disable the input field only if the message is longer than 300 characters
+    const isLongMessage = message.length > 300;
+    if (isLongMessage) {
+      inputField.disabled = true; // Disable input field for long messages
+    }
+
+    for (let index = 0; index < pieces.length; index++) {
+      // Set the input field to the current piece
+      const fullMessage = pieces[index]; // Use the current piece
+      inputField.value = fullMessage;
+
+      // Log each piece and its length
+      console.log(`Sending piece ${index + 1}: "${fullMessage}" (Length: ${fullMessage.length})`);
+
+      // Simulate sending the message
+      sendButton.click(); // Click the send button
+
+      // If not the last piece, generate a random delay before sending the next one
+      if (index < pieces.length - 1) {
+        const randomDelay = Math.floor(Math.random() * 500) + 500; // 500 ms to 1000 ms
+        console.log(`Waiting for ${randomDelay} ms before sending the next piece.`);
+        await new Promise(resolve => setTimeout(resolve, randomDelay)); // Use await for async delay
+      }
+    }
+
+    // Re-enable the input field after all pieces have been sent, if it was disabled
+    if (isLongMessage) {
+      inputField.disabled = false;
+    }
+  }
+
+  // Function to set up the input field listener
+  function setupInputFieldListener() {
+    const inputField = document.querySelector('.text'); // Get the input field element
+    inputField.setAttribute('maxlength', '1000'); // Set the initial maxlength attribute to 1000
+    inputField.addEventListener('keydown', (event) => {
+      // Check if the pressed key is Enter
+      if (event.key === 'Enter') {
+        event.preventDefault(); // Prevent the default behavior (like a newline)
+        const message = inputField.value; // Get the current message
+
+        // Call the function to send the message in parts
+        sendMessageInParts(message);
+        console.log(`Message processed: "${message}"`);
+
+        // Clear the input field after sending
+        inputField.value = '';
+      }
+    });
+  }
+
   // create a new MutationObserver to wait for the chat to fully load with all messages
   let waitForChatObserver = new MutationObserver(mutations => {
     // Get the container for all chat messages
@@ -5350,6 +5433,9 @@
 
         // Execute the function to trigger the process of chat cleaning after the youtube and images convertation to avoid issues
         executeMessageRemover();
+
+        // Initialize the input field listener to handle message sending when Enter is pressed
+        setupInputFieldListener();
       }
     }
   });

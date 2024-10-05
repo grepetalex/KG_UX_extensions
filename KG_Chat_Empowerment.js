@@ -5369,17 +5369,22 @@
     const inputField = document.querySelector('.text'); // Get the input field element
     inputField.setAttribute('maxlength', '1000'); // Set the initial maxlength attribute to 1000
     inputField.addEventListener('keydown', (event) => {
+      const message = inputField.value; // Get the current message
       // Check if the pressed key is Enter
       if (event.key === 'Enter') {
-        event.preventDefault(); // Prevent the default behavior (like a newline)
-        const message = inputField.value; // Get the current message
+        // If the message is longer than 300, prevent the default behavior and send it in parts
+        if (message.length > 300) {
+          event.preventDefault(); // Prevent the default behavior (like a newline)
+          // Call the function to send the message in parts
+          sendMessageInParts(message);
+          console.log(`Message processed: "${message}"`);
 
-        // Call the function to send the message in parts
-        sendMessageInParts(message);
-        console.log(`Message processed: "${message}"`);
-
-        // Clear the input field after sending
-        inputField.value = '';
+          // Clear the input field after sending
+          inputField.value = '';
+        } else {
+          // If the message is no longer than 300, just allow the default behavior (like a newline)
+          console.log(`Short message processed: "${message}"`);
+        }
       }
     });
   }

@@ -2975,164 +2975,164 @@
   // Call the function to apply chat message grouping
   applyChatMessageGrouping();
 
-  // Jaro-Winkler Distance Calculation Function
-  function calculateDistance(s1, s2) {
-    const windowSize = Math.floor(Math.max(s1.length, s2.length) / 2) - 1;
-    const s1Matches = Array(s1.length).fill(false);
-    const s2Matches = Array(s2.length).fill(false);
-    let commonMatches = 0;
+  // // Jaro-Winkler Distance Calculation Function
+  // function calculateDistance(s1, s2) {
+  //   const windowSize = Math.floor(Math.max(s1.length, s2.length) / 2) - 1;
+  //   const s1Matches = Array(s1.length).fill(false);
+  //   const s2Matches = Array(s2.length).fill(false);
+  //   let commonMatches = 0;
 
-    // Distance calculation
-    for (let i = 0; i < s1.length; i++) {
-      const start = Math.max(0, i - windowSize);
-      const end = Math.min(i + windowSize + 1, s2.length);
+  //   // Distance calculation
+  //   for (let i = 0; i < s1.length; i++) {
+  //     const start = Math.max(0, i - windowSize);
+  //     const end = Math.min(i + windowSize + 1, s2.length);
 
-      for (let j = start; j < end; j++) {
-        if (!s2Matches[j] && s1[i] === s2[j]) {
-          s1Matches[i] = s2Matches[j] = true;
-          commonMatches++;
-          break;
-        }
-      }
-    }
+  //     for (let j = start; j < end; j++) {
+  //       if (!s2Matches[j] && s1[i] === s2[j]) {
+  //         s1Matches[i] = s2Matches[j] = true;
+  //         commonMatches++;
+  //         break;
+  //       }
+  //     }
+  //   }
 
-    if (commonMatches === 0) {
-      return 0; // No common characters, distance is 0
-    }
+  //   if (commonMatches === 0) {
+  //     return 0; // No common characters, distance is 0
+  //   }
 
-    // Transposition calculation
-    let transpositions = 0;
-    let k = 0;
-    for (let i = 0; i < s1.length; i++) {
-      if (s1Matches[i]) {
-        while (!s2Matches[k]) k++;
-        if (s1[i] !== s2[k++]) transpositions++;
-      }
-    }
+  //   // Transposition calculation
+  //   let transpositions = 0;
+  //   let k = 0;
+  //   for (let i = 0; i < s1.length; i++) {
+  //     if (s1Matches[i]) {
+  //       while (!s2Matches[k]) k++;
+  //       if (s1[i] !== s2[k++]) transpositions++;
+  //     }
+  //   }
 
-    const similarity = (commonMatches / s1.length + commonMatches / s2.length + (commonMatches - transpositions) / commonMatches) / 3;
+  //   const similarity = (commonMatches / s1.length + commonMatches / s2.length + (commonMatches - transpositions) / commonMatches) / 3;
 
-    // Adjustment
-    const prefixLength = Math.min(4, Math.min(s1.length, s2.length));
-    let commonPrefix = 0;
-    for (let i = 0; i < prefixLength && s1[i] === s2[i]; i++) {
-      commonPrefix++;
-    }
+  //   // Adjustment
+  //   const prefixLength = Math.min(4, Math.min(s1.length, s2.length));
+  //   let commonPrefix = 0;
+  //   for (let i = 0; i < prefixLength && s1[i] === s2[i]; i++) {
+  //     commonPrefix++;
+  //   }
 
-    const adjustment = commonPrefix * 0.1 * (1 - similarity);
+  //   const adjustment = commonPrefix * 0.1 * (1 - similarity);
 
-    const distance = similarity + adjustment;
+  //   const distance = similarity + adjustment;
 
-    return distance;
-  }
+  //   return distance;
+  // }
 
 
-  // Extracts Message Text, Excludes First Word if Ends with Comma
-  function extractMessageText(message) {
-    const messageContent = Array.from(message.childNodes)
-      .filter(node => node.nodeType === Node.TEXT_NODE)
-      .map(node => node.textContent.trim())
-      .join(' ');
+  // // Extracts Message Text, Excludes First Word if Ends with Comma
+  // function extractMessageText(message) {
+  //   const messageContent = Array.from(message.childNodes)
+  //     .filter(node => node.nodeType === Node.TEXT_NODE)
+  //     .map(node => node.textContent.trim())
+  //     .join(' ');
 
-    const words = messageContent.split(/\s+/);
+  //   const words = messageContent.split(/\s+/);
 
-    if (words.length > 1) {
-      // Check if the first word ends with a comma
-      const firstWord = words[0];
-      const isCommaSeparated = firstWord.endsWith(',');
+  //   if (words.length > 1) {
+  //     // Check if the first word ends with a comma
+  //     const firstWord = words[0];
+  //     const isCommaSeparated = firstWord.endsWith(',');
 
-      // Exclude the first word if it ends with a comma
-      const [, ...remainingWords] = words;
+  //     // Exclude the first word if it ends with a comma
+  //     const [, ...remainingWords] = words;
 
-      return isCommaSeparated ? remainingWords.join(' ') : messageContent;
-    }
+  //     return isCommaSeparated ? remainingWords.join(' ') : messageContent;
+  //   }
 
-    return messageContent;
-  }
+  //   return messageContent;
+  // }
 
-  // Function to remove spam messages based on Jaro-Winkler distance
-  function removeSpamMessages() {
-    // Get the messages container element
-    const messagesContainer = document.getElementById('chat-content');
+  // // Function to remove spam messages based on Jaro-Winkler distance
+  // function removeSpamMessages() {
+  //   // Get the messages container element
+  //   const messagesContainer = document.getElementById('chat-content');
 
-    // Get all the chat message elements from the messages container
-    const chatMessages = messagesContainer.querySelectorAll('.messages-content div p');
+  //   // Get all the chat message elements from the messages container
+  //   const chatMessages = messagesContainer.querySelectorAll('.messages-content div p');
 
-    // Object to store user logs
-    const userLogs = {};
+  //   // Object to store user logs
+  //   const userLogs = {};
 
-    // Iterate through each chat message
-    chatMessages.forEach((message, index) => {
-      // Extract the text content without considering the time and username
-      const messageText = extractMessageText(message);
+  //   // Iterate through each chat message
+  //   chatMessages.forEach((message, index) => {
+  //     // Extract the text content without considering the time and username
+  //     const messageText = extractMessageText(message);
 
-      // Extract the user's username and user ID
-      const usernameElement = message.querySelector('.username span[data-user]');
-      if (!usernameElement) {
-        return; // Skip messages without a username
-      }
+  //     // Extract the user's username and user ID
+  //     const usernameElement = message.querySelector('.username span[data-user]');
+  //     if (!usernameElement) {
+  //       return; // Skip messages without a username
+  //     }
 
-      const userId = usernameElement.getAttribute('data-user');
-      const nickname = usernameElement.textContent;
+  //     const userId = usernameElement.getAttribute('data-user');
+  //     const nickname = usernameElement.textContent;
 
-      // Find or create user log entry
-      if (!userLogs[nickname]) {
-        userLogs[nickname] = { userId, keptMessages: [], removedMessages: [] };
-      }
+  //     // Find or create user log entry
+  //     if (!userLogs[nickname]) {
+  //       userLogs[nickname] = { userId, keptMessages: [], removedMessages: [] };
+  //     }
 
-      // Get the user log
-      const userLog = userLogs[nickname];
+  //     // Get the user log
+  //     const userLog = userLogs[nickname];
 
-      // Iterate through preceding messages for the same user for comparison
-      let hidden = false;
-      for (let i = 0; i < index; i++) {
-        const previousMessage = chatMessages[i];
-        const previousUsernameElement = previousMessage.querySelector('.username span[data-user]');
+  //     // Iterate through preceding messages for the same user for comparison
+  //     let hidden = false;
+  //     for (let i = 0; i < index; i++) {
+  //       const previousMessage = chatMessages[i];
+  //       const previousUsernameElement = previousMessage.querySelector('.username span[data-user]');
 
-        // Skip messages without a username
-        if (!previousUsernameElement) {
-          continue;
-        }
+  //       // Skip messages without a username
+  //       if (!previousUsernameElement) {
+  //         continue;
+  //       }
 
-        const previousUserId = previousUsernameElement.getAttribute('data-user');
+  //       const previousUserId = previousUsernameElement.getAttribute('data-user');
 
-        // Compare messages only if they belong to the same user
-        if (userId === previousUserId) {
-          const previousMessageText = extractMessageText(previousMessage);
+  //       // Compare messages only if they belong to the same user
+  //       if (userId === previousUserId) {
+  //         const previousMessageText = extractMessageText(previousMessage);
 
-          // Calculate Jaro-Winkler distance and set a threshold for similarity
-          const similarityThreshold = 0.9;
+  //         // Calculate Jaro-Winkler distance and set a threshold for similarity
+  //         const similarityThreshold = 0.9;
 
-          const similarity = calculateDistance(messageText, previousMessageText);
+  //         const similarity = calculateDistance(messageText, previousMessageText);
 
-          if (similarity >= similarityThreshold) {
-            // Apply logic to hide or remove the message
-            message.style.transition = 'transform 2s ease';
-            message.style.transformOrigin = 'right';
-            message.style.transform = 'scale(1)';
-            message.style.color = 'coral';
+  //         if (similarity >= similarityThreshold) {
+  //           // Apply logic to hide or remove the message
+  //           message.style.transition = 'transform 2s ease';
+  //           message.style.transformOrigin = 'right';
+  //           message.style.transform = 'scale(1)';
+  //           message.style.color = 'coral';
 
-            setTimeout(() => {
-              message.style.transition = 'transform 0.3s ease';
-              message.style.transform = 'scale(0)';
+  //           setTimeout(() => {
+  //             message.style.transition = 'transform 0.3s ease';
+  //             message.style.transform = 'scale(0)';
 
-              setTimeout(() => {
-                message.remove();
-                // Add the message to removedMessages for the specific user
-                userLog.removedMessages.push({ index, text: messageText });
-                hidden = true;
-              }, 300);
-            }, 2000);
+  //             setTimeout(() => {
+  //               message.remove();
+  //               // Add the message to removedMessages for the specific user
+  //               userLog.removedMessages.push({ index, text: messageText });
+  //               hidden = true;
+  //             }, 300);
+  //           }, 2000);
 
-            break; // Break the loop to avoid removing multiple occurrences
-          }
-        }
-      }
-    });
-  }
+  //           break; // Break the loop to avoid removing multiple occurrences
+  //         }
+  //       }
+  //     }
+  //   });
+  // }
 
   // Time difference threshold (in milliseconds) to identify spam
-  const timeDifferenceThreshold = 1000;
+  const timeDifferenceThreshold = 400;
   // Message limit per timeDifferenceThreshold
   const messageLimit = 1;
   // Object to track user-specific data
@@ -3712,7 +3712,7 @@
               // Call the function to apply the chat message grouping
               applyChatMessageGrouping();
               // Calls the removeSpamMessages function to filter and hide similar chat messages based on Jaro-Winkler distance.
-              removeSpamMessages();
+              // removeSpamMessages();
               // Call the function to scroll to the bottom of the chat
               scrollMessages();
               // Call the banSpammer function to track and handle potential spam messages
@@ -5404,7 +5404,7 @@
         waitForChatObserver.disconnect();
 
         // Calls the removeSpamMessages function to filter and hide similar chat messages based on Jaro-Winkler distance.
-        removeSpamMessages();
+        // removeSpamMessages();
 
         // Convert image links to visible image containers
         convertImageLinkToImage();

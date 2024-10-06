@@ -2803,10 +2803,10 @@
     const username = messageElement.querySelector('.username');
     let usernameText = username ? username.textContent : null;
 
-    // Check if usernameText is not null before replacing "<" and ">" symbols
+    // Check if usernameText is not null before replacing "<", ">" symbols, and digits
     if (usernameText !== null) {
-      // Remove the "<" and ">" symbols from the username if they are present
-      usernameText = usernameText.replace(/</g, '').replace(/>/g, '');
+      // Remove the "<", ">", and digits from the username
+      usernameText = usernameText.replace(/<|>/g, '').replace(/\d/g, '');
     }
 
     let usernamePrefix = '';
@@ -2826,7 +2826,7 @@
     lastUsername = usernameText;
 
     const messageWithPronunciation = `${usernamePrefix}${replaceWithPronunciation(messageText)}`;
-    return { messageText: messageWithPronunciation, usernameText: username };
+    return { messageText: messageWithPronunciation, usernameText: usernameText };
   }
 
   // Prevent the "readNewMessages" function from being called multiple times until all messages in the set have been read
@@ -3646,8 +3646,12 @@
             // Get the username of the user who sent the latest message
             let latestMessageUsername = null;
             if (latestMessageTextContentResult && latestMessageTextContentResult.usernameText) {
-              latestMessageUsername = latestMessageTextContentResult.usernameText.textContent;
+              latestMessageUsername = latestMessageTextContentResult.usernameText;
             }
+
+            // Sanitize the username for comparison
+            const sanitizedLatestMessageUsername = latestMessageUsername ? latestMessageUsername.replace(/\d/g, '') : null;
+            const sanitizedMyNickname = myNickname.replace(/\d/g, '');
 
             // Get the sound switcher element and check which option is selected
             const soundSwitcher = document.querySelector('#voice, #beep, #silence');
@@ -3662,10 +3666,9 @@
             // If mode is voice, speak the new message and update the latest message content in local storage
             if (isVoice && isInitialized && newMessageTextContent && newMessageTextContent !== latestMessageTextContent) {
               // Update localStorage key "latestMessageTextContent"
-              // If "newMessageTextContent" value doesn't match "latestMessageTextContent" value
               localStorage.setItem('latestMessageTextContent', newMessageTextContent);
               // Speak the new message only if it's not addressed to your nickname
-              if (latestMessageUsername && !latestMessageUsername.includes(myNickname)) {
+              if (sanitizedLatestMessageUsername && !sanitizedLatestMessageUsername.includes(sanitizedMyNickname)) {
                 if (isEveryMessage) {
                   // Add the new message to the Set
                   addNewMessage(newMessageTextContent);
@@ -3683,10 +3686,9 @@
             // If mode is beep, play the beep sound for the new message
             if (isBeep && isInitialized && newMessageTextContent && newMessageTextContent !== latestMessageTextContent) {
               // Update localStorage key "latestMessageTextContent"
-              // If "newMessageTextContent" value doesn't match "latestMessageTextContent" value
               localStorage.setItem('latestMessageTextContent', newMessageTextContent);
               // Play the beep sound only if the message is not addressed to your nickname
-              if (latestMessageUsername && !latestMessageUsername.includes(myNickname)) {
+              if (sanitizedLatestMessageUsername && !sanitizedLatestMessageUsername.includes(sanitizedMyNickname)) {
                 // Play mention frequencies if the message is addressed to you
                 if (isMention) {
                   playBeep(mentionMessageFrequencies, beepVolume);
@@ -3720,7 +3722,6 @@
               // Call the function to show the latest popup message
               showPopupMessage();
             }
-
           }
         }
       }

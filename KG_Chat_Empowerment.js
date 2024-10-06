@@ -2210,7 +2210,9 @@
   // Function to create a user element with avatar, name, and profile link based on user details
   function createUserElement(userId, mainTitle, userName, isRevoked) {
     const avatarTimestamp = fetchedUsers[userId]?.avatarTimestamp;
-    const bigAvatarUrl = `/storage/avatars/${userId}_big.png${avatarTimestamp && avatarTimestamp !== '00' ? `?updated=${avatarTimestamp}` : ''}`;
+
+    // Ensure the bigAvatarUrl is only constructed if avatarTimestamp is not '00'
+    const bigAvatarUrl = avatarTimestamp !== '00' ? `/storage/avatars/${userId}_big.png?updated=${avatarTimestamp}` : '';
 
     const newUserElement = document.createElement('div');
     const rankClass = getRankClass(mainTitle);
@@ -2219,15 +2221,13 @@
     const newAvatarElement = document.createElement('div');
     newAvatarElement.classList.add('avatar');
 
-    // Check if the .name element has the 'style' attribute
-    const userElement = document.querySelector(`.userlist-content .user${userId} .name`);
-    const hasStyle = userElement && userElement.hasAttribute('style');
-
-    if (hasStyle) {
-      const avatarContent = document.createElement('img'); // Create the img element
-      avatarContent.src = bigAvatarUrl;
-      newAvatarElement.appendChild(avatarContent); // Append the img element inside the condition
+    // Only create and append an image element if avatarTimestamp is not '00'
+    if (avatarTimestamp !== '00') {
+      const avatarImage = document.createElement('img');
+      avatarImage.src = bigAvatarUrl;
+      newAvatarElement.appendChild(avatarImage);
     } else {
+      // Insert a random SVG icon instead of an image when avatarTimestamp is '00'
       newAvatarElement.innerHTML = getRandomIconSVG();
     }
 
@@ -5449,3 +5449,6 @@
   waitForChatObserver.observe(document, { childList: true, subtree: true });
 
 })();
+
+
+// Make correction for the avatar if the response is :null also make random SVG face.

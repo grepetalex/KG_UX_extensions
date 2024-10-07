@@ -2841,7 +2841,7 @@
     lastUsername = usernameText;
 
     // Determine final message text based on whether it's a private message
-    const finalMessageText = privateMessageText ? privateMessageText : messageText; // Only private message if it exists
+    const finalMessageText = privateMessageText ? `шёпотом: ${privateMessageText}` : messageText;
 
     const messageWithPronunciation = `${usernamePrefix}${replaceWithPronunciation(finalMessageText)}`;
     return { messageText: messageWithPronunciation, usernameText: username };

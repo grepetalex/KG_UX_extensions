@@ -2800,10 +2800,10 @@
 
   // Function to get the cleaned text content of the latest message with username prefix
   function getLatestMessageTextContent() {
-    const messageElement = document.querySelector('.messages-content div p:last-child');
-    if (!messageElement) {
-      return null;
-    }
+    // Select the last <p> element specifically
+    const messageElement = document.querySelector('.messages-content div p:last-of-type');
+    // Return null if no message found
+    if (!messageElement) return null;
 
     const isTextNode = (node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== '';
     const textNodes = [...messageElement.childNodes].filter(isTextNode);

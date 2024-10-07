@@ -101,7 +101,8 @@
     { name: 'oonch', gender: 'male', pronunciation: 'Клонец унча' }, // ---------- 13
     { name: 'iChessKnock', gender: 'male', pronunciation: 'Чеснок' }, // --------- 14
     { name: 'Anatolysov', gender: 'male', pronunciation: 'Анатолий' }, // -------- 15
-    { name: 'Солнцеликий', gender: 'male', pronunciation: 'Солнцеликий' } // ----- 16
+    { name: 'Солнцеликий', gender: 'male', pronunciation: 'Солнцеликий' }, // ---- 16
+    { name: 'elasez_uyefot_2', gender: 'male', pronunciation: 'Чупачупс' } // ---- 17
   ];
 
   // Notify me if someone is addressing to me using such aliases
@@ -2715,17 +2716,19 @@
 
   // Function to replace username mentions with their respective pronunciations
   function replaceWithPronunciation(text) {
-    if (text === null) {
-      return text;
-    }
+    if (!text) return text; // Return early if text is null or empty
 
-    const replaceUsername = (username) => {
-      const user = usersToTrack.find(user => user.name === username);
-      return user ? user.pronunciation : username;
-    }
+    // Create a pattern to match usernames, allowing for digits in the names
+    const pattern = new RegExp(usersToTrack.map(user => user.name.replace(/\d/g, '\\d*')).join('|'), 'gi');
 
-    const pattern = new RegExp(usersToTrack.map(user => user.name).join('|'), 'g');
-    return text.replace(pattern, replaceUsername);
+    // Replace all matching usernames with their corresponding pronunciations
+    return text.replace(pattern, (match) => {
+      // Clean digits from the matched username for comparison
+      const cleanedMatch = match.replace(/\d/g, '');
+      // Find the user by cleaned username
+      const user = usersToTrack.find(user => user.name.replace(/\d/g, '').toLowerCase() === cleanedMatch.toLowerCase());
+      return user ? user.pronunciation : match; // Return pronunciation or original match
+    });
   }
 
   // Function what will highlight every mention word in the mention message only

@@ -101,8 +101,7 @@
     { name: 'oonch', gender: 'male', pronunciation: 'Клонец унча' }, // ---------- 13
     { name: 'iChessKnock', gender: 'male', pronunciation: 'Чеснок' }, // --------- 14
     { name: 'Anatolysov', gender: 'male', pronunciation: 'Анатолий' }, // -------- 15
-    { name: 'Солнцеликий', gender: 'male', pronunciation: 'Солнцеликий' }, // ---- 16
-    { name: 'elasez_uyefot_2', gender: 'male', pronunciation: 'Чупачупс' } // ---- 17
+    { name: 'Солнцеликий', gender: 'male', pronunciation: 'Солнцеликий' } // ----- 16
   ];
 
   // Notify me if someone is addressing to me using such aliases
@@ -266,35 +265,35 @@
     }
   });
 
-  function textToSpeech(text, voiceSpeed = voiceSpeed) {
+  /**
+   * Converts text to speech using the Web Speech API.
+   * 
+   * @param {string} text - The text to be spoken. Underscores in the text are replaced with spaces.
+   * @param {number} [voiceSpeed=voiceSpeed] - The speed at which the speech will be delivered.
+   * @returns {Promise} A promise that resolves when the speech ends.
+   */
+  async function textToSpeech(text, voiceSpeed = voiceSpeed) {
     return new Promise(async (resolve) => {
       // Wait for the voices to be loaded
-      const { synth, utterance, voices, voice } = await awaitVoices;
+      const { synth, utterance, voice } = await awaitVoices;
 
-      // Replace underscores with spaces
+      // Prepare the message by replacing underscores with spaces for better readability
       const message = text.replace(/_/g, ' ');
 
-      // Set the text content of the utterance
-      utterance.text = message;
-      // Set the speed of the utterance
-      utterance.rate = voiceSpeed;
-      // Calculate the volume of the utterance based on the global volume value
-      // const dynamicVolume = volume * 6;
-      // Set the volume of the utterance
-      // utterance.volume = dynamicVolume;
-      utterance.volume = voiceVolume;
-      // Set the pitch of the utterance
-      utterance.pitch = voicePitch;
-      // Set the voice of the utterance
-      utterance.voice = voice;
+      // Set utterance properties in an object for clarity and compactness
+      Object.assign(utterance, {
+        text: message, // The text to be spoken
+        rate: voiceSpeed, // Speed at which the speech will be delivered
+        volume: voiceVolume, // Volume level of the speech
+        pitch: voicePitch, // Pitch of the speech
+        voice: voice // Selected voice for the utterance
+      });
 
-      // Speak the utterance
+      // Speak the utterance using the speech synthesis engine
       synth.speak(utterance);
 
-      // Wait for the utterance to end before resolving the Promise
-      utterance.onend = () => {
-        resolve();
-      };
+      // Resolve the promise when the speech ends
+      utterance.onend = resolve; // Call resolve to indicate completion
     });
   }
 
@@ -2716,19 +2715,17 @@
 
   // Function to replace username mentions with their respective pronunciations
   function replaceWithPronunciation(text) {
-    if (!text) return text; // Return early if text is null or empty
+    if (text === null) {
+      return text;
+    }
 
-    // Create a pattern to match usernames, allowing for digits in the names
-    const pattern = new RegExp(usersToTrack.map(user => user.name.replace(/\d/g, '\\d*')).join('|'), 'gi');
+    const replaceUsername = (username) => {
+      const user = usersToTrack.find(user => user.name === username);
+      return user ? user.pronunciation : username;
+    }
 
-    // Replace all matching usernames with their corresponding pronunciations
-    return text.replace(pattern, (match) => {
-      // Clean digits from the matched username for comparison
-      const cleanedMatch = match.replace(/\d/g, '');
-      // Find the user by cleaned username
-      const user = usersToTrack.find(user => user.name.replace(/\d/g, '').toLowerCase() === cleanedMatch.toLowerCase());
-      return user ? user.pronunciation : match; // Return pronunciation or original match
-    });
+    const pattern = new RegExp(usersToTrack.map(user => user.name).join('|'), 'g');
+    return text.replace(pattern, replaceUsername);
   }
 
   // Function what will highlight every mention word in the mention message only
@@ -2806,10 +2803,10 @@
     const username = messageElement.querySelector('.username');
     let usernameText = username ? username.textContent : null;
 
-    // Check if usernameText is not null before replacing "<", ">" symbols, and digits
+    // Check if usernameText is not null before replacing "<" and ">" symbols
     if (usernameText !== null) {
-      // Remove the "<", ">", and digits from the username
-      usernameText = usernameText.replace(/<|>/g, '').replace(/\d/g, '');
+      // Remove the "<" and ">" symbols from the username if they are present
+      usernameText = usernameText.replace(/</g, '').replace(/>/g, '');
     }
 
     let usernamePrefix = '';
@@ -2829,7 +2826,7 @@
     lastUsername = usernameText;
 
     const messageWithPronunciation = `${usernamePrefix}${replaceWithPronunciation(messageText)}`;
-    return { messageText: messageWithPronunciation, usernameText: usernameText };
+    return { messageText: messageWithPronunciation, usernameText: username };
   }
 
   // Prevent the "readNewMessages" function from being called multiple times until all messages in the set have been read
@@ -3649,12 +3646,8 @@
             // Get the username of the user who sent the latest message
             let latestMessageUsername = null;
             if (latestMessageTextContentResult && latestMessageTextContentResult.usernameText) {
-              latestMessageUsername = latestMessageTextContentResult.usernameText;
+              latestMessageUsername = latestMessageTextContentResult.usernameText.textContent;
             }
-
-            // Sanitize the username for comparison
-            const sanitizedLatestMessageUsername = latestMessageUsername ? latestMessageUsername.replace(/\d/g, '') : null;
-            const sanitizedMyNickname = myNickname.replace(/\d/g, '');
 
             // Get the sound switcher element and check which option is selected
             const soundSwitcher = document.querySelector('#voice, #beep, #silence');
@@ -3669,9 +3662,10 @@
             // If mode is voice, speak the new message and update the latest message content in local storage
             if (isVoice && isInitialized && newMessageTextContent && newMessageTextContent !== latestMessageTextContent) {
               // Update localStorage key "latestMessageTextContent"
+              // If "newMessageTextContent" value doesn't match "latestMessageTextContent" value
               localStorage.setItem('latestMessageTextContent', newMessageTextContent);
               // Speak the new message only if it's not addressed to your nickname
-              if (sanitizedLatestMessageUsername && !sanitizedLatestMessageUsername.includes(sanitizedMyNickname)) {
+              if (latestMessageUsername && !latestMessageUsername.includes(myNickname)) {
                 if (isEveryMessage) {
                   // Add the new message to the Set
                   addNewMessage(newMessageTextContent);
@@ -3689,9 +3683,10 @@
             // If mode is beep, play the beep sound for the new message
             if (isBeep && isInitialized && newMessageTextContent && newMessageTextContent !== latestMessageTextContent) {
               // Update localStorage key "latestMessageTextContent"
+              // If "newMessageTextContent" value doesn't match "latestMessageTextContent" value
               localStorage.setItem('latestMessageTextContent', newMessageTextContent);
               // Play the beep sound only if the message is not addressed to your nickname
-              if (sanitizedLatestMessageUsername && !sanitizedLatestMessageUsername.includes(sanitizedMyNickname)) {
+              if (latestMessageUsername && !latestMessageUsername.includes(myNickname)) {
                 // Play mention frequencies if the message is addressed to you
                 if (isMention) {
                   playBeep(mentionMessageFrequencies, beepVolume);
@@ -3725,6 +3720,7 @@
               // Call the function to show the latest popup message
               showPopupMessage();
             }
+
           }
         }
       }
@@ -5453,6 +5449,3 @@
   waitForChatObserver.observe(document, { childList: true, subtree: true });
 
 })();
-
-
-// Make correction for the avatar if the response is :null also make random SVG face.

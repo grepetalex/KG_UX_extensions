@@ -268,32 +268,36 @@
   /**
    * Converts text to speech using the Web Speech API.
    * 
-   * @param {string} text - The text to be spoken. Underscores in the text are replaced with spaces.
+   * @param {string} text - The text to be spoken. Underscores in the text are replaced with hyphens for clarity.
    * @param {number} [voiceSpeed=voiceSpeed] - The speed at which the speech will be delivered.
    * @returns {Promise} A promise that resolves when the speech ends.
    */
   async function textToSpeech(text, voiceSpeed = voiceSpeed) {
     return new Promise(async (resolve) => {
-      // Wait for the voices to be loaded
+      // Wait for the voices to be loaded asynchronously
       const { synth, utterance, voice } = await awaitVoices;
 
-      // Prepare the message by replacing underscores with spaces for better readability
-      const message = text.replace(/_/g, ' ');
+      // Replace underscores with hyphens in the text for better readability in the speech
+      const message = text.replace(/_/g, '-');
 
-      // Set utterance properties in an object for clarity and compactness
+      // Remove digits before key words like "пишет:" or "обращается:", 
+      // ensuring exactly one space is left before those words
+      const cleanedMessage = message.replace(/\s*\d+\s+(?=(пишет:|обращается:))/, ' ').trim();
+
+      // Set utterance properties, such as text to be spoken, rate, volume, pitch, and voice
       Object.assign(utterance, {
-        text: message, // The text to be spoken
+        text: cleanedMessage, // Cleaned message to be spoken
         rate: voiceSpeed, // Speed at which the speech will be delivered
         volume: voiceVolume, // Volume level of the speech
         pitch: voicePitch, // Pitch of the speech
-        voice: voice // Selected voice for the utterance
+        voice: voice // The selected voice for the utterance
       });
 
-      // Speak the utterance using the speech synthesis engine
+      // Speak the utterance using the Web Speech synthesis engine
       synth.speak(utterance);
 
-      // Resolve the promise when the speech ends
-      utterance.onend = resolve; // Call resolve to indicate completion
+      // Resolve the promise once the speech finishes
+      utterance.onend = resolve; // Trigger resolve to indicate completion
     });
   }
 

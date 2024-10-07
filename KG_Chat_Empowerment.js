@@ -693,6 +693,11 @@
     for (let i = 0; i < links.length; i++) {
       const link = links[i];
 
+      // Check if the link has a valid href
+      if (!link.href || !link.href.startsWith('http')) {
+        continue; // Skip invalid links
+      }
+
       // Check if the link's href includes allowed image extension
       const { allowed, extension } = isAllowedImageExtension(link.href);
 

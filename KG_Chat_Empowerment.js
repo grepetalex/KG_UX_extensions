@@ -2807,7 +2807,13 @@
 
     const isTextNode = (node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== '';
     const textNodes = [...messageElement.childNodes].filter(isTextNode);
+
+    // Get message text from text nodes
     const messageText = textNodes.map(node => node.textContent).join('').trim();
+
+    // For private messages, check for the presence of a private message span
+    const privateMessageElement = messageElement.querySelector('span.private');
+    let privateMessageText = privateMessageElement ? privateMessageElement.textContent.trim() : '';
 
     const username = messageElement.querySelector('.username');
     let usernameText = username ? username.textContent : null;
@@ -2834,7 +2840,10 @@
 
     lastUsername = usernameText;
 
-    const messageWithPronunciation = `${usernamePrefix}${replaceWithPronunciation(messageText)}`;
+    // Determine final message text based on whether it's a private message
+    const finalMessageText = privateMessageText ? privateMessageText : messageText; // Only private message if it exists
+
+    const messageWithPronunciation = `${usernamePrefix}${replaceWithPronunciation(finalMessageText)}`;
     return { messageText: messageWithPronunciation, usernameText: username };
   }
 

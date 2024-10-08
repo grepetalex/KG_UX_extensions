@@ -2805,16 +2805,48 @@
     // Return null if no message found
     if (!messageElement) return null;
 
+    // Helper function to check if a node is a text node
     const isTextNode = (node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== '';
-    const textNodes = [...messageElement.childNodes].filter(isTextNode);
 
-    // Get message text from text nodes
-    const messageText = textNodes.map(node => node.textContent).join('').trim();
+    // Helper function to check if a node is an img (emoticon)
+    const isImageNode = (node) => node.nodeName === 'IMG' && node.getAttribute('title');
+
+    // Constants to store parts of the common message (text + emoticons)
+    const commonMessageParts = [];
+    const childNodes = [...messageElement.childNodes];
+
+    childNodes.forEach(node => {
+      if (isTextNode(node)) {
+        commonMessageParts.push(node.textContent.trim()); // Add text content to parts
+      } else if (isImageNode(node)) {
+        commonMessageParts.push(node.getAttribute('title')); // Add emoticon title to parts
+      }
+    });
+
+    // Combine the message parts into a single string
+    const messageText = commonMessageParts.filter(Boolean).join(' ').trim();
 
     // For private messages, check for the presence of a private message span
     const privateMessageElement = messageElement.querySelector('span.private');
-    let privateMessageText = privateMessageElement ? privateMessageElement.textContent.trim() : '';
 
+    const privateMessageParts = [];
+    if (privateMessageElement) {
+      const privateChildNodes = [...privateMessageElement.childNodes];
+      privateChildNodes.forEach(node => {
+        if (isTextNode(node)) {
+          privateMessageParts.push(node.textContent.trim()); // Add private text content
+        } else if (isImageNode(node)) {
+          privateMessageParts.push(node.getAttribute('title')); // Add private emoticon title
+        }
+      });
+    }
+
+    // Combine the private message parts into a single string if private message exists
+    const privateMessageText = privateMessageParts.length > 0
+      ? privateMessageParts.filter(Boolean).join(' ').trim()
+      : '';
+
+    // Retrieve the username from the message
     const username = messageElement.querySelector('.username');
     let usernameText = username ? username.textContent : null;
 
@@ -2841,11 +2873,16 @@
     lastUsername = usernameText;
 
     // Determine final message text based on whether it's a private message
-    const finalMessageText = privateMessageText ? `шёпотом: ${privateMessageText}` : messageText;
+    const finalMessageText = privateMessageText
+      ? `шёпотом: ${privateMessageText}`
+      : messageText;
 
+    // Combine the username prefix and the final message text
     const messageWithPronunciation = `${usernamePrefix}${replaceWithPronunciation(finalMessageText)}`;
+
     return { messageText: messageWithPronunciation, usernameText: username };
   }
+
 
   // Prevent the "readNewMessages" function from being called multiple times until all messages in the set have been read
   let isReading = false;
@@ -5237,7 +5274,7 @@
           event.preventDefault(); // Prevent the default behavior (like a newline)
           // Call the function to send the message in parts
           sendMessageInParts(message);
-          console.log(`Message processed: "${message}"`);
+          console.log(`Long message processed: "${message}"`);
 
           // Clear the input field after sending
           inputField.value = '';

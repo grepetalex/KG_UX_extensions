@@ -1137,7 +1137,10 @@
         opacity = targetOpacity; // Cap opacity
         clearInterval(interval); // Stop the interval
         if (targetOpacity === 0) {
-          document.body.removeChild(dimming); // Remove the element from the DOM
+          // Check if the element is still a child of document.body before removing it
+          if (document.body.contains(dimming)) {
+            document.body.removeChild(dimming); // Remove the element from the DOM
+          }
         }
       }
       dimming.style.opacity = opacity.toString(); // Update the opacity
@@ -1157,7 +1160,9 @@
       if ((step > 0 && opacity >= targetOpacity) || (step < 0 && opacity <= targetOpacity)) {
         opacity = targetOpacity; // Set opacity to the target value
         clearInterval(interval); // Clear the interval
-        if (targetOpacity === 0) {
+
+        // Check if element still has a parent before removing it
+        if (targetOpacity === 0 && element.parentNode) {
           element.parentNode.removeChild(element); // Remove the target element from the DOM
         }
       }

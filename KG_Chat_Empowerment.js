@@ -776,6 +776,8 @@
                   document.addEventListener('keydown', function (event) {
                     // Check if the key pressed was the "Escape" key
                     if (event.key === 'Escape') {
+                      // Fade out the big image
+                      fadeTargetElement(bigImage, 'hide');
                       fadeDimmingElement('hide');
                     }
                     // Check if the key pressed was the left arrow key (<)
@@ -1222,6 +1224,16 @@
     cachedUsersPanel.style.width = '90vw';
     cachedUsersPanel.style.height = '80vh';
     cachedUsersPanel.style.zIndex = '999';
+
+    // Attach a keydown event listener to the document object
+    document.addEventListener('keydown', function (event) {
+      // Check if the key pressed was the "Escape" key
+      if (event.key === 'Escape') {
+        // Fade out the cached users panel
+        fadeTargetElement(cachedUsersPanel, 'hide');
+        fadeDimmingElement('hide');
+      }
+    });
 
     // Create a container div with class 'panel-header'
     const panelHeaderContainer = document.createElement('div');

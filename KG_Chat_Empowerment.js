@@ -623,7 +623,6 @@
 
   // Define global variables for the current big image and dimming background
   let bigImage = null;
-  let dimming = null;
 
   // Define an array to store all the thumbnail links and their corresponding image URLs
   const thumbnailLinks = [];
@@ -749,24 +748,15 @@
                 e.preventDefault();
                 e.stopPropagation();
 
+                // Reset bigImage to null before processing the new thumbnail click
+                bigImage = null;
+
                 currentImageIndex = thumbnailLinks.findIndex((item) => item.imgSrc === link.href);
 
-                // Check if bigImage and dimming are already created
-                if (!bigImage && !dimming) {
-                  dimming = document.createElement('div');
-                  dimming.classList.add('dimming-background');
-                  dimming.style.background = 'black';
-                  dimming.style.top = '0';
-                  dimming.style.left = '0';
-                  dimming.style.right = '0';
-                  dimming.style.bottom = '0';
-                  dimming.style.position = 'fixed';
-                  dimming.style.opacity = '0';
-                  dimming.style.zIndex = '998';
-
-                  document.body.appendChild(dimming);
-
-                  bigImage = createBigImage(img.src, dimming);
+                // Check if bigImage is already created
+                if (!bigImage) {
+                  // Create the big image
+                  bigImage = createBigImage(img.src);
 
                   bigImage.style.top = '50%';
                   bigImage.style.left = '50%';
@@ -776,27 +766,17 @@
                   bigImage.style.zIndex = '999';
                   bigImage.style.transformOrigin = 'center center';
 
-                  // Gradually increase the opacity of the dimming background and bigImage
-                  let opacity = 0;
-                  const interval = setInterval(() => {
-                    opacity += 0.05;
-                    // Change the opacity from 0 up to 0.5
-                    if (opacity <= 0.5) {
-                      dimming.style.opacity = opacity.toString();
-                    }
-                    bigImage.style.opacity = opacity.toString();
+                  // Fade in the big image
+                  fadeTargetElement(bigImage, 'show');
 
-                    // Change the opacity from 0 up to 1
-                    if (opacity >= 1) {
-                      clearInterval(interval);
-                    }
-                  }, 10);
+                  // To show the dimming background
+                  fadeDimmingElement('show');
 
                   // Attach a keydown event listener to the document object
                   document.addEventListener('keydown', function (event) {
                     // Check if the key pressed was the "Escape" key
                     if (event.key === 'Escape') {
-                      removeDimmingContainer();
+                      fadeDimmingElement('hide');
                     }
                     // Check if the key pressed was the left arrow key (<)
                     else if (event.key === 'ArrowLeft') {
@@ -851,7 +831,7 @@
   } // end convertImageLinkToImage
 
   // Function to create a big image with a dimming layer
-  function createBigImage(src, dimming) {
+  function createBigImage(src) {
     const bigImage = document.createElement('img');
     bigImage.src = src;
     bigImage.classList.add('scaled-thumbnail');
@@ -859,15 +839,6 @@
     bigImage.style.maxWidth = '90vw';
 
     document.body.appendChild(bigImage);
-
-    // Add click event listener to the dimming background for removal
-    dimming.addEventListener('click', function () {
-      removeDimmingContainer();
-    });
-
-    bigImage.addEventListener('click', function () {
-      removeDimmingContainer();
-    });
 
     // ZOOM AND MOVE -- START
 
@@ -905,22 +876,6 @@
       event.preventDefault();
     }
 
-    // Add an event listener to bigImage for wheel event
-    bigImage.addEventListener('wheel', handleZoom);
-
-    // Add an event listener to bigImage for mousedown event
-    bigImage.addEventListener('mousedown', function (event) {
-      // Check if the middle mouse button is pressed
-      if (event.button === 1) {
-        // Set the dragging flag
-        isDragging = true;
-
-        // Calculate the initial position relative to the image's position
-        startX = event.clientX;
-        startY = event.clientY;
-      }
-    });
-
     // Function to update the image position smoothly
     function updateImagePosition(event) {
       if (isDragging) {
@@ -941,25 +896,64 @@
       }
     }
 
-    // Add an event listener to document for mousemove event
-    document.addEventListener('mousemove', updateImagePosition);
+    // Add event listener for mousedown
+    const mouseDownHandler = (event) => {
+      // Check if the middle mouse button is pressed
+      if (event.button === 1) {
+        isDragging = true; // Set the dragging flag
+        [startX, startY] = [event.clientX, event.clientY]; // Calculate initial position
+      }
+    };
 
-    // Add an event listener to document for mouseup event
-    document.addEventListener('mouseup', function (event) {
-      // Reset the dragging flag
-      isDragging = false;
+    // Add event listener for mouseup
+    const mouseUpHandler = () => {
+      isDragging = false; // Reset the dragging flag
+    };
+
+    // Add event listener for mousemove
+    const mouseMoveHandler = updateImagePosition; // Assuming updateImagePosition is defined elsewhere
+
+    // Add event listener for wheel
+    const wheelHandler = handleZoom; // Assuming handleZoom is defined elsewhere
+
+    // Attach event listeners
+    document.addEventListener('mousedown', mouseDownHandler);
+    document.addEventListener('mouseup', mouseUpHandler);
+    document.addEventListener('mousemove', mouseMoveHandler);
+    document.addEventListener('wheel', wheelHandler);
+
+    // Create a MutationObserver to watch for the removal of scaled-thumbnail elements
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        // Check if nodes have been removed
+        if (mutation.removedNodes.length) {
+          mutation.removedNodes.forEach((node) => {
+            // Check if the removed node is the scaled-thumbnail
+            if (node.classList && node.classList.contains('scaled-thumbnail')) {
+              // Remove all event listeners directly
+              document.removeEventListener('mousedown', mouseDownHandler);
+              document.removeEventListener('mouseup', mouseUpHandler);
+              document.removeEventListener('mousemove', mouseMoveHandler);
+              document.removeEventListener('wheel', wheelHandler);
+
+              // Disconnect the observer after handling the removal
+              observer.disconnect();
+            }
+          });
+        }
+      }
     });
 
-    // Add an event listener to elements with class "dimming-background" for wheel event
-    const dimmingBackgroundElements = document.querySelectorAll('.dimming-background');
-    dimmingBackgroundElements.forEach((dimmingBackgroundElement) => {
-      dimmingBackgroundElement.addEventListener('wheel', handleZoom);
+    // Start observing the body or the relevant parent container
+    observer.observe(document.body, {
+      childList: true, // Watch for the addition/removal of child nodes
+      subtree: true, // Observe all descendants
     });
-
-    // ZOOM AND MOVE -- END
 
     return bigImage;
   }
+
+  // ZOOM AND MOVE -- END
 
   // Function to navigate between images within bounds
   function navigateImages(direction) {
@@ -985,46 +979,6 @@
 
       // Update the current index
       currentImageIndex = newIndex;
-    }
-  }
-
-  let isRemovingDimming = false; // Add a flag to track removal process
-
-  // Function to remove the dimming container
-  function removeDimmingContainer() {
-    if (dimming && !isRemovingDimming) {
-      isRemovingDimming = true; // Set the flag to true
-
-      // Gradually decrease the opacity of the dimming and bigImage elements
-      let opacity = 0.5;
-      const interval = setInterval(() => {
-        opacity -= 0.1;
-        dimming.style.opacity = opacity;
-        if (bigImage) {
-          bigImage.style.opacity = opacity;
-        }
-        if (opacity <= 0) {
-          clearInterval(interval);
-
-          // Check if the flag is still true before removing elements
-          if (isRemovingDimming) {
-            // Reset the currentImageIndex to 0
-            currentImageIndex = 0;
-
-            // Remove the dimming element from the document body
-            document.body.removeChild(dimming);
-            // Reset the global variable
-            dimming = null;
-            if (bigImage) {
-              // Remove the bigImage element from the document body
-              document.body.removeChild(bigImage);
-              // Reset the global variable
-              bigImage = null;
-            }
-            isRemovingDimming = false; // Reset the flag
-          }
-        }
-      }, 10);
     }
   }
 
@@ -1135,15 +1089,118 @@
   userCountStylesElement.textContent = userCountStyles;
   document.head.appendChild(userCountStylesElement);
 
+  // Constants for fade speed control
+  const fadeIntervalTime = 10; // Time between each opacity change step in ms
+  const fadeDuration = 100; // Total fade duration in ms
+
+  // Function to create and fade the dimming element
+  function fadeDimmingElement(action) {
+    // Check if the dimming element already exists
+    let dimming = document.querySelector('.dimming-background');
+
+    // If the action is 'hide' and the dimming element doesn't exist, return
+    if (action === 'hide' && !dimming) return;
+
+    // Create the dimming element only if it doesn't exist
+    if (!dimming) {
+      dimming = document.createElement('div');
+      dimming.classList.add('dimming-background');
+      dimming.style.background = 'black';
+      dimming.style.top = '0';
+      dimming.style.left = '0';
+      dimming.style.right = '0';
+      dimming.style.bottom = '0';
+      dimming.style.position = 'fixed';
+      dimming.style.opacity = '0';
+      dimming.style.zIndex = '998';
+
+      // Append the dimming element to the body
+      document.body.appendChild(dimming);
+
+      // Add click event listener to remove the dimming element and the upper element
+      dimming.addEventListener('click', function () {
+        // Get the previous sibling element (the one above the dimming background) and remove it if it exists
+        dimming.previousElementSibling && dimming.previousElementSibling.parentNode.removeChild(dimming.previousElementSibling);
+        fadeDimmingElement('hide');
+      });
+    }
+
+    let opacity = parseFloat(dimming.style.opacity) || 0; // Current opacity
+    const targetOpacity = action === 'show' ? 0.5 : 0; // Target opacity based on action
+    const step = (targetOpacity - opacity) / (fadeDuration / fadeIntervalTime); // Calculate the change in opacity per step
+
+    const interval = setInterval(() => {
+      opacity += step; // Update the opacity
+      if ((step > 0 && opacity >= targetOpacity) || (step < 0 && opacity <= targetOpacity)) {
+        opacity = targetOpacity; // Cap opacity
+        clearInterval(interval); // Stop the interval
+        if (targetOpacity === 0) {
+          document.body.removeChild(dimming); // Remove the element from the DOM
+        }
+      }
+      dimming.style.opacity = opacity.toString(); // Update the opacity
+    }, fadeIntervalTime);
+  }
+
+  // Function to gradually fade a target element to show or hide it
+  function fadeTargetElement(element, action) {
+    if (!element) return; // Return if the element does not exist
+
+    const targetOpacity = action === 'show' ? 1 : 0; // Set target opacity based on action
+    let opacity = parseFloat(element.style.opacity) || 0; // Get the current opacity
+    const step = (targetOpacity - opacity) / (fadeDuration / fadeIntervalTime); // Calculate the change in opacity per step
+
+    const interval = setInterval(() => {
+      opacity += step; // Update the opacity
+      if ((step > 0 && opacity >= targetOpacity) || (step < 0 && opacity <= targetOpacity)) {
+        opacity = targetOpacity; // Set opacity to the target value
+        clearInterval(interval); // Clear the interval
+        if (targetOpacity === 0) {
+          element.parentNode.removeChild(element); // Remove the target element from the DOM
+        }
+      }
+      element.style.opacity = opacity.toString(); // Update the element's opacity
+    }, fadeIntervalTime);
+
+    // Add a double click event listener to hide the element
+    element.addEventListener('dblclick', () => {
+      fadeTargetElement(element, 'hide'); // Call fadeTargetElement to hide on double click
+      fadeDimmingElement('hide'); // Hide the dimming element on double click
+    });
+  }
 
   // NEW CHAT CACHE CONTROL PANEL (START)
+
+  // Rank order mapping
+  const rankOrder = {
+    'Экстракибер': 1,
+    'Кибергонщик': 2,
+    'Супермен': 3,
+    'Маньяк': 4,
+    'Гонщик': 5,
+    'Профи': 6,
+    'Таксист': 7,
+    'Любитель': 8,
+    'Новичок': 9
+  };
+
+  // Rank color mapping
+  const rankColors = {
+    'Экстракибер': '#06B4E9', // Light Blue
+    'Кибергонщик': '#5681ff', // Medium Blue
+    'Супермен': '#B543F5', // Purple
+    'Маньяк': '#DA0543', // Red
+    'Гонщик': '#FF8C00', // Orange
+    'Профи': '#C1AA00', // Yellow
+    'Таксист': '#2DAB4F', // Green
+    'Любитель': '#61B5B3', // Light Cyan
+    'Новичок': '#AFAFAF' // Grey
+  };
 
   // Function to display the cached user list panel
   function showCachePanel() {
     // Check if the panel already exists
-    if (document.querySelector('.cached-users-panel')) {
-      return;
-    }
+    if (document.querySelector('.cached-users-panel')) return;
 
     // Get data from localStorage
     const fetchedUsersData = localStorage.getItem('fetchedUsers');
@@ -1151,39 +1208,11 @@
     // Initialize users by parsing fetched data or setting as empty object
     let users = JSON.parse(fetchedUsersData) || {};
 
-    // Rank order mapping
-    const rankOrder = {
-      'Экстракибер': 1,
-      'Кибергонщик': 2,
-      'Супермен': 3,
-      'Маньяк': 4,
-      'Гонщик': 5,
-      'Профи': 6,
-      'Таксист': 7,
-      'Любитель': 8,
-      'Новичок': 9
-    };
-
-    // Rank color mapping
-    const rankColors = {
-      'Экстракибер': '#06B4E9', // Light Blue
-      'Кибергонщик': '#5681ff', // Medium Blue
-      'Супермен': '#B543F5', // Purple
-      'Маньяк': '#DA0543', // Red
-      'Гонщик': '#FF8C00', // Orange
-      'Профи': '#C1AA00', // Yellow
-      'Таксист': '#2DAB4F', // Green
-      'Любитель': '#61B5B3', // Light Cyan
-      'Новичок': '#AFAFAF' // Grey
-    };
-
     // Create a container div with class 'cached-users-panel'
     const cachedUsersPanel = document.createElement('div');
     cachedUsersPanel.className = 'cached-users-panel';
     // Set initial styles
     cachedUsersPanel.style.opacity = '0';
-    cachedUsersPanel.style.transition = 'opacity 0.6s cubic-bezier(.05,.95,.45,.95)';
-
     cachedUsersPanel.style.backgroundColor = '#1b1b1b';
     cachedUsersPanel.style.setProperty('border-radius', '0.6em', 'important');
     cachedUsersPanel.style.position = 'fixed';
@@ -1192,7 +1221,7 @@
     cachedUsersPanel.style.transform = 'translateX(-50%)';
     cachedUsersPanel.style.width = '90vw';
     cachedUsersPanel.style.height = '80vh';
-    cachedUsersPanel.style.zIndex = '120';
+    cachedUsersPanel.style.zIndex = '999';
 
     // Create a container div with class 'panel-header'
     const panelHeaderContainer = document.createElement('div');
@@ -1672,11 +1701,11 @@
     // Append the cached-users-panel to the body
     document.body.appendChild(cachedUsersPanel);
 
-    // Trigger a reflow by accessing offsetHeight to apply the initial styles
-    cachedUsersPanel.offsetHeight;
+    // Fade in the cached users panel
+    fadeTargetElement(cachedUsersPanel, 'show');
 
-    // Update the opacity to 1 to smoothly reveal the element
-    cachedUsersPanel.style.opacity = '1';
+    // Show the dimming background
+    fadeDimmingElement('show');
 
     // Function to update the remaining time
     function updateRemainingTime() {
@@ -1723,16 +1752,10 @@
     const cachedUsersPanel = document.querySelector('.cached-users-panel');
 
     if (cachedUsersPanel) {
-      // Set the opacity to 0 to smoothly hide the element
-      cachedUsersPanel.style.opacity = '0';
-
-      // After a short delay (or transition duration), remove the element
-      setTimeout(() => {
-        if (cachedUsersPanel.parentNode) {
-          // Remove the cachedUsersPanel from the DOM
-          cachedUsersPanel.parentNode.removeChild(cachedUsersPanel);
-        }
-      }, 300); // Adjust the delay as needed
+      // Call the fade function for the cachedUsersPanel
+      fadeTargetElement(cachedUsersPanel, 'hide');
+      // Call the fade function for the dimming element
+      fadeDimmingElement('hide');
     }
   }
 

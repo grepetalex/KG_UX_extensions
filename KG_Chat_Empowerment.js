@@ -1467,18 +1467,71 @@
     const fetchedUsersContainer = document.createElement('div');
     fetchedUsersContainer.className = 'fetched-users';
 
-    // Add CSS styles for grid layout and centering
-    fetchedUsersContainer.style.display = 'grid';
-    fetchedUsersContainer.style.gridAutoFlow = 'dense'; // Allows items to fill empty spaces
-    fetchedUsersContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(200px, 1fr))';
-    fetchedUsersContainer.style.gridTemplateRows = 'repeat(auto-fill, minmax(80px, 1fr))';
-    fetchedUsersContainer.style.gap = '12px';
-    fetchedUsersContainer.style.padding = '24px';
-    fetchedUsersContainer.style.overflowY = 'auto';
-    fetchedUsersContainer.style.height = 'calc(100% - (64px + 0.6em))';
+    // Set grid layout properties
+    fetchedUsersContainer.style.display = 'grid'; // Use grid layout
+    fetchedUsersContainer.style.gridTemplateRows = '1fr 1fr'; // Stack two rows for new and old users
+    fetchedUsersContainer.style.height = 'calc(100% - (64px + 0.6em))'; // Set height for main container
+    fetchedUsersContainer.style.overflowY = 'auto'; // Enable vertical scrolling if needed
+
+    // Function to create a user container with common styles
+    function createUserContainer(className) {
+      const userContainer = document.createElement('div');
+      userContainer.className = className;
+
+      // Add common CSS styles for grid layout and centering
+      userContainer.style.display = 'grid';
+      userContainer.style.gridAutoFlow = 'dense'; // Allows items to fill empty spaces
+      userContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(200px, 1fr))'; // Responsive columns
+      userContainer.style.gap = '12px'; // Space between items
+      userContainer.style.padding = '24px';
+      userContainer.style.height = 'calc(100% - (64px + 0.6em))';
+
+      return userContainer;
+    }
+
+    // Create containers for old and new users
+    const oldUsersContainer = createUserContainer('old-users');
+    const newUsersContainer = createUserContainer('new-users');
+
+    // Function to create a description for user groups
+    function createDescription(text, className) {
+      const description = document.createElement('span');
+      description.className = className;
+      description.textContent = text;
+      description.style.color = 'bisque';
+      description.style.fontFamily = 'Montserrat';
+      description.style.fontSize = '1em';
+      description.style.margin = '0';
+      description.style.padding = '0.4em 0.2em';
+      // Make description span all columns
+      description.style.gridColumn = '1 / -1';
+      return description;
+    }
+
+    // Create and style descriptions for old and new users
+    const oldUsersDescription = createDescription('Active Users', 'old-users-description'); // Create description for old users
+    const newUsersDescription = createDescription('New Registrations', 'new-users-description'); // Create description for new users
+
+    // Append descriptions to their respective containers
+    oldUsersContainer.appendChild(oldUsersDescription); // Append description to old users container
+    newUsersContainer.appendChild(newUsersDescription); // Append description to new users container
+
+    // Append containers to the fetchedUsersContainer
+    fetchedUsersContainer.appendChild(oldUsersContainer);
+    fetchedUsersContainer.appendChild(newUsersContainer);
 
     // Create an array to hold user elements
     const userElements = [];
+
+    // Get current date for comparison
+    const currentDate = new Date();
+
+    // Helper function to check if registered date is within the last 24 hours
+    const isNewUser = (registered) => {
+      const registeredDate = new Date(registered);
+      const timeDifference = currentDate - registeredDate; // Difference in milliseconds
+      return timeDifference <= 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+    };
 
     // Iterate through each user
     Object.keys(users).forEach(async (userId) => {
@@ -1488,7 +1541,7 @@
       const userElement = document.createElement('div');
       userElement.className = 'user';
       userElement.style.padding = '0.2em';
-      userElement.style.margin = '0.2em';
+      userElement.style.margin = '0.4em 0.2em';
       userElement.style.display = 'grid';
       userElement.style.gridTemplateColumns = 'auto 1fr';
       userElement.style.alignItems = 'center';
@@ -1502,14 +1555,14 @@
       // Define styles for tracked and untracked users
       const styles = {
         tracked: {
-          ...baseStyle, // Spread the base styles
+          ...baseStyle,
           color: 'greenyellow',
           backgroundColor: 'darkgreen',
           fontWeight: 'bold',
           padding: '0 6px'
         },
         untracked: {
-          ...baseStyle, // Spread the base styles
+          ...baseStyle,
           color: 'orange',
           fontWeight: 'normal'
         }
@@ -1522,7 +1575,6 @@
       const generateStylesString = (styles) => {
         return Object.entries(styles)
           .map(([key, value]) => {
-            // Convert camelCase to kebab-case for CSS property names
             const cssProperty = key.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
             return `${cssProperty}: ${value}`;
           })
@@ -1531,7 +1583,7 @@
 
       // Create the avatar div container
       const avatarElement = document.createElement('div');
-      avatarElement.className = 'avatar'; // Assign a class name for styling
+      avatarElement.className = 'avatar';
       avatarElement.style.marginRight = '8px';
 
       // Retrieve the avatar timestamp for the user
@@ -1542,21 +1594,15 @@
 
       // Check if avatarTimestamp is defined and not '00'
       if (avatarTimestamp && avatarTimestamp !== '00') {
-        // Append the timestamp to the URL if it's valid
         const finalAvatarUrl = `${bigAvatarUrl}?updated=${avatarTimestamp}`;
-
-        // Create the avatar image element
         const imgElement = document.createElement('img');
-        imgElement.src = finalAvatarUrl; // Use the constructed avatar URL
-        imgElement.alt = `${userData.login}'s avatar`; // Set alt attribute for accessibility
-        imgElement.style.height = '24px'; // Set height for the avatar
-        imgElement.style.width = '24px'; // Set width for the avatar (optional)
-        imgElement.style.objectFit = 'cover'; // Ensure the image covers the area without stretching
-
-        // Append the image to the avatar container
+        imgElement.src = finalAvatarUrl;
+        imgElement.alt = `${userData.login}'s avatar`;
+        imgElement.style.height = '24px';
+        imgElement.style.width = '24px';
+        imgElement.style.objectFit = 'cover';
         avatarElement.appendChild(imgElement);
       } else {
-        // Set innerHTML to random SVG icon when timestamp is '00' or undefined
         avatarElement.innerHTML = getRandomIconSVG();
       }
 
@@ -1564,7 +1610,6 @@
       loginElement.className = 'login';
       loginElement.textContent = userData.login;
 
-      // Concatenate visits if they exist
       if (userData.visits !== undefined) {
         loginElement.innerHTML += `<span style="${generateStylesString(chosenStyles)}">${userData.visits}</span>`;
       }
@@ -1574,9 +1619,8 @@
       loginElement.style.setProperty('color', 'skyblue', 'important');
       loginElement.style.textDecoration = 'none';
       loginElement.style.fontFamily = "Montserrat";
-      loginElement.style.transition = 'color 0.3s ease'; // Add smooth transition
+      loginElement.style.transition = 'color 0.3s ease';
 
-      // Add underline on hover and change color to a lighter shade of skyblue
       loginElement.addEventListener('mouseover', () => {
         loginElement.style.setProperty('color', 'cornsilk', 'important');
       });
@@ -1590,125 +1634,115 @@
       rankElement.style.color = rankColors[userData.rank] || 'white';
       rankElement.style.padding = '2px 0';
 
-      // Create user-data container
       const userDataElement = document.createElement('div');
       userDataElement.className = 'user-data';
 
-      // Append login, rank, and registered elements to user-data
       const registeredElement = document.createElement('div');
       registeredElement.className = 'registered';
       registeredElement.textContent = userData.registered;
       registeredElement.style.color = 'cadetblue';
       registeredElement.style.fontSize = '12px';
 
-      // Store original content for registered element
       const originalContent = registeredElement.textContent;
-      let hoverTimer; // Timer for managing mouse hover delay
+      let hoverTimer;
 
-      // Add mouseover event with 300ms delay
       registeredElement.addEventListener('mouseover', () => {
-        // Clear any existing timer
         clearTimeout(hoverTimer);
-        // Set a timer to show the time after 300 ms
         hoverTimer = setTimeout(() => {
-          registeredElement.textContent = calculateTimeOnSite(userData.registered); // Show time after delay
+          registeredElement.textContent = calculateTimeOnSite(userData.registered);
         }, 300);
       });
 
-      // Add mouseout event to revert back to the original content
       registeredElement.addEventListener('mouseout', () => {
-        // Clear the timer if mouse leaves before the time is displayed
         clearTimeout(hoverTimer);
-        registeredElement.textContent = originalContent; // Restore original content
+        registeredElement.textContent = originalContent;
       });
 
-      // Append login, rank, and registered to userDataElement
       userDataElement.appendChild(loginElement);
       userDataElement.appendChild(rankElement);
       userDataElement.appendChild(registeredElement);
 
-      // Create user metrics container
       const userMetrics = document.createElement('div');
       userMetrics.className = 'user-metrics';
       userMetrics.style.marginTop = '4px';
       userMetrics.style.gridColumn = 'span 2';
 
-      const doubleSpace = '&nbsp;&nbsp;'; // Constant for double space
+      const doubleSpace = '&nbsp;&nbsp;';
 
-      // Create elements for best speed, rating level, cars count, and friends count
       const bestSpeedElement = document.createElement('span');
       bestSpeedElement.style.color = 'cyan';
-      bestSpeedElement.innerHTML = `🚀${userData.bestSpeed || 0}${doubleSpace}`; // Adding rocket icon for speed with double space
+      bestSpeedElement.innerHTML = `🚀${userData.bestSpeed || 0}${doubleSpace}`;
       bestSpeedElement.title = 'Best speed';
-      bestSpeedElement.className = 'best-speed'; // Assigning class
+      bestSpeedElement.className = 'best-speed';
 
       const ratingLevelElement = document.createElement('span');
       ratingLevelElement.style.color = 'gold';
-      ratingLevelElement.innerHTML = `⭐${userData.ratingLevel || 0}${doubleSpace}`; // Adding star icon for rating
+      ratingLevelElement.innerHTML = `⭐${userData.ratingLevel || 0}${doubleSpace}`;
       ratingLevelElement.title = 'Rating level';
-      ratingLevelElement.className = 'rating-level'; // Assigning class
+      ratingLevelElement.className = 'rating-level';
 
       const carsElement = document.createElement('span');
       carsElement.style.color = 'lightblue';
-      carsElement.innerHTML = `🚖${userData.cars || 0}${doubleSpace}`; // Adding car icon for cars with double space
+      carsElement.innerHTML = `🚖${userData.cars || 0}${doubleSpace}`;
       carsElement.title = 'Cars count';
-      carsElement.className = 'cars-count'; // Assigning class
+      carsElement.className = 'cars-count';
 
       const friendsElement = document.createElement('span');
       friendsElement.style.color = 'lightgreen';
-      friendsElement.innerHTML = `🤝${userData.friends || 0}${doubleSpace}`; // Adding friends icon with double space
+      friendsElement.innerHTML = `🤝${userData.friends || 0}${doubleSpace}`;
       friendsElement.title = 'Friends count';
-      friendsElement.className = 'friends-count'; // Assigning class
+      friendsElement.className = 'friends-count';
 
-      // Array of elements
       const elements = [bestSpeedElement, ratingLevelElement, carsElement, friendsElement];
 
-      // Apply cursor style to all elements
       elements.forEach(element => {
-        element.style.cursor = 'pointer'; // Setting cursor type to help
+        element.style.cursor = 'pointer';
       });
 
-      // Append all elements to userMetrics
       userMetrics.appendChild(bestSpeedElement);
       userMetrics.appendChild(ratingLevelElement);
       userMetrics.appendChild(carsElement);
       userMetrics.appendChild(friendsElement);
 
-      // Add a single click event listener to userMetrics
       userMetrics.addEventListener('click', (event) => {
-        const target = event.target; // Get the clicked element
+        const target = event.target;
 
         if (target.classList.contains('best-speed')) {
-          window.open(`https://klavogonki.ru/u/#/${userId}/stats/normal/`, '_blank'); // Use actual userId
+          window.open(`https://klavogonki.ru/u/#/${userId}/stats/normal/`, '_blank');
         } else if (target.classList.contains('rating-level')) {
-          window.open(`https://klavogonki.ru/top/rating/today?s=${userData.login}`, '_blank'); // Use userData.login
+          window.open(`https://klavogonki.ru/top/rating/today?s=${userData.login}`, '_blank');
         } else if (target.classList.contains('cars-count')) {
-          window.open(`https://klavogonki.ru/u/#/${userId}/car/`, '_blank'); // Use actual userId
+          window.open(`https://klavogonki.ru/u/#/${userId}/car/`, '_blank');
         } else if (target.classList.contains('friends-count')) {
-          window.open(`https://klavogonki.ru/u/#/${userId}/friends/list/`, '_blank'); // Use actual userId
+          window.open(`https://klavogonki.ru/u/#/${userId}/friends/list/`, '_blank');
         }
       });
 
-      // Append user-data and user-metrics to the main userElement
       userElement.appendChild(avatarElement);
       userElement.appendChild(userDataElement);
       userElement.appendChild(userMetrics);
 
       // Append the user div to the userElements array
-      userElements.push({ userElement, order: rankOrder[userData.rank] || 10, bestSpeed: userData.bestSpeed || 0 });
+      userElements.push({
+        userElement,
+        order: rankOrder[userData.rank] || 10,
+        bestSpeed: userData.bestSpeed || 0,
+        registered: userData.registered // Store the registered date
+      });
     });
 
-    // Sort userElements array based on rank order and best speed
-    userElements.sort((a, b) => {
-      // First compare by rank order
-      const rankComparison = a.order - b.order;
-      // If ranks are equal, compare by best speed in descending order
-      return rankComparison !== 0 ? rankComparison : b.bestSpeed - a.bestSpeed;
-    });
+    // Sort userElements by rank and best speed
+    userElements.sort((a, b) =>
+      // First by rank, then by speed
+      a.order !== b.order ? a.order - b.order : b.bestSpeed - a.bestSpeed
+    );
 
-    // Append sorted user elements to the fetched-users container
-    userElements.forEach(({ userElement }) => {
-      fetchedUsersContainer.appendChild(userElement);
+    // Distribute userElements into new or old users containers
+    userElements.forEach(({ userElement, registered }) => {
+      // Choose container
+      const targetContainer = isNewUser(registered) ? newUsersContainer : oldUsersContainer;
+      // Append userElement
+      targetContainer.appendChild(userElement);
     });
 
     // Append the panel-header container to the cached-users-panel

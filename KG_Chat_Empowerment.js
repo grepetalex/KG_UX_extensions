@@ -1,3 +1,4 @@
+
 // ==UserScript==
 // @name         KG_Chat_Empowerment
 // @namespace    klavogonki

@@ -1,4 +1,3 @@
-
 // ==UserScript==
 // @name         KG_Chat_Empowerment
 // @namespace    klavogonki
@@ -1349,6 +1348,73 @@
 
     // Append the drop time element to the panel header container
     panelHeaderContainer.appendChild(dropTime);
+
+    // Create a container div for the search input
+    const searchContainer = document.createElement('div');
+    searchContainer.className = 'search-for-users';
+    searchContainer.style.width = '100%';
+    searchContainer.style.margin = '0 20px';
+    searchContainer.style.display = 'flex';
+
+    // Create the input field for searching users
+    const searchInput = document.createElement('input');
+    searchInput.className = 'user-search-input';
+    searchInput.type = 'text';
+    searchInput.style.width = '100%';
+    searchInput.style.padding = '10px';
+    searchInput.style.margin = '0 1em';
+    searchInput.style.fontSize = '1em';
+    searchInput.style.fontFamily = 'Montserrat';
+    searchInput.style.setProperty('color', 'bisque', 'important');
+    searchInput.style.setProperty('border-radius', '5px', 'important');
+    searchInput.style.boxSizing = 'border-box';
+    searchInput.style.backgroundColor = '#111';
+    searchInput.style.border = '1px solid #222';
+
+    // Append search input to the search container
+    searchContainer.appendChild(searchInput);
+
+    // Append the search container to the panel header container
+    panelHeaderContainer.appendChild(searchContainer);
+
+    // Use a mutation observer to wait for the element to appear in the DOM
+    const observer = new MutationObserver(mutations => {
+      if (mutations.some(mutation => mutation.type === 'childList' && mutation.addedNodes.length > 0)) {
+        const cachePanelSearchInput = document.querySelector('.user-search-input');
+        const cachePanelLogins = Array.from(document.querySelectorAll('.fetched-users .login'));
+
+        // Fuzzy match scoring function
+        const getFuzzyMatchScore = (query, text) => {
+          let score = 0, queryIndex = 0;
+          for (const char of text.toLowerCase()) {
+            if (queryIndex < query.length && char === query[queryIndex].toLowerCase()) {
+              score += 2; // Increment score for matching character
+              queryIndex++; // Increment index for the next character
+            }
+          }
+          return queryIndex === query.length ? score : 0;
+        };
+
+        // Filter items based on input query
+        const filterItems = query => {
+          cachePanelLogins.forEach(item => {
+            const userContainer = item.closest('.user');
+            userContainer.style.display = (!query || getFuzzyMatchScore(query, item.textContent) > 0) ? 'grid' : 'none';
+          });
+        };
+
+        // Set focus to the search input field
+        cachePanelSearchInput.focus();
+
+        // Add input event listener to filter items as the user types
+        cachePanelSearchInput.addEventListener('input', () => filterItems(cachePanelSearchInput.value.trim()));
+
+        observer.disconnect();
+      }
+    });
+
+    // Start observing the panel header container for changes
+    observer.observe(panelHeaderContainer, { childList: true, subtree: true });
 
     // Create a container div with class 'panel-control-buttons'
     const panelControlButtons = document.createElement('div');

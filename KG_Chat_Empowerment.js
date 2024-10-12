@@ -1485,7 +1485,7 @@
       userContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(200px, 1fr))'; // Responsive columns
       userContainer.style.gap = '12px'; // Space between items
       userContainer.style.padding = '24px';
-      userContainer.style.height = 'calc(100% - (64px + 0.6em))';
+      userContainer.style.height = 'fit-content';
 
       return userContainer;
     }
@@ -1506,6 +1506,7 @@
       description.style.padding = '0.4em 0.2em';
       // Make description span all columns
       description.style.gridColumn = '1 / -1';
+      description.style.height = 'fit-content';
       return description;
     }
 
@@ -1546,6 +1547,7 @@
       userElement.style.display = 'grid';
       userElement.style.gridTemplateColumns = 'auto 1fr';
       userElement.style.alignItems = 'center';
+      userElement.style.height = 'fit-content';
 
       // Base styles shared by both tracked and untracked users
       const baseStyle = {

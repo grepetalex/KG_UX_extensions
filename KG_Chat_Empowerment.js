@@ -641,7 +641,8 @@
     'pikabu.ru',
     'userapi.com', // vk.com
     'ibb.co', // imgbb.com
-    'yaplakal.com'
+    'yaplakal.com',
+    'freepik.com'
   ];
 
   /**

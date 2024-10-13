@@ -97,8 +97,8 @@
     { name: 'ExpLo1t', gender: 'female', pronunciation: 'Эксплоит' }, // --------- 09
     { name: 'инфо-пчелы', gender: 'male', pronunciation: 'Инфо-Пчёлы' }, // ------ 10
     { name: 'Razmontana', gender: 'male', pronunciation: 'Размонтана' }, // ------ 11
-    { name: 'un4given', gender: 'male', pronunciation: 'Унч' }, // --------------- 12
-    { name: 'oonch', gender: 'male', pronunciation: 'Клонец унча' }, // ---------- 13
+    { name: 'un4given', gender: 'male', pronunciation: 'Анфогивн' }, // ---------- 12
+    { name: 'oonch', gender: 'male', pronunciation: 'Унч' }, // ------------------ 13
     { name: 'iChessKnock', gender: 'male', pronunciation: 'Чеснок' }, // --------- 14
     { name: 'Anatolysov', gender: 'male', pronunciation: 'Анатолий' }, // -------- 15
     { name: 'Солнцеликий', gender: 'male', pronunciation: 'Солнцеликий' } // ----- 16
@@ -3820,16 +3820,49 @@
       <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
       </svg>`;
   // Icon for userlistCache
-  const iconUserlistCache = `<svg xmlns="${svgUrl}" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="lightcoral" stroke-width="${iconStrokeWidth}"
+  const iconUserlistCache = `<svg xmlns="${svgUrl}" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="#b4d583" stroke-width="${iconStrokeWidth}"
       stroke-linecap="round" stroke-linejoin="round" class="feather feather-database">
       <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
       <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
       <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
       </svg>`;
+  // Icon for personal messages
+  const iconPersonalMessages = `<svg xmlns="${svgUrl}" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="#ffa07a" stroke-width="${iconStrokeWidth}"
+      stroke-linecap="round" stroke-linejoin="round" class="feather feather-mail">
+      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+      <polyline points="22,6 12,13 2,6"></polyline>
+      </svg>`;
 
 
+  // Declare variables for the sound switcher button and its icon
   let soundSwitcher, soundSwitcherIcon;
+  // Declare variables for the message mode button and its icon
   let messageMode, messageModeIcon;
+
+  // Helper function to add pulse effect
+  function addPulseEffect(element) {
+    element.classList.add('pulse');
+    setTimeout(() => {
+      element.classList.remove('pulse');
+    }, 300);
+  }
+
+  // Helper function to apply common styles to buttons
+  function applyBaseButtonStyles(element) {
+    Object.assign(element.style, {
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      width: '48px',
+      height: '48px',
+      cursor: 'pointer',
+      margin: `${empowermentButtonsMargin}px`,
+      backgroundColor: '#212226',
+      border: '1px solid #45474b',
+    });
+  }
+
+  // CREATE SOUND SWITCHER BUTTON (START)
 
   function createSoundSwitcherButton() {
     // Create a new element with class 'sound-switcher-button' and id 'silence'
@@ -3842,16 +3875,8 @@
     soundSwitcher.id = messageNotificationState;
     // Retrieve the value from localStorage key "messageNotificationTitle"
 
-    // Append some styles
-    soundSwitcher.style.display = 'flex';
-    soundSwitcher.style.justifyContent = 'center';
-    soundSwitcher.style.alignItems = 'center';
-    soundSwitcher.style.width = '48px';
-    soundSwitcher.style.height = '48px';
-    soundSwitcher.style.cursor = 'pointer';
-    soundSwitcher.style.margin = `${empowermentButtonsMargin}px`;
-    soundSwitcher.style.backgroundColor = '#212226';
-    soundSwitcher.style.border = '1px solid #45474b';
+    // Apply base button styles
+    applyBaseButtonStyles(soundSwitcher);
 
     // Retrieve the value from KG_Chat_Empowerment.messageSettings.messageNotificationTitle
     const messageNotificationTitle = KG_Chat_Empowerment.messageSettings.messageNotificationTitle || 'Do not disturb';
@@ -3888,13 +3913,8 @@
         currentVoicePitch.remove();
       }
 
-      // Add the 'pulse' class to the element
-      this.classList.add('pulse');
-
-      // Remove the 'pulse' class after one second
-      setTimeout(() => {
-        this.classList.remove('pulse');
-      }, 500);
+      // Add pulse effect for soundSwitcher
+      addPulseEffect(this);
 
       switch (this.id) {
         case 'silence':
@@ -3936,335 +3956,6 @@
         break;
     }
   } updateSoundSwitcherIcon();
-
-
-  function createMessageModeButton() {
-    // Create a new element with class 'message-mode-button' and id 'every-messages'
-    messageMode = document.createElement('div');
-    // Retrieve the value from KG_Chat_Empowerment.messageSettings.messageModeState
-    const messageModeState = KG_Chat_Empowerment.messageSettings.messageModeState || 'every-message';
-    // Add the class 'message-mode-button' to the 'messagesMode' element
-    messageMode.classList.add('message-mode-button');
-    // Initial button id if the localStorage key isn't created with assigned value by user
-    messageMode.id = messageModeState;
-
-    // Append some styles
-    messageMode.style.display = 'flex';
-    messageMode.style.justifyContent = 'center';
-    messageMode.style.alignItems = 'center';
-    messageMode.style.width = '48px';
-    messageMode.style.height = '48px';
-    messageMode.style.cursor = 'pointer';
-    messageMode.style.margin = `${empowermentButtonsMargin}px`;
-    messageMode.style.backgroundColor = '#212226';
-    messageMode.style.border = '1px solid #45474b';
-
-    // Retrieve the value from KG_Chat_Empowerment.messageSettings.messageModeTitle
-    const messageModeTitle = KG_Chat_Empowerment.messageSettings.messageModeTitle || 'Notify about every message';
-    // Assign title for the current notification state
-    messageMode.title = messageModeTitle;
-
-    // Create message mode button icon container
-    messageModeIcon = document.createElement('span');
-    // Add class to icon container
-    messageModeIcon.classList.add('message-mode-icon');
-
-    // Append icon container inside message mode button
-    messageMode.appendChild(messageModeIcon);
-    // Append sound switcher button to chat buttons panel
-    empowermentButtonsPanel.appendChild(messageMode);
-  } createMessageModeButton();
-
-
-  // Function to create the button for showCachePanel
-  function createShowUserListCacheButton() {
-    // Create a new element with class 'cache-panel-load-button'
-    const showUserListCacheButton = document.createElement('div');
-
-    // Add the class 'cache-panel-load-button' to the button
-    showUserListCacheButton.classList.add('cache-panel-load-button');
-
-    // Append some styles
-    showUserListCacheButton.style.display = 'flex';
-    showUserListCacheButton.style.position = 'relative';
-    showUserListCacheButton.style.justifyContent = 'center';
-    showUserListCacheButton.style.alignItems = 'center';
-    showUserListCacheButton.style.width = '48px';
-    showUserListCacheButton.style.height = '48px';
-    showUserListCacheButton.style.cursor = 'pointer';
-    showUserListCacheButton.style.margin = `${empowermentButtonsMargin}px`; // Use the correct margin variable
-    showUserListCacheButton.style.border = '1px solid #27ae60'; // Border color, you can change it
-    showUserListCacheButton.style.backgroundColor = '#212226';
-    showUserListCacheButton.style.border = '1px solid #45474b';
-
-    // Add data base icon to the button
-    showUserListCacheButton.innerHTML = iconUserlistCache;
-
-    // Create the small indicator for user count
-    const userCount = document.createElement('div');
-    userCount.classList.add('user-count');
-    userCount.style.display = 'flex';
-    userCount.style.position = 'absolute';
-    userCount.style.justifyContent = 'center';
-    userCount.style.alignItems = 'center';
-    userCount.style.left = '0';
-    userCount.style.bottom = '0';
-    userCount.style.transform = 'translate(-50%, 50%)';
-    userCount.style.zIndex = '1';
-    userCount.style.height = '20px';
-    userCount.style.padding = '0 4px';
-    userCount.style.setProperty('border-radius', '2px', 'important');
-    userCount.style.backgroundColor = 'rgb(160, 180, 130)';
-    userCount.style.color = 'rgb(2, 2, 2)';
-    userCount.style.fontSize = '12px';
-    userCount.style.fontFamily = 'Roboto';
-    userCount.style.fontWeight = 'bold';
-
-    // Initially set the count based on localStorage
-    const fetchedUsers = JSON.parse(localStorage.getItem('fetchedUsers')) || {};
-    const userCountValue = Object.keys(fetchedUsers).length;
-    userCount.textContent = userCountValue;
-
-    showUserListCacheButton.appendChild(userCount);
-
-    // Assign a title to the button
-    showUserListCacheButton.title = 'Show User List Cache Panel';
-
-    // Add a click event listener to the button
-    showUserListCacheButton.addEventListener('click', function () {
-      // Add the 'pulse' class to create a visual effect
-      showUserListCacheButton.classList.add('pulse');
-      // Remove the 'pulse' class after 500ms to stop the visual effect
-      setTimeout(() => {
-        showUserListCacheButton.classList.remove('pulse');
-      }, 500);
-
-      // Call showCachePanel function to show the cache panel
-      showCachePanel();
-    });
-
-    // Append the button to the existing panel
-    empowermentButtonsPanel.appendChild(showUserListCacheButton);
-  } createShowUserListCacheButton();
-
-  // Function to update the user count displayed near the cache button based on localStorage
-  function updateUserCountText() {
-    const userCountElement = document.querySelector('.cache-panel-load-button .user-count'); // Select the element
-    if (!userCountElement) return; // Ensure the element exists
-
-    const fetchedUsers = JSON.parse(localStorage.getItem('fetchedUsers')) || {};
-
-    // Update the text content based on the number of users
-    userCountElement.textContent = Object.keys(fetchedUsers).length.toString();
-  }
-
-  // Function to retrieve the chat input field and length popup container based on the current URL
-  function retrieveChatElementsByRoomType() {
-    const currentURL = window.location.href; // Get the current URL
-    let inputField, lengthPopupContainer;
-
-    if (currentURL.includes('gamelist')) {
-      inputField = document.querySelector('#chat-general .text'); // Selector for the general chat input
-      lengthPopupContainer = document.querySelector('#chat-general .messages'); // Selector for the general chat messages
-    } else if (currentURL.includes('gmid')) {
-      inputField = document.querySelector('[id^="chat-game"] .text'); // Selector for the game chat input
-      lengthPopupContainer = document.querySelector('[id^="chat-game"] .messages'); // Selector for the game chat messages
-    } else {
-      console.error('No matching room type found in the URL.');
-      return null; // Return null if no matching type is found
-    }
-
-    return { inputField, lengthPopupContainer }; // Return both the input field and the length popup container
-  }
-
-
-  // CHAT POPUP INDICATOR LENGTH START 
-
-  // Select the input element and length popup container using the helper function
-  const { inputField: chatField, lengthPopupContainer } = retrieveChatElementsByRoomType();
-
-  // Create a style element for animations
-  const lengthPopupAnimations = document.createElement('style');
-  lengthPopupAnimations.textContent = `
-    @keyframes bounceIn {
-      0% { transform: translateY(0); opacity: 0; }
-      50% { transform: translateY(-10px); opacity: 1; }
-      100% { transform: translateY(0); opacity: 1; }
-    }
-    @keyframes bounceOut {
-      0% { transform: translateY(0); opacity: 1; }
-      50% { transform: translateY(-10px); opacity: 1; }
-      100% { transform: translateY(0); opacity: 0; }
-    }
-    .length-field-popup {
-      position: absolute; font: bold 12px Montserrat; bottom: 40px; height: 20px;
-      display: flex; align-items: center; justify-content: center; padding: 2px 4px; margin: 2px;
-      line-height: 20px; opacity: 0;
-    }`;
-
-  document.head.appendChild(lengthPopupAnimations);
-
-  const lengthPopup = document.createElement('div');
-  lengthPopup.className = 'length-field-popup';
-  lengthPopupContainer.appendChild(lengthPopup);
-
-  // Rename the timeout variable to be more descriptive
-  let hidePopupTimeout;
-
-  // Track the previous input length
-  let previousLength = 0;
-
-  // Function to update the color of the length popup
-  function updateLengthPopupColor(length) {
-    if (!lengthPopup) {
-      console.error('lengthPopup is not defined');
-      return;
-    }
-
-    let textColor;
-
-    // Determine color based on the length
-    if (length === 0) {
-      textColor = 'hsl(200, 20%, 50%)'; // Light Blue
-    } else if (length >= 1 && length <= 90) {
-      textColor = 'hsl(120, 100%, 40%)'; // Bright Green
-    } else if (length > 90 && length <= 100) {
-      const factor = (length - 90) / 10;
-      const h = Math.round(120 + factor * (60 - 120)); // Interpolating hue
-      textColor = `hsl(${h}, 100%, 40%)`;
-    } else if (length > 100 && length <= 190) {
-      textColor = 'hsl(60, 100%, 50%)'; // Bright Yellow
-    } else if (length > 190 && length <= 200) {
-      const factor = (length - 190) / 10;
-      const h = Math.round(60 + factor * (30 - 60)); // Interpolating hue
-      textColor = `hsl(${h}, 100%, 50%)`;
-    } else if (length > 200 && length <= 250) {
-      textColor = 'hsl(40, 100%, 50%)'; // Orange (Updated)
-    } else if (length > 250 && length <= 300) {
-      const factor = (length - 250) / 50;
-      const h = Math.round(40 + factor * (0 - 40)); // Interpolating hue
-      textColor = `hsl(${h}, 100%, 70%)`;
-    } else {
-      textColor = 'hsl(0, 100%, 70%)'; // Red (Updated)
-    }
-
-    // Apply the text color to the length popup
-    lengthPopup.style.color = textColor;
-  }
-
-  // Function to show the length popup with updated color and arrow direction
-  function showLengthPopup(length) {
-    let displayText;
-
-    // Check if a symbol is added (→) or removed (←)
-    if (length > previousLength) {
-      displayText = `${length} 🡆`; // Typing: Right arrow after the length
-    } else if (length < previousLength) {
-      displayText = `🡄 ${length}`; // Deleting: Left arrow before the length
-    } else {
-      displayText = `${length}`; // No change: No arrows
-    }
-
-    lengthPopup.textContent = displayText; // Display the length and arrow
-    lengthPopup.style.opacity = '1'; // Ensure it's visible
-    updateLengthPopupColor(length); // Update the text color based on length
-    lengthPopup.style.animation = 'bounceIn 0.5s forwards'; // Apply bounce-in animation
-
-    // Update the previous length
-    previousLength = length;
-  }
-
-  function hideLengthPopup() {
-    lengthPopup.style.animation = 'bounceOut 0.5s forwards';
-    setTimeout(() => {
-      lengthPopup.style.opacity = '0';
-    }, 500);
-  }
-
-  // Event listener for input
-  chatField.addEventListener('input', function () {
-    clearTimeout(hidePopupTimeout);
-
-    const length = chatField.value.length;
-    showLengthPopup(length); // Show the length popup with updated length and arrow
-
-    // Calculate position of the popup
-    const fieldTextWidthCalculator = document.createElement('span');
-    fieldTextWidthCalculator.style.visibility = 'hidden';
-    fieldTextWidthCalculator.style.whiteSpace = 'nowrap';
-    fieldTextWidthCalculator.style.font = getComputedStyle(chatField).font;
-    fieldTextWidthCalculator.textContent = chatField.value;
-    document.body.appendChild(fieldTextWidthCalculator);
-
-    const inputWidth = fieldTextWidthCalculator.offsetWidth;
-    const newLeft = chatField.offsetLeft + inputWidth + 5;
-    const maxLeft = chatField.offsetLeft + chatField.offsetWidth - lengthPopup.offsetWidth;
-    lengthPopup.style.left = `${Math.min(newLeft, maxLeft)}px`;
-
-    document.body.removeChild(fieldTextWidthCalculator);
-
-    // Reset the timeout for hiding the popup
-    hidePopupTimeout = setTimeout(hideLengthPopup, 1000);
-  });
-
-  // Event listener for keydown (Enter key)
-  chatField.addEventListener('keydown', function (event) {
-    if (event.key === 'Enter') {
-      showLengthPopup(0);
-      lengthPopup.style.left = '0px';
-      lengthPopup.style.color = 'hsl(200, 20%, 50%)'; // Light Blue
-    }
-  });
-
-  // CHAT POPUP INDICATOR LENGTH END
-
-
-  // Add the isAltKeyPressed condition to the messagesMode event listener
-  messageMode.addEventListener('click', function (event) {
-    // Only execute when isCtrlKeyPressed or isAltKeyPressed are false
-    if (!isCtrlKeyPressed || !isAltKeyPressed) {
-
-      // Add the 'pulse' class to the element
-      this.classList.add('pulse');
-
-      // Remove the 'pulse' class after one second
-      setTimeout(() => {
-        this.classList.remove('pulse');
-      }, 500);
-
-      switch (this.id) {
-        case 'every-message':
-          this.id = 'mention-message';
-          this.title = 'Notify about mention message';
-          KG_Chat_Empowerment.messageSettings.messageModeState = 'mention-message';
-          KG_Chat_Empowerment.messageSettings.messageModeTitle = 'Notify about mention message';
-          break;
-        case 'mention-message':
-          this.id = 'every-message';
-          this.title = 'Notify about every message';
-          KG_Chat_Empowerment.messageSettings.messageModeState = 'every-message';
-          KG_Chat_Empowerment.messageSettings.messageModeTitle = 'Notify about every message';
-          break;
-      }
-
-      // Stringify KG_Chat_Empowerment before updating in localStorage
-      localStorage.setItem('KG_Chat_Empowerment', JSON.stringify(KG_Chat_Empowerment));
-
-      updateMessageModeIcon();
-    }
-  });
-
-  function updateMessageModeIcon() {
-    switch (messageMode.id) {
-      case 'every-message':
-        messageModeIcon.innerHTML = iconModeEvery;
-        break;
-      case 'mention-message':
-        messageModeIcon.innerHTML = iconModeMention;
-        break;
-    }
-  } updateMessageModeIcon();
-
 
   // This function combines the results of the above functions to return an object
   // with both the speed and pitch percentages as strings with a "%" sign appended.
@@ -4555,6 +4246,394 @@
     // Show the updated voice settings
     showVoiceSettings();
   }
+
+  // CREATE SOUND SWITCHER BUTTON (END)
+
+
+  // CREATE MESSAGE MODE BUTTON (START)
+
+  function createMessageModeButton() {
+    // Create a new element with class 'message-mode-button' and id 'every-messages'
+    messageMode = document.createElement('div');
+    // Retrieve the value from KG_Chat_Empowerment.messageSettings.messageModeState
+    const messageModeState = KG_Chat_Empowerment.messageSettings.messageModeState || 'every-message';
+    // Add the class 'message-mode-button' to the 'messagesMode' element
+    messageMode.classList.add('message-mode-button');
+    // Initial button id if the localStorage key isn't created with assigned value by user
+    messageMode.id = messageModeState;
+
+    // Apply base button styles
+    applyBaseButtonStyles(messageMode);
+
+    // Retrieve the value from KG_Chat_Empowerment.messageSettings.messageModeTitle
+    const messageModeTitle = KG_Chat_Empowerment.messageSettings.messageModeTitle || 'Notify about every message';
+    // Assign title for the current notification state
+    messageMode.title = messageModeTitle;
+
+    // Create message mode button icon container
+    messageModeIcon = document.createElement('span');
+    // Add class to icon container
+    messageModeIcon.classList.add('message-mode-icon');
+
+    // Append icon container inside message mode button
+    messageMode.appendChild(messageModeIcon);
+    // Append sound switcher button to chat buttons panel
+    empowermentButtonsPanel.appendChild(messageMode);
+  } createMessageModeButton();
+
+  // Add the isAltKeyPressed condition to the messagesMode event listener
+  messageMode.addEventListener('click', function (event) {
+    // Only execute when isCtrlKeyPressed or isAltKeyPressed are false
+    if (!isCtrlKeyPressed || !isAltKeyPressed) {
+
+      // Add pulse effect for messageMode
+      addPulseEffect(this);
+
+      switch (this.id) {
+        case 'every-message':
+          this.id = 'mention-message';
+          this.title = 'Notify about mention message';
+          KG_Chat_Empowerment.messageSettings.messageModeState = 'mention-message';
+          KG_Chat_Empowerment.messageSettings.messageModeTitle = 'Notify about mention message';
+          break;
+        case 'mention-message':
+          this.id = 'every-message';
+          this.title = 'Notify about every message';
+          KG_Chat_Empowerment.messageSettings.messageModeState = 'every-message';
+          KG_Chat_Empowerment.messageSettings.messageModeTitle = 'Notify about every message';
+          break;
+      }
+
+      // Stringify KG_Chat_Empowerment before updating in localStorage
+      localStorage.setItem('KG_Chat_Empowerment', JSON.stringify(KG_Chat_Empowerment));
+
+      updateMessageModeIcon();
+    }
+  });
+
+  function updateMessageModeIcon() {
+    switch (messageMode.id) {
+      case 'every-message':
+        messageModeIcon.innerHTML = iconModeEvery;
+        break;
+      case 'mention-message':
+        messageModeIcon.innerHTML = iconModeMention;
+        break;
+    }
+  } updateMessageModeIcon();
+
+  // CREATE MESSAGE MODE BUTTON (END)
+
+
+  // CREATE USER LIST CACHE BUTTON (START)
+
+  // Function to create the button for showCachePanel
+  function createShowUserListCacheButton() {
+    // Create a new element with class 'cache-panel-load-button'
+    const showUserListCacheButton = document.createElement('div');
+
+    // Add the class 'cache-panel-load-button' to the button
+    showUserListCacheButton.classList.add('cache-panel-load-button');
+
+    // Apply base button styles
+    applyBaseButtonStyles(showUserListCacheButton);
+
+    // Add cache-specific styles directly
+    showUserListCacheButton.style.position = 'relative';
+    showUserListCacheButton.style.zIndex = '1';
+
+    // Add data base icon to the button
+    showUserListCacheButton.innerHTML = iconUserlistCache;
+
+    // Create the small indicator for user count
+    const userCount = document.createElement('div');
+    userCount.classList.add('user-count');
+    userCount.style.display = 'flex';
+    userCount.style.position = 'absolute';
+    userCount.style.justifyContent = 'center';
+    userCount.style.alignItems = 'center';
+    userCount.style.left = '0';
+    userCount.style.bottom = '0';
+    userCount.style.transform = 'translate(-50%, 50%)';
+    userCount.style.zIndex = '1';
+    userCount.style.height = '20px';
+    userCount.style.padding = '0 4px';
+    userCount.style.setProperty('border-radius', '2px', 'important');
+    userCount.style.backgroundColor = '#9db380';
+    userCount.style.color = 'rgb(2, 2, 2)';
+    userCount.style.fontSize = '12px';
+    userCount.style.fontFamily = 'Roboto';
+    userCount.style.fontWeight = 'bold';
+
+    // Initially set the count based on localStorage
+    const fetchedUsers = JSON.parse(localStorage.getItem('fetchedUsers')) || {};
+    const userCountValue = Object.keys(fetchedUsers).length;
+    userCount.textContent = userCountValue;
+
+    showUserListCacheButton.appendChild(userCount);
+
+    // Assign a title to the button
+    showUserListCacheButton.title = 'Show User List Cache Panel';
+
+    // Add a click event listener to the button
+    showUserListCacheButton.addEventListener('click', function () {
+
+      // Add pulse effect for cacheButton
+      addPulseEffect(showUserListCacheButton);
+
+      // Call showCachePanel function to show the cache panel
+      showCachePanel();
+    });
+
+    // Append the button to the existing panel
+    empowermentButtonsPanel.appendChild(showUserListCacheButton);
+  } createShowUserListCacheButton();
+
+  // CREATE USER LIST CACHE BUTTON (END)
+
+
+  // CREATE PERSONAL MESSAGES BUTTON (START)
+
+  // Function to create the button for showing personal messages
+  function createShowPersonalMessagesButton() {
+    // Create a new element with class 'personal-messages-button'
+    const showPersonalMessagesButton = document.createElement('div');
+
+    // Add the class 'personal-messages-button' to the button
+    showPersonalMessagesButton.classList.add('personal-messages-button');
+
+    // Apply base button styles
+    applyBaseButtonStyles(showPersonalMessagesButton);
+
+    // Add personal messages-specific styles directly
+    showPersonalMessagesButton.style.position = 'relative';
+
+    // Add data base icon to the button (you can change this to an appropriate icon for personal messages)
+    showPersonalMessagesButton.innerHTML = iconPersonalMessages;
+
+    // Create the small indicator for new message count
+    const newMessageCount = document.createElement('div');
+    newMessageCount.classList.add('message-count');
+    newMessageCount.style.display = 'flex';
+    newMessageCount.style.position = 'absolute';
+    newMessageCount.style.justifyContent = 'center';
+    newMessageCount.style.alignItems = 'center';
+    newMessageCount.style.left = '0';
+    newMessageCount.style.bottom = '0';
+    newMessageCount.style.transform = 'translate(-50%, 50%)';
+    newMessageCount.style.zIndex = '1';
+    newMessageCount.style.height = '20px';
+    newMessageCount.style.padding = '0 4px';
+    newMessageCount.style.setProperty('border-radius', '2px', 'important');
+    newMessageCount.style.backgroundColor = '#fa8072';
+    newMessageCount.style.color = 'rgb(2, 2, 2)';
+    newMessageCount.style.fontSize = '12px';
+    newMessageCount.style.fontFamily = 'Roboto';
+    newMessageCount.style.fontWeight = 'bold';
+
+    // Initially set the count based on localStorage or a relevant messages count
+    const personalMessages = JSON.parse(localStorage.getItem('personalMessages')) || {};
+    const messageCountValue = Object.keys(personalMessages).length;
+    newMessageCount.textContent = messageCountValue;
+
+    showPersonalMessagesButton.appendChild(newMessageCount);
+
+    // Assign a title to the button
+    showPersonalMessagesButton.title = 'Show Personal Messages';
+
+    // Add a click event listener to the button
+    showPersonalMessagesButton.addEventListener('click', function () {
+
+      // Add pulse effect for the messages button
+      addPulseEffect(showPersonalMessagesButton);
+
+      // Call a function to show the personal messages panel (you need to implement this function)
+      // showPersonalMessagesPanel();
+    });
+
+    // Append the button to the existing panel
+    empowermentButtonsPanel.appendChild(showPersonalMessagesButton);
+  }
+
+  createShowPersonalMessagesButton();
+
+  // CREATE PERSONAL MESSAGES BUTTON (END)
+
+
+  // Function to update the user count displayed near the cache button based on localStorage
+  function updateUserCountText() {
+    const userCountElement = document.querySelector('.cache-panel-load-button .user-count'); // Select the element
+    if (!userCountElement) return; // Ensure the element exists
+
+    const fetchedUsers = JSON.parse(localStorage.getItem('fetchedUsers')) || {};
+
+    // Update the text content based on the number of users
+    userCountElement.textContent = Object.keys(fetchedUsers).length.toString();
+  }
+
+  // Function to retrieve the chat input field and length popup container based on the current URL
+  function retrieveChatElementsByRoomType() {
+    const currentURL = window.location.href; // Get the current URL
+    let inputField, lengthPopupContainer;
+
+    if (currentURL.includes('gamelist')) {
+      inputField = document.querySelector('#chat-general .text'); // Selector for the general chat input
+      lengthPopupContainer = document.querySelector('#chat-general .messages'); // Selector for the general chat messages
+    } else if (currentURL.includes('gmid')) {
+      inputField = document.querySelector('[id^="chat-game"] .text'); // Selector for the game chat input
+      lengthPopupContainer = document.querySelector('[id^="chat-game"] .messages'); // Selector for the game chat messages
+    } else {
+      console.error('No matching room type found in the URL.');
+      return null; // Return null if no matching type is found
+    }
+
+    return { inputField, lengthPopupContainer }; // Return both the input field and the length popup container
+  }
+
+
+  // CHAT POPUP INDICATOR LENGTH START 
+
+  // Select the input element and length popup container using the helper function
+  const { inputField: chatField, lengthPopupContainer } = retrieveChatElementsByRoomType();
+
+  // Create a style element for animations
+  const lengthPopupAnimations = document.createElement('style');
+  lengthPopupAnimations.textContent = `
+    @keyframes bounceIn {
+      0% { transform: translateY(0); opacity: 0; }
+      50% { transform: translateY(-10px); opacity: 1; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes bounceOut {
+      0% { transform: translateY(0); opacity: 1; }
+      50% { transform: translateY(-10px); opacity: 1; }
+      100% { transform: translateY(0); opacity: 0; }
+    }
+    .length-field-popup {
+      position: absolute; font: bold 12px Montserrat; bottom: 40px; height: 20px;
+      display: flex; align-items: center; justify-content: center; padding: 2px 4px; margin: 2px;
+      line-height: 20px; opacity: 0;
+    }`;
+
+  document.head.appendChild(lengthPopupAnimations);
+
+  const lengthPopup = document.createElement('div');
+  lengthPopup.className = 'length-field-popup';
+  lengthPopupContainer.appendChild(lengthPopup);
+
+  // Rename the timeout variable to be more descriptive
+  let hidePopupTimeout;
+
+  // Track the previous input length
+  let previousLength = 0;
+
+  // Function to update the color of the length popup
+  function updateLengthPopupColor(length) {
+    if (!lengthPopup) {
+      console.error('lengthPopup is not defined');
+      return;
+    }
+
+    let textColor;
+
+    // Determine color based on the length
+    if (length === 0) {
+      textColor = 'hsl(200, 20%, 50%)'; // Light Blue
+    } else if (length >= 1 && length <= 90) {
+      textColor = 'hsl(120, 100%, 40%)'; // Bright Green
+    } else if (length > 90 && length <= 100) {
+      const factor = (length - 90) / 10;
+      const h = Math.round(120 + factor * (60 - 120)); // Interpolating hue
+      textColor = `hsl(${h}, 100%, 40%)`;
+    } else if (length > 100 && length <= 190) {
+      textColor = 'hsl(60, 100%, 50%)'; // Bright Yellow
+    } else if (length > 190 && length <= 200) {
+      const factor = (length - 190) / 10;
+      const h = Math.round(60 + factor * (30 - 60)); // Interpolating hue
+      textColor = `hsl(${h}, 100%, 50%)`;
+    } else if (length > 200 && length <= 250) {
+      textColor = 'hsl(40, 100%, 50%)'; // Orange (Updated)
+    } else if (length > 250 && length <= 300) {
+      const factor = (length - 250) / 50;
+      const h = Math.round(40 + factor * (0 - 40)); // Interpolating hue
+      textColor = `hsl(${h}, 100%, 70%)`;
+    } else {
+      textColor = 'hsl(0, 100%, 70%)'; // Red (Updated)
+    }
+
+    // Apply the text color to the length popup
+    lengthPopup.style.color = textColor;
+  }
+
+  // Function to show the length popup with updated color and arrow direction
+  function showLengthPopup(length) {
+    let displayText;
+
+    // Check if a symbol is added (→) or removed (←)
+    if (length > previousLength) {
+      displayText = `${length} 🡆`; // Typing: Right arrow after the length
+    } else if (length < previousLength) {
+      displayText = `🡄 ${length}`; // Deleting: Left arrow before the length
+    } else {
+      displayText = `${length}`; // No change: No arrows
+    }
+
+    lengthPopup.textContent = displayText; // Display the length and arrow
+    lengthPopup.style.opacity = '1'; // Ensure it's visible
+    updateLengthPopupColor(length); // Update the text color based on length
+    lengthPopup.style.animation = 'bounceIn 0.5s forwards'; // Apply bounce-in animation
+
+    // Update the previous length
+    previousLength = length;
+  }
+
+  function hideLengthPopup() {
+    lengthPopup.style.animation = 'bounceOut 0.5s forwards';
+    setTimeout(() => {
+      lengthPopup.style.opacity = '0';
+    }, 500);
+  }
+
+  // Event listener for input
+  chatField.addEventListener('input', function () {
+    clearTimeout(hidePopupTimeout);
+
+    const length = chatField.value.length;
+    showLengthPopup(length); // Show the length popup with updated length and arrow
+
+    // Calculate position of the popup
+    const fieldTextWidthCalculator = document.createElement('span');
+    fieldTextWidthCalculator.style.visibility = 'hidden';
+    fieldTextWidthCalculator.style.whiteSpace = 'nowrap';
+    fieldTextWidthCalculator.style.font = getComputedStyle(chatField).font;
+    fieldTextWidthCalculator.textContent = chatField.value;
+    document.body.appendChild(fieldTextWidthCalculator);
+
+    const inputWidth = fieldTextWidthCalculator.offsetWidth;
+    const newLeft = chatField.offsetLeft + inputWidth + 5;
+    const maxLeft = chatField.offsetLeft + chatField.offsetWidth - lengthPopup.offsetWidth;
+    lengthPopup.style.left = `${Math.min(newLeft, maxLeft)}px`;
+
+    document.body.removeChild(fieldTextWidthCalculator);
+
+    // Reset the timeout for hiding the popup
+    hidePopupTimeout = setTimeout(hideLengthPopup, 1000);
+  });
+
+  // Event listener for keydown (Enter key)
+  chatField.addEventListener('keydown', function (event) {
+    if (event.key === 'Enter') {
+      showLengthPopup(0);
+      lengthPopup.style.left = '0px';
+      lengthPopup.style.color = 'hsl(200, 20%, 50%)'; // Light Blue
+    }
+  });
+
+  // CHAT POPUP INDICATOR LENGTH END
+
+
+
+
 
   // REMOVE UNWANTED MESSAGES
 

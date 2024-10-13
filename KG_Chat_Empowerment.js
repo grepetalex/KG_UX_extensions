@@ -5431,6 +5431,19 @@
     });
   }
 
+  // Function to set up input field backup and restore
+  function setupInputBackup(inputSelector) {
+    const inputField = document.querySelector(inputSelector); // Select the input element
+    if (inputField) {
+      // Restore the input value
+      inputField.value = localStorage.getItem('inputBackup') || '';
+      // Backup on input with debounce
+      inputField.addEventListener('input', debounce(() => localStorage.setItem('inputBackup', inputField.value), 250));
+      // Clear local storage on Enter
+      inputField.addEventListener('keydown', (event) => { if (event.key === 'Enter') localStorage.removeItem('inputBackup'); });
+    }
+  }
+
   // create a new MutationObserver to wait for the chat to fully load with all messages
   let waitForChatObserver = new MutationObserver(mutations => {
     // Get the container for all chat messages
@@ -5453,6 +5466,9 @@
 
         // Restore chat tab from localStorage
         restoreChatTabAndFocus();
+
+        // Call the function with the selector for the input field
+        setupInputBackup('#chat-general .text');
 
         // Call the function to re-highlight all the mention words of the messages
         highlightMentionWords();

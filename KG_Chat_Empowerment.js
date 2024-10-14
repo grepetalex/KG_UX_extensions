@@ -4676,7 +4676,10 @@
 
       const messageTextElement = document.createElement('span');
       messageTextElement.className = 'message-text';
-      messageTextElement.textContent = message;
+      // messageTextElement.textContent = message;
+      messageTextElement.innerHTML = message.replace(/:(\w+):/g,
+        (_, word) => `<img src="/img/smilies/${word}.gif" alt=":${word}:" title=":${word}:" class="smile">`
+      );
 
       // Change the messageTextElement color based on type
       const usernameColors = {

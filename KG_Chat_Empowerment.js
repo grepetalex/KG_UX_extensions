@@ -4636,13 +4636,19 @@
     messagesContainer.style.height = 'calc(100% - 70px)'; // Adjust height considering header
     messagesContainer.style.padding = '1em';
 
+    let lastUsername = null; // Store the last username processed
+
     // Loop through the messages and create message elements
     Object.entries(messages).forEach(([, { time, username, message, usernameColor, type }]) => {
       const messageElement = document.createElement('div');
       messageElement.className = 'message-item';
-      messageElement.style.padding = '0.4em';
-      messageElement.style.borderRadius = '0.2em';
-      messageElement.style.margin = '0.2em 0';
+      messageElement.style.padding = '0.2em';
+
+      // Add margin-top if this is the first message of a new username group
+      if (username !== lastUsername) {
+        messageElement.style.marginTop = '0.6em';
+        lastUsername = username; // Update the lastUsername
+      }
 
       // Remove square brackets from the time string
       const formattedTime = time.replace(/[\[\]]/g, '').trim();
@@ -4651,26 +4657,34 @@
       const timeElement = document.createElement('span');
       timeElement.className = 'message-time';
       timeElement.textContent = formattedTime;
-      timeElement.style.color = 'darkseagreen';
-      timeElement.style.margin = '0.4em';
+      timeElement.style.margin = '0.2em';
+
+      // Change the timeElement color based on type
+      const timeColors = {
+        private: 'coral',
+        mention: 'darkseagreen'
+      }
+
+      timeElement.style.color = timeColors[type] || 'slategray';
 
       const usernameElement = document.createElement('span');
       usernameElement.className = 'message-username';
       usernameElement.textContent = username;
       usernameElement.style.color = usernameColor;
-      usernameElement.style.margin = '0.4em';
+      usernameElement.style.filter = 'invert(100%)';
+      usernameElement.style.margin = '0.2em';
 
       const messageTextElement = document.createElement('span');
       messageTextElement.className = 'message-text';
       messageTextElement.textContent = message;
 
       // Change the messageTextElement color based on type
-      const typeColors = {
-        private: 'sandybrown',
-        mention: 'antiquewhite'
+      const usernameColors = {
+        private: 'coral',
+        mention: 'lightsteelblue'
       };
 
-      messageTextElement.style.color = typeColors[type] || 'slategray'; // Default color for other types
+      messageTextElement.style.color = usernameColors[type] || 'slategray';
       messageTextElement.style.margin = '0.4em';
 
       // Append time, username, and message to the message element

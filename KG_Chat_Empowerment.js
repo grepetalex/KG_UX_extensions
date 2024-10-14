@@ -2966,83 +2966,63 @@
     // Retrieve or initialize the personalMessages object from localStorage
     const personalMessages = JSON.parse(localStorage.getItem('personalMessages')) || {};
 
-    // Function to handle private messages
-    const privateMessageContainer = messageElement.querySelector('.room.private');
+    // Initialize privateMessageText
+    let privateMessageText = '';
 
-    // For private messages, check for the presence of a private message span
-    const privateMessageElement = messageElement.querySelector('span.private');
-
-    if (privateMessageContainer && privateMessageContainer.textContent.includes('[шепчет вам]')) {
-      // Extract relevant data from the message
+    // Helper function to handle messages
+    const handleMessage = (messageType, messageText) => {
       const time = messageElement.querySelector('.time')?.textContent || 'N/A';
       const usernameElement = messageElement.querySelector('.username span[data-user]');
       const username = usernameElement ? usernameElement.textContent : 'Unknown';
-
-      // Extract the color of the username from the parent element
       const usernameColor = usernameElement ? usernameElement.parentElement.style.color : 'lightblue';
-
-      // Extract the message text from <span class="private">
-      const messageText = privateMessageElement?.textContent || '';
 
       // Create a unique key based on the time and username to avoid collisions
       const messageKey = `${time}_${username}`;
 
-      // Store the message data in personalMessages
+      // Store the message data in personalMessages with the new order
       personalMessages[messageKey] = {
         time,
         username,
-        message: messageText,
-        usernameColor
+        usernameColor,
+        message: messageText, // Use the messageText passed to the function
+        type: messageType // Use the passed messageType
       };
 
       // Save the updated personalMessages back to localStorage
       localStorage.setItem('personalMessages', JSON.stringify(personalMessages));
+    };
+
+    // Function to handle private messages
+    const privateMessageContainer = messageElement.querySelector('.room.private');
+    if (privateMessageContainer && privateMessageContainer.textContent.includes('[шепчет вам]')) {
+      const privateMessageElement = messageElement.querySelector('span.private');
+      privateMessageText = privateMessageElement ? privateMessageElement.textContent : '';
+      handleMessage('private', privateMessageText); // Pass 'private' and the private message text
     }
 
-    const privateMessageParts = [];
-    if (privateMessageElement) {
-      const privateChildNodes = [...privateMessageElement.childNodes];
-      privateChildNodes.forEach(node => {
-        if (isTextNode(node)) {
-          privateMessageParts.push(node.textContent.trim()); // Add private text content
-        } else if (isImageNode(node)) {
-          privateMessageParts.push(node.getAttribute('title')); // Add private emoticon title
-        }
-      });
-    }
-
-    // Combine the private message parts into a single string if private message exists
-    const privateMessageText = privateMessageParts.length > 0
-      ? privateMessageParts.filter(Boolean).join(' ').trim()
-      : '';
-
-    // Retrieve the username from the message
+    // Check if the message contains a mention for the current user
+    let usernamePrefix = '';
     const username = messageElement.querySelector('.username');
     let usernameText = username ? username.textContent : null;
 
-    // Check if usernameText is not null before replacing "<" and ">" symbols
+    // Remove the "<" and ">" symbols from the username if they are present
     if (usernameText !== null) {
-      // Remove the "<" and ">" symbols from the username if they are present
       usernameText = usernameText.replace(/</g, '').replace(/>/g, '');
     }
 
-    let usernamePrefix = '';
-
-    // If the current username is an alias what is about you, use a "is addressing" prefix
     if (isMentionForMe(messageText)) {
       isMention = true;
       usernamePrefix = `${replaceWithPronunciation(usernameText)} обращается: `;
+      handleMessage('mention', messageText); // Pass 'mention' and the original message text
       highlightMentionWords();
-    }
-    // If the current username is the same as the last username seen, use a "is writing" prefix
-    else if (usernameText !== lastUsername) {
+    } else if (usernameText !== lastUsername) {
       isMention = false;
       usernamePrefix = `${replaceWithPronunciation(usernameText)} пишет: `;
     }
 
-    lastUsername = usernameText;
+    lastUsername = usernameText; // Update the last seen username
 
-    // Determine final message text based on whether it's a private message
+    // Determine final message text based on whether it's a private message or mention
     const finalMessageText = privateMessageText
       ? `шёпотом: ${privateMessageText}`
       : messageText;
@@ -3052,7 +3032,6 @@
 
     return { messageText: messageWithPronunciation, usernameText: username };
   }
-
 
   // Prevent the "readNewMessages" function from being called multiple times until all messages in the set have been read
   let isReading = false;
@@ -4658,7 +4637,7 @@
     messagesContainer.style.padding = '1em';
 
     // Loop through the messages and create message elements
-    Object.entries(messages).forEach(([key, { time, username, message, usernameColor }]) => {
+    Object.entries(messages).forEach(([, { time, username, message, usernameColor, type }]) => {
       const messageElement = document.createElement('div');
       messageElement.className = 'message-item';
       messageElement.style.padding = '0.4em';
@@ -4679,12 +4658,19 @@
       usernameElement.className = 'message-username';
       usernameElement.textContent = username;
       usernameElement.style.color = usernameColor;
-      usernameElement.style.color = '0.4em';
+      usernameElement.style.margin = '0.4em';
 
       const messageTextElement = document.createElement('span');
       messageTextElement.className = 'message-text';
       messageTextElement.textContent = message;
-      messageTextElement.style.color = 'sandybrown';
+
+      // Change the messageTextElement color based on type
+      const typeColors = {
+        private: 'sandybrown',
+        mention: 'antiquewhite'
+      };
+
+      messageTextElement.style.color = typeColors[type] || 'slategray'; // Default color for other types
       messageTextElement.style.margin = '0.4em';
 
       // Append time, username, and message to the message element

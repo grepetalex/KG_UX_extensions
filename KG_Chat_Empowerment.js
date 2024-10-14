@@ -2621,7 +2621,7 @@
 
   // Initialize variables for the user count animation
   let currentTextContent = [];
-  let isAnimating = false;
+  let isAnimated = false;
 
   // Define a constant to set the debounce delay
   const debounceTimeout = 1500;
@@ -2665,8 +2665,8 @@
         userCount.style.filter = userCountValue > 0 ? 'none' : 'grayscale(100%)';
 
         // Check if the user count animation needs to be started only when the chat is not closed
-        if (!chatHidden && currentTextContent.length === 0 && newUserList.length > 0 && !isAnimating) {
-          isAnimating = true;
+        if (!chatHidden && currentTextContent.length === 0 && newUserList.length > 0 && !isAnimated) {
+          isAnimated = true;
           const actualUserCount = newUserList.length;
           const speed = 20; // Change the speed here (in milliseconds)
           let count = 0;
@@ -2680,26 +2680,19 @@
             } else {
               currentTextContent = Array.from(userList.children).map(child => child.textContent);
               userCount.style.filter = 'none';
-              userCount.classList.add('pulse');
-              setTimeout(() => {
-                userCount.classList.remove('pulse');
-                isAnimating = false; // set isAnimating to false after the animation
-              }, 500);
+              addPulseEffect(userCount);
             }
           };
           setTimeout(userCountIncrement, speed);
         } // Animation END
 
         // Check if chat is not closed and animation not in progress
-        if (!chatHidden && !isAnimating) {
+        if (!chatHidden && !isAnimated) {
           // Check if the user count has changed and add pulse animation
           if (userCountValue !== prevUserCountValue) {
-            userCount.classList.add('pulse');
+            addPulseEffect(userCount);
             // Updating the counter element value
             userCount.innerHTML = userCountValue;
-            setTimeout(() => {
-              userCount.classList.remove('pulse');
-            }, 1000);
           }
         }
 
@@ -4542,6 +4535,61 @@
     const panelControlButtons = document.createElement('div');
     panelControlButtons.className = 'panel-control-buttons';
     panelControlButtons.style.display = 'flex';
+
+    // Inline SVG source for the trash icon
+    const trashIconSVG = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+      fill="none" stroke="darkorange" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round" class="feather feather-trash-2">
+      <polyline points="3 6 5 6 21 6"></polyline>
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+      <line x1="10" y1="11" x2="10" y2="17"></line>
+      <line x1="14" y1="11" x2="14" y2="17"></line>
+    </svg>`;
+
+    // Create a clear cache button with the provided SVG icon
+    const clearCacheButton = document.createElement('div');
+    clearCacheButton.className = 'clear-cache-button';
+    clearCacheButton.innerHTML = trashIconSVG;
+    clearCacheButton.style.backgroundColor = 'brown';
+    clearCacheButton.style.width = '48px';
+    clearCacheButton.style.height = '48px';
+    clearCacheButton.style.display = 'flex';
+    clearCacheButton.style.justifyContent = 'center';
+    clearCacheButton.style.alignItems = 'center';
+    clearCacheButton.style.cursor = 'pointer';
+    clearCacheButton.style.setProperty('border-radius', '0.2em', 'important');
+    clearCacheButton.style.marginRight = '16px';
+
+    // Add a hover effect with brightness transition
+    clearCacheButton.style.filter = 'brightness(1)';
+    clearCacheButton.style.transition = 'filter 0.3s ease';
+
+    // Add a mouseover event listener to the clear cache button
+    clearCacheButton.addEventListener('mouseover', () => {
+      clearCacheButton.style.filter = 'brightness(0.8)';
+    });
+
+    // Add a mouseout event listener to the clear cache button
+    clearCacheButton.addEventListener('mouseout', () => {
+      clearCacheButton.style.filter = 'brightness(1)';
+    });
+
+    // Add a click event listener to the clear cache button
+    clearCacheButton.addEventListener('click', () => {
+      // Clear the messages container
+      messagesContainer.innerHTML = null;
+
+      // Set the 'personalMessages' key in localStorage to an empty object
+      localStorage.setItem('personalMessages', JSON.stringify({}));
+
+      // Update the message count displayed in the personal messages button
+      const messagesCountElement = document.querySelector('.personal-messages-button .message-count');
+      if (messagesCountElement) messagesCountElement.textContent = '0';
+    });
+
+    // Append the clear cache button to the panel header container
+    panelControlButtons.appendChild(clearCacheButton);
 
     // Inline SVG source for the "x" icon (close button)
     const closeSVG = `

@@ -4738,6 +4738,88 @@
   // CREATE PERSONAL MESSAGES BUTTON (END)
 
 
+  // CREATE PANEL GRAPHICAL SETTINGS BUTTON (START)
+
+  // Function to create the button for showing settings
+  function createShowSettingsButton() {
+    // Create a new element with class 'settings-button'
+    const showSettingsButton = document.createElement('div');
+
+    // Add the class 'settings-button' to the button
+    showSettingsButton.classList.add('settings-button');
+
+    // Apply base button styles
+    applyBaseButtonStyles(showSettingsButton);
+
+    // Add settings-specific styles directly
+    showSettingsButton.style.position = 'relative';
+
+    // Add settings icon to the button (use the SVG icon you provided)
+    showSettingsButton.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="bisque" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-sliders">
+      <line x1="4" y1="21" x2="4" y2="14"></line>
+      <line x1="4" y1="10" x2="4" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="12"></line>
+      <line x1="12" y1="8" x2="12" y2="3"></line>
+      <line x1="20" y1="21" x2="20" y2="16"></line>
+      <line x1="20" y1="12" x2="20" y2="3"></line>
+      <line x1="1" y1="14" x2="7" y2="14"></line>
+      <line x1="9" y1="8" x2="15" y2="8"></line>
+      <line x1="17" y1="16" x2="23" y2="16"></line>
+    </svg>
+  `;
+
+    // Create a hidden file input for uploading settings
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.json'; // Specify the file type if needed (e.g., JSON)
+    fileInput.style.display = 'none'; // Hide the file input
+
+    // Add an event listener to handle file selection
+    fileInput.addEventListener('change', function (event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          const settingsData = JSON.parse(e.target.result);
+          // Call a function to process the uploaded settings data
+          processUploadedSettings(settingsData);
+        };
+        reader.readAsText(file);
+      }
+    });
+
+    // Add a click event listener to the button
+    showSettingsButton.addEventListener('click', function () {
+      // Add pulse effect for the settings button
+      addPulseEffect(showSettingsButton);
+
+      // Trigger the file input click to open the file selection dialog
+      fileInput.click();
+
+      // Optionally, you can also call a function to show the settings panel
+      // showSettingsPanel(); // Uncomment this if you want to open a settings panel
+    });
+
+    // Append the file input to the button
+    showSettingsButton.appendChild(fileInput);
+
+    // Append the button to the existing panel
+    empowermentButtonsPanel.appendChild(showSettingsButton);
+  }
+
+  // Call the function to create the settings button
+  createShowSettingsButton();
+
+  // Function to process the uploaded settings data
+  function processUploadedSettings(settingsData) {
+    // Implement your logic for handling the uploaded settings data
+    console.log('Uploaded settings:', settingsData);
+  }
+
+  // CREATE PANEL GRAPHICAL SETTINGS BUTTON (END)
+
+
   // Function to retrieve the chat input field and length popup container based on the current URL
   function retrieveChatElementsByRoomType() {
     const currentURL = window.location.href; // Get the current URL

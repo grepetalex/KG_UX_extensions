@@ -97,7 +97,7 @@
     { name: 'ExpLo1t', gender: 'female', pronunciation: 'Эксплоит' }, // --------- 09
     { name: 'инфо-пчелы', gender: 'male', pronunciation: 'Инфо-Пчёлы' }, // ------ 10
     { name: 'Razmontana', gender: 'male', pronunciation: 'Размонтана' }, // ------ 11
-    { name: 'un4given', gender: 'male', pronunciation: 'Анфогивн' }, // ---------- 12
+    { name: 'un4given', gender: 'male', pronunciation: 'Анфогивон' }, // ---------- 12
     { name: 'oonch', gender: 'male', pronunciation: 'Унч' }, // ------------------ 13
     { name: 'iChessKnock', gender: 'male', pronunciation: 'Чеснок' }, // --------- 14
     { name: 'Anatolysov', gender: 'male', pronunciation: 'Анатолий' }, // -------- 15
@@ -2862,7 +2862,6 @@
 
   // Function to check if a username is mentioned in the message
   function isMentionForMe(message) {
-    // return mentionKeywords.some(keyword => message.includes(keyword));
     const messageLowercase = message.toLowerCase();
     return mentionKeywords.some(keyword => messageLowercase.includes(keyword.toLowerCase()));
   }
@@ -2971,8 +2970,41 @@
     // Combine the message parts into a single string
     const messageText = commonMessageParts.filter(Boolean).join(' ').trim();
 
+    // Retrieve or initialize the personalMessages object from localStorage
+    const personalMessages = JSON.parse(localStorage.getItem('personalMessages')) || {};
+
+    // Function to handle private messages
+    const privateMessageContainer = messageElement.querySelector('.room.private');
+
     // For private messages, check for the presence of a private message span
     const privateMessageElement = messageElement.querySelector('span.private');
+
+    if (privateMessageContainer && privateMessageContainer.textContent.includes('[шепчет вам]')) {
+      // Extract relevant data from the message
+      const time = messageElement.querySelector('.time')?.textContent || 'N/A';
+      const usernameElement = messageElement.querySelector('.username span[data-user]');
+      const username = usernameElement ? usernameElement.textContent : 'Unknown';
+
+      // Extract the color of the username from the parent element
+      const usernameColor = usernameElement ? usernameElement.parentElement.style.color : 'lightblue';
+
+      // Extract the message text from <span class="private">
+      const messageText = privateMessageElement?.textContent || '';
+
+      // Create a unique key based on the time and username to avoid collisions
+      const messageKey = `${time}_${username}`;
+
+      // Store the message data in personalMessages
+      personalMessages[messageKey] = {
+        time,
+        username,
+        message: messageText,
+        usernameColor
+      };
+
+      // Save the updated personalMessages back to localStorage
+      localStorage.setItem('personalMessages', JSON.stringify(personalMessages));
+    }
 
     const privateMessageParts = [];
     if (privateMessageElement) {
@@ -3761,6 +3793,8 @@
               banSpammer();
               // Call the function to show the latest popup message
               showPopupMessage();
+              // Call the function to update the message count display
+              updatePersonalMessageCountText();
             }
 
           }
@@ -4389,14 +4423,27 @@
     empowermentButtonsPanel.appendChild(showUserListCacheButton);
   } createShowUserListCacheButton();
 
+  // Function to update the user count displayed near the cache button based on localStorage
+  function updateUserCountText() {
+    const userCountElement = document.querySelector('.cache-panel-load-button .user-count');
+    if (!userCountElement) return; // Ensure the element exists
+
+    const newUserCount = Object.keys(JSON.parse(localStorage.getItem('fetchedUsers')) || {}).length.toString();
+
+    // Update the text content and add pulse effect if the count has changed
+    if (newUserCount !== userCountElement.textContent) {
+      userCountElement.textContent = newUserCount;
+      addPulseEffect(userCountElement);
+    }
+  }
+
   // CREATE USER LIST CACHE BUTTON (END)
 
 
   // CREATE PERSONAL MESSAGES BUTTON (START)
 
   // Function to create the button for showing personal messages
-  function createShowPersonalMessagesButton() {
-    // Create a new element with class 'personal-messages-button'
+  function createShowPersonalMessagesButton() { // Create a new element with class 'personal-messages-button'
     const showPersonalMessagesButton = document.createElement('div');
 
     // Add the class 'personal-messages-button' to the button
@@ -4431,10 +4478,9 @@
     newMessageCount.style.fontFamily = 'Roboto';
     newMessageCount.style.fontWeight = 'bold';
 
-    // Initially set the count based on localStorage or a relevant messages count
     const personalMessages = JSON.parse(localStorage.getItem('personalMessages')) || {};
     const messageCountValue = Object.keys(personalMessages).length;
-    newMessageCount.textContent = messageCountValue;
+    newMessageCount.textContent = messageCountValue; // Update the message count
 
     showPersonalMessagesButton.appendChild(newMessageCount);
 
@@ -4448,7 +4494,7 @@
       addPulseEffect(showPersonalMessagesButton);
 
       // Call a function to show the personal messages panel (you need to implement this function)
-      // showPersonalMessagesPanel();
+      showPersonalMessagesPanel();
     });
 
     // Append the button to the existing panel
@@ -4457,19 +4503,189 @@
 
   createShowPersonalMessagesButton();
 
+  // Function to display the personal messages panel
+  function showPersonalMessagesPanel() {
+    // Check if the cached messages panel already exists
+    if (document.querySelector('.cached-messages-panel')) return;
+
+    // Get data from localStorage
+    const cachedMessagesData = localStorage.getItem('personalMessages');
+
+    // Initialize messages by parsing fetched data or setting as empty array
+    let messages = JSON.parse(cachedMessagesData) || [];
+
+    // Create a container div with class 'cached-messages-panel'
+    const cachedMessagesPanel = document.createElement('div');
+    cachedMessagesPanel.className = 'cached-messages-panel';
+    // Set initial styles
+    cachedMessagesPanel.style.opacity = '0';
+    cachedMessagesPanel.style.backgroundColor = '#1b1b1b';
+    cachedMessagesPanel.style.setProperty('border-radius', '0.6em', 'important');
+    cachedMessagesPanel.style.position = 'fixed';
+    cachedMessagesPanel.style.top = '100px';
+    cachedMessagesPanel.style.left = '50%';
+    cachedMessagesPanel.style.transform = 'translateX(-50%)';
+    cachedMessagesPanel.style.width = '50vw';
+    cachedMessagesPanel.style.height = '80vh';
+    cachedMessagesPanel.style.zIndex = '999';
+    cachedMessagesPanel.style.minWidth = '1000px';
+
+    // Create a container div for the panel header
+    const panelHeaderContainer = document.createElement('div');
+    panelHeaderContainer.className = 'panel-header';
+    panelHeaderContainer.style.display = 'flex';
+    panelHeaderContainer.style.flexDirection = 'row';
+    panelHeaderContainer.style.justifyContent = 'flex-end'; // Aligns to the right
+    panelHeaderContainer.style.padding = '0.6em';
+
+    // Create a container div with class 'panel-control-buttons'
+    const panelControlButtons = document.createElement('div');
+    panelControlButtons.className = 'panel-control-buttons';
+    panelControlButtons.style.display = 'flex';
+
+    // Inline SVG source for the "x" icon (close button)
+    const closeSVG = `
+    <svg xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="lightgreen"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="feather feather-x">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>`;
+
+    // Create a close button with the provided SVG icon
+    const closePanelButton = document.createElement('div');
+    closePanelButton.className = 'close-panel-button';
+    closePanelButton.innerHTML = closeSVG;
+    closePanelButton.style.backgroundColor = 'darkolivegreen';
+    closePanelButton.style.width = '48px';
+    closePanelButton.style.height = '48px';
+    closePanelButton.style.display = 'flex';
+    closePanelButton.style.justifyContent = 'center';
+    closePanelButton.style.alignItems = 'center';
+    closePanelButton.style.cursor = 'pointer';
+    closePanelButton.style.setProperty('border-radius', '0.2em', 'important');
+
+    // Add a hover effect with brightness transition
+    closePanelButton.style.filter = 'brightness(1)';
+    closePanelButton.style.transition = 'filter 0.3s ease';
+
+    // Add a mouseover event listener to the close panel button
+    closePanelButton.addEventListener('mouseover', () => {
+      closePanelButton.style.filter = 'brightness(0.8)';
+    });
+
+    // Add a mouseout event listener to the close panel button
+    closePanelButton.addEventListener('mouseout', () => {
+      closePanelButton.style.filter = 'brightness(1)';
+    });
+
+    // Add a click event listener to the close panel button
+    closePanelButton.addEventListener('click', () => {
+      // Fade out the cached messages panel when the close button is clicked
+      fadeTargetElement(cachedMessagesPanel, 'hide');
+      fadeDimmingElement('hide');
+    });
+
+    // Append the close button to the panel control buttons
+    panelControlButtons.appendChild(closePanelButton);
+
+    // Append the panel control buttons element inside the panel header container
+    panelHeaderContainer.appendChild(panelControlButtons);
+
+    // Append the header to the cached messages panel
+    cachedMessagesPanel.appendChild(panelHeaderContainer);
+
+    // Create a container for the messages
+    const messagesContainer = document.createElement('div');
+    messagesContainer.className = 'messages-container';
+    messagesContainer.style.overflowY = 'auto'; // Enable scrolling for messages
+    messagesContainer.style.height = 'calc(100% - 70px)'; // Adjust height considering header
+    messagesContainer.style.padding = '1em';
+
+    // Loop through the messages and create message elements
+    Object.entries(messages).forEach(([key, { time, username, message, usernameColor }]) => {
+      const messageElement = document.createElement('div');
+      messageElement.className = 'message-item';
+      messageElement.style.padding = '0.4em';
+      messageElement.style.borderRadius = '0.2em';
+      messageElement.style.margin = '0.2em 0';
+
+      // Remove square brackets from the time string
+      const formattedTime = time.replace(/[\[\]]/g, '').trim();
+
+      // Create time, username, and message elements
+      const timeElement = document.createElement('span');
+      timeElement.className = 'message-time';
+      timeElement.textContent = formattedTime;
+      timeElement.style.color = 'darkseagreen';
+      timeElement.style.margin = '0.4em';
+
+      const usernameElement = document.createElement('span');
+      usernameElement.className = 'message-username';
+      usernameElement.textContent = username;
+      usernameElement.style.color = usernameColor;
+      usernameElement.style.color = '0.4em';
+
+      const messageTextElement = document.createElement('span');
+      messageTextElement.className = 'message-text';
+      messageTextElement.textContent = message;
+      messageTextElement.style.color = 'sandybrown';
+      messageTextElement.style.margin = '0.4em';
+
+      // Append time, username, and message to the message element
+      messageElement.appendChild(timeElement);
+      messageElement.appendChild(usernameElement);
+      messageElement.appendChild(messageTextElement);
+
+      // Append the message element to the messages container
+      messagesContainer.appendChild(messageElement);
+    });
+
+    // Append the messages container to the cached messages panel
+    cachedMessagesPanel.appendChild(messagesContainer);
+
+    // Append the cached messages panel to the body
+    document.body.appendChild(cachedMessagesPanel);
+
+    // Fade in the cached messages panel
+    fadeTargetElement(cachedMessagesPanel, 'show');
+
+    // Show the dimming background
+    fadeDimmingElement('show');
+
+    // Attach a keydown event listener to the document object
+    document.addEventListener('keydown', function (event) {
+      // Check if the key pressed was the "Escape" key
+      if (event.key === 'Escape') {
+        // Fade out the cached messages panel
+        fadeTargetElement(cachedMessagesPanel, 'hide');
+        fadeDimmingElement('hide');
+      }
+    });
+  }
+
+  // Function to update the message count displayed near the personal messages button based on localStorage
+  function updatePersonalMessageCountText() {
+    const messageCountElement = document.querySelector('.personal-messages-button .message-count'); // Select the element
+    if (!messageCountElement) return; // Ensure the element exists
+
+    const personalMessages = JSON.parse(localStorage.getItem('personalMessages')) || {};
+
+    addPulseEffect(messageCountElement);
+
+    // Update the text content based on the number of messages
+    messageCountElement.textContent = Object.keys(personalMessages).length.toString();
+  }
+
   // CREATE PERSONAL MESSAGES BUTTON (END)
 
-
-  // Function to update the user count displayed near the cache button based on localStorage
-  function updateUserCountText() {
-    const userCountElement = document.querySelector('.cache-panel-load-button .user-count'); // Select the element
-    if (!userCountElement) return; // Ensure the element exists
-
-    const fetchedUsers = JSON.parse(localStorage.getItem('fetchedUsers')) || {};
-
-    // Update the text content based on the number of users
-    userCountElement.textContent = Object.keys(fetchedUsers).length.toString();
-  }
 
   // Function to retrieve the chat input field and length popup container based on the current URL
   function retrieveChatElementsByRoomType() {

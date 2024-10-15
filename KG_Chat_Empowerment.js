@@ -339,6 +339,113 @@
     return `hsl(${hue},${saturation}%,${lightness}%)`;
   }
 
+  // // Function to purge chat user actions with a smooth step-by-step animation
+  // // Parameters:
+  // //   - delayBetweenAnimations: Delay between each animation step (default: 300ms)
+  // //   - smoothScrollDuration: Duration of smooth scrolling (default: 500ms)
+  // function purgeStaticChatNotifications(delayBetweenAnimations = 300, smoothScrollDuration = 500) {
+  //   // Get all elements with the class .static-chat-notification
+  //   const staticChatNotifications = Array.from(document.querySelectorAll('.static-chat-notification')).reverse();
+
+  //   // Get the chat container
+  //   const chatContainer = document.querySelector(".messages-content");
+
+  //   // Return early if the chat container does not exist
+  //   if (!chatContainer) return;
+
+  //   // Asynchronous function to check if an element is visible in the viewport
+  //   async function isElementVisible(element) {
+  //     // Introduce a delay (for example, 100ms) to simulate asynchronous behavior
+  //     await new Promise(resolve => setTimeout(resolve, 100));
+
+  //     const rect = element.getBoundingClientRect();
+  //     return (
+  //       rect.top >= 0 &&
+  //       rect.left >= 0 &&
+  //       rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+  //       rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+  //     );
+  //   }
+
+  //   // Function to apply the animation to an element
+  //   function animateOut(element, index) {
+  //     // Calculate the delay for each element
+  //     const delay = index * delayBetweenAnimations;
+
+  //     // Apply opacity and translation animation with delay
+  //     setTimeout(() => {
+  //       element.style.transition = `
+  //         opacity ${delayBetweenAnimations / 1000}s cubic-bezier(0.83, 0, 0.17, 1),
+  //         transform ${delayBetweenAnimations / 1000}s cubic-bezier(0.83, 0, 0.17, 1)
+  //       `;
+  //       element.style.opacity = 0;
+  //       element.style.transform = `translateX(1em)`;
+
+  //       // After the animation duration, scroll the chat if the next notification is not visible
+  //       setTimeout(() => {
+  //         element.remove();
+
+  //         // Check if the next notification is visible
+  //         const nextIndex = index + 1;
+  //         const nextElement = staticChatNotifications[nextIndex];
+
+  //         if (nextElement && !isElementVisible(nextElement)) {
+  //           const closestContainer = nextElement.closest('.static-chat-notifications-container');
+  //           const containerHeight = closestContainer ? closestContainer.offsetHeight : 0;
+  //           const extraSpace = 200;
+
+  //           // Calculate the distance to scroll, including containerHeight
+  //           const distanceToTop = nextElement.offsetTop - chatContainer.offsetTop - containerHeight - extraSpace;
+
+  //           // Smooth scroll to the next notification
+  //           chatContainer.style.scrollBehavior = 'smooth';
+  //           chatContainer.scrollTop = distanceToTop;
+
+  //           // Add an extra delay before removing the element
+  //           setTimeout(() => {
+  //             // Remove the element after scrolling to the next notification
+  //             nextElement.remove();
+
+  //             // Continue only if the next element is the last one
+  //             if (nextIndex === staticChatNotifications.length - 1) {
+  //               // If it's the last element, smooth scroll back to the bottom
+  //               chatContainer.scrollTop = chatContainer.scrollHeight;
+
+  //               // Set a longer delay before resetting scroll behavior to default
+  //               setTimeout(() => {
+  //                 // After the smooth scroll duration, reset scroll behavior to default
+  //                 chatContainer.style.scrollBehavior = 'auto';
+
+  //                 // Remove all .static-chat-notifications-container after all notifications are removed
+  //                 const containers = document.querySelectorAll('.static-chat-notifications-container');
+  //                 containers.forEach(container => container.remove());
+  //               }, smoothScrollDuration); // Use smoothScrollDuration here
+  //             }
+  //           }, delayBetweenAnimations);
+  //         } else if (nextIndex === staticChatNotifications.length - 1) {
+  //           // If there is no next element, and it's the last one, smooth scroll back to the bottom
+  //           chatContainer.scrollTop = chatContainer.scrollHeight;
+
+  //           // Set a longer delay before resetting scroll behavior to default
+  //           setTimeout(() => {
+  //             // After the smooth scroll duration, reset scroll behavior to default
+  //             chatContainer.style.scrollBehavior = 'auto';
+
+  //             // Remove all .static-chat-notifications-container after all notifications are removed
+  //             const containers = document.querySelectorAll('.static-chat-notifications-container');
+  //             containers.forEach(container => container.remove());
+  //           }, smoothScrollDuration); // Use smoothScrollDuration here
+  //         }
+  //       }, delayBetweenAnimations);
+  //     }, delay);
+  //   }
+
+  //   // Use forEach on the reversed array and apply animations
+  //   staticChatNotifications.forEach((element, index) => {
+  //     animateOut(element, index);
+  //   });
+  // }
+
   // Function to purge chat user actions with a smooth step-by-step animation
   // Parameters:
   //   - delayBetweenAnimations: Delay between each animation step (default: 300ms)
@@ -349,6 +456,9 @@
 
     // Get the chat container
     const chatContainer = document.querySelector(".messages-content");
+
+    // Return early if the chat container does not exist
+    if (!chatContainer) return;
 
     // Function to check if an element is visible in the viewport
     function isElementVisible(element) {
@@ -362,76 +472,53 @@
     }
 
     // Function to apply the animation to an element
-    function animateOut(element, index) {
+    async function animateOut(element, index) {
       // Calculate the delay for each element
       const delay = index * delayBetweenAnimations;
 
       // Apply opacity and translation animation with delay
-      setTimeout(() => {
-        element.style.transition = `
-          opacity ${delayBetweenAnimations / 1000}s cubic-bezier(0.83, 0, 0.17, 1),
-          transform ${delayBetweenAnimations / 1000}s cubic-bezier(0.83, 0, 0.17, 1)
-        `;
-        element.style.opacity = 0;
-        element.style.transform = `translateX(1em)`;
+      await new Promise(resolve => setTimeout(resolve, delay));
+      element.style.transition = `opacity ${delayBetweenAnimations / 1000}s cubic-bezier(0.83, 0, 0.17, 1), transform ${delayBetweenAnimations / 1000}s cubic-bezier(0.83, 0, 0.17, 1)`;
+      element.style.opacity = 0;
+      element.style.transform = `translateX(1em)`;
 
-        // After the animation duration, scroll the chat if the next notification is not visible
-        setTimeout(() => {
-          element.remove();
+      // After the animation duration, remove the element
+      await new Promise(resolve => setTimeout(resolve, delayBetweenAnimations));
+      element.remove();
 
-          // Check if the next notification is visible
-          const nextIndex = index + 1;
-          const nextElement = staticChatNotifications[nextIndex];
+      // Check if the next notification is visible
+      const nextIndex = index + 1;
+      const nextElement = staticChatNotifications[nextIndex];
 
-          if (nextElement && !isElementVisible(nextElement)) {
-            const closestContainer = nextElement.closest('.static-chat-notifications-container');
-            const containerHeight = closestContainer ? closestContainer.offsetHeight : 0;
-            const extraSpace = 200;
+      if (nextElement) {
+        // Use await to ensure element is visible before scrolling
+        if (!isElementVisible(nextElement)) {
+          await scrollToNextElement(nextElement, chatContainer, smoothScrollDuration);
+        }
+        // Remove the next element after scrolling or if already visible
+        nextElement.remove();
+      } else {
+        // If last element, smooth scroll back to the bottom
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+        await new Promise(resolve => setTimeout(resolve, smoothScrollDuration));
+        chatContainer.style.scrollBehavior = 'auto';
+        const containers = document.querySelectorAll('.static-chat-notifications-container');
+        containers.forEach(container => container.remove());
+      }
+    }
 
-            // Calculate the distance to scroll, including containerHeight
-            const distanceToTop = nextElement.offsetTop - chatContainer.offsetTop - containerHeight - extraSpace;
+    // Function to handle smooth scrolling to the next element
+    async function scrollToNextElement(nextElement, chatContainer, smoothScrollDuration) {
+      const closestContainer = nextElement.closest('.static-chat-notifications-container');
+      const containerHeight = closestContainer ? closestContainer.offsetHeight : 0;
+      const extraSpace = 200;
 
-            // Smooth scroll to the next notification
-            chatContainer.style.scrollBehavior = 'smooth';
-            chatContainer.scrollTop = distanceToTop;
+      const distanceToTop = nextElement.offsetTop - chatContainer.offsetTop - containerHeight - extraSpace;
+      chatContainer.style.scrollBehavior = 'smooth';
+      chatContainer.scrollTop = distanceToTop;
 
-            // Add an extra delay before removing the element
-            setTimeout(() => {
-              // Remove the element after scrolling to the next notification
-              nextElement.remove();
-
-              // Continue only if the next element is the last one
-              if (nextIndex === staticChatNotifications.length - 1) {
-                // If it's the last element, smooth scroll back to the bottom
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-
-                // Set a longer delay before resetting scroll behavior to default
-                setTimeout(() => {
-                  // After the smooth scroll duration, reset scroll behavior to default
-                  chatContainer.style.scrollBehavior = 'auto';
-
-                  // Remove all .static-chat-notifications-container after all notifications are removed
-                  const containers = document.querySelectorAll('.static-chat-notifications-container');
-                  containers.forEach(container => container.remove());
-                }, smoothScrollDuration); // Use smoothScrollDuration here
-              }
-            }, delayBetweenAnimations);
-          } else if (nextIndex === staticChatNotifications.length - 1) {
-            // If there is no next element, and it's the last one, smooth scroll back to the bottom
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-
-            // Set a longer delay before resetting scroll behavior to default
-            setTimeout(() => {
-              // After the smooth scroll duration, reset scroll behavior to default
-              chatContainer.style.scrollBehavior = 'auto';
-
-              // Remove all .static-chat-notifications-container after all notifications are removed
-              const containers = document.querySelectorAll('.static-chat-notifications-container');
-              containers.forEach(container => container.remove());
-            }, smoothScrollDuration); // Use smoothScrollDuration here
-          }
-        }, delayBetweenAnimations);
-      }, delay);
+      // Wait for smooth scroll animation to finish
+      await new Promise(resolve => setTimeout(resolve, smoothScrollDuration));
     }
 
     // Use forEach on the reversed array and apply animations
@@ -4353,7 +4440,7 @@
 
     // Add cache-specific styles directly
     showUserListCacheButton.style.position = 'relative';
-    showUserListCacheButton.style.zIndex = '1';
+    showUserListCacheButton.style.zIndex = '2';
 
     // Add data base icon to the button
     showUserListCacheButton.innerHTML = iconUserlistCache;
@@ -4433,6 +4520,7 @@
 
     // Add personal messages-specific styles directly
     showPersonalMessagesButton.style.position = 'relative';
+    showPersonalMessagesButton.style.zIndex = '1';
 
     // Add data base icon to the button (you can change this to an appropriate icon for personal messages)
     showPersonalMessagesButton.innerHTML = iconPersonalMessages;

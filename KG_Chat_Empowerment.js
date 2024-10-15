@@ -3063,9 +3063,20 @@
     // Initialize privateMessageText
     let privateMessageText = '';
 
+    // Helper function to get the current date in YYYY-MM-DD format
+    function getCurrentDate() {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0'); // Month starts from 0
+      const day = String(today.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
     // Helper function to handle messages
     const handleMessage = (messageType, messageText) => {
       const time = messageElement.querySelector('.time')?.textContent || 'N/A';
+      const date = getCurrentDate(); // Get the current date
+
       const usernameElement = messageElement.querySelector('.username span[data-user]');
       const username = usernameElement ? usernameElement.textContent : 'Unknown';
       const usernameColor = usernameElement ? usernameElement.parentElement.style.color : 'lightblue';
@@ -3076,6 +3087,7 @@
       // Store the message data in personalMessages with the new order
       personalMessages[messageKey] = {
         time,
+        date,
         username,
         usernameColor,
         message: messageText, // Use the messageText passed to the function
@@ -4764,7 +4776,7 @@
     let lastUsername = null; // Store the last username processed
 
     // Loop through the messages and create message elements
-    Object.entries(messages).forEach(([, { time, username, message, usernameColor, type }]) => {
+    Object.entries(messages).forEach(([, { time, date, username, message, usernameColor, type }]) => {
       const messageElement = document.createElement('div');
       messageElement.className = 'message-item';
       messageElement.style.padding = '0.2em';
@@ -4791,6 +4803,28 @@
       }
 
       timeElement.style.color = timeColors[type] || 'slategray';
+
+      // Add click event listener only for "mention" type
+      if (type === 'mention') {
+        timeElement.style.cursor = 'pointer'; // Pointer cursor on hover
+        timeElement.style.transition = 'color 0.2s ease'; // Smooth color change
+
+        // Hover effect: change color to light green
+        timeElement.addEventListener('mouseover', () => {
+          timeElement.style.color = 'lightgreen';
+        });
+
+        // Revert color on mouseout
+        timeElement.addEventListener('mouseout', () => {
+          timeElement.style.color = timeColors[type];
+        });
+
+        // Click event: open the chat log link with the provided message date
+        timeElement.addEventListener('click', () => {
+          const url = `https://klavogonki.ru/chatlogs/${date}.html#${formattedTime}`;
+          window.open(url, '_blank', 'noopener,noreferrer'); // Open in a new tab securely
+        });
+      }
 
       const usernameElement = document.createElement('span');
       usernameElement.className = 'message-username';

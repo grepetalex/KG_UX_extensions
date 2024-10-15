@@ -4683,6 +4683,10 @@
       // Set the 'personalMessages' key in localStorage to an empty object
       localStorage.setItem('personalMessages', JSON.stringify({}));
 
+      // Fade out the cached messages panel when the clear cache button is clicked
+      fadeTargetElement(cachedMessagesPanel, 'hide');
+      fadeDimmingElement('hide');
+
       // Update the message count displayed in the personal messages button
       const messagesCountElement = document.querySelector('.personal-messages-button .total-message-count');
       if (messagesCountElement) messagesCountElement.textContent = '0';

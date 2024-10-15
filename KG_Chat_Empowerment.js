@@ -3859,8 +3859,8 @@
               banSpammer();
               // Call the function to show the latest popup message
               showPopupMessage();
-              // Call the function to update the message count display
-              updatePersonalMessageCountText();
+              // Call the function to update the total and new message count display
+              updatePersonalMessageCounts();
             }
 
           }
@@ -4508,47 +4508,44 @@
 
   // CREATE PERSONAL MESSAGES BUTTON (START)
 
-  // Function to create the button for showing personal messages
-  function createShowPersonalMessagesButton() { // Create a new element with class 'personal-messages-button'
+  // Function to create the button for opening personal messages
+  function createPersonalMessagesButton() {
+    // Create a new element with class 'personal-messages-button'
     const showPersonalMessagesButton = document.createElement('div');
-
-    // Add the class 'personal-messages-button' to the button
     showPersonalMessagesButton.classList.add('personal-messages-button');
 
     // Apply base button styles
     applyBaseButtonStyles(showPersonalMessagesButton);
 
-    // Add personal messages-specific styles directly
+    // Add personal messages-specific styles
     showPersonalMessagesButton.style.position = 'relative';
     showPersonalMessagesButton.style.zIndex = '1';
+    showPersonalMessagesButton.innerHTML = iconPersonalMessages; // Add icon
 
-    // Add data base icon to the button (you can change this to an appropriate icon for personal messages)
-    showPersonalMessagesButton.innerHTML = iconPersonalMessages;
+    // Create the small indicator for all message count
+    const allMessageCount = createMessageCountIndicator('total-message-count', '#fa8072');
+    const personalMessages = JSON.parse(localStorage.getItem('personalMessages')) || {};
+    allMessageCount.textContent = Object.keys(personalMessages).length;
+
+    // Position the all message count to the left
+    allMessageCount.style.left = '0';
+    allMessageCount.style.transform = 'translate(-50%, 50%)';
+    showPersonalMessagesButton.appendChild(allMessageCount);
 
     // Create the small indicator for new message count
-    const newMessageCount = document.createElement('div');
-    newMessageCount.classList.add('message-count');
-    newMessageCount.style.display = 'flex';
-    newMessageCount.style.position = 'absolute';
-    newMessageCount.style.justifyContent = 'center';
-    newMessageCount.style.alignItems = 'center';
-    newMessageCount.style.left = '0';
-    newMessageCount.style.bottom = '0';
-    newMessageCount.style.transform = 'translate(-50%, 50%)';
-    newMessageCount.style.zIndex = '1';
-    newMessageCount.style.height = '20px';
-    newMessageCount.style.padding = '0 4px';
-    newMessageCount.style.setProperty('border-radius', '2px', 'important');
-    newMessageCount.style.backgroundColor = '#fa8072';
-    newMessageCount.style.color = 'rgb(2, 2, 2)';
-    newMessageCount.style.fontSize = '12px';
-    newMessageCount.style.fontFamily = 'Roboto';
-    newMessageCount.style.fontWeight = 'bold';
+    const newMessageCount = createMessageCountIndicator('new-message-count', '#ffd700');
 
-    const personalMessages = JSON.parse(localStorage.getItem('personalMessages')) || {};
-    const messageCountValue = Object.keys(personalMessages).length;
-    newMessageCount.textContent = messageCountValue; // Update the message count
+    // Get the new messages count from localStorage or set to 0 if not present
+    let newMessagesCount = Number(localStorage.getItem('newMessagesCount')) || (localStorage.setItem('newMessagesCount', '0'), 0);
 
+    newMessageCount.textContent = newMessagesCount;
+
+    // Check the newMessagesCount value and set visibility
+    newMessageCount.style.visibility = newMessagesCount > 0 ? 'visible' : 'hidden'; // Set visibility based on count
+
+    // Position the new message count to the right
+    newMessageCount.style.right = '0';
+    newMessageCount.style.transform = 'translate(50%, 50%)';
     showPersonalMessagesButton.appendChild(newMessageCount);
 
     // Assign a title to the button
@@ -4556,24 +4553,53 @@
 
     // Add a click event listener to the button
     showPersonalMessagesButton.addEventListener('click', function () {
+      addPulseEffect(showPersonalMessagesButton); // Add pulse effect
+      showPersonalMessagesPanel(); // Show the personal messages panel
 
-      // Add pulse effect for the messages button
-      addPulseEffect(showPersonalMessagesButton);
-
-      // Call a function to show the personal messages panel (you need to implement this function)
-      showPersonalMessagesPanel();
+      // Reset newMessagesCount in localStorage to 0 when opening the panel
+      localStorage.setItem('newMessagesCount', '0');
+      newMessagesCount = 0; // Reset the local variable
+      newMessageCount.textContent = newMessagesCount; // Update the displayed count
     });
 
     // Append the button to the existing panel
     empowermentButtonsPanel.appendChild(showPersonalMessagesButton);
   }
 
-  createShowPersonalMessagesButton();
+  // Helper function to create a message count indicator
+  function createMessageCountIndicator(className, backgroundColor) {
+    const messageCount = document.createElement('div');
+    messageCount.classList.add(className);
+    messageCount.style.display = 'flex';
+    messageCount.style.position = 'absolute';
+    messageCount.style.justifyContent = 'center';
+    messageCount.style.alignItems = 'center';
+    messageCount.style.height = '20px'; // Fixed height for all indicators
+    messageCount.style.padding = '0 4px';
+    messageCount.style.setProperty('border-radius', '2px', 'important');
+    messageCount.style.backgroundColor = backgroundColor;
+    messageCount.style.color = 'rgb(2, 2, 2)';
+    messageCount.style.fontSize = '12px';
+    messageCount.style.fontFamily = 'Roboto';
+    messageCount.style.fontWeight = 'bold';
+    messageCount.style.bottom = '0'; // Common bottom positioning for both indicators
+    return messageCount;
+  }
+
+  // Call the function to create the button
+  createPersonalMessagesButton();
 
   // Function to display the personal messages panel
   function showPersonalMessagesPanel() {
     // Check if the cached messages panel already exists
     if (document.querySelector('.cached-messages-panel')) return;
+
+    // Reset the new messages indicator to 0
+    const newMessagesCountElement = document.querySelector('.personal-messages-button .new-message-count');
+    if (newMessagesCountElement) newMessagesCountElement.textContent = '0';
+    newMessagesCountElement.style.visibility = 'hidden';
+    // Remove the localStorage key for new personal messages after opening the messages panel (always)
+    localStorage.removeItem('newMessagesCount');
 
     // Get data from localStorage
     const cachedMessagesData = localStorage.getItem('personalMessages');
@@ -4658,7 +4684,7 @@
       localStorage.setItem('personalMessages', JSON.stringify({}));
 
       // Update the message count displayed in the personal messages button
-      const messagesCountElement = document.querySelector('.personal-messages-button .message-count');
+      const messagesCountElement = document.querySelector('.personal-messages-button .total-message-count');
       if (messagesCountElement) messagesCountElement.textContent = '0';
     });
 
@@ -4817,17 +4843,41 @@
     });
   }
 
-  // Function to update the message count displayed near the personal messages button based on localStorage
-  function updatePersonalMessageCountText() {
-    const messageCountElement = document.querySelector('.personal-messages-button .message-count'); // Select the element
-    if (!messageCountElement) return; // Ensure the element exists
+  // Initialize previousTotalCount with the current personal messages count from localStorage
+  let previousTotalCount =
+    (localStorage.personalMessages && Object.keys(JSON.parse(localStorage.personalMessages)).length) || 0;
+
+  /**
+   * Updates total and new personal message counts near the personal messages button.
+   * - Increments new message count only when total message count increases.
+   * - Manages visibility and pulse effects for the new message indicator.
+   */
+  function updatePersonalMessageCounts() {
+    const totalCountElement = document.querySelector('.personal-messages-button .total-message-count');
+    const newCountElement = document.querySelector('.personal-messages-button .new-message-count');
+    if (!totalCountElement || !newCountElement) return; // Exit if elements are missing
 
     const personalMessages = JSON.parse(localStorage.getItem('personalMessages')) || {};
+    const totalCount = Object.keys(personalMessages).length;
 
-    addPulseEffect(messageCountElement);
+    let newCount = Number(localStorage.getItem('newMessagesCount')) || 0;
+    if (totalCount > previousTotalCount) {
+      newCount++;
+      localStorage.setItem('newMessagesCount', newCount);
+      addPulseEffect(newCountElement); // Apply pulse effect for new messages
+    }
 
-    // Update the text content based on the number of messages
-    messageCountElement.textContent = Object.keys(personalMessages).length.toString();
+    // Update counts in the UI
+    totalCountElement.textContent = totalCount;
+    newCountElement.textContent = newCount;
+
+    // Manage visibility of the new message indicator
+    newCountElement.style.visibility = newCount > 0 ? 'visible' : 'hidden';
+
+    // Apply pulse effect if total count changes
+    if (totalCount !== previousTotalCount) addPulseEffect(totalCountElement);
+
+    previousTotalCount = totalCount; // Update previous count
   }
 
   // CREATE PERSONAL MESSAGES BUTTON (END)

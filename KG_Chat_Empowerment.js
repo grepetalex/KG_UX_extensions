@@ -85,7 +85,7 @@
     : defaultVoicePitch; // Default value if KG_Chat_Empowerment.voiceSettings.voicePitch is null
 
   // Define the users to track and notify with popup and audio
-  const usersToTrack = [
+  let usersToTrack = [
     { name: 'Даниэль', gender: 'male', pronunciation: 'Даниэль' }, // ------------ 01
     { name: 'Пьяный_Качок', gender: 'male', pronunciation: 'Пьяный-Качок' }, // -- 02
     { name: 'Баристарх', gender: 'male', pronunciation: 'Баристарх' }, // -------- 03
@@ -104,16 +104,23 @@
     { name: 'Солнцеликий', gender: 'male', pronunciation: 'Солнцеликий' } // ----- 16
   ];
 
-  // Notify me if someone is addressing to me using such aliases
-  // Case-insensitive. It can be written fully in lowercase or fully in uppercase or in any other ways.
-  const mentionKeywords = [
-    // Actual nickname
+  // Notify if someone addresses me using these aliases (case-insensitive)
+  let mentionKeywords = [
+    // Your actual nickname
     myNickname,
     // Possible nickname keywords
     'Душа',
     'Панчер'
   ];
 
+  // Check and load settings from localStorage if available and not empty
+  const storedUsersToTrack = JSON.parse(localStorage.getItem('usersToTrack'));
+  const storedMentionKeywords = JSON.parse(localStorage.getItem('mentionKeywords'));
+
+  // Replace usersToTrack with stored value if it exists and is not empty
+  usersToTrack = storedUsersToTrack?.length ? storedUsersToTrack : usersToTrack;
+  // Replace mentionKeywords with stored value if it exists and is not empty
+  mentionKeywords = storedMentionKeywords?.length ? storedMentionKeywords : mentionKeywords;
 
   // Key Events: CTRL and ALT
 
@@ -4740,7 +4747,8 @@
 
   // CREATE PANEL GRAPHICAL SETTINGS BUTTON (START)
 
-  // Function to create the button for showing settings
+
+  // Create a button to upload and apply new settings
   function createShowSettingsButton() {
     // Create a new element with class 'settings-button'
     const showSettingsButton = document.createElement('div');
@@ -4781,11 +4789,25 @@
       if (file) {
         const reader = new FileReader();
         reader.onload = function (e) {
-          const settingsData = JSON.parse(e.target.result);
-          // Call a function to process the uploaded settings data
-          processUploadedSettings(settingsData);
+          const jsonData = e.target.result; // Get the raw JSON string
+          try {
+            const settingsData = JSON.parse(jsonData); // Attempt to parse the JSON data
+            // Call a function to process the uploaded settings data
+            processUploadedSettings(settingsData);
+          } catch (error) {
+            console.error('Error parsing JSON data:', error.message); // Log the error message
+            console.error('Invalid JSON:', jsonData); // Log the raw JSON string for debugging
+
+            // Optional: Notify the user about the error (you can replace this with a better UI message)
+            alert('Failed to parse JSON data. Please check the format and try again.');
+          }
         };
-        reader.readAsText(file);
+
+        reader.onerror = function (e) {
+          console.error('Error reading file:', e.target.error); // Handle file reading errors
+        };
+
+        reader.readAsText(file); // Read the file as text
       }
     });
 
@@ -4793,12 +4815,8 @@
     showSettingsButton.addEventListener('click', function () {
       // Add pulse effect for the settings button
       addPulseEffect(showSettingsButton);
-
       // Trigger the file input click to open the file selection dialog
       fileInput.click();
-
-      // Optionally, you can also call a function to show the settings panel
-      // showSettingsPanel(); // Uncomment this if you want to open a settings panel
     });
 
     // Append the file input to the button
@@ -4811,10 +4829,18 @@
   // Call the function to create the settings button
   createShowSettingsButton();
 
-  // Function to process the uploaded settings data
-  function processUploadedSettings(settingsData) {
-    // Implement your logic for handling the uploaded settings data
-    console.log('Uploaded settings:', settingsData);
+  // Save the current settings to localStorage
+  function saveSettingsToLocalStorage() {
+    localStorage.setItem('usersToTrack', JSON.stringify(usersToTrack));
+    localStorage.setItem('mentionKeywords', JSON.stringify(mentionKeywords));
+  }
+
+  // Process and apply uploaded settings
+  function processUploadedSettings({ usersToTrack: u, mentionKeywords: m }) {
+    if (u?.length) usersToTrack = u; // Update usersToTrack if new data is provided
+    if (m?.length) mentionKeywords = [...m, myNickname]; // Update mentionKeywords and include myNickname
+    saveSettingsToLocalStorage(); // Save to localStorage after applying settings
+    console.log('Uploaded settings applied:', { usersToTrack, mentionKeywords });
   }
 
   // CREATE PANEL GRAPHICAL SETTINGS BUTTON (END)

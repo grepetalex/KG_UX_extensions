@@ -4534,11 +4534,23 @@
     const parent = document.querySelector('.messages-content'); // Find the chat container
     if (!parent) return null; // Return null if the container is not found
 
-    const targetWords = targetText.split(' '); // Split the target text into words
+    // Clean the target text by removing patterns and trimming whitespace
+    const cleanedTargetText = targetText.replace(/(:\w+:|::\w+::)/g, '').replace(/\s+/g, ' ').trim();
+
+    // If the cleaned target text is empty, return false
+    if (cleanedTargetText === '') return false;
+
+    const targetWords = cleanedTargetText.split(' '); // Split the cleaned target text into words
 
     // Find the <p> element containing matches in the correct order
     const foundElement = Array.from(parent.querySelectorAll('p')).find(p => {
-      const messageWords = p.textContent.split(' '); // Split message text into words
+      // Replace all found :words: and ::words:: with a single space, then trim
+      const messageText = p.textContent.replace(/(:\w+:|::\w+::)/g, '').replace(/\s+/g, ' ').trim();
+      const messageWords = messageText.split(' '); // Split cleaned message text into words
+
+      // If the message contains only emoticons, return false
+      if (messageWords.length === 0 || messageWords.every(word => word === '')) return false;
+
       let targetIndex = 0; // Initialize target word index
 
       // Check for matching words in order, ignoring unmatched words
@@ -4550,7 +4562,9 @@
         // If all target words are matched, return true
         if (targetIndex === targetWords.length) return true;
       }
-      return false; // Not all target words matched
+
+      // If not all target words are matched, return false
+      return false;
     });
 
     // If foundElement exists, check visibility and scroll if necessary
@@ -4567,7 +4581,7 @@
       return foundElement; // Return the found element
     }
 
-    return null; // Return null if no element was found
+    return false; // Return false if no element was found or only emoticons matched
   }
 
   // Function to display the personal messages panel

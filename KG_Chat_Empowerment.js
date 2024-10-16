@@ -627,40 +627,57 @@
   /**
    * Checks if a given URL's domain is trusted.
    * @param {string} url - The URL to check.
-   * @returns {{isTrusted: boolean, domain: string}} - Result and the extracted domain.
+   * @returns {{isTrusted: boolean, domain: string, isValid: boolean}} - Result and the extracted domain.
    */
   function isTrustedDomain(url) {
-    // Parse the URL
-    const parsedURL = new URL(url);
-    // Split the lowercase hostname into parts
-    const hostnameParts = parsedURL.hostname.toLowerCase().split('.');
-    // Get the last two parts of the hostname if there are more than two, otherwise, use all parts
-    const lastTwoHostnameParts = hostnameParts.length > 2 ? hostnameParts.slice(-2) : hostnameParts;
-    // Join the last two parts to form the domain
-    const domain = lastTwoHostnameParts.join('.');
-    // Check if the domain is trusted
-    const isTrusted = trustedDomains.includes(domain);
+    let isValid = true; // Assume URL is valid initially
+    let domain = '';
 
-    // Return an object with the result and the domain
-    return { isTrusted, domain };
+    try {
+      // Parse the URL
+      const parsedURL = new URL(url);
+      // Split the lowercase hostname into parts
+      const hostnameParts = parsedURL.hostname.toLowerCase().split('.');
+      // Get the last two parts of the hostname if there are more than two, otherwise, use all parts
+      const lastTwoHostnameParts = hostnameParts.length > 2 ? hostnameParts.slice(-2) : hostnameParts;
+      // Join the last two parts to form the domain
+      domain = lastTwoHostnameParts.join('.');
+      // Check if the domain is trusted
+      const isTrusted = trustedDomains.includes(domain);
+
+      // Return an object with the result, the domain, and the validity of the URL
+      return { isTrusted, domain, isValid };
+    } catch (error) {
+      // If an error occurs, the URL is invalid
+      isValid = false;
+      return { isTrusted: false, domain: '', isValid };
+    }
   }
 
   /**
    * Function to check if a given URL has an allowed image extension
    * @param {string} url - The URL to check
-   * @returns {Object} - An object with properties 'allowed' (boolean) and 'extension' (string)
+   * @returns {Object} - An object with properties 'allowed' (boolean), 'extension' (string), and 'valid' (boolean)
    */
   function isAllowedImageExtension(url) {
-    // Use URL API to get pathname
-    const extensionMatch = new URL(url).pathname.match(/\.([^.]+)$/);
-    // Extract the file extension from the pathname (if any)
-    const extension = extensionMatch ? extensionMatch[1].toLowerCase() : '';
-    // List of allowed image file extensions
-    const allowedImageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-    // Check if the extracted extension is in the list of allowed extensions
-    const allowed = allowedImageExtensions.includes(`.${extension}`);
-    // Return an object with the result and the extracted extension
-    return { allowed, extension };
+    let valid = true; // Assume URL is valid initially
+
+    try {
+      // Use URL API to get pathname
+      const extensionMatch = new URL(url).pathname.match(/\.([^.]+)$/);
+      // Extract the file extension from the pathname (if any)
+      const extension = extensionMatch ? extensionMatch[1].toLowerCase() : '';
+      // List of allowed image file extensions
+      const allowedImageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+      // Check if the extracted extension is in the list of allowed extensions
+      const allowed = allowedImageExtensions.includes(extension);
+      // Return an object with the result, the extracted extension, and the validity of the URL
+      return { valid, allowed, extension };
+    } catch (error) {
+      // If an error occurs, the URL is invalid
+      valid = false;
+      return { valid, allowed: false, extension: '' };
+    }
   }
 
   function convertImageLinkToImage() {

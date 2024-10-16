@@ -339,113 +339,6 @@
     return `hsl(${hue},${saturation}%,${lightness}%)`;
   }
 
-  // // Function to purge chat user actions with a smooth step-by-step animation
-  // // Parameters:
-  // //   - delayBetweenAnimations: Delay between each animation step (default: 300ms)
-  // //   - smoothScrollDuration: Duration of smooth scrolling (default: 500ms)
-  // function purgeStaticChatNotifications(delayBetweenAnimations = 300, smoothScrollDuration = 500) {
-  //   // Get all elements with the class .static-chat-notification
-  //   const staticChatNotifications = Array.from(document.querySelectorAll('.static-chat-notification')).reverse();
-
-  //   // Get the chat container
-  //   const chatContainer = document.querySelector(".messages-content");
-
-  //   // Return early if the chat container does not exist
-  //   if (!chatContainer) return;
-
-  //   // Asynchronous function to check if an element is visible in the viewport
-  //   async function isElementVisible(element) {
-  //     // Introduce a delay (for example, 100ms) to simulate asynchronous behavior
-  //     await new Promise(resolve => setTimeout(resolve, 100));
-
-  //     const rect = element.getBoundingClientRect();
-  //     return (
-  //       rect.top >= 0 &&
-  //       rect.left >= 0 &&
-  //       rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-  //       rect.right <= (window.innerWidth || document.documentElement.clientWidth)
-  //     );
-  //   }
-
-  //   // Function to apply the animation to an element
-  //   function animateOut(element, index) {
-  //     // Calculate the delay for each element
-  //     const delay = index * delayBetweenAnimations;
-
-  //     // Apply opacity and translation animation with delay
-  //     setTimeout(() => {
-  //       element.style.transition = `
-  //         opacity ${delayBetweenAnimations / 1000}s cubic-bezier(0.83, 0, 0.17, 1),
-  //         transform ${delayBetweenAnimations / 1000}s cubic-bezier(0.83, 0, 0.17, 1)
-  //       `;
-  //       element.style.opacity = 0;
-  //       element.style.transform = `translateX(1em)`;
-
-  //       // After the animation duration, scroll the chat if the next notification is not visible
-  //       setTimeout(() => {
-  //         element.remove();
-
-  //         // Check if the next notification is visible
-  //         const nextIndex = index + 1;
-  //         const nextElement = staticChatNotifications[nextIndex];
-
-  //         if (nextElement && !isElementVisible(nextElement)) {
-  //           const closestContainer = nextElement.closest('.static-chat-notifications-container');
-  //           const containerHeight = closestContainer ? closestContainer.offsetHeight : 0;
-  //           const extraSpace = 200;
-
-  //           // Calculate the distance to scroll, including containerHeight
-  //           const distanceToTop = nextElement.offsetTop - chatContainer.offsetTop - containerHeight - extraSpace;
-
-  //           // Smooth scroll to the next notification
-  //           chatContainer.style.scrollBehavior = 'smooth';
-  //           chatContainer.scrollTop = distanceToTop;
-
-  //           // Add an extra delay before removing the element
-  //           setTimeout(() => {
-  //             // Remove the element after scrolling to the next notification
-  //             nextElement.remove();
-
-  //             // Continue only if the next element is the last one
-  //             if (nextIndex === staticChatNotifications.length - 1) {
-  //               // If it's the last element, smooth scroll back to the bottom
-  //               chatContainer.scrollTop = chatContainer.scrollHeight;
-
-  //               // Set a longer delay before resetting scroll behavior to default
-  //               setTimeout(() => {
-  //                 // After the smooth scroll duration, reset scroll behavior to default
-  //                 chatContainer.style.scrollBehavior = 'auto';
-
-  //                 // Remove all .static-chat-notifications-container after all notifications are removed
-  //                 const containers = document.querySelectorAll('.static-chat-notifications-container');
-  //                 containers.forEach(container => container.remove());
-  //               }, smoothScrollDuration); // Use smoothScrollDuration here
-  //             }
-  //           }, delayBetweenAnimations);
-  //         } else if (nextIndex === staticChatNotifications.length - 1) {
-  //           // If there is no next element, and it's the last one, smooth scroll back to the bottom
-  //           chatContainer.scrollTop = chatContainer.scrollHeight;
-
-  //           // Set a longer delay before resetting scroll behavior to default
-  //           setTimeout(() => {
-  //             // After the smooth scroll duration, reset scroll behavior to default
-  //             chatContainer.style.scrollBehavior = 'auto';
-
-  //             // Remove all .static-chat-notifications-container after all notifications are removed
-  //             const containers = document.querySelectorAll('.static-chat-notifications-container');
-  //             containers.forEach(container => container.remove());
-  //           }, smoothScrollDuration); // Use smoothScrollDuration here
-  //         }
-  //       }, delayBetweenAnimations);
-  //     }, delay);
-  //   }
-
-  //   // Use forEach on the reversed array and apply animations
-  //   staticChatNotifications.forEach((element, index) => {
-  //     animateOut(element, index);
-  //   });
-  // }
-
   // Function to purge chat user actions with a smooth step-by-step animation
   // Parameters:
   //   - delayBetweenAnimations: Delay between each animation step (default: 300ms)
@@ -3042,41 +2935,28 @@
     // Helper function to check if a node is an img (emoticon)
     const isImageNode = (node) => node.nodeName === 'IMG' && node.getAttribute('title');
 
-    // Constants to store parts of the common message (text + emoticons)
-    const commonMessageParts = [];
-    const childNodes = [...messageElement.childNodes];
+    // Function to collect message parts (text + emoticons) from any container
+    const collectMessageParts = (container) =>
+      [...container.childNodes]
+        .map(node =>
+          isTextNode(node) ? node.textContent.trim() :
+            isImageNode(node) ? node.getAttribute('title') : ''
+        )
+        .filter(Boolean); // Remove empty strings
 
-    childNodes.forEach(node => {
-      if (isTextNode(node)) {
-        commonMessageParts.push(node.textContent.trim()); // Add text content to parts
-      } else if (isImageNode(node)) {
-        commonMessageParts.push(node.getAttribute('title')); // Add emoticon title to parts
-      }
-    });
+    // Process common message
+    const commonMessageParts = collectMessageParts(messageElement);
+    const messageText = commonMessageParts.join(' ').trim(); // Final message text
 
-    // Combine the message parts into a single string
-    const messageText = commonMessageParts.filter(Boolean).join(' ').trim();
-
-    // Retrieve or initialize the personalMessages object from localStorage
+    // Retrieve or initialize personalMessages from localStorage
     const personalMessages = JSON.parse(localStorage.getItem('personalMessages')) || {};
 
-    // Initialize privateMessageText
-    let privateMessageText = '';
-
-    // Helper function to get the current date in YYYY-MM-DD format
-    function getCurrentDate() {
-      const today = new Date();
-      const year = today.getFullYear();
-      const month = String(today.getMonth() + 1).padStart(2, '0'); // Month starts from 0
-      const day = String(today.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    }
+    // Helper to get the current date in YYYY-MM-DD format
+    const getCurrentDate = () => new Date().toLocaleDateString('en-CA');
 
     // Helper function to handle messages
     const handleMessage = (messageType, messageText) => {
       const time = messageElement.querySelector('.time')?.textContent || 'N/A';
-      const date = getCurrentDate(); // Get the current date
-
       const usernameElement = messageElement.querySelector('.username span[data-user]');
       const username = usernameElement ? usernameElement.textContent : 'Unknown';
       const usernameColor = usernameElement ? usernameElement.parentElement.style.color : 'lightblue';
@@ -3087,23 +2967,28 @@
       // Store the message data in personalMessages with the new order
       personalMessages[messageKey] = {
         time,
-        date,
+        date: getCurrentDate(),
         username,
         usernameColor,
-        message: messageText, // Use the messageText passed to the function
-        type: messageType // Use the passed messageType
+        message: messageText,
+        type: messageType
       };
 
       // Save the updated personalMessages back to localStorage
       localStorage.setItem('personalMessages', JSON.stringify(personalMessages));
     };
 
-    // Function to handle private messages
+    // Process private message
+    let privateMessageText = '';
+
     const privateMessageContainer = messageElement.querySelector('.room.private');
     if (privateMessageContainer && privateMessageContainer.textContent.includes('[шепчет вам]')) {
       const privateMessageElement = messageElement.querySelector('span.private');
-      privateMessageText = privateMessageElement ? privateMessageElement.textContent : '';
-      handleMessage('private', privateMessageText); // Pass 'private' and the private message text
+      if (privateMessageElement) {
+        const privateMessageParts = collectMessageParts(privateMessageElement);
+        privateMessageText = privateMessageParts.join(' ').trim(); // Final private message
+        handleMessage('private', privateMessageText); // Handle private message
+      }
     }
 
     // Check if the message contains a mention for the current user
@@ -4859,7 +4744,6 @@
 
       const messageTextElement = document.createElement('span');
       messageTextElement.className = 'message-text';
-      // messageTextElement.textContent = message;
       messageTextElement.innerHTML = message.replace(/:(\w+):/g,
         (_, word) => `<img src="/img/smilies/${word}.gif" alt=":${word}:" title=":${word}:" class="smile">`
       );
@@ -5067,7 +4951,7 @@
   }
 
 
-  // CHAT POPUP INDICATOR LENGTH START 
+  // CHAT POPUP INDICATOR LENGTH (START)
 
   // Select the input element and length popup container using the helper function
   const { inputField: chatField, lengthPopupContainer } = retrieveChatElementsByRoomType();
@@ -5202,13 +5086,12 @@
       showLengthPopup(0);
       lengthPopup.style.left = '0px';
       lengthPopup.style.color = 'hsl(200, 20%, 50%)'; // Light Blue
+      // Reset the timeout for hiding the popup
+      hidePopupTimeout = setTimeout(hideLengthPopup, 1000);
     }
   });
 
-  // CHAT POPUP INDICATOR LENGTH END
-
-
-
+  // CHAT POPUP INDICATOR LENGTH (END)
 
 
   // REMOVE UNWANTED MESSAGES

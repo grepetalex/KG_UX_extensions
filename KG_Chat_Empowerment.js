@@ -272,24 +272,16 @@
     }
   });
 
-  /**
-   * Converts text to speech using the Web Speech API.
-   * 
-   * @param {string} text - The text to be spoken. Underscores in the text are replaced with hyphens.
-   * @param {number} [voiceSpeed=voiceSpeed] - The speed at which the speech will be delivered.
-   * @returns {Promise} A promise that resolves when the speech ends.
-   */
+  // Converts text to speech using the Web Speech API.
   async function textToSpeech(text, voiceSpeed = voiceSpeed) {
     return new Promise(async (resolve) => {
       // Wait for the voices to be loaded asynchronously
       const { synth, utterance, voice } = await awaitVoices;
 
-      // Replace underscores with hyphens in the text for better readability in the speech
-      const message = text.replace(/_/g, '-');
-
-      // Remove digits before key words like "пишет:" or "обращается:", 
-      // ensuring exactly one space is left before those words
-      const cleanedMessage = message.replace(/\s*\d+\s+(?=(пишет:|обращается:))/, ' ').trim();
+      const cleanedMessage = text
+        .replace(/_/g, '-') // Replace underscores with hyphens
+        .replace(/https?:\/\/([a-zA-Z0-9\-\.]+)(\/[^\s]*)?/g, (_, p1) => p1) // Replace URLs with domains
+        .split(' ').map(word => word.replace(/\d+/g, '')).filter(Boolean).join(' ').trim(); // Clean digits and format
 
       // Set utterance properties, such as text to be spoken, rate, volume, pitch, and voice
       Object.assign(utterance, {
@@ -2931,16 +2923,18 @@
 
     // Helper function to check if a node is a text node
     const isTextNode = (node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== '';
-
     // Helper function to check if a node is an img (emoticon)
     const isImageNode = (node) => node.nodeName === 'IMG' && node.getAttribute('title');
+    // Helper function to check if a node is an anchor (link)
+    const isAnchorNode = (node) => node.nodeName === 'A' && node.getAttribute('href');
 
-    // Function to collect message parts (text + emoticons) from any container
+    // Function to collect message parts (text + emoticons + links) from any container
     const collectMessageParts = (container) =>
       [...container.childNodes]
         .map(node =>
           isTextNode(node) ? node.textContent.trim() :
-            isImageNode(node) ? node.getAttribute('title') : ''
+            isImageNode(node) ? node.getAttribute('title') :
+              isAnchorNode(node) ? node.getAttribute('href') : ''
         )
         .filter(Boolean); // Remove empty strings
 
@@ -3868,6 +3862,31 @@
     });
   }
 
+  // Helper function to add a shake effect for messages not found in the personal messages panel.
+  function addShakeEffect(element) {
+    const transforms = [
+      'translate3d(0, 0, 0)', // Initial start position
+      'translate3d(-2px, 0, 0)', // Shake left (larger)
+      'translate3d(4px, 0, 0)', // Shake right (larger)
+      'translate3d(-8px, 0, 0)', // Shake left more (larger)
+      'translate3d(8px, 0, 0)', // Shake right more (larger)
+      'translate3d(-2px, 0, 0)', // Shake left (larger)
+      'translate3d(0, 0, 0)' // Return to original position
+    ];
+
+    // Define an initial delay and a decrement factor for timing
+    let delay = 100; // Start with 100ms
+    const increment = 50; // Increase the delay by 50ms for each keyframe
+
+    transforms.forEach((transform, index) => {
+      setTimeout(() => {
+        element.style.transform = transform; // Apply the current transform
+        element.style.transition = 'transform 0.1s ease'; // Ensure smooth transition
+      }, delay); // Schedule the transform
+      delay += increment; // Increase delay for the next keyframe
+    });
+  }
+
   // Helper function to apply common styles to buttons
   function applyBaseButtonStyles(element) {
     Object.assign(element.style, {
@@ -4510,6 +4529,31 @@
   // Call the function to create the button
   createPersonalMessagesButton();
 
+  function findChatMessage(targetText) {
+    const parent = document.querySelector('.messages-content'); // Find the chat container
+    if (!parent) return null; // Return null if the container is not found
+
+    // Find the <p> element containing the target text or return null
+    const foundElement = Array.from(parent.querySelectorAll('p')).find(p => p.textContent.includes(targetText));
+
+    // If foundElement exists, check visibility and scroll if necessary
+    if (foundElement) {
+      const elementRect = foundElement.getBoundingClientRect();
+      const parentRect = parent.getBoundingClientRect();
+
+      // Check if the found element is out of view
+      if (elementRect.top < parentRect.top || elementRect.bottom > parentRect.bottom) {
+        foundElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); // Smooth scroll to the element
+        // Reset scroll behavior back to default after 500ms
+        setTimeout(() => parent && (parent.style.scrollBehavior = 'auto'), 500); // One-line reset
+      }
+      setTimeout(() => (foundElement ? addShakeEffect(foundElement) : null), 300); // Add shake effect if element found
+      return foundElement; // Return the found element
+    }
+
+    return null; // Return null if no element was found
+  }
+
   // Function to display the personal messages panel
   function showPersonalMessagesPanel() {
     // Check if the cached messages panel already exists
@@ -4744,9 +4788,25 @@
 
       const messageTextElement = document.createElement('span');
       messageTextElement.className = 'message-text';
+
       messageTextElement.innerHTML = message.replace(/:(\w+):/g,
         (_, word) => `<img src="/img/smilies/${word}.gif" alt=":${word}:" title=":${word}:" class="smile">`
       );
+
+      // Set cursor style for messageTextElement only if type is "mention"
+      if (type === 'mention') {
+        messageTextElement.style.cursor = 'pointer'; // Pointer cursor
+        messageTextElement.addEventListener('click', () => {
+          const foundMessage = findChatMessage(message); // Call the function and store the result
+          if (foundMessage) {
+            // Fade out the cached messages panel
+            fadeTargetElement(cachedMessagesPanel, 'hide');
+            fadeDimmingElement('hide');
+          } else {
+            addShakeEffect(messageTextElement.parentElement); // Add shake effect to the parent
+          }
+        });
+      }
 
       // Change the messageTextElement color based on type
       const usernameColors = {
@@ -4774,7 +4834,6 @@
 
     // Fade in the cached messages panel
     fadeTargetElement(cachedMessagesPanel, 'show');
-
     // Show the dimming background
     fadeDimmingElement('show');
 

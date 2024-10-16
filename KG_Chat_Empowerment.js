@@ -3959,6 +3959,30 @@
     }, 300);
   }
 
+  // Helper function to add jump effect like a ball with more keyframes
+  function addJumpEffect(element) {
+    const transforms = [
+      'translate(50%, 50%)', // Initial start position
+      'translate(50%, 20%)', // Jump up
+      'translate(50%, 10%)', // Higher jump peak
+      'translate(50%, 50%)', // Return to original position
+      'translate(50%, 30%)', // Slight bounce down
+      'translate(50%, 40%)', // Adjust slightly up
+      'translate(50%, 50%)' // Final position (original)
+    ];
+
+    // Define an initial delay and a decrement factor for timing
+    let delay = 300; // Start with 200ms
+    const decrement = 40; // Decrease the delay by 40ms for each keyframe
+
+    transforms.forEach((transform, index) => {
+      setTimeout(() => {
+        element.style.transform = transform; // Apply the current transform
+      }, delay); // Schedule the transform
+      delay -= decrement; // Decrease delay for the next keyframe
+    });
+  }
+
   // Helper function to apply common styles to buttons
   function applyBaseButtonStyles(element) {
     Object.assign(element.style, {
@@ -4903,6 +4927,7 @@
       newCount++;
       localStorage.setItem('newMessagesCount', newCount);
       addPulseEffect(newCountElement); // Apply pulse effect for new messages
+      addJumpEffect(newCountElement); // Apply jump effect for new messages
     }
 
     // Update counts in the UI

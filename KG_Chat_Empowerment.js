@@ -4529,25 +4529,41 @@
   // Call the function to create the button
   createPersonalMessagesButton();
 
+  // Finds the specified message in the chat, ensuring words match in order while ignoring unmatched words in between.
   function findChatMessage(targetText) {
     const parent = document.querySelector('.messages-content'); // Find the chat container
     if (!parent) return null; // Return null if the container is not found
 
-    // Find the <p> element containing the target text or return null
-    const foundElement = Array.from(parent.querySelectorAll('p')).find(p => p.textContent.includes(targetText));
+    const targetWords = targetText.split(' '); // Split the target text into words
+
+    // Find the <p> element containing matches in the correct order
+    const foundElement = Array.from(parent.querySelectorAll('p')).find(p => {
+      const messageWords = p.textContent.split(' '); // Split message text into words
+      let targetIndex = 0; // Initialize target word index
+
+      // Check for matching words in order, ignoring unmatched words
+      for (const messageWord of messageWords) {
+        // If the current message word matches the current target word
+        if (targetIndex < targetWords.length && messageWord.includes(targetWords[targetIndex])) {
+          targetIndex++; // Move to the next target word
+        }
+        // If all target words are matched, return true
+        if (targetIndex === targetWords.length) return true;
+      }
+      return false; // Not all target words matched
+    });
 
     // If foundElement exists, check visibility and scroll if necessary
     if (foundElement) {
       const elementRect = foundElement.getBoundingClientRect();
       const parentRect = parent.getBoundingClientRect();
 
-      // Check if the found element is out of view
+      // Scroll to the found element if it's out of view
       if (elementRect.top < parentRect.top || elementRect.bottom > parentRect.bottom) {
-        foundElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); // Smooth scroll to the element
-        // Reset scroll behavior back to default after 500ms
-        setTimeout(() => parent && (parent.style.scrollBehavior = 'auto'), 500); // One-line reset
+        foundElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        setTimeout(() => parent && (parent.style.scrollBehavior = 'auto'), 500); // Reset scroll behavior
       }
-      setTimeout(() => (foundElement ? addShakeEffect(foundElement) : null), 300); // Add shake effect if element found
+      setTimeout(() => foundElement && addShakeEffect(foundElement), 300); // Add shake effect if found
       return foundElement; // Return the found element
     }
 
@@ -4793,29 +4809,19 @@
         (_, word) => `<img src="/img/smilies/${word}.gif" alt=":${word}:" title=":${word}:" class="smile">`
       );
 
-      const excludeEmoticonsCode = /:\w+:/g; // Regular expression to match text wrapped in ::
-
       // Set cursor style for messageTextElement only if type is "mention"
       if (type === 'mention') {
         messageTextElement.style.cursor = 'pointer'; // Pointer cursor
 
         // Add click event listener
         messageTextElement.addEventListener('click', () => {
-          // Clean the message by removing emoticon codes and collapsing whitespace
-          const foundMessageWithoutEmoticons = message.replace(excludeEmoticonsCode, '').replace(/\s+/g, ' ').trim();
-
-          // Log the cleaned message to check if emoticon codes are removed
-          console.log(`Cleaned message: "${foundMessageWithoutEmoticons}"`); // Debug log
-
           // Call the function with the cleaned message
-          const foundMessage = findChatMessage(foundMessageWithoutEmoticons);
-
+          const foundMessage = findChatMessage(message);
           if (foundMessage) {
             // Fade out the cached messages panel if the message is found
             fadeTargetElement(cachedMessagesPanel, 'hide');
             fadeDimmingElement('hide');
           } else {
-            console.log(foundMessageWithoutEmoticons); // Log the cleaned message if not found
             addShakeEffect(messageTextElement.parentElement); // Add shake effect to the parent
           }
         });

@@ -4793,16 +4793,29 @@
         (_, word) => `<img src="/img/smilies/${word}.gif" alt=":${word}:" title=":${word}:" class="smile">`
       );
 
+      const excludeEmoticonsCode = /:\w+:/g; // Regular expression to match text wrapped in ::
+
       // Set cursor style for messageTextElement only if type is "mention"
       if (type === 'mention') {
         messageTextElement.style.cursor = 'pointer'; // Pointer cursor
+
+        // Add click event listener
         messageTextElement.addEventListener('click', () => {
-          const foundMessage = findChatMessage(message); // Call the function and store the result
+          // Clean the message by removing emoticon codes and collapsing whitespace
+          const foundMessageWithoutEmoticons = message.replace(excludeEmoticonsCode, '').replace(/\s+/g, ' ').trim();
+
+          // Log the cleaned message to check if emoticon codes are removed
+          console.log(`Cleaned message: "${foundMessageWithoutEmoticons}"`); // Debug log
+
+          // Call the function with the cleaned message
+          const foundMessage = findChatMessage(foundMessageWithoutEmoticons);
+
           if (foundMessage) {
-            // Fade out the cached messages panel
+            // Fade out the cached messages panel if the message is found
             fadeTargetElement(cachedMessagesPanel, 'hide');
             fadeDimmingElement('hide');
           } else {
+            console.log(foundMessageWithoutEmoticons); // Log the cleaned message if not found
             addShakeEffect(messageTextElement.parentElement); // Add shake effect to the parent
           }
         });

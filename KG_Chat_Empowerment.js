@@ -4548,20 +4548,8 @@
   // Call the function to create the button
   createPersonalMessagesButton();
 
-  /**
-   * Find chat message by time in range and matching username.
-   * 
-   * This function searches through the chat messages in the specified container
-   * to find a message that matches the given target time and username.
-   * It first looks for an exact time match, and if none is found, it checks
-   * for a match within ±2 seconds. If a matching message is found, the function
-   * scrolls the container to center the message in view.
-   *
-   * @param {string} targetTime - The time of the target message in the format "[HH:MM:SS]".
-   * @param {string} targetUsername - The username of the message sender to match.
-   * @returns {HTMLElement|null} - The found message element or null if not found.
-   */
-  function findChatMessage(targetTime, targetUsername) {
+  // Find chat message by time in range and matching username
+  function findChatMessage(targetTime, targetUsername, allowScroll) {
     const parent = document.querySelector('.messages-content'); // Chat container
     if (!parent) return null; // Return null if the container isn't found
 
@@ -4602,23 +4590,26 @@
     }
 
     if (foundElement) {
-      const { top, height } = foundElement.getBoundingClientRect(); // Get the position and height of the found element
-      const { top: parentTop, height: parentHeight } = parent.getBoundingClientRect(); // Get the position and height of the parent
+      // Scroll to the found element if allowScroll is true
+      if (allowScroll) {
+        const { top, height } = foundElement.getBoundingClientRect(); // Get the position and height of the found element
+        const { top: parentTop, height: parentHeight } = parent.getBoundingClientRect(); // Get the position and height of the parent
 
-      // Calculate the middle position of the parent container
-      const parentMiddle = parentTop + parentHeight / 2;
+        // Calculate the middle position of the parent container
+        const parentMiddle = parentTop + parentHeight / 2;
 
-      // Determine how far to scroll to center the found element
-      const scrollOffset = top - parentMiddle + height / 2;
+        // Determine how far to scroll to center the found element
+        const scrollOffset = top - parentMiddle + height / 2;
 
-      // Scroll to the found element to center it within the parent
-      parent.scrollBy({
-        top: scrollOffset,
-        behavior: 'smooth'
-      });
+        // Scroll to the found element to center it within the parent
+        parent.scrollBy({
+          top: scrollOffset,
+          behavior: 'smooth'
+        });
 
-      setTimeout(() => (parent.style.scrollBehavior = 'auto'), 500); // Reset scroll behavior
-      setTimeout(() => addShakeEffect(foundElement), 300); // Add shake effect
+        setTimeout(() => (parent.style.scrollBehavior = 'auto'), 500); // Reset scroll behavior
+        setTimeout(() => addShakeEffect(foundElement), 300); // Add shake effect
+      }
       return foundElement; // Return the found element
     }
 
@@ -4860,10 +4851,25 @@
 
       const messageTextElement = document.createElement('span');
       messageTextElement.className = 'message-text';
+      messageTextElement.style.margin = '0.4em';
 
       messageTextElement.innerHTML = message.replace(/:(\w+):/g,
         (_, word) => `<img src="/img/smilies/${word}.gif" alt=":${word}:" title=":${word}:" class="smile">`
       );
+
+      // Change the messageTextElement color based on type
+      const messageColors = {
+        private: 'coral',
+        mention: 'lightsteelblue'
+      };
+
+      // Check if the chat message is found
+      let pingMessages = findChatMessage(time, username, false);
+      // Colorize the messageTextElement accordingly
+      messageTextElement.style.color =
+        pingMessages && type === 'mention' ? 'lightgreen' :
+          pingMessages && type === 'private' ? 'lemonchiffon' :
+            messageColors[type] || 'slategray';
 
       // Set cursor style for messageTextElement only if type is "mention"
       if (type === 'mention') {
@@ -4872,7 +4878,7 @@
         // Add click event listener
         messageTextElement.addEventListener('click', () => {
           // Call the function to search for the chat message by time in range and username
-          const foundMessage = findChatMessage(time, username);
+          const foundMessage = findChatMessage(time, username, true);
           if (foundMessage) {
             // Fade out the cached messages panel if the message is found
             fadeTargetElement(cachedMessagesPanel, 'hide');
@@ -4882,15 +4888,6 @@
           }
         });
       }
-
-      // Change the messageTextElement color based on type
-      const usernameColors = {
-        private: 'coral',
-        mention: 'lightsteelblue'
-      };
-
-      messageTextElement.style.color = usernameColors[type] || 'slategray';
-      messageTextElement.style.margin = '0.4em';
 
       // Append time, username, and message to the message element
       messageElement.appendChild(timeElement);

@@ -4482,30 +4482,30 @@
     showPersonalMessagesButton.innerHTML = iconPersonalMessages; // Add icon
 
     // Create the small indicator for all message count
-    const allMessageCount = createMessageCountIndicator('total-message-count', '#fa8072');
+    const allMessageIndicator = createMessageCountIndicator('total-message-count', '#fa8072');
     const personalMessages = JSON.parse(localStorage.getItem('personalMessages')) || {};
-    allMessageCount.textContent = Object.keys(personalMessages).length;
+    allMessageIndicator.textContent = Object.keys(personalMessages).length;
 
     // Position the all message count to the left
-    allMessageCount.style.left = '0';
-    allMessageCount.style.transform = 'translate(-50%, 50%)';
-    showPersonalMessagesButton.appendChild(allMessageCount);
+    allMessageIndicator.style.left = '0';
+    allMessageIndicator.style.transform = 'translate(-50%, 50%)';
+    showPersonalMessagesButton.appendChild(allMessageIndicator);
 
     // Create the small indicator for new message count
-    const newMessageCount = createMessageCountIndicator('new-message-count', '#ffd700');
+    const newMessageIndicator = createMessageCountIndicator('new-message-count', '#ffd700');
 
     // Get the new messages count from localStorage or set to 0 if not present
     let newMessagesCount = Number(localStorage.getItem('newMessagesCount')) || (localStorage.setItem('newMessagesCount', '0'), 0);
 
-    newMessageCount.textContent = newMessagesCount;
+    newMessageIndicator.textContent = newMessagesCount;
 
     // Check the newMessagesCount value and set visibility
-    newMessageCount.style.visibility = newMessagesCount > 0 ? 'visible' : 'hidden'; // Set visibility based on count
+    newMessageIndicator.style.visibility = newMessagesCount > 0 ? 'visible' : 'hidden'; // Set visibility based on count
 
     // Position the new message count to the right
-    newMessageCount.style.right = '0';
-    newMessageCount.style.transform = 'translate(50%, 50%)';
-    showPersonalMessagesButton.appendChild(newMessageCount);
+    newMessageIndicator.style.right = '0';
+    newMessageIndicator.style.transform = 'translate(50%, 50%)';
+    showPersonalMessagesButton.appendChild(newMessageIndicator);
 
     // Assign a title to the button
     showPersonalMessagesButton.title = 'Show Personal Messages';
@@ -4513,12 +4513,15 @@
     // Add a click event listener to the button
     showPersonalMessagesButton.addEventListener('click', function () {
       addPulseEffect(showPersonalMessagesButton); // Add pulse effect
-      showPersonalMessagesPanel(); // Show the personal messages panel
-
-      // Reset newMessagesCount in localStorage to 0 when opening the panel
-      localStorage.setItem('newMessagesCount', '0');
-      newMessagesCount = 0; // Reset the local variable
-      newMessageCount.textContent = newMessagesCount; // Update the displayed count
+      const personalMessagesCount = Object.keys(JSON.parse(localStorage.getItem('personalMessages')) || {}).length;
+      // Open the personal messages panel only when there are messages present.
+      if (personalMessagesCount > 0) {
+        showPersonalMessagesPanel(); // Show the personal messages panel
+        // Reset newMessagesCount in localStorage to 0 when opening the panel
+        localStorage.setItem('newMessagesCount', '0');
+        newMessagesCount = 0; // Reset the local variable
+        newMessageIndicator.textContent = newMessagesCount; // Update the displayed count
+      }
     });
 
     // Append the button to the existing panel

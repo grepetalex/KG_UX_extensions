@@ -4790,6 +4790,9 @@
     messagesContainer.style.padding = '1em';
 
     let lastUsername = null; // Store the last username processed
+    let pingCheckCounter = 0; // Initialize a counter
+    let maxPingChecks = 100; // Set the limit to 100
+    let pingMessages = false; // Initialize pingMessages as false
 
     // Loop through the messages and create message elements
     Object.entries(messages).forEach(([, { time, date, username, message, usernameColor, type }]) => {
@@ -4863,8 +4866,18 @@
         mention: 'lightsteelblue'
       };
 
-      // Check if the chat message is found
-      let pingMessages = findChatMessage(time, username, false);
+      if (pingCheckCounter < maxPingChecks) {
+        // Find chat message and increment the counter
+        pingMessages = findChatMessage(time, username, false);
+        pingCheckCounter++; // Increment the counter
+
+        // Check if the counter has reached or exceeded the maximum
+        if (pingCheckCounter >= maxPingChecks) {
+          // Reset pingMessages to false if the limit is reached
+          pingMessages = false;
+          console.log("Reached maximum ping checks, resetting pingMessages.");
+        }
+      }
       // Colorize the messageTextElement accordingly
       messageTextElement.style.color =
         pingMessages && type === 'mention' ? 'lightgreen' :

@@ -4546,45 +4546,17 @@
   // Call the function to create the button
   createPersonalMessagesButton();
 
-  // Finds the specified message in the chat, ensuring words match in order while ignoring unmatched words in between.
-  function findChatMessage(targetText) {
+  // Finds the specified message in the chat by checking for the child element with class 'time' and matching its text content.
+  function findChatMessage(targetTime) {
     const parent = document.querySelector('.messages-content'); // Find the chat container
     if (!parent) return null; // Return null if the container is not found
 
-    // Clean the target text by removing patterns and trimming whitespace
-    const cleanedTargetText = targetText.replace(/(:\w+:|::\w+::)/g, '').replace(/\s+/g, ' ').trim();
-
-    // If the cleaned target text is empty, return false
-    if (cleanedTargetText === '') return false;
-
-    const targetWords = cleanedTargetText.split(' '); // Split the cleaned target text into words
-
-    // Find the <p> element containing matches in the correct order
-    const foundElement = Array.from(parent.querySelectorAll('p')).find(p => {
-      // Replace all found :words: and ::words:: with a single space, then trim
-      const messageText = p.textContent.replace(/(:\w+:|::\w+::)/g, '').replace(/\s+/g, ' ').trim();
-      const messageWords = messageText.split(' '); // Split cleaned message text into words
-
-      // If the message contains only emoticons, return false
-      if (messageWords.length === 0 || messageWords.every(word => word === '')) return false;
-
-      let targetIndex = 0; // Initialize target word index
-
-      // Check for matching words in order, ignoring unmatched words
-      for (const messageWord of messageWords) {
-        // If the current message word matches the current target word
-        if (targetIndex < targetWords.length && messageWord.includes(targetWords[targetIndex])) {
-          targetIndex++; // Move to the next target word
-        }
-        // If all target words are matched, return true
-        if (targetIndex === targetWords.length) return true;
-      }
-
-      // If not all target words are matched, return false
-      return false;
+    // Find the <p> element containing a child with class 'time' that matches the target time
+    const foundElement = Array.from(parent.querySelectorAll('p')).find((p) => {
+      const timeElement = p.querySelector('.time'); // Get the child element with class 'time'
+      return timeElement && timeElement.textContent === targetTime; // Return true if time text matches the target time
     });
 
-    // If foundElement exists, check visibility and scroll if necessary
     if (foundElement) {
       const elementRect = foundElement.getBoundingClientRect();
       const parentRect = parent.getBoundingClientRect();
@@ -4592,13 +4564,15 @@
       // Scroll to the found element if it's out of view
       if (elementRect.top < parentRect.top || elementRect.bottom > parentRect.bottom) {
         foundElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        setTimeout(() => parent && (parent.style.scrollBehavior = 'auto'), 500); // Reset scroll behavior
+        setTimeout(() => (parent.style.scrollBehavior = 'auto'), 500); // Reset scroll behavior
       }
-      setTimeout(() => foundElement && addShakeEffect(foundElement), 300); // Add shake effect if found
+
+      setTimeout(() => addShakeEffect(foundElement), 300); // Add shake effect if found
       return foundElement; // Return the found element
     }
 
-    return false; // Return false if no element was found or only emoticons matched
+    console.log('No matching element found.'); // Log if no element was found
+    return false; // Return false if no element was found
   }
 
   // Function to display the personal messages panel
@@ -4846,8 +4820,9 @@
 
         // Add click event listener
         messageTextElement.addEventListener('click', () => {
-          // Call the function with the cleaned message
-          const foundMessage = findChatMessage(message);
+          const timeValue = time;
+          // Call the function to search for the chat message by time 
+          const foundMessage = findChatMessage(timeValue);
           if (foundMessage) {
             // Fade out the cached messages panel if the message is found
             fadeTargetElement(cachedMessagesPanel, 'hide');

@@ -86,31 +86,13 @@
 
   // Define the users to track and notify with popup and audio
   let usersToTrack = [
-    { name: 'Даниэль', gender: 'male', pronunciation: 'Даниэль' }, // ------------ 01
-    { name: 'Пьяный_Качок', gender: 'male', pronunciation: 'Пьяный-Качок' }, // -- 02
-    { name: 'Баристарх', gender: 'male', pronunciation: 'Баристарх' }, // -------- 03
-    { name: 'madinko', gender: 'female', pronunciation: 'Мадинко' }, // ---------- 04
-    { name: 'Переборыч', gender: 'male', pronunciation: 'Переборыч' }, // -------- 05
-    { name: 'Advisor', gender: 'male', pronunciation: 'Адвайзер' }, // ----------- 06
-    { name: 'Хеопс', gender: 'male', pronunciation: 'Хеопс' }, // ---------------- 07
-    { name: 'Рустамко', gender: 'male', pronunciation: 'Рустамко' }, // ---------- 08
-    { name: 'ExpLo1t', gender: 'female', pronunciation: 'Эксплоит' }, // --------- 09
-    { name: 'инфо-пчелы', gender: 'male', pronunciation: 'Инфо-Пчёлы' }, // ------ 10
-    { name: 'Razmontana', gender: 'male', pronunciation: 'Размонтана' }, // ------ 11
-    { name: 'un4given', gender: 'male', pronunciation: 'Анфогивон' }, // ---------- 12
-    { name: 'oonch', gender: 'male', pronunciation: 'Унч' }, // ------------------ 13
-    { name: 'iChessKnock', gender: 'male', pronunciation: 'Чеснок' }, // --------- 14
-    { name: 'Anatolysov', gender: 'male', pronunciation: 'Анатолий' }, // -------- 15
-    { name: 'Солнцеликий', gender: 'male', pronunciation: 'Солнцеликий' } // ----- 16
+    { name: 'Даниэль', gender: 'male', pronunciation: 'Даниэль' }
   ];
 
   // Notify if someone addresses me using these aliases (case-insensitive)
   let mentionKeywords = [
     // Your actual nickname
-    myNickname,
-    // Possible nickname keywords
-    'Душа',
-    'Панчер'
+    myNickname
   ];
 
   // Check and load settings from localStorage if available and not empty

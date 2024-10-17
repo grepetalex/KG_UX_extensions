@@ -3904,6 +3904,26 @@
     });
   }
 
+  // Helper function to add a blink effect using color opacity.
+  function addBlinkEffect(element) {
+    // Set the initial color to bisque with full opacity.
+    element.style.backgroundColor = 'rgba(255, 228, 196, 1)'; // bisque color.
+
+    const opacities = [1, 0, 1, 0]; // Full -> Hidden -> Full -> End at Hidden.
+    const delay = 100; // Static delay of 200ms between frames.
+
+    // Repeat the blink effect three times.
+    for (let i = 0; i < 3; i++) {
+      opacities.forEach((opacity, index) => {
+        setTimeout(() => {
+          // Apply the opacity to the background color.
+          element.style.backgroundColor = `rgba(255, 228, 196, ${opacity})`;
+          element.style.transition = 'background-color 0.3s ease'; // Smooth transition.
+        }, delay * (i * opacities.length + index)); // Schedule the color change.
+      });
+    }
+  }
+
   // Helper function to apply common styles to buttons
   function applyBaseButtonStyles(element) {
     Object.assign(element.style, {
@@ -4546,44 +4566,82 @@
   // Call the function to create the button
   createPersonalMessagesButton();
 
-  // Finds the specified message in the chat by checking for the child element with class 'time' and matching its text content.
-  function findChatMessage(targetTime) {
-    const parent = document.querySelector('.messages-content'); // Find the chat container
-    if (!parent) return null; // Return null if the container is not found
+  /**
+   * Find chat message by time in range and matching username.
+   * 
+   * This function searches through the chat messages in the specified container
+   * to find a message that matches the given target time and username.
+   * It first looks for an exact time match, and if none is found, it checks
+   * for a match within ±2 seconds. If a matching message is found, the function
+   * scrolls the container to center the message in view.
+   *
+   * @param {string} targetTime - The time of the target message in the format "[HH:MM:SS]".
+   * @param {string} targetUsername - The username of the message sender to match.
+   * @returns {HTMLElement|null} - The found message element or null if not found.
+   */
+  function findChatMessage(targetTime, targetUsername) {
+    const parent = document.querySelector('.messages-content'); // Chat container
+    if (!parent) return null; // Return null if the container isn't found
 
     // Convert time string "[HH:MM:SS]" to total seconds
     const timeStringToSeconds = (str) =>
-      str.replace(/[\[\]]/g, '').split(':').reduce((acc, time, i) => acc + Number(time) * (60 ** (2 - i)), 0);
+      str.replace(/[\[\]]/g, '').split(':').reduce((acc, time, i) =>
+        acc + Number(time) * (60 ** (2 - i)), 0
+      );
 
-    const initialTimeValue = timeStringToSeconds(targetTime); // Convert target time to total seconds
+    const initialTimeValue = timeStringToSeconds(targetTime); // Target time in seconds
 
-    // Find the <p> element with a matching time within ±10 seconds
-    const foundElement = Array.from(parent.querySelectorAll('p')).find((p) => {
-      const timeElement = p.querySelector('.time'); // Get the child element with class 'time'
-      if (timeElement) {
-        const currentTimeValue = timeStringToSeconds(timeElement.textContent); // Convert current time to total seconds
-        // Check if currentTimeValue is within the ±10 seconds range
-        return [...Array(21).keys()].some(i => Math.abs(currentTimeValue - (initialTimeValue + (i - 10))) === 0);
-      }
-      return false; // Return false if no match found
-    });
+    // Helper to find <p> elements by matching time and username
+    const findMatchingElement = (condition) =>
+      Array.from(parent.querySelectorAll('p')).find((p) => {
+        const timeElement = p.querySelector('.time'); // Get the child element with class 'time'
+        const usernameElement = p.querySelector('.username span[data-user]'); // Get the username element
+
+        if (timeElement && usernameElement) {
+          const currentTimeValue = timeStringToSeconds(timeElement.textContent.trim());
+          const usernameText = usernameElement.textContent.trim(); // Extract the text content of the username
+
+          // Check if the time and username match the conditions
+          return condition(currentTimeValue) && usernameText === targetUsername;
+        }
+        return false;
+      });
+
+    // 1. Try to find an exact match first
+    let foundElement = findMatchingElement(
+      (currentTimeValue) => currentTimeValue === initialTimeValue
+    );
+
+    // 2. If no exact match, search within ±2 seconds
+    if (!foundElement) {
+      foundElement = findMatchingElement(
+        (currentTimeValue) => Math.abs(currentTimeValue - initialTimeValue) <= 2
+      );
+    }
 
     if (foundElement) {
-      const { top, bottom } = foundElement.getBoundingClientRect(); // Get bounding rectangle of the found element
-      const { top: parentTop, bottom: parentBottom } = parent.getBoundingClientRect(); // Get bounding rectangle of the parent
+      const { top, height } = foundElement.getBoundingClientRect(); // Get the position and height of the found element
+      const { top: parentTop, height: parentHeight } = parent.getBoundingClientRect(); // Get the position and height of the parent
 
-      // Scroll to the found element if it's out of view
-      if (top < parentTop || bottom > parentBottom) {
-        foundElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        setTimeout(() => (parent.style.scrollBehavior = 'auto'), 500); // Reset scroll behavior
-      }
+      // Calculate the middle position of the parent container
+      const parentMiddle = parentTop + parentHeight / 2;
 
-      setTimeout(() => addShakeEffect(foundElement), 300); // Add shake effect if found
+      // Determine how far to scroll to center the found element
+      const scrollOffset = top - parentMiddle + height / 2;
+
+      // Scroll to the found element to center it within the parent
+      parent.scrollBy({
+        top: scrollOffset,
+        behavior: 'smooth'
+      });
+
+      setTimeout(() => (parent.style.scrollBehavior = 'auto'), 500); // Reset scroll behavior
+      setTimeout(() => addShakeEffect(foundElement), 300); // Add shake effect
       return foundElement; // Return the found element
     }
 
-    console.log('No matching element found.'); // Log if no element was found
-    return false; // Return false if no element was found
+    console.log('No matching element found.');
+    return false; // Return false if no match is found
   }
 
   // Function to display the personal messages panel
@@ -4831,9 +4889,8 @@
 
         // Add click event listener
         messageTextElement.addEventListener('click', () => {
-          const timeValue = time;
-          // Call the function to search for the chat message by time 
-          const foundMessage = findChatMessage(timeValue);
+          // Call the function to search for the chat message by time in range and username
+          const foundMessage = findChatMessage(time, username);
           if (foundMessage) {
             // Fade out the cached messages panel if the message is found
             fadeTargetElement(cachedMessagesPanel, 'hide');

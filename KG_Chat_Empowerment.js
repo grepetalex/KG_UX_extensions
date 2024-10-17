@@ -4551,18 +4551,29 @@
     const parent = document.querySelector('.messages-content'); // Find the chat container
     if (!parent) return null; // Return null if the container is not found
 
-    // Find the <p> element containing a child with class 'time' that matches the target time
+    // Convert time string "[HH:MM:SS]" to total seconds
+    const timeStringToSeconds = (str) =>
+      str.replace(/[\[\]]/g, '').split(':').reduce((acc, time, i) => acc + Number(time) * (60 ** (2 - i)), 0);
+
+    const initialTimeValue = timeStringToSeconds(targetTime); // Convert target time to total seconds
+
+    // Find the <p> element with a matching time within ±10 seconds
     const foundElement = Array.from(parent.querySelectorAll('p')).find((p) => {
       const timeElement = p.querySelector('.time'); // Get the child element with class 'time'
-      return timeElement && timeElement.textContent === targetTime; // Return true if time text matches the target time
+      if (timeElement) {
+        const currentTimeValue = timeStringToSeconds(timeElement.textContent); // Convert current time to total seconds
+        // Check if currentTimeValue is within the ±10 seconds range
+        return [...Array(21).keys()].some(i => Math.abs(currentTimeValue - (initialTimeValue + (i - 10))) === 0);
+      }
+      return false; // Return false if no match found
     });
 
     if (foundElement) {
-      const elementRect = foundElement.getBoundingClientRect();
-      const parentRect = parent.getBoundingClientRect();
+      const { top, bottom } = foundElement.getBoundingClientRect(); // Get bounding rectangle of the found element
+      const { top: parentTop, bottom: parentBottom } = parent.getBoundingClientRect(); // Get bounding rectangle of the parent
 
       // Scroll to the found element if it's out of view
-      if (elementRect.top < parentRect.top || elementRect.bottom > parentRect.bottom) {
+      if (top < parentTop || bottom > parentBottom) {
         foundElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         setTimeout(() => (parent.style.scrollBehavior = 'auto'), 500); // Reset scroll behavior
       }

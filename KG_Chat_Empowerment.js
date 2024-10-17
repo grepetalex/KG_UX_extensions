@@ -4854,6 +4854,7 @@
 
       const messageTextElement = document.createElement('span');
       messageTextElement.className = 'message-text';
+      messageTextElement.style.cursor = 'pointer'; // Pointer cursor
       messageTextElement.style.margin = '0.4em';
 
       messageTextElement.innerHTML = message.replace(/:(\w+):/g,
@@ -4884,23 +4885,18 @@
           pingMessages && type === 'private' ? 'lemonchiffon' :
             messageColors[type] || 'slategray';
 
-      // Set cursor style for messageTextElement only if type is "mention"
-      if (type === 'mention') {
-        messageTextElement.style.cursor = 'pointer'; // Pointer cursor
-
-        // Add click event listener
-        messageTextElement.addEventListener('click', () => {
-          // Call the function to search for the chat message by time in range and username
-          const foundMessage = findChatMessage(time, username, true);
-          if (foundMessage) {
-            // Fade out the cached messages panel if the message is found
-            fadeTargetElement(cachedMessagesPanel, 'hide');
-            fadeDimmingElement('hide');
-          } else {
-            addShakeEffect(messageTextElement.parentElement); // Add shake effect to the parent
-          }
-        });
-      }
+      // Add click event listener
+      messageTextElement.addEventListener('click', () => {
+        // Call the function to search for the chat message by time in range and username
+        const foundMessage = findChatMessage(time, username, true);
+        if (foundMessage) {
+          // Fade out the cached messages panel if the message is found
+          fadeTargetElement(cachedMessagesPanel, 'hide');
+          fadeDimmingElement('hide');
+        } else {
+          addShakeEffect(messageTextElement.parentElement); // Add shake effect to the parent
+        }
+      });
 
       // Append time, username, and message to the message element
       messageElement.appendChild(timeElement);

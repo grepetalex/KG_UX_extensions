@@ -3693,6 +3693,12 @@
             let isEveryMessageMode = messageMode && messageMode.id === 'every-message';
             let isMentionMessageMode = messageMode && messageMode.id === 'mention-message';
 
+            // Define the constant for the private message check
+            const privateMessageIndicator = '[шепчет вам]';
+            // Check if the message element contains a private message
+            const privateMessageContainer = node.querySelector('.room.private');
+            const isPrivateMessage = privateMessageContainer && privateMessageContainer.textContent.includes(privateMessageIndicator);
+
             // If mode is voice, speak the new message and update the latest message content in local storage
             if (isVoice && isInitialized && newMessageTextContent && newMessageTextContent !== latestMessageTextContent) {
               // Update localStorage key "latestMessageTextContent"
@@ -3705,8 +3711,8 @@
                 if (isEveryMessageMode) {
                   addNewMessage(newMessageTextContent);
                 }
-                // Read mention messages only in mention-message mode
-                else if (isMentionMessageMode && isMention) {
+                // Read mention messages only in mention-message mode or private-message
+                else if (isMentionMessageMode && isMention || isPrivateMessage) {
                   addNewMessage(newMessageTextContent);
                 }
               }

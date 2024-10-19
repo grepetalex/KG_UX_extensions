@@ -3707,14 +3707,27 @@
               // Speak the new message only if it's not addressed to your nickname.
               // Do not read personal messages. Only unique other people's messages.
               if (latestMessageUsername && !latestMessageUsername.includes(myNickname)) {
+
                 // Read all messages in every-message mode
                 if (isEveryMessageMode) {
+                  console.log('Triggered: Every message mode'); // Log for every-message mode
                   addNewMessage(newMessageTextContent);
                 }
-                // Read mention messages only in mention-message mode or private-message
-                else if (isMentionMessageMode && isMention || isPrivateMessage) {
+                // Read mention messages only in mention-message
+                else if (isMentionMessageMode && isMention) {
+                  console.log('Triggered: Mention message mode'); // Log for mention-message mode
                   addNewMessage(newMessageTextContent);
                 }
+                // Read when private messages is addressed to you
+                else if (isPrivateMessage) {
+                  console.log('Triggered: Private message'); // Log for private message
+                  // Optionally handle private messages
+                  addNewMessage(newMessageTextContent); // Read the private message if required
+                }
+                else {
+                  console.log('No matching condition'); // Log when no condition matches
+                }
+
               }
             }
 

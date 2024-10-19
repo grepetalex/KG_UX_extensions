@@ -3669,13 +3669,13 @@
         for (let node of mutation.addedNodes) {
           if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'P') {
             // Read the text content of the new message and speak it
-            const latestMessageTextContent = localStorage.getItem('latestMessageTextContent');
+            let latestMessageTextContent = localStorage.getItem('latestMessageTextContent');
 
             // Get the latest message data
-            const latestMessageData = getLatestMessageData();
+            let latestMessageData = getLatestMessageData();
 
             // Get the message of the user who sent the latest message
-            const newMessageTextContent = latestMessageData?.messageText || null;
+            let newMessageTextContent = latestMessageData?.messageText || null;
             // Get the username of the user who sent the latest message
             let latestMessageUsername = latestMessageData?.usernameText || null;
 
@@ -3684,14 +3684,14 @@
             }
 
             // Get the sound switcher element and check which option is selected
-            const soundSwitcher = document.querySelector('#voice, #beep, #silence');
-            const isVoice = soundSwitcher && soundSwitcher.id === 'voice';
-            const isBeep = soundSwitcher && soundSwitcher.id === 'beep';
+            let soundSwitcher = document.querySelector('#voice, #beep, #silence');
+            let isVoice = soundSwitcher && soundSwitcher.id === 'voice';
+            let isBeep = soundSwitcher && soundSwitcher.id === 'beep';
 
             // Get the message mode element and check which option is selected
-            const messageMode = document.querySelector('#every-message, #mention-message');
-            const isEveryMessageMode = messageMode && messageMode.id === 'every-message';
-            const isMentionMessageMode = messageMode && messageMode.id === 'mention-message';
+            let messageMode = document.querySelector('#every-message, #mention-message');
+            let isEveryMessageMode = messageMode && messageMode.id === 'every-message';
+            let isMentionMessageMode = messageMode && messageMode.id === 'mention-message';
 
             // If mode is voice, speak the new message and update the latest message content in local storage
             if (isVoice && isInitialized && newMessageTextContent && newMessageTextContent !== latestMessageTextContent) {
@@ -3701,20 +3701,13 @@
               // Speak the new message only if it's not addressed to your nickname.
               // Do not read personal messages. Only unique other people's messages.
               if (latestMessageUsername && !latestMessageUsername.includes(myNickname)) {
+                // Read all messages in every-message mode
                 if (isEveryMessageMode) {
-                  // console.log('Adding new message to the set (Every Message Mode):', newMessageTextContent);
                   addNewMessage(newMessageTextContent);
-                } else if (isMentionMessageMode) {
-                  // Clean the username by removing angle brackets
-                  const cleanUsername = latestMessageUsername.replace(/<|>/g, '').trim();
-                  // Make sure if the user is tracked before adding new message in a queue for reading
-                  const isTrackedUser = usersToTrack.some((trackedUser) => trackedUser.name === cleanUsername);
-                  if (isTrackedUser) {
-                    // console.log('Adding new message to the set (Mention Message Mode):', newMessageTextContent);
-                    addNewMessage(newMessageTextContent);
-                  } else {
-                    console.log('User not tracked, not adding message:', newMessageTextContent);
-                  }
+                }
+                // Read mention messages only in mention-message mode
+                else if (isMentionMessageMode && isMention) {
+                  addNewMessage(newMessageTextContent);
                 }
               }
             }
@@ -3724,20 +3717,16 @@
               // Update localStorage key "latestMessageTextContent"
               localStorage.setItem('latestMessageTextContent', newMessageTextContent);
 
-              // Play the beep sound only if the message is not addressed to your nickname
+              // Only proceed if the message is not addressed to your nickname
               if (latestMessageUsername && !latestMessageUsername.includes(myNickname)) {
-                // Play mention frequencies if the message is addressed to you
-                if (isMention) {
-                  playBeep(mentionMessageFrequencies, beepVolume);
-                  // Return value as default to continue making a beep sound as a usual message
-                  isMention = false;
-                }
-                // Play usual frequencies if the message is addressed to other users or not addressed to anybody
-                else {
-                  if (isEveryMessageMode) {
-                    playBeep(usualMessageFrequencies, beepVolume);
-                  }
-                }
+                // Determine the sound frequencies to play based on mention status
+                const frequenciesToPlay = isMention ? mentionMessageFrequencies : usualMessageFrequencies;
+
+                // Play the determined beep sound
+                playBeep(frequenciesToPlay, beepVolume);
+
+                // Reset mention flag if it was true
+                isMention && (isMention = false);
               }
             }
 

@@ -3684,14 +3684,14 @@
             }
 
             // Get the sound switcher element and check which option is selected
-            let soundSwitcher = document.querySelector('#voice, #beep, #silence');
-            let isVoice = soundSwitcher && soundSwitcher.id === 'voice';
-            let isBeep = soundSwitcher && soundSwitcher.id === 'beep';
+            const soundSwitcher = document.querySelector('#voice, #beep, #silence');
+            const isVoice = soundSwitcher && soundSwitcher.id === 'voice';
+            const isBeep = soundSwitcher && soundSwitcher.id === 'beep';
 
             // Get the message mode element and check which option is selected
-            let messageMode = document.querySelector('#every-message, #mention-message');
-            let isEveryMessageMode = messageMode && messageMode.id === 'every-message';
-            let isMentionMessageMode = messageMode && messageMode.id === 'mention-message';
+            const messageMode = document.querySelector('#every-message, #mention-message');
+            const isEveryMessageMode = messageMode && messageMode.id === 'every-message';
+            const isMentionMessageMode = messageMode && messageMode.id === 'mention-message';
 
             // Define the constant for the private message check
             const privateMessageIndicator = '[шепчет вам]';

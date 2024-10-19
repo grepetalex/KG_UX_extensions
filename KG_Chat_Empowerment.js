@@ -95,14 +95,22 @@
     myNickname
   ];
 
+  // Define userlist of users whose messages should be hidden
+  let ignoreUserList = [
+    // Empty
+  ];
+
   // Check and load settings from localStorage if available and not empty
   const storedUsersToTrack = JSON.parse(localStorage.getItem('usersToTrack'));
   const storedMentionKeywords = JSON.parse(localStorage.getItem('mentionKeywords'));
+  const storedIgnoreUserList = JSON.parse(localStorage.getItem('ignoreUserList'));
 
   // Replace usersToTrack with stored value if it exists and is not empty
   usersToTrack = storedUsersToTrack?.length ? storedUsersToTrack : usersToTrack;
   // Replace mentionKeywords with stored value if it exists and is not empty
   mentionKeywords = storedMentionKeywords?.length ? storedMentionKeywords : mentionKeywords;
+  // Replace ignoreUserList with stored value if it exists and is not empty
+  ignoreUserList = storedIgnoreUserList?.length ? storedIgnoreUserList : ignoreUserList;
 
   // Key Events: CTRL and ALT
 
@@ -3653,15 +3661,59 @@
 
   // POPUP MESSAGES END
 
+  // Function to convert Cyrillic characters to Latin
+  function convertCyrillicToLatin(input) {
+    const cyrillicToLatinMap = {
+      'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D',
+      'Е': 'E', 'Ё': 'Yo', 'Ж': 'Zh', 'З': 'Z', 'И': 'I',
+      'Й': 'Y', 'К': 'K', 'Л': 'L', 'М': 'M', 'Н': 'N',
+      'О': 'O', 'П': 'P', 'Р': 'R', 'С': 'S', 'Т': 'T',
+      'У': 'U', 'Ф': 'F', 'Х': 'Kh', 'Ц': 'Ts', 'Ч': 'Ch',
+      'Ш': 'Sh', 'Щ': 'Shch', 'Ъ': 'y', // 'ъ' maps to 'y'
+      'Ы': 'Y', 'Ь': 'i', // 'ь' maps to 'i'
+      'Э': 'E', 'Ю': 'Yu', 'Я': 'Ya',
+      'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd',
+      'е': 'e', 'ё': 'yo', 'ж': 'zh', 'з': 'z', 'и': 'i',
+      'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n',
+      'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't',
+      'у': 'u', 'ф': 'f', 'х': 'kh', 'ц': 'ts', 'ч': 'ch',
+      'ш': 'sh', 'щ': 'shch', 'ъ': 'y', // 'ъ' maps to 'y'
+      'ы': 'y', 'ь': 'i', // 'ь' maps to 'i'
+      'э': 'e', 'ю': 'yu', 'я': 'ya'
+    };
+
+    // Convert the input string to Latin using the mapping
+    return input.split('').map(char => cyrillicToLatinMap[char] || char).join('');
+  }
+
+  // Function to convert Russian usernames
+  function convertRussianUsernameToLatin(username) {
+    // Use the conversion function on the username
+    return convertCyrillicToLatin(username);
+  }
+
   // Skip reading the messages on page load to read them normally when the user is present and the page is stable
   let isInitialized = false;
+
+  // Function to remove all messages from users in the ignoreUserList
+  function removeIgnoredUserMessages() {
+    document.querySelectorAll('.messages-content p').forEach(message => {
+      const usernameElement = message.querySelector('.username'); // Adjust selector if needed
+      const username = usernameElement?.textContent?.replace(/[<>]/g, '') || null;
+
+      if (username && ignoreUserList.includes(username)) {
+        console.log(`Removed message from ignored user: ${username}`);
+        message.remove(); // Remove the message
+      }
+    });
+  }
 
   // Create a mutation observer to watch for new messages being added
   const newMessagesObserver = new MutationObserver(mutations => {
     // If isInitialized is false, return without doing anything
     if (!isInitialized) {
       isInitialized = true;
-      return;
+      return; // Stop processing further
     }
 
     for (let mutation of mutations) {
@@ -3677,10 +3729,19 @@
             // Get the message of the user who sent the latest message
             let newMessageTextContent = latestMessageData?.messageText || null;
             // Get the username of the user who sent the latest message
-            let latestMessageUsername = latestMessageData?.usernameText || null;
+            let latestMessageUsername = latestMessageData?.usernameText.textContent || null;
 
-            if (latestMessageData && latestMessageData.usernameText) {
-              latestMessageUsername = latestMessageData.usernameText.textContent;
+            // Replace all instances of '<' and '>' from the latestMessageUsername
+            const cleanUsername = latestMessageUsername?.replace(/[<>]/g, '') || null;
+
+            // Convert Cyrillic username to Latin
+            const latinUsername = convertRussianUsernameToLatin(cleanUsername);
+
+            // Check if the username is in the ignoreUserList
+            if (latestMessageUsername && ignoreUserList.includes(cleanUsername)) {
+              node.classList.add('ignored-user', latinUsername);
+              node.style.display = 'none'; // Hide the message
+              continue; // Skip the rest of the processing for this message
             }
 
             // Get the sound switcher element and check which option is selected
@@ -5119,14 +5180,17 @@
   function saveSettingsToLocalStorage() {
     localStorage.setItem('usersToTrack', JSON.stringify(usersToTrack));
     localStorage.setItem('mentionKeywords', JSON.stringify(mentionKeywords));
+    localStorage.setItem('ignoreUserList', JSON.stringify(ignoreUserList));
   }
 
   // Process and apply uploaded settings
-  function processUploadedSettings({ usersToTrack: u, mentionKeywords: m }) {
+  function processUploadedSettings({ usersToTrack: u, mentionKeywords: m, ignoreUserList: i }) {
     if (u?.length) usersToTrack = u; // Update usersToTrack if new data is provided
     if (m?.length) mentionKeywords = [...m, myNickname]; // Update mentionKeywords and include myNickname
+    if (i?.length) ignoreUserList = i; // Update ignoreUserList if new data is provided
+
     saveSettingsToLocalStorage(); // Save to localStorage after applying settings
-    console.log('Uploaded settings applied:', { usersToTrack, mentionKeywords });
+    console.log('Uploaded settings applied:', { usersToTrack, mentionKeywords, ignoreUserList });
   }
 
   // CREATE PANEL GRAPHICAL SETTINGS BUTTON (END)
@@ -6048,42 +6112,32 @@
         // stop observing the DOM
         waitForChatObserver.disconnect();
 
+        // Remove ignored users' messages if the page is not initialized
+        removeIgnoredUserMessages();
         // Convert image links to visible image containers
         convertImageLinkToImage();
-
         // Convert YouTube links to visible iframe containers
         convertYoutubeLinkToIframe();
-
         // Restore chat tab from localStorage
         restoreChatTabAndFocus();
-
         // Call the function with the selector for the input field
         setupInputBackup('#chat-general .text');
-
         // Call the function to re-highlight all the mention words of the messages
         highlightMentionWords();
-
         // Call the function to apply the chat message grouping
         applyChatMessageGrouping();
-
         // Check for chat state
         debouncedCheckForChatState();
-
         // Call the function to scroll to the bottom of the chat
         scrollMessages();
-
         // Call the function to refresh the user list and clear the cache if needed
         refreshFetchedUsers(false, cacheRefreshThresholdHours);
-
         // Refresh experimental custom chat user list on old list changes
         refreshUserList();
-
         // Call the setChatFieldFocus function when the page loads
         setChatFieldFocus();
-
         // Execute the function to trigger the process of chat cleaning after the youtube and images convertation to avoid issues
         executeMessageRemover();
-
         // Initialize the input field listener to handle message sending when Enter is pressed
         setupInputFieldListener();
       }

@@ -3709,21 +3709,21 @@
 
                 // Read all messages in every-message mode
                 if (isEveryMessageMode) {
-                  console.log('Triggered: Every message mode');
+                  console.log('Triggered Voice: Every message mode');
                   addNewMessage(newMessageTextContent);
                 }
                 // Read mention messages only in mention-message mode
                 else if (isMentionMessageMode && isMention) {
-                  console.log('Triggered: Mention message mode');
+                  console.log('Triggered Voice: Mention message mode');
                   addNewMessage(newMessageTextContent);
                 }
                 // Read when private messages is addressed to you
                 else if (isPrivateMessage) {
-                  console.log('Triggered: Private message');
+                  console.log('Triggered Voice: Private message');
                   addNewMessage(newMessageTextContent);
                 }
                 else {
-                  console.log('No matching condition for voice mode');
+                  console.log('No matching condition for Voice Mode');
                 }
 
               }
@@ -3757,7 +3757,7 @@
                   playBeep(frequenciesToPlay, beepVolume);
                 }
                 else {
-                  console.log('No matching condition for beep mode');
+                  console.log('No matching condition for Beep Mode');
                 }
 
                 // Reset mention flag if it was true

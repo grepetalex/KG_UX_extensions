@@ -1949,6 +1949,7 @@
 
     .chat-user-list .profile,
     .chat-user-list .tracked,
+    .chat-user-list .ignored,
     .chat-user-list .moderator {
         display: inline-flex;
         width: 24px;
@@ -2337,6 +2338,22 @@
       ></polygon>
   </svg>`;
 
+  // SVG icon for ignored users
+  const ignoredSVG = `
+  <svg xmlns="http://www.w3.org/2000/svg" 
+      width="16" 
+      height="16" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="lightsalmon" 
+      stroke-width="2" 
+      stroke-linecap="round" 
+      stroke-linejoin="round" 
+      class="feather feather-slash">
+    <circle cx="12" cy="12" r="10"></circle>
+    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+  </svg>`;
+
   // Helper function to get a random SVG
   function getRandomIconSVG() {
     const svgs = [mehSVG, smileSVG, frownSVG];
@@ -2400,9 +2417,22 @@
 
     if (userToTrack) {
       const trackedIcon = document.createElement('div');
+      trackedIcon.title = 'Tracked user';
       trackedIcon.classList.add('tracked');
       trackedIcon.innerHTML = trackedSVG;
       newUserElement.appendChild(trackedIcon);
+    }
+
+    // Check if the user is in the ignore list
+    const isIgnoredUser = (userName) => ignoreUserList.includes(userName);
+
+    // Create and hide a message element if the user is in ignoreUserList
+    if (isIgnoredUser(userName)) {
+      const ignoredIcon = document.createElement('div');
+      ignoredIcon.title = 'Ignored user';
+      ignoredIcon.classList.add('ignored');
+      ignoredIcon.innerHTML = ignoredSVG;
+      newUserElement.appendChild(ignoredIcon);
     }
 
     // Check if there is an <img> element with a src attribute containing the word "moderator" inside the ins element

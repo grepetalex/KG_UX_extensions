@@ -3721,7 +3721,6 @@
                 // Read when private messages is addressed to you
                 else if (isPrivateMessage) {
                   console.log('Triggered: Private message'); // Log for private message
-                  // Optionally handle private messages
                   addNewMessage(newMessageTextContent); // Read the private message if required
                 }
                 else {

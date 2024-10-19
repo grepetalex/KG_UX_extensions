@@ -4826,9 +4826,37 @@
     let pingCheckCounter = 0; // Initialize a counter
     let maxPingChecks = 100; // Set the limit to 100
     let pingMessages = false; // Initialize pingMessages as false
+    let lastDate = null; // Store the last processed date
 
-    // Loop through the messages and create message elements
+    const today = new Intl.DateTimeFormat('en-CA').format(new Date()); // 'en-CA' gives 'YYYY-MM-DD' format
+
+    // Loop through the messages and create elements
     Object.entries(messages).forEach(([, { time, date, username, message, usernameColor, type }]) => {
+      // If the current date is different from the last processed one, create a new date-item
+      if (lastDate !== date) {
+        const dateItem = document.createElement('div');
+        dateItem.className = 'date-item';
+        // show "Today" if date matches
+        dateItem.textContent = date === today ? 'Today' : date;
+        dateItem.style.position = 'relative';
+        dateItem.style.font = '1em Montserrat';
+        dateItem.style.color = 'burlywood';
+        // burlywood with transparency 0.1
+        dateItem.style.backgroundColor = 'rgba(222, 184, 135, 0.1)';
+        dateItem.style.width = '100px';
+        dateItem.style.margin = '1em 0 0.5em';
+        dateItem.style.padding = '0.4em';
+        dateItem.style.textAlign = 'center';
+        dateItem.style.setProperty('border-radius', '0.4em', 'important');
+        dateItem.style.left = '50%';
+        dateItem.style.transform = 'translateX(-50%)';
+
+        dateItem.style.textAlign = 'center';
+        messagesContainer.appendChild(dateItem); // Add the date-item to the container
+        lastDate = date; // Update the last processed date
+      }
+
+      // Create a message-item for the current message
       const messageElement = document.createElement('div');
       messageElement.className = 'message-item';
       messageElement.style.padding = '0.2em';

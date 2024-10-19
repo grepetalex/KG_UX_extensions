@@ -3704,27 +3704,26 @@
               // Update localStorage key "latestMessageTextContent"
               localStorage.setItem('latestMessageTextContent', newMessageTextContent);
 
-              // Speak the new message only if it's not addressed to your nickname.
               // Do not read personal messages. Only unique other people's messages.
               if (latestMessageUsername && !latestMessageUsername.includes(myNickname)) {
 
                 // Read all messages in every-message mode
                 if (isEveryMessageMode) {
-                  console.log('Triggered: Every message mode'); // Log for every-message mode
+                  console.log('Triggered: Every message mode');
                   addNewMessage(newMessageTextContent);
                 }
-                // Read mention messages only in mention-message
+                // Read mention messages only in mention-message mode
                 else if (isMentionMessageMode && isMention) {
-                  console.log('Triggered: Mention message mode'); // Log for mention-message mode
+                  console.log('Triggered: Mention message mode');
                   addNewMessage(newMessageTextContent);
                 }
                 // Read when private messages is addressed to you
                 else if (isPrivateMessage) {
-                  console.log('Triggered: Private message'); // Log for private message
-                  addNewMessage(newMessageTextContent); // Read the private message if required
+                  console.log('Triggered: Private message');
+                  addNewMessage(newMessageTextContent);
                 }
                 else {
-                  console.log('No matching condition'); // Log when no condition matches
+                  console.log('No matching condition for voice mode');
                 }
 
               }
@@ -3732,19 +3731,37 @@
 
             // If mode is beep, play the beep sound for the new message
             if (isBeep && isInitialized && newMessageTextContent && newMessageTextContent !== latestMessageTextContent) {
+
               // Update localStorage key "latestMessageTextContent"
               localStorage.setItem('latestMessageTextContent', newMessageTextContent);
 
-              // Only proceed if the message is not addressed to your nickname
+              // Do not read personal messages. Only unique other people's messages.
               if (latestMessageUsername && !latestMessageUsername.includes(myNickname)) {
-                // Determine the sound frequencies to play based on mention status
-                const frequenciesToPlay = isMention ? mentionMessageFrequencies : usualMessageFrequencies;
 
-                // Play the determined beep sound
-                playBeep(frequenciesToPlay, beepVolume);
+                // Beep all messages in every-message mode
+                if (isEveryMessageMode) {
+                  console.log('Triggered Beep: Every message mode');
+                  const frequenciesToPlay = isMention ? mentionMessageFrequencies : usualMessageFrequencies;
+                  playBeep(frequenciesToPlay, beepVolume);
+                }
+                // Beep mention messages only in mention-message mode
+                else if (isMentionMessageMode && isMention) {
+                  console.log('Triggered Beep: Mention message mode');
+                  const frequenciesToPlay = mentionMessageFrequencies;
+                  playBeep(frequenciesToPlay, beepVolume);
+                }
+                // Beep when private messages are addressed to you
+                else if (isPrivateMessage) {
+                  console.log('Triggered Beep: Private message');
+                  const frequenciesToPlay = mentionMessageFrequencies;
+                  playBeep(frequenciesToPlay, beepVolume);
+                }
+                else {
+                  console.log('No matching condition for beep mode');
+                }
 
                 // Reset mention flag if it was true
-                isMention && (isMention = false);
+                if (isMention) isMention = false;
               }
             }
 

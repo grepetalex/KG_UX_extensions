@@ -5216,15 +5216,28 @@
     localStorage.setItem('ignoreUserList', JSON.stringify(ignoreUserList));
   }
 
-  // Process and apply uploaded settings
-  function processUploadedSettings({ usersToTrack: u, mentionKeywords: m, ignoreUserList: i }) {
-    if (u?.length) usersToTrack = u; // Update usersToTrack if new data is provided
-    if (m?.length) mentionKeywords = [...m, myNickname]; // Update mentionKeywords and include myNickname
-    if (i?.length) ignoreUserList = i; // Update ignoreUserList if new data is provided
+  // // Process and apply uploaded settings
+  // function processUploadedSettings({ usersToTrack: u, mentionKeywords: m, ignoreUserList: i }) {
+  //   if (u?.length) usersToTrack = u; // Update usersToTrack if new data is provided
+  //   if (m?.length) mentionKeywords = [...m, myNickname]; // Update mentionKeywords and include myNickname
+  //   if (i?.length) ignoreUserList = i; // Update ignoreUserList if new data is provided
 
-    saveSettingsToLocalStorage(); // Save to localStorage after applying settings
+  //   saveSettingsToLocalStorage(); // Save to localStorage after applying settings
+  //   console.log('Uploaded settings applied:', { usersToTrack, mentionKeywords, ignoreUserList });
+  // }
+
+  // Process and apply uploaded settings
+  function processUploadedSettings({ usersToTrack: u = [], mentionKeywords: m = [], ignoreUserList: i = [] }) {
+    // Ensure the uploaded values are valid arrays or default to the existing ones
+    usersToTrack = Array.isArray(u) ? u : usersToTrack;
+    mentionKeywords = Array.isArray(m) ? [...m, myNickname] : mentionKeywords;
+    ignoreUserList = Array.isArray(i) ? i : ignoreUserList;
+
+    // Save to localStorage after applying the settings
+    saveSettingsToLocalStorage();
     console.log('Uploaded settings applied:', { usersToTrack, mentionKeywords, ignoreUserList });
   }
+
 
   // CREATE PANEL GRAPHICAL SETTINGS BUTTON (END)
 

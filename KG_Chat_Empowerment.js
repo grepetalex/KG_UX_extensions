@@ -1422,6 +1422,7 @@
     // Create a clear cache button with the provided SVG icon
     const clearCacheButton = document.createElement('div');
     clearCacheButton.className = 'clear-cache-button';
+    clearCacheButton.title = 'Clear cache';
     clearCacheButton.innerHTML = trashIconSVG;
     clearCacheButton.style.backgroundColor = 'brown';
     clearCacheButton.style.width = '48px';
@@ -1481,6 +1482,7 @@
     // Create a close button with the provided SVG icon
     const closePanelButton = document.createElement('div');
     closePanelButton.className = 'close-panel-button';
+    closePanelButton.title = 'Close panel';
     closePanelButton.innerHTML = closeSVG;
     closePanelButton.style.backgroundColor = 'darkolivegreen';
     closePanelButton.style.width = '48px';
@@ -4805,6 +4807,7 @@
     // Create a clear cache button with the provided SVG icon
     const clearCacheButton = document.createElement('div');
     clearCacheButton.className = 'clear-cache-button';
+    clearCacheButton.title = 'Clear messages';
     clearCacheButton.innerHTML = trashIconSVG;
     clearCacheButton.style.backgroundColor = 'brown';
     clearCacheButton.style.width = '48px';
@@ -4869,6 +4872,7 @@
     // Create a close button with the provided SVG icon
     const closePanelButton = document.createElement('div');
     closePanelButton.className = 'close-panel-button';
+    closePanelButton.title = 'Close panel';
     closePanelButton.innerHTML = closeSVG;
     closePanelButton.style.backgroundColor = 'darkolivegreen';
     closePanelButton.style.width = '48px';

@@ -5153,6 +5153,69 @@
     }
   }
 
+  // Global function to handle downloading current settings
+  function handleDownloadSettings(settingsData) {
+    if (!settingsData || typeof settingsData !== 'object') {
+      console.error('Invalid settings data for download.');
+      alert('Cannot export settings. Please try again.');
+      return;
+    }
+
+    try {
+      // Convert settings data to JSON string
+      const jsonData = JSON.stringify(settingsData, null, 2);
+
+      // Format date as 'YYYY-MM-DD'
+      const currentDate = new Intl.DateTimeFormat('en-CA').format(new Date());
+
+      // Generate filename with the current date
+      const filename = `KG_Chat_Empowerment_Settings_${currentDate}.json`;
+
+      // Create a Blob object from the JSON string
+      const blob = new Blob([jsonData], { type: 'application/json' });
+
+      // Create a URL for the Blob
+      const url = URL.createObjectURL(blob);
+
+      // Create a temporary link element to trigger the download
+      const tempLink = document.createElement('a');
+      tempLink.href = url;
+      tempLink.download = filename;
+
+      // Append the link to the body
+      document.body.appendChild(tempLink);
+
+      // Trigger the download
+      tempLink.click();
+
+      // Remove the temporary link from the document
+      document.body.removeChild(tempLink);
+
+      // Clean up the Blob URL after the download
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error exporting settings:', error);
+      alert('Failed to export settings. Please try again.');
+    }
+  }
+
+  // Function to retrieve settings from localStorage and combine them into a single object
+  function getSettingsData() {
+    // Retrieve data from localStorage using the appropriate keys
+    const usersToTrack = JSON.parse(localStorage.getItem('usersToTrack')) || [];
+    const mentionKeywords = JSON.parse(localStorage.getItem('mentionKeywords')) || [];
+    const ignoreUserList = JSON.parse(localStorage.getItem('ignoreUserList')) || [];
+
+    // Combine the retrieved data into a single object
+    const settingsData = {
+      usersToTrack: usersToTrack,
+      mentionKeywords: mentionKeywords,
+      ignoreUserList: ignoreUserList,
+    };
+
+    return settingsData;
+  }// Function to retrieve settings from localStorage and combine them into a single object
+
   // Create a button to upload and apply new settings
   function createSettingsButton() {
     // Create a new element with class 'settings-button'
@@ -5392,7 +5455,7 @@
       importFileInput.click(); // Trigger file input click
     });
 
-    // Append the file input to the import button (now it is inside the button)
+    // Append the file input to the import button
     importSettingsButton.appendChild(importFileInput);
 
     // Create an export button with the provided SVG icon
@@ -5400,6 +5463,12 @@
     exportSettingsButton.className = 'export-settings-button';
     exportSettingsButton.innerHTML = exportSVG;
     exportSettingsButton.title = 'Export settings';
+
+    // Example of how to use the getSettingsData function in the export event
+    exportSettingsButton.addEventListener('click', function () {
+      const settingsData = getSettingsData(); // Retrieve the settings data
+      handleDownloadSettings(settingsData); // Pass the retrieved settings data to the download function
+    });
 
     // Call the helper function with specific styles for the export button
     assignHeaderButtonsStyles(exportSettingsButton, {

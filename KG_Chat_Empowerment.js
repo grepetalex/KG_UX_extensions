@@ -4945,7 +4945,6 @@
         dateItem.style.left = '50%';
         dateItem.style.transform = 'translateX(-50%)';
 
-        dateItem.style.textAlign = 'center';
         messagesContainer.appendChild(dateItem); // Add the date-item to the container
         lastDate = date; // Update the last processed date
       }
@@ -5129,7 +5128,7 @@
 
 
   // Create a button to upload and apply new settings
-  function createShowSettingsButton() {
+  function createSettingsButton() {
     // Create a new element with class 'settings-button'
     const showSettingsButton = document.createElement('div');
 
@@ -5195,8 +5194,15 @@
     showSettingsButton.addEventListener('click', function () {
       // Add pulse effect for the settings button
       addPulseEffect(showSettingsButton);
-      // Trigger the file input click to open the file selection dialog
-      fileInput.click();
+
+      // Check if the Alt key was held down during the click
+      if (isAltKeyPressed) {
+        // If Alt is pressed, trigger the file input click
+        fileInput.click();
+      } else {
+        // If Alt is not pressed, show the settings panel
+        showSettingsPanel();
+      }
     });
 
     // Append the file input to the button
@@ -5207,7 +5213,7 @@
   }
 
   // Call the function to create the settings button
-  createShowSettingsButton();
+  createSettingsButton();
 
   // Save the current settings to localStorage
   function saveSettingsToLocalStorage() {
@@ -5215,16 +5221,6 @@
     localStorage.setItem('mentionKeywords', JSON.stringify(mentionKeywords));
     localStorage.setItem('ignoreUserList', JSON.stringify(ignoreUserList));
   }
-
-  // // Process and apply uploaded settings
-  // function processUploadedSettings({ usersToTrack: u, mentionKeywords: m, ignoreUserList: i }) {
-  //   if (u?.length) usersToTrack = u; // Update usersToTrack if new data is provided
-  //   if (m?.length) mentionKeywords = [...m, myNickname]; // Update mentionKeywords and include myNickname
-  //   if (i?.length) ignoreUserList = i; // Update ignoreUserList if new data is provided
-
-  //   saveSettingsToLocalStorage(); // Save to localStorage after applying settings
-  //   console.log('Uploaded settings applied:', { usersToTrack, mentionKeywords, ignoreUserList });
-  // }
 
   // Process and apply uploaded settings
   function processUploadedSettings({ usersToTrack: u = [], mentionKeywords: m = [], ignoreUserList: i = [] }) {
@@ -5238,6 +5234,142 @@
     console.log('Uploaded settings applied:', { usersToTrack, mentionKeywords, ignoreUserList });
   }
 
+  // Function to display the settings panel
+  function showSettingsPanel() {
+    // Check if the settings panel already exists
+    if (document.querySelector('.settings-panel')) return;
+
+    // Create the settings panel container
+    const settingsPanel = document.createElement('div');
+    settingsPanel.className = 'settings-panel';
+
+    // Set initial styles
+    settingsPanel.style.opacity = '0';
+    settingsPanel.style.backgroundColor = '#1b1b1b';
+    settingsPanel.style.setProperty('border-radius', '0.6em', 'important');
+    settingsPanel.style.position = 'fixed';
+    settingsPanel.style.top = '100px';
+    settingsPanel.style.left = '50%';
+    settingsPanel.style.transform = 'translateX(-50%)';
+    settingsPanel.style.width = '50vw';
+    settingsPanel.style.height = '80vh';
+    settingsPanel.style.zIndex = '999';
+    settingsPanel.style.minWidth = '1000px';
+
+    // Create a container div for the panel header
+    const panelHeaderContainer = document.createElement('div');
+    panelHeaderContainer.className = 'panel-header';
+    panelHeaderContainer.style.display = 'flex';
+    panelHeaderContainer.style.flexDirection = 'row';
+    panelHeaderContainer.style.justifyContent = 'flex-end'; // Aligns to the right
+    panelHeaderContainer.style.padding = '0.6em';
+
+    // Inline SVG source for the "x" icon (close button)
+    const closeSVG = `
+    <svg xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="lightgreen"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="feather feather-x">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>`;
+
+    // Create a close button with the provided SVG icon
+    const closePanelButton = document.createElement('div');
+    closePanelButton.className = 'close-panel-button';
+    closePanelButton.innerHTML = closeSVG;
+    closePanelButton.style.backgroundColor = 'darkolivegreen';
+    closePanelButton.style.width = '48px';
+    closePanelButton.style.height = '48px';
+    closePanelButton.style.display = 'flex';
+    closePanelButton.style.justifyContent = 'center';
+    closePanelButton.style.alignItems = 'center';
+    closePanelButton.style.cursor = 'pointer';
+    closePanelButton.style.setProperty('border-radius', '0.2em', 'important');
+
+    // Add a hover effect with brightness transition
+    closePanelButton.style.filter = 'brightness(1)';
+    closePanelButton.style.transition = 'filter 0.3s ease';
+
+    // Add mouseover and mouseout event listeners for the close button
+    closePanelButton.addEventListener('mouseover', () => {
+      closePanelButton.style.filter = 'brightness(0.8)';
+    });
+    closePanelButton.addEventListener('mouseout', () => {
+      closePanelButton.style.filter = 'brightness(1)';
+    });
+
+    // Add a click event listener to the close panel button
+    closePanelButton.addEventListener('click', () => {
+      // Fade out the settings panel when the close button is clicked
+      fadeTargetElement(settingsPanel, 'hide');
+      fadeDimmingElement('hide');
+    });
+
+    // Append the close button to the panel header container
+    panelHeaderContainer.appendChild(closePanelButton);
+    // Append the header to the settings panel
+    settingsPanel.appendChild(panelHeaderContainer);
+
+    // Create a container for the settings content
+    const settingsContainer = document.createElement('div');
+    settingsContainer.className = 'settings-content-container';
+    settingsContainer.style.overflowY = 'auto'; // Enable scrolling for settings content
+    settingsContainer.style.height = 'calc(100% - 70px)'; // Adjust height considering header
+    settingsContainer.style.padding = '1em';
+
+    // Helper function to assign styles to description elements
+    function assignDescriptionStyles(element) {
+      element.style.position = 'relative';
+      element.style.font = '1em Montserrat';
+      element.style.color = 'burlywood';
+      element.style.backgroundColor = 'rgba(222, 184, 135, 0.1)';
+      element.style.width = 'fit-content';
+      element.style.margin = '1em 0 0.5em';
+      element.style.padding = '0.4em';
+      element.style.textAlign = 'center';
+      element.style.setProperty('border-radius', '0.4em', 'important');
+      element.style.left = '50%';
+      element.style.transform = 'translateX(-50%)';
+    }
+
+    // Array of settings types
+    const settingsTypes = ['tracked', 'mention', 'ignored'];
+
+    // Loop through each type and create description and container elements
+    settingsTypes.forEach(type => {
+      const description = document.createElement('div');
+      description.className = `settings-${type}-description`; // Add specific class for description
+
+      assignDescriptionStyles(description);
+
+      // Create the description container directly
+      const container = document.createElement('div');
+      container.className = `settings-${type}-container`; // Add specific class for container
+
+      // Set the text content with only the first letter capitalized
+      description.textContent = type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
+
+      settingsContainer.appendChild(description);
+      settingsContainer.appendChild(container);
+    });
+
+    // Append the settings content container to the settings panel
+    settingsPanel.appendChild(settingsContainer);
+
+    // Append the settings panel to the body
+    document.body.appendChild(settingsPanel);
+
+    // Fade in the settings panel and dimming background element
+    fadeTargetElement(settingsPanel, 'show');
+    fadeDimmingElement('show');
+  }
 
   // CREATE PANEL GRAPHICAL SETTINGS BUTTON (END)
 

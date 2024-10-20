@@ -5126,6 +5126,32 @@
 
   // CREATE PANEL GRAPHICAL SETTINGS BUTTON (START)
 
+  // Global function to handle file input and process uploaded settings
+  function handleUploadSettings(event) {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const jsonData = e.target.result; // Get the raw JSON string
+        try {
+          const settingsData = JSON.parse(jsonData); // Attempt to parse the JSON data
+          // Call a function to process the uploaded settings data
+          processUploadedSettings(settingsData);
+        } catch (error) {
+          console.error('Error parsing JSON data:', error.message); // Log the error message
+          console.error('Invalid JSON:', jsonData); // Log the raw JSON string for debugging
+          // Optional: Notify the user about the error
+          alert('Failed to parse JSON data. Please check the format and try again.');
+        }
+      };
+
+      reader.onerror = function (e) {
+        console.error('Error reading file:', e.target.error); // Handle file reading errors
+      };
+
+      reader.readAsText(file); // Read the file as text
+    }
+  }
 
   // Create a button to upload and apply new settings
   function createSettingsButton() {
@@ -5163,32 +5189,7 @@
     fileInput.style.display = 'none'; // Hide the file input
 
     // Add an event listener to handle file selection
-    fileInput.addEventListener('change', function (event) {
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-          const jsonData = e.target.result; // Get the raw JSON string
-          try {
-            const settingsData = JSON.parse(jsonData); // Attempt to parse the JSON data
-            // Call a function to process the uploaded settings data
-            processUploadedSettings(settingsData);
-          } catch (error) {
-            console.error('Error parsing JSON data:', error.message); // Log the error message
-            console.error('Invalid JSON:', jsonData); // Log the raw JSON string for debugging
-
-            // Optional: Notify the user about the error (you can replace this with a better UI message)
-            alert('Failed to parse JSON data. Please check the format and try again.');
-          }
-        };
-
-        reader.onerror = function (e) {
-          console.error('Error reading file:', e.target.error); // Handle file reading errors
-        };
-
-        reader.readAsText(file); // Read the file as text
-      }
-    });
+    fileInput.addEventListener('change', handleUploadSettings);
 
     // Add a click event listener to the button
     showSettingsButton.addEventListener('click', function () {
@@ -5280,30 +5281,84 @@
         <line x1="6" y1="6" x2="18" y2="18"></line>
     </svg>`;
 
+    // Inline SVG source for the "download" icon (export button)
+    const exportSVG = `
+    <svg xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#90b9ee"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="feather feather-download">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="7 10 12 15 17 10"></polyline>
+        <line x1="12" y1="15" x2="12" y2="3"></line>
+    </svg>`;
+
+    // Inline SVG source for the "upload" icon (import button)
+    const importSVG = `
+    <svg xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#d190ee"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="feather feather-upload">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="17 8 12 3 7 8"></polyline>
+        <line x1="12" y1="3" x2="12" y2="15"></line>
+    </svg>`;
+
+    // Helper function to assign common styles to header buttons
+    function assignHeaderButtonsStyles(buttonElement, specificStyles, isFirstButton = false) {
+      // Common styles
+      buttonElement.style.width = '48px';
+      buttonElement.style.height = '48px';
+      buttonElement.style.display = 'flex';
+      buttonElement.style.justifyContent = 'center';
+      buttonElement.style.alignItems = 'center';
+      buttonElement.style.cursor = 'pointer';
+      buttonElement.style.setProperty('border-radius', '0.2em', 'important');
+
+      // Apply marginRight only if it's not the first button
+      if (!isFirstButton) {
+        buttonElement.style.marginRight = '1em';
+      }
+
+      // Apply specific styles
+      for (const property in specificStyles) {
+        buttonElement.style[property] = specificStyles[property];
+      }
+
+      // Add a hover effect with brightness transition
+      buttonElement.style.filter = 'brightness(1)';
+      buttonElement.style.transition = 'filter 0.3s ease';
+
+      // Add mouseover and mouseout event listeners for the button
+      buttonElement.addEventListener('mouseover', () => {
+        buttonElement.style.filter = 'brightness(0.8)';
+      });
+      buttonElement.addEventListener('mouseout', () => {
+        buttonElement.style.filter = 'brightness(1)';
+      });
+    }
+
     // Create a close button with the provided SVG icon
     const closePanelButton = document.createElement('div');
     closePanelButton.className = 'close-panel-button';
     closePanelButton.innerHTML = closeSVG;
-    closePanelButton.style.backgroundColor = 'darkolivegreen';
-    closePanelButton.style.width = '48px';
-    closePanelButton.style.height = '48px';
-    closePanelButton.style.display = 'flex';
-    closePanelButton.style.justifyContent = 'center';
-    closePanelButton.style.alignItems = 'center';
-    closePanelButton.style.cursor = 'pointer';
-    closePanelButton.style.setProperty('border-radius', '0.2em', 'important');
+    closePanelButton.title = 'Close panel';
 
-    // Add a hover effect with brightness transition
-    closePanelButton.style.filter = 'brightness(1)';
-    closePanelButton.style.transition = 'filter 0.3s ease';
-
-    // Add mouseover and mouseout event listeners for the close button
-    closePanelButton.addEventListener('mouseover', () => {
-      closePanelButton.style.filter = 'brightness(0.8)';
-    });
-    closePanelButton.addEventListener('mouseout', () => {
-      closePanelButton.style.filter = 'brightness(1)';
-    });
+    // Call the helper function for the close button without marginRight
+    assignHeaderButtonsStyles(closePanelButton, {
+      backgroundColor: 'darkolivegreen',
+    }, true); // Pass true for isFirstButton
 
     // Add a click event listener to the close panel button
     closePanelButton.addEventListener('click', () => {
@@ -5312,8 +5367,54 @@
       fadeDimmingElement('hide');
     });
 
-    // Append the close button to the panel header container
+    // Create an import button with the provided SVG icon
+    const importSettingsButton = document.createElement('div');
+    importSettingsButton.className = 'import-settings-button';
+    importSettingsButton.innerHTML = importSVG;
+    importSettingsButton.title = 'Import settings';
+
+    // Call the helper function with specific styles for the import button
+    assignHeaderButtonsStyles(importSettingsButton, {
+      backgroundColor: '#502f6b',
+    });
+
+    // Create a hidden file input for importing settings
+    const importFileInput = document.createElement('input');
+    importFileInput.type = 'file';
+    importFileInput.accept = '.json'; // Specify the file type
+    importFileInput.style.display = 'none'; // Hide the file input
+
+    // Add an event listener for the import file input
+    importFileInput.addEventListener('change', handleUploadSettings);
+
+    // Add a click event listener to the import button
+    importSettingsButton.addEventListener('click', () => {
+      importFileInput.click(); // Trigger file input click
+    });
+
+    // Append the file input to the import button (now it is inside the button)
+    importSettingsButton.appendChild(importFileInput);
+
+    // Create an export button with the provided SVG icon
+    const exportSettingsButton = document.createElement('div');
+    exportSettingsButton.className = 'export-settings-button';
+    exportSettingsButton.innerHTML = exportSVG;
+    exportSettingsButton.title = 'Export settings';
+
+    // Call the helper function with specific styles for the export button
+    assignHeaderButtonsStyles(exportSettingsButton, {
+      backgroundColor: '#2f4c6b',
+    });
+
+    // Append the buttons to the panel header container
+    panelHeaderContainer.appendChild(importSettingsButton);
+    panelHeaderContainer.appendChild(exportSettingsButton);
     panelHeaderContainer.appendChild(closePanelButton);
+
+    // Append the header to the settings panel
+    settingsPanel.appendChild(panelHeaderContainer);
+
+
     // Append the header to the settings panel
     settingsPanel.appendChild(panelHeaderContainer);
 

@@ -3732,8 +3732,11 @@
       const username = usernameElement?.textContent?.replace(/[<>]/g, '') || null;
 
       if (username && ignoreUserList.includes(username)) {
-        console.log(`Removed message from ignored user: ${username}`);
-        message.remove(); // Remove the message
+        // console.log(`Hidden message from ignored user: ${username}`);
+        // Convert Cyrillic username to Latin
+        const latinUsername = convertRussianUsernameToLatin(username);
+        message.classList.add('ignored-user', latinUsername);
+        message.style.display = 'none'; // Hide the message
       }
     });
   }

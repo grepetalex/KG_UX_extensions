@@ -5259,12 +5259,17 @@
       // Add pulse effect for the settings button
       addPulseEffect(showSettingsButton);
 
-      // Check if the Alt key was held down during the click
       if (isAltKeyPressed) {
-        // If Alt is pressed, trigger the file input click
+        // Export settings
+        const settingsData = getSettingsData(); // Retrieve the settings data
+        handleDownloadSettings(settingsData); // Pass the retrieved settings data to the download function
+      }
+      else if (isCtrlKeyPressed) {
+        // Import settings
         fileInput.click();
-      } else {
-        // If Alt is not pressed, show the settings panel
+      }
+      else {
+        // If Alt or Ctrl is not pressed open settings panel
         showSettingsPanel();
       }
     });

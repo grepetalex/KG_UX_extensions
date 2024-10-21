@@ -5302,6 +5302,15 @@
     localStorage.setItem('ignoreUserList', JSON.stringify(ignoreUserList));
   }
 
+  // Retrieve settings from localStorage
+  function retrieveSettingsFromLocalStorage() {
+    const usersToTrack = JSON.parse(localStorage.getItem('usersToTrack')) || [];
+    const mentionKeywords = JSON.parse(localStorage.getItem('mentionKeywords')) || [];
+    const ignoreUserList = JSON.parse(localStorage.getItem('ignoreUserList')) || [];
+
+    return { usersToTrack, mentionKeywords, ignoreUserList };
+  }
+
   // Process and apply uploaded settings
   function processUploadedSettings({ usersToTrack: u = [], mentionKeywords: m = [], ignoreUserList: i = [] }) {
     // Ensure the uploaded values are valid arrays or default to the existing ones
@@ -5392,6 +5401,39 @@
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
         <polyline points="17 8 12 3 7 8"></polyline>
         <line x1="12" y1="3" x2="12" y2="15"></line>
+    </svg>`;
+
+    // Inline SVG source for the "save" icon (save button)
+    const saveSVG = `
+    <svg xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="feather feather-save">
+        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+        <polyline points="7 3 7 8 15 8"></polyline>
+    </svg>`;
+
+    // Inline SVG source for the "remove" icon (remove button)
+    const removeSVG = `
+    <svg xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="feather feather-trash">
+        <polyline points="3 6 5 6 21 6"></polyline>
+        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
     </svg>`;
 
     // Helper function to assign common styles to header buttons
@@ -5517,7 +5559,7 @@
       element.style.color = 'burlywood';
       element.style.backgroundColor = 'rgba(222, 184, 135, 0.1)';
       element.style.width = 'fit-content';
-      element.style.margin = '1em 0 0.5em';
+      element.style.margin = '2em 0';
       element.style.padding = '0.4em';
       element.style.textAlign = 'center';
       element.style.setProperty('border-radius', '0.4em', 'important');
@@ -5549,8 +5591,204 @@
     // Append the settings content container to the settings panel
     settingsPanel.appendChild(settingsContainer);
 
+    // Applies common styles to an settings input field element
+    function styleInput(input) {
+      input.style.height = '28px';
+      input.style.padding = '0.4em';
+      input.style.font = '1em Montserrat';
+      input.style.fontFamily = 'Montserrat';
+      input.style.color = 'bisque';
+      input.style.setProperty('border-radius', '0.2em', 'important');
+      input.style.boxSizing = 'border-box';
+      input.style.backgroundColor = 'rgb(17,17,17)';
+      input.style.border = '1px solid rgb(34,34,34)';
+    }
+
+    // Applies common styles to a button element for saving or removing actions
+    function styleButton(button, strokeColor, backgroundColor) {
+      button.style.stroke = strokeColor;
+      button.style.width = '28px';
+      button.style.height = '28px';
+      button.style.display = 'flex';
+      button.style.justifyContent = 'center';
+      button.style.alignItems = 'center';
+      button.style.backgroundColor = backgroundColor;
+      button.style.setProperty('border-radius', '0.2em', 'important');
+      button.style.cursor = 'pointer';
+    }
+
+    // Applies common styles to a select element and its options
+    function styleSelect(select) {
+      select.style.height = '28px';
+      select.style.padding = '0.4em';
+      select.style.font = '1em Montserrat';
+      select.style.fontFamily = 'Montserrat';
+      select.style.setProperty('color', 'bisque', 'important');
+      select.style.setProperty('border-radius', '0.2em', 'important');
+      select.style.boxSizing = 'border-box';
+      select.style.setProperty('background-color', 'rgb(17,17,17)', 'important');
+      select.style.setProperty('border', '1px solid rgb(34,34,34)', 'important');
+
+      // Style each option element
+      Array.from(select.options).forEach(option => {
+        option.style.height = '28px';
+        option.style.setProperty('background-color', 'rgb(17,17,17)', 'important');
+        option.style.setProperty('color', 'bisque', 'important');
+        option.style.fontFamily = 'Montserrat';
+      });
+    }
+
+    // Helper function to create a tracked row
+    function createTrackedRow(user) {
+      const row = document.createElement('div');
+      row.className = 'tracked-row';
+      row.style.display = 'flex';
+      row.style.gap = '0.5em';
+      row.style.marginBottom = '1em';
+
+      const usernameInput = document.createElement('input');
+      usernameInput.className = 'tracked-username';
+      usernameInput.value = user.name;
+      usernameInput.placeholder = 'Username';
+
+      styleInput(usernameInput);
+
+      const genderSelect = document.createElement('select');
+      genderSelect.className = 'tracked-gender';
+      ['male', 'female'].forEach(gender => {
+        const option = document.createElement('option');
+        option.value = gender;
+        option.textContent = gender.charAt(0).toUpperCase() + gender.slice(1);
+        if (user.gender === gender) option.selected = true;
+        genderSelect.appendChild(option);
+      });
+
+      // Apply styles to the select element
+      styleSelect(genderSelect);
+
+      const pronunciationInput = document.createElement('input');
+      pronunciationInput.className = 'tracked-pronunciation';
+      pronunciationInput.value = user.pronunciation;
+      pronunciationInput.placeholder = 'Pronunciation';
+      styleInput(pronunciationInput);
+
+      const removeButton = document.createElement('div');
+      removeButton.className = 'remove-tracked-row';
+      removeButton.innerHTML = removeSVG;
+      styleButton(removeButton, '#ee9090', '#6b2f2f');
+
+      const saveButton = document.createElement('div');
+      saveButton.className = 'save-tracked-row';
+      saveButton.innerHTML = saveSVG;
+      styleButton(saveButton, '#90ee90', '#2f6b2f');
+
+      row.appendChild(usernameInput);
+      row.appendChild(genderSelect);
+      row.appendChild(pronunciationInput);
+      row.appendChild(removeButton);
+      row.appendChild(saveButton);
+
+      return row;
+    }
+
+    // Helper function to create a mention item
+    function createMentionItem(keyword) {
+      const item = document.createElement('div');
+      item.className = 'mention-item';
+      item.style.display = 'inline-flex';
+      item.style.gap = '0.5em';
+      item.style.padding = '0.6em';
+      item.style.marginBottom = '1em';
+
+      const mentionInput = document.createElement('input');
+      mentionInput.className = 'mention-field';
+      mentionInput.value = keyword;
+      mentionInput.placeholder = 'Mention Keyword';
+      styleInput(mentionInput);
+
+      const removeButton = document.createElement('div');
+      removeButton.className = 'remove-mention-word';
+      removeButton.innerHTML = removeSVG;
+      styleButton(removeButton, '#ee9090', '#6b2f2f');
+
+      const saveButton = document.createElement('div');
+      saveButton.className = 'save-mention-word';
+      saveButton.innerHTML = saveSVG;
+      styleButton(saveButton, '#90ee90', '#2f6b2f');
+
+      item.appendChild(mentionInput);
+      item.appendChild(removeButton);
+      item.appendChild(saveButton);
+
+      return item;
+    }
+
+    // Helper function to create an ignored item
+    function createIgnoredItem(user) {
+      const item = document.createElement('div');
+      item.className = 'ignored-item';
+      item.style.display = 'inline-flex';
+      item.style.gap = '0.5em';
+      item.style.padding = '0.6em';
+      item.style.marginBottom = '1em';
+
+      const ignoredInput = document.createElement('input');
+      ignoredInput.className = 'ignored-field';
+      ignoredInput.value = user;
+      ignoredInput.placeholder = 'Ignored User';
+      styleInput(ignoredInput);
+
+      const removeButton = document.createElement('div');
+      removeButton.className = 'remove-ignored-word';
+      removeButton.innerHTML = removeSVG;
+      styleButton(removeButton, '#ee9090', '#6b2f2f');
+
+      const saveButton = document.createElement('div');
+      saveButton.className = 'save-ignored-word';
+      saveButton.innerHTML = saveSVG;
+      styleButton(saveButton, '#90ee90', '#2f6b2f');
+
+      item.appendChild(ignoredInput);
+      item.appendChild(removeButton);
+      item.appendChild(saveButton);
+
+      return item;
+    }
+
+    // Populate settings dynamically
+    function populateSettings() {
+      const containers = {
+        usersToTrack: '.settings-tracked-container',
+        mentionKeywords: '.settings-mention-container',
+        ignoreUserList: '.settings-ignored-container'
+      };
+
+      const creators = {
+        usersToTrack: createTrackedRow,
+        mentionKeywords: createMentionItem,
+        ignoreUserList: createIgnoredItem
+      };
+
+      const data = retrieveSettingsFromLocalStorage();
+
+      Object.entries(data).forEach(([key, items]) => {
+        const container = document.querySelector(containers[key]);
+
+        // Apply flex display and wrap styles to mention and ignored user containers
+        if (key === 'mentionKeywords' || key === 'ignoreUserList') {
+          container.style.display = 'inline-flex';
+          container.style.flexWrap = 'wrap';
+        }
+
+        items.forEach(item => container.appendChild(creators[key](item)));
+      });
+    }
+
     // Append the settings panel to the body
     document.body.appendChild(settingsPanel);
+
+    // Call the function to populate settings on page load
+    populateSettings();
 
     // Fade in the settings panel and dimming background element
     fadeTargetElement(settingsPanel, 'show');

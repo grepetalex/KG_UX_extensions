@@ -5604,8 +5604,13 @@
       input.style.border = '1px solid rgb(34,34,34)';
     }
 
-    // Applies common styles to a button element for saving or removing actions
-    function styleButton(button, strokeColor, backgroundColor) {
+    /* Applies common styles to a button element for saving or removing actions.
+    * @param {HTMLElement} button - The button element to style.
+    * @param {string} strokeColor - The stroke color for the button.
+    * @param {string} backgroundColor - The background color for the button.
+    * @param {boolean} disabled - Whether the button should be styled as disabled.
+    */
+    function styleButton(button, strokeColor, backgroundColor, disabled) {
       button.style.stroke = strokeColor;
       button.style.width = '28px';
       button.style.height = '28px';
@@ -5615,7 +5620,15 @@
       button.style.backgroundColor = backgroundColor;
       button.style.setProperty('border-radius', '0.2em', 'important');
       button.style.cursor = 'pointer';
+
+      if (disabled) {
+        button.style.filter = 'grayscale(1)';
+        button.style.pointerEvents = 'none';
+      } else {
+        button.style.filter = 'grayscale(0)';
+      }
     }
+
 
     // Applies common styles to a select element and its options
     function styleSelect(select) {
@@ -5650,7 +5663,6 @@
       usernameInput.className = 'tracked-username';
       usernameInput.value = user.name;
       usernameInput.placeholder = 'Username';
-
       styleInput(usernameInput);
 
       const genderSelect = document.createElement('select');
@@ -5675,12 +5687,12 @@
       const removeButton = document.createElement('div');
       removeButton.className = 'remove-tracked-row';
       removeButton.innerHTML = removeSVG;
-      styleButton(removeButton, '#ee9090', '#6b2f2f');
+      styleButton(removeButton, '#ee9090', '#6b2f2f', false);
 
       const saveButton = document.createElement('div');
       saveButton.className = 'save-tracked-row';
       saveButton.innerHTML = saveSVG;
-      styleButton(saveButton, '#90ee90', '#2f6b2f');
+      styleButton(saveButton, '#90ee90', '#2f6b2f', true);
 
       row.appendChild(usernameInput);
       row.appendChild(genderSelect);
@@ -5709,12 +5721,12 @@
       const removeButton = document.createElement('div');
       removeButton.className = 'remove-mention-word';
       removeButton.innerHTML = removeSVG;
-      styleButton(removeButton, '#ee9090', '#6b2f2f');
+      styleButton(removeButton, '#ee9090', '#6b2f2f', false);
 
       const saveButton = document.createElement('div');
       saveButton.className = 'save-mention-word';
       saveButton.innerHTML = saveSVG;
-      styleButton(saveButton, '#90ee90', '#2f6b2f');
+      styleButton(saveButton, '#90ee90', '#2f6b2f', true);
 
       item.appendChild(mentionInput);
       item.appendChild(removeButton);
@@ -5741,12 +5753,12 @@
       const removeButton = document.createElement('div');
       removeButton.className = 'remove-ignored-word';
       removeButton.innerHTML = removeSVG;
-      styleButton(removeButton, '#ee9090', '#6b2f2f');
+      styleButton(removeButton, '#ee9090', '#6b2f2f', false);
 
       const saveButton = document.createElement('div');
       saveButton.className = 'save-ignored-word';
       saveButton.innerHTML = saveSVG;
-      styleButton(saveButton, '#90ee90', '#2f6b2f');
+      styleButton(saveButton, '#90ee90', '#2f6b2f', true);
 
       item.appendChild(ignoredInput);
       item.appendChild(removeButton);

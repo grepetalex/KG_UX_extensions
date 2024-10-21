@@ -5063,6 +5063,11 @@
 
       // Append the message element to the messages container
       messagesContainer.appendChild(messageElement);
+
+      requestAnimationFrame(() => {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll after next repaint
+      });
+
     });
 
     // Append the messages container to the cached messages panel

@@ -88,7 +88,7 @@
 
   // Define the users to track and notify with popup and audio
   let usersToTrack = [
-    { name: 'Даниэль', gender: 'male', pronunciation: 'Даниэль' }
+    { name: 'Даниэль', gender: 'Male', pronunciation: 'Даниэль' }
   ];
 
   // Notify if someone addresses me using these aliases (case-insensitive)
@@ -293,8 +293,8 @@
   }
 
   const verbs = {
-    male: { enter: 'зашёл', leave: 'вышел' },
-    female: { enter: 'зашла', leave: 'вышла' }
+    Male: { enter: 'зашёл', leave: 'вышел' },
+    Female: { enter: 'зашла', leave: 'вышла' }
   };
 
   function getUserGender(userName) {
@@ -5302,15 +5302,6 @@
     localStorage.setItem('ignoreUserList', JSON.stringify(ignoreUserList));
   }
 
-  // Retrieve settings from localStorage
-  function retrieveSettingsFromLocalStorage() {
-    const usersToTrack = JSON.parse(localStorage.getItem('usersToTrack')) || [];
-    const mentionKeywords = JSON.parse(localStorage.getItem('mentionKeywords')) || [];
-    const ignoreUserList = JSON.parse(localStorage.getItem('ignoreUserList')) || [];
-
-    return { usersToTrack, mentionKeywords, ignoreUserList };
-  }
-
   // Process and apply uploaded settings
   function processUploadedSettings({ usersToTrack: u = [], mentionKeywords: m = [], ignoreUserList: i = [] }) {
     // Ensure the uploaded values are valid arrays or default to the existing ones
@@ -5434,6 +5425,22 @@
         class="feather feather-trash">
         <polyline points="3 6 5 6 21 6"></polyline>
         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+    </svg>`;
+
+    // Inline SVG source for the "add" icon (add button)
+    const addSVG = `
+    <svg xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="feather feather-plus">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
     </svg>`;
 
     // Helper function to assign common styles to header buttons
@@ -5620,10 +5627,16 @@
       button.style.backgroundColor = backgroundColor;
       button.style.setProperty('border-radius', '0.2em', 'important');
       button.style.cursor = 'pointer';
+      button.style.transition = 'filter 0.3s';
+
+      // Compact event listeners for mouse over and mouse out
+      button.addEventListener('mouseover', () => button.style.filter = 'brightness(0.8)');
+      button.addEventListener('mouseout', () => button.style.filter = 'brightness(1)');
 
       if (disabled) {
         button.style.filter = 'grayscale(1)';
         button.style.pointerEvents = 'none';
+        button.style.opacity = '0.5';
       } else {
         button.style.filter = 'grayscale(0)';
       }
@@ -5653,11 +5666,11 @@
 
     // Helper function to create a tracked row
     function createTrackedRow(user) {
-      const row = document.createElement('div');
-      row.className = 'tracked-row';
-      row.style.display = 'flex';
-      row.style.gap = '0.5em';
-      row.style.marginBottom = '1em';
+      const item = document.createElement('div');
+      item.className = 'tracked-item';
+      item.style.display = 'flex';
+      item.style.gap = '0.5em';
+      item.style.padding = '0.25em';
 
       const usernameInput = document.createElement('input');
       usernameInput.className = 'tracked-username';
@@ -5667,7 +5680,7 @@
 
       const genderSelect = document.createElement('select');
       genderSelect.className = 'tracked-gender';
-      ['male', 'female'].forEach(gender => {
+      ['Male', 'Female'].forEach(gender => {
         const option = document.createElement('option');
         option.value = gender;
         option.textContent = gender.charAt(0).toUpperCase() + gender.slice(1);
@@ -5685,22 +5698,22 @@
       styleInput(pronunciationInput);
 
       const removeButton = document.createElement('div');
-      removeButton.className = 'remove-tracked-row';
+      removeButton.className = 'remove-tracked-item';
       removeButton.innerHTML = removeSVG;
       styleButton(removeButton, '#ee9090', '#6b2f2f', false);
 
       const saveButton = document.createElement('div');
-      saveButton.className = 'save-tracked-row';
+      saveButton.className = 'save-tracked-item';
       saveButton.innerHTML = saveSVG;
       styleButton(saveButton, '#90ee90', '#2f6b2f', true);
 
-      row.appendChild(usernameInput);
-      row.appendChild(genderSelect);
-      row.appendChild(pronunciationInput);
-      row.appendChild(removeButton);
-      row.appendChild(saveButton);
+      item.appendChild(usernameInput);
+      item.appendChild(genderSelect);
+      item.appendChild(pronunciationInput);
+      item.appendChild(removeButton);
+      item.appendChild(saveButton);
 
-      return row;
+      return item;
     }
 
     // Helper function to create a mention item
@@ -5710,7 +5723,6 @@
       item.style.display = 'inline-flex';
       item.style.gap = '0.5em';
       item.style.padding = '0.6em';
-      item.style.marginBottom = '1em';
 
       const mentionInput = document.createElement('input');
       mentionInput.className = 'mention-field';
@@ -5742,7 +5754,6 @@
       item.style.display = 'inline-flex';
       item.style.gap = '0.5em';
       item.style.padding = '0.6em';
-      item.style.marginBottom = '1em';
 
       const ignoredInput = document.createElement('input');
       ignoredInput.className = 'ignored-field';
@@ -5781,20 +5792,75 @@
         ignoreUserList: createIgnoredItem
       };
 
-      const data = retrieveSettingsFromLocalStorage();
+      const data = getSettingsData();
 
       Object.entries(data).forEach(([key, items]) => {
         const container = document.querySelector(containers[key]);
+        container.style.width = '100%';
 
-        // Apply flex display and wrap styles to mention and ignored user containers
+        // Apply specific styles for mention and ignored containers
         if (key === 'mentionKeywords' || key === 'ignoreUserList') {
           container.style.display = 'inline-flex';
           container.style.flexWrap = 'wrap';
+          container.style.alignItems = 'center';
         }
 
+        // Create and append existing items
         items.forEach(item => container.appendChild(creators[key](item)));
+
+        // Create and append the add button with the appropriate creator
+        const addButton = createAddButton(containers[key], creators[key]);
+        container.appendChild(addButton);
       });
     }
+
+    // Function to create an "Add" button for dynamic item creation
+    function createAddButton(containerSelector, itemCreator) {
+      const addButton = document.createElement('div');
+      const middleWord = containerSelector.split('-')[1]; // Extract key type (e.g., tracked, mention)
+
+      // Set class, content, and style for the button
+      addButton.className = `add-${middleWord}-item`;
+      addButton.innerHTML = addSVG; // Add SVG icon to the button
+      styleButton(addButton, '#d190ee', '#502f6b', false); // Style the button
+      if (middleWord === 'tracked') addButton.style.margin = '0.4em'; // Add margin for tracked items
+
+      // On click, validate the last item and create a new one if valid
+      addButton.addEventListener('click', () => {
+        const container = document.querySelector(containerSelector); // Get the container element
+
+        // Get all settings {type} items and select the last one
+        const allItems = container.querySelectorAll(`.${middleWord}-item`);
+        const lastItem = allItems.length > 0 ? allItems[allItems.length - 1] : null;
+
+        // Check if the last item has any input fields
+        const inputFields = lastItem ? lastItem.querySelectorAll('input') : []; // Get all input fields in the last item
+        const hasEmptyFields = Array.from(inputFields).some(field => field.value.trim().length === 0); // Check for empty fields
+
+        // Allow creation only if the last item has no empty fields (or if there are no items yet)
+        const canCreateNewItem = !lastItem || !hasEmptyFields;
+
+        if (canCreateNewItem) {
+          // Create a new empty item based on the item creator function
+          const emptyItem = itemCreator === createTrackedRow
+            ? itemCreator({ name: '', pronunciation: '' }) // Remove gender from tracked item creation
+            : itemCreator('');
+
+          // Check if the new item is a valid HTMLElement before inserting
+          if (emptyItem instanceof HTMLElement) {
+            container.insertBefore(emptyItem, addButton); // Insert the new item before the Add button
+          } else {
+            console.error('Invalid item created.'); // Log an error if the item is not valid
+          }
+        } else {
+          // Alert the user if the last item is filled
+          alert('Please fill in the previous item before adding a new one.');
+        }
+      });
+
+      return addButton; // Return the created button
+    }
+
 
     // Append the settings panel to the body
     document.body.appendChild(settingsPanel);

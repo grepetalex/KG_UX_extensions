@@ -5397,11 +5397,11 @@
     // Inline SVG source for the "save" icon (save button)
     const saveSVG = `
     <svg xmlns="http://www.w3.org/2000/svg"
-        width="16"
-        height="16"
+        width="24"
+        height="24"
         viewBox="0 0 24 24"
         fill="none"
-        stroke="currentColor"
+        stroke="#90eedc"
         stroke-width="2"
         stroke-linecap="round"
         stroke-linejoin="round"
@@ -5466,7 +5466,7 @@
 
       // Add a hover effect with brightness transition
       buttonElement.style.filter = 'brightness(1)';
-      buttonElement.style.transition = 'filter 0.3s ease';
+      buttonElement.style.transition = 'filter 0.3s ease, opacity 0.3s ease';
 
       // Add mouseover and mouseout event listeners for the button
       buttonElement.addEventListener('mouseover', () => {
@@ -5506,6 +5506,58 @@
       backgroundColor: '#502f6b',
     });
 
+    // Create a save button with the provided SVG icon
+    const saveSettingsButton = document.createElement('div');
+    saveSettingsButton.className = 'save-settings-button';
+    saveSettingsButton.innerHTML = saveSVG;
+    saveSettingsButton.title = 'Save settings';
+    saveSettingsButton.style.opacity = '0';
+
+    // Function to initialize the save button logic
+    function initializeSaveButtonLogic(saveButton) {
+      // Select the container that holds input fields
+      const container = document.querySelector('.settings-content-container');
+      // If the container is not found, log an error and exit the function
+      if (!container) return console.error("Container not found.");
+      // Function to show the save button by setting its opacity to 1
+      const showButton = () => (saveButton.style.opacity = '1');
+      // Function to hide the save button by setting its opacity to 0
+      const hideButton = () => (saveButton.style.opacity = '0');
+      // Check if a field is valid (contains 3 or more characters)
+      const isValidField = field => field.value.trim().length >= 3;
+
+      // Function to handle input changes in the fields
+      const handleInputChange = () => {
+        // Check if all input fields are valid
+        const allValid = Array.from(container.querySelectorAll('input, select'))
+          .every(isValidField);
+
+        // Show or hide the save button based on the validity of the fields
+        if (allValid) {
+          showButton();
+        } else {
+          hideButton(); // Hide button if any field is invalid
+        }
+      };
+
+      // Add input listeners to existing fields
+      container.querySelectorAll('input, select').forEach(field => {
+        field.addEventListener('input', handleInputChange);
+      });
+
+      // Monitor dynamic changes inside the container for added fields
+      new MutationObserver(debounce(() => {
+        container.querySelectorAll('input, select').forEach(field => {
+          field.addEventListener('input', handleInputChange);
+        });
+      }, debounceTimeout)).observe(container, { childList: true, subtree: true });
+    }
+
+    // Call the helper function with specific styles for the save button
+    assignHeaderButtonsStyles(saveSettingsButton, {
+      backgroundColor: '#2f6b63',
+    });
+
     // Create a hidden file input for importing settings
     const importFileInput = document.createElement('input');
     importFileInput.type = 'file';
@@ -5541,6 +5593,7 @@
     });
 
     // Append the buttons to the panel header container
+    panelHeaderContainer.appendChild(saveSettingsButton);
     panelHeaderContainer.appendChild(importSettingsButton);
     panelHeaderContainer.appendChild(exportSettingsButton);
     panelHeaderContainer.appendChild(closePanelButton);
@@ -5630,8 +5683,8 @@
       button.style.transition = 'filter 0.3s';
 
       // Compact event listeners for mouse over and mouse out
-      button.addEventListener('mouseover', () => button.style.filter = 'brightness(0.8)');
-      button.addEventListener('mouseout', () => button.style.filter = 'brightness(1)');
+      button.addEventListener('mouseover', () => (button.style.filter = 'brightness(0.8)'));
+      button.addEventListener('mouseout', () => (button.style.filter = 'brightness(1)'));
 
       if (disabled) {
         button.style.filter = 'grayscale(1)';
@@ -5661,6 +5714,13 @@
         option.style.setProperty('background-color', 'rgb(17,17,17)', 'important');
         option.style.setProperty('color', 'bisque', 'important');
         option.style.fontFamily = 'Montserrat';
+      });
+    }
+
+    // Common function to attach click event for removing an item
+    function attachRemoveListener(removeButton, item) {
+      removeButton.addEventListener('click', () => {
+        item.remove(); // Remove the parent element
       });
     }
 
@@ -5700,18 +5760,13 @@
       const removeButton = document.createElement('div');
       removeButton.className = 'remove-tracked-item';
       removeButton.innerHTML = removeSVG;
+      attachRemoveListener(removeButton, item);
       styleButton(removeButton, '#ee9090', '#6b2f2f', false);
-
-      const saveButton = document.createElement('div');
-      saveButton.className = 'save-tracked-item';
-      saveButton.innerHTML = saveSVG;
-      styleButton(saveButton, '#90ee90', '#2f6b2f', true);
 
       item.appendChild(usernameInput);
       item.appendChild(genderSelect);
       item.appendChild(pronunciationInput);
       item.appendChild(removeButton);
-      item.appendChild(saveButton);
 
       return item;
     }
@@ -5733,16 +5788,11 @@
       const removeButton = document.createElement('div');
       removeButton.className = 'remove-mention-word';
       removeButton.innerHTML = removeSVG;
+      attachRemoveListener(removeButton, item);
       styleButton(removeButton, '#ee9090', '#6b2f2f', false);
-
-      const saveButton = document.createElement('div');
-      saveButton.className = 'save-mention-word';
-      saveButton.innerHTML = saveSVG;
-      styleButton(saveButton, '#90ee90', '#2f6b2f', true);
 
       item.appendChild(mentionInput);
       item.appendChild(removeButton);
-      item.appendChild(saveButton);
 
       return item;
     }
@@ -5764,16 +5814,11 @@
       const removeButton = document.createElement('div');
       removeButton.className = 'remove-ignored-word';
       removeButton.innerHTML = removeSVG;
+      attachRemoveListener(removeButton, item);
       styleButton(removeButton, '#ee9090', '#6b2f2f', false);
-
-      const saveButton = document.createElement('div');
-      saveButton.className = 'save-ignored-word';
-      saveButton.innerHTML = saveSVG;
-      styleButton(saveButton, '#90ee90', '#2f6b2f', true);
 
       item.appendChild(ignoredInput);
       item.appendChild(removeButton);
-      item.appendChild(saveButton);
 
       return item;
     }
@@ -5867,6 +5912,9 @@
 
     // Call the function to populate settings on page load
     populateSettings();
+
+    // Make save button work as expected
+    initializeSaveButtonLogic(saveSettingsButton);
 
     // Fade in the settings panel and dimming background element
     fadeTargetElement(settingsPanel, 'show');

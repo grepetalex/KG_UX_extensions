@@ -92,15 +92,10 @@
   ];
 
   // Notify if someone addresses me using these aliases (case-insensitive)
-  let mentionKeywords = [
-    // Your actual nickname
-    myNickname
-  ];
+  let mentionKeywords = [];
 
   // Define user list of users whose messages should be hidden
-  let ignoreUserList = [
-    // Empty
-  ];
+  let ignoreUserList = [];
 
   // Check and load settings from localStorage if available and not empty
   const storedUsersToTrack = JSON.parse(localStorage.getItem('usersToTrack'));
@@ -111,6 +106,7 @@
   usersToTrack = storedUsersToTrack?.length ? storedUsersToTrack : usersToTrack;
   // Replace mentionKeywords with stored value if it exists and is not empty
   mentionKeywords = storedMentionKeywords?.length ? storedMentionKeywords : mentionKeywords;
+  mentionKeywords.push(myNickname); // Actual nickname
   // Replace ignoreUserList with stored value if it exists and is not empty
   ignoreUserList = storedIgnoreUserList?.length ? storedIgnoreUserList : ignoreUserList;
 
@@ -5589,12 +5585,12 @@
       const attachEventListeners = (element) => {
         if (element.tagName === 'INPUT' || element.tagName === 'SELECT') {
           element.addEventListener('input', handleInputChange);
-          console.log('Listener attached to:', element);
+          // console.log('Listener attached to:', element);
         } else {
           // Check its children for input or select elements
           element.querySelectorAll('input, select').forEach((child) => {
             child.addEventListener('input', handleInputChange);
-            console.log('Listener attached to child:', child);
+            // console.log('Listener attached to child:', child);
           });
         }
       };
@@ -5605,14 +5601,14 @@
           if (mutation.type === 'childList') {
             mutation.addedNodes.forEach((node) => {
               if (node.nodeType === Node.ELEMENT_NODE) {
-                console.log('Added:', node);
+                // console.log('Added:', node);
                 attachEventListeners(node); // Attach event listeners to new elements
               }
             });
 
             mutation.removedNodes.forEach((node) => {
               if (node.nodeType === Node.ELEMENT_NODE) {
-                console.log('Removed:', node);
+                // console.log('Removed:', node);
                 handleInputChange(); // Call handleInputChange to check the state after any changes
               }
             });

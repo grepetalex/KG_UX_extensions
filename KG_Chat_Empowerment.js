@@ -97,7 +97,7 @@
     myNickname
   ];
 
-  // Define userlist of users whose messages should be hidden
+  // Define user list of users whose messages should be hidden
   let ignoreUserList = [
     // Empty
   ];
@@ -5306,7 +5306,7 @@
   function processUploadedSettings({ usersToTrack: u = [], mentionKeywords: m = [], ignoreUserList: i = [] }) {
     // Ensure the uploaded values are valid arrays or default to the existing ones
     usersToTrack = Array.isArray(u) ? u : usersToTrack;
-    mentionKeywords = Array.isArray(m) ? [...m, myNickname] : mentionKeywords;
+    mentionKeywords = Array.isArray(m) ? m : mentionKeywords;
     ignoreUserList = Array.isArray(i) ? i : ignoreUserList;
 
     // Save to localStorage after applying the settings
@@ -5513,31 +5513,68 @@
     saveSettingsButton.title = 'Save settings';
     saveSettingsButton.style.opacity = '0';
 
-    // Function to initialize the save button logic
     function initializeSaveButtonLogic(saveButton) {
-      // Select the container that holds input fields
       const container = document.querySelector('.settings-content-container');
-      // If the container is not found, log an error and exit the function
       if (!container) return console.error("Container not found.");
-      // Function to show the save button by setting its opacity to 1
+
       const showButton = () => (saveButton.style.opacity = '1');
-      // Function to hide the save button by setting its opacity to 0
       const hideButton = () => (saveButton.style.opacity = '0');
-      // Check if a field is valid (contains 3 or more characters)
-      const isValidField = field => field.value.trim().length >= 3;
 
-      // Function to handle input changes in the fields
+      // Get previous values from localStorage
+      const previousValues = getSettingsData();
+
       const handleInputChange = () => {
-        // Check if all input fields are valid
-        const allValid = Array.from(container.querySelectorAll('input, select'))
-          .every(isValidField);
+        const currentValues = {
+          usersToTrack: [],
+          mentionKeywords: [],
+          ignoreUserList: []
+        };
 
-        // Show or hide the save button based on the validity of the fields
-        if (allValid) {
-          showButton();
-        } else {
-          hideButton(); // Hide button if any field is invalid
-        }
+        // Process tracked items
+        container.querySelectorAll('.settings-tracked-container .tracked-item').forEach(item => {
+          const usernameField = item.querySelector('.tracked-username');
+          const genderField = item.querySelector('.tracked-gender');
+          const pronunciationField = item.querySelector('.tracked-pronunciation');
+
+          const usernameValue = usernameField ? usernameField.value.trim() : '';
+          const genderValue = genderField ? genderField.value.trim() : '';
+          const pronunciationValue = pronunciationField ? pronunciationField.value.trim() : '';
+
+          // Push current values to usersToTrack
+          currentValues.usersToTrack.push({
+            name: usernameValue,
+            gender: genderValue,
+            pronunciation: pronunciationValue,
+          });
+        });
+
+        // Process mention items
+        container.querySelectorAll('.settings-mention-container .mention-item').forEach(item => {
+          const mentionField = item.querySelector('.mention-field');
+          const mentionValue = mentionField ? mentionField.value.trim() : '';
+          currentValues.mentionKeywords.push(mentionValue);
+        });
+
+        // Process ignored items
+        container.querySelectorAll('.settings-ignored-container .ignored-item').forEach(item => {
+          const ignoredField = item.querySelector('.ignored-field');
+          const ignoredValue = ignoredField ? ignoredField.value.trim() : '';
+          currentValues.ignoreUserList.push(ignoredValue);
+        });
+
+        // Check if any values have changed compared to previous state
+        const valuesChanged = JSON.stringify(previousValues) !== JSON.stringify(currentValues);
+
+        // Show or hide the save button based on whether values have changed
+        valuesChanged ? showButton() : hideButton();
+
+        // Attach click event to save settings when there are changes
+        saveButton.onclick = () => {
+          processUploadedSettings(currentValues); // Process and save the current settings
+          // Update previousValues to the current state after saving
+          Object.assign(previousValues, currentValues);
+          hideButton(); // Optionally hide the button after saving
+        };
       };
 
       // Add input listeners to existing fields
@@ -5545,12 +5582,13 @@
         field.addEventListener('input', handleInputChange);
       });
 
-      // Monitor dynamic changes inside the container for added fields
-      new MutationObserver(debounce(() => {
-        container.querySelectorAll('input, select').forEach(field => {
-          field.addEventListener('input', handleInputChange);
-        });
-      }, debounceTimeout)).observe(container, { childList: true, subtree: true });
+      // Monitor dynamic changes inside the container for added and removed fields
+      const observer = new MutationObserver(debounce(() => {
+        handleInputChange(); // Call handleInputChange to check the state after any changes
+      }, 300));
+
+      // Observe additions and removals in tracked, mentioned, and ignored items
+      observer.observe(container, { childList: true, subtree: true });
     }
 
     // Call the helper function with specific styles for the save button

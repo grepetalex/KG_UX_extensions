@@ -3028,8 +3028,10 @@
         type: messageType
       };
 
-      // Save the updated personalMessages back to localStorage
-      localStorage.setItem('personalMessages', JSON.stringify(personalMessages));
+      // Save to localStorage only if the user is not in the ignoreUserList
+      if (!ignoreUserList.includes(username)) {
+        localStorage.setItem('personalMessages', JSON.stringify(personalMessages));
+      }
     };
 
     // Check if the message contains a mention for the current user

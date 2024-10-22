@@ -5168,17 +5168,27 @@
     }
 
     try {
-      // Convert 'usersToTrack' to single-line entries and join with commas
-      const usersToTrackFormatted = settingsData.usersToTrack
-        .map(user => JSON.stringify(user))
-        .join(', '); // Compact inline format
+      // Define constants for indentation sizes within the function
+      const tabSize2 = '  '; // 2 spaces
+      const tabSize4 = '    '; // 4 spaces
 
-      // Build the JSON structure with users on one line and pretty keywords/lists
-      const jsonData = `{
-  "usersToTrack": [ ${usersToTrackFormatted} ],
-  "mentionKeywords": ${JSON.stringify(settingsData.mentionKeywords, null, 2)},
-  "ignoreUserList": ${JSON.stringify(settingsData.ignoreUserList, null, 2)}
-}`;
+      // Convert 'usersToTrack' to single-line entries with proper indentation
+      const usersToTrackFormatted = settingsData.usersToTrack
+        .map((user) => `${tabSize4}${JSON.stringify(user)}`) // Use defined const for indentation
+        .join(',\n'); // Join with a new line for better formatting
+
+      // Build the JSON structure with appropriate formatting using string concatenation
+      const jsonData = '{\n' +
+        `${tabSize2}"usersToTrack": [\n` +
+        `${usersToTrackFormatted}\n` +
+        `${tabSize2}],\n` +
+        `${tabSize2}"mentionKeywords": [\n` +
+        `${settingsData.mentionKeywords.map(keyword => `${tabSize4}"${keyword}"`).join(',\n')}\n` +
+        `${tabSize2}],\n` +
+        `${tabSize2}"ignoreUserList": [\n` +
+        `${settingsData.ignoreUserList.map(user => `${tabSize4}"${user}"`).join(',\n')}\n` +
+        `${tabSize2}]\n` +
+        '}';
 
       // Generate a filename with the current date (YYYY-MM-DD)
       const currentDate = new Intl.DateTimeFormat('en-CA').format(new Date());
@@ -5219,7 +5229,7 @@
     };
 
     return settingsData;
-  }// Function to retrieve settings from localStorage and combine them into a single object
+  }
 
   // Create a button to upload and apply new settings
   function createSettingsButton() {

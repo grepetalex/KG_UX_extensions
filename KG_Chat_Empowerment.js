@@ -5797,7 +5797,7 @@
 
     // Applies common styles to an settings input field element
     function styleInput(input) {
-      input.style.height = '28px';
+      input.style.height = '30px';
       input.style.padding = '0.4em';
       input.style.font = '1em Montserrat';
       input.style.fontFamily = 'Montserrat';
@@ -5816,8 +5816,8 @@
     */
     function styleButton(button, strokeColor, backgroundColor, disabled) {
       button.style.stroke = strokeColor;
-      button.style.width = '28px';
-      button.style.height = '28px';
+      button.style.width = '30px';
+      button.style.height = '30px';
       button.style.display = 'flex';
       button.style.justifyContent = 'center';
       button.style.alignItems = 'center';
@@ -5841,7 +5841,7 @@
 
     // Applies common styles to a select element and its options
     function styleSelect(select) {
-      select.style.height = '28px';
+      select.style.height = '30px';
       select.style.padding = '0.4em';
       select.style.font = '1em Montserrat';
       select.style.fontFamily = 'Montserrat';
@@ -5853,7 +5853,7 @@
 
       // Style each option element
       Array.from(select.options).forEach(option => {
-        option.style.height = '28px';
+        option.style.height = '30px';
         option.style.setProperty('background-color', 'rgb(17,17,17)', 'important');
         option.style.setProperty('color', 'bisque', 'important');
         option.style.fontFamily = 'Montserrat';
@@ -5881,13 +5881,29 @@
       usernameInput.placeholder = 'Username';
       styleInput(usernameInput);
 
+      // Array of genders with their corresponding emojis
+      const genders = [
+        { value: 'Male', emoji: '👨' },
+        { value: 'Female', emoji: '👩' }
+      ];
+
+      // const genderSelect = document.createElement('select');
+      // genderSelect.className = 'tracked-gender';
+      // ['Male', 'Female'].forEach(gender => {
+      //   const option = document.createElement('option');
+      //   option.value = gender;
+      //   option.textContent = gender.charAt(0).toUpperCase() + gender.slice(1);
+      //   if (user.gender === gender) option.selected = true;
+      //   genderSelect.appendChild(option);
+      // });
       const genderSelect = document.createElement('select');
       genderSelect.className = 'tracked-gender';
-      ['Male', 'Female'].forEach(gender => {
+
+      genders.forEach(({ value, emoji }) => {
         const option = document.createElement('option');
-        option.value = gender;
-        option.textContent = gender.charAt(0).toUpperCase() + gender.slice(1);
-        if (user.gender === gender) option.selected = true;
+        option.value = value;
+        option.textContent = `${emoji} ${value.charAt(0).toUpperCase() + value.slice(1)}`; // Add emoji here
+        if (user.gender === value) option.selected = true; // Check user gender for selected option
         genderSelect.appendChild(option);
       });
 

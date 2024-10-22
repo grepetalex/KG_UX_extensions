@@ -2979,7 +2979,7 @@
     let commonMessageText = '';
     let privateMessageText = '';
     let systemMessageText = '';
-    const systemUsername = '🤖 Клавобот';
+    const systemUsername = 'Клавобот';
 
     // Process common message
     const commonMessageParts = collectMessageParts(messageElement);
@@ -2999,7 +2999,10 @@
     const systemMessageElement = messageElement.querySelector('.system-message');
     if (systemMessageElement) {
       const systemMessageParts = collectMessageParts(systemMessageElement);
+      // Join system message parts into final systemMessageText
       systemMessageText = systemMessageParts.join(' ').trim(); // Final system message
+      // Clear <Клавобот> from systemMessageText
+      systemMessageText = systemMessageText.replace(/<Клавобот>\s*/g, '');
     }
 
     // Retrieve or initialize personalMessages from localStorage
@@ -3761,6 +3764,18 @@
     });
   }
 
+  // Function to play sound as a notification for system message banned
+  function playSound() {
+    const marioGameOver = 'https://github.com/VimiummuimiV/Sounds/raw/refs/heads/main/Mario_Game_Over.mp3';
+    const audio = new Audio(marioGameOver);
+    audio.play();
+  }
+
+  // Function to detect a system ban message based on the message text content
+  function isBanMessageFromSystem(messageText) {
+    return ['Клавобот', 'Пользователь', 'заблокирован'].every(word => messageText.includes(word));
+  }
+
   // Create a mutation observer to watch for new messages being added
   const newMessagesObserver = new MutationObserver(mutations => {
     // If isInitialized is false, return without doing anything
@@ -3786,6 +3801,12 @@
 
             // Convert Cyrillic username to Latin
             const latinUsername = convertRussianUsernameToLatin(latestMessageUsername);
+
+            // Detect and handle the ban message (play sound if detected)
+            if (isBanMessageFromSystem(newMessageTextContent)) {
+              console.log('Ban message detected:', newMessageTextContent);
+              playSound(); // Play the Mario Game Over sound
+            }
 
             // Check if the username is in the ignoreUserList
             if (latestMessageUsername && ignoreUserList.includes(latestMessageUsername)) {

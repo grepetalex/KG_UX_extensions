@@ -2975,9 +2975,32 @@
         )
         .filter(Boolean); // Remove empty strings
 
+    // Initialize variables for message texts
+    let commonMessageText = '';
+    let privateMessageText = '';
+    let systemMessageText = '';
+    const systemUsername = '🤖 Клавобот';
+
     // Process common message
     const commonMessageParts = collectMessageParts(messageElement);
-    const messageText = commonMessageParts.join(' ').trim(); // Final message text
+    commonMessageText = commonMessageParts.join(' ').trim(); // Final common message text
+
+    // Process private message
+    const privateMessageContainer = messageElement.querySelector('.room.private');
+    if (privateMessageContainer && privateMessageContainer.textContent.includes('[шепчет вам]')) {
+      const privateMessageElement = messageElement.querySelector('span.private');
+      if (privateMessageElement) {
+        const privateMessageParts = collectMessageParts(privateMessageElement);
+        privateMessageText = privateMessageParts.join(' ').trim(); // Final private message
+      }
+    }
+
+    // Process system message
+    const systemMessageElement = messageElement.querySelector('.system-message');
+    if (systemMessageElement) {
+      const systemMessageParts = collectMessageParts(systemMessageElement);
+      systemMessageText = systemMessageParts.join(' ').trim(); // Final system message
+    }
 
     // Retrieve or initialize personalMessages from localStorage
     const personalMessages = JSON.parse(localStorage.getItem('personalMessages')) || {};
@@ -2989,8 +3012,8 @@
     const handleMessage = (messageType, messageText) => {
       const time = messageElement.querySelector('.time')?.textContent || 'N/A';
       const usernameElement = messageElement.querySelector('.username span[data-user]');
-      const username = usernameElement ? usernameElement.textContent : 'Unknown';
-      const usernameColor = usernameElement ? usernameElement.parentElement.style.color : 'lightblue';
+      const username = usernameElement ? usernameElement.textContent : systemUsername;
+      const usernameColor = usernameElement ? usernameElement.parentElement.style.color : 'lightgray';
 
       // Create a unique key based on the time and username to avoid collisions
       const messageKey = `${time}_${username}`;
@@ -3009,50 +3032,46 @@
       localStorage.setItem('personalMessages', JSON.stringify(personalMessages));
     };
 
-    // Process private message
-    let privateMessageText = '';
-
-    const privateMessageContainer = messageElement.querySelector('.room.private');
-    if (privateMessageContainer && privateMessageContainer.textContent.includes('[шепчет вам]')) {
-      const privateMessageElement = messageElement.querySelector('span.private');
-      if (privateMessageElement) {
-        const privateMessageParts = collectMessageParts(privateMessageElement);
-        privateMessageText = privateMessageParts.join(' ').trim(); // Final private message
-        handleMessage('private', privateMessageText); // Handle private message
-      }
-    }
-
     // Check if the message contains a mention for the current user
-    let usernamePrefix = '';
-    const username = messageElement.querySelector('.username');
-    let usernameText = username ? username.textContent : null;
+    const usernameElement = messageElement.querySelector('.username');
+    let usernameText = (usernameElement && usernameElement.textContent)
+      ? usernameElement.textContent.replace(/</g, '').replace(/>/g, '')
+      : systemUsername; // Default to systemUsername if not found
 
-    // Remove the "<" and ">" symbols from the username if they are present
-    if (usernameText !== null) {
-      usernameText = usernameText.replace(/</g, '').replace(/>/g, '');
+    let usernamePrefix = ''; // Initialize usernamePrefix
+
+    // Determine the final message text based on the availability of common, private, or system messages
+    let finalMessageText = commonMessageText; // Start with the common message
+
+    if (privateMessageText) {
+      finalMessageText = `${privateMessageText}`; // If it's a private message
+      handleMessage('private', finalMessageText);
+    } else if (systemMessageText) {
+      finalMessageText = `${systemMessageText}`; // If there's a system message
+      handleMessage('system', finalMessageText);
     }
 
-    if (isMentionForMe(messageText)) {
+    // Handle mentions
+    if (isMentionForMe(finalMessageText)) {
       isMention = true;
-      usernamePrefix = `${replaceWithPronunciation(usernameText)} обращается: `;
-      handleMessage('mention', messageText); // Pass 'mention' and the original message text
+      usernamePrefix = `${replaceWithPronunciation(usernameText)} обращается: `; // Use usernameText directly
+      handleMessage('mention', finalMessageText); // Pass 'mention' and the original final message text
       highlightMentionWords();
     } else if (usernameText !== lastUsername) {
       isMention = false;
-      usernamePrefix = `${replaceWithPronunciation(usernameText)} пишет: `;
+      usernamePrefix = `${replaceWithPronunciation(usernameText)} пишет: `; // Use usernameText directly
     }
 
     lastUsername = usernameText; // Update the last seen username
 
-    // Determine final message text based on whether it's a private message or mention
-    const finalMessageText = privateMessageText
-      ? `шёпотом: ${privateMessageText}`
-      : messageText;
-
     // Combine the username prefix and the final message text
     const messageWithPronunciation = `${usernamePrefix}${replaceWithPronunciation(finalMessageText)}`;
 
-    return { messageText: messageWithPronunciation, usernameText: username };
+    // Return all relevant message data including the system message
+    return {
+      messageText: messageWithPronunciation || systemMessageText, // If messageText is null, assign systemMessageText
+      usernameText: usernameText // Always return usernameText
+    };
   }
 
   // Prevent the "readNewMessages" function from being called multiple times until all messages in the set have been read
@@ -3761,16 +3780,13 @@
             // Get the message of the user who sent the latest message
             let newMessageTextContent = latestMessageData?.messageText || null;
             // Get the username of the user who sent the latest message
-            let latestMessageUsername = latestMessageData?.usernameText.textContent || null;
-
-            // Replace all instances of '<' and '>' from the latestMessageUsername
-            const cleanUsername = latestMessageUsername?.replace(/[<>]/g, '') || null;
+            let latestMessageUsername = latestMessageData?.usernameText || null;
 
             // Convert Cyrillic username to Latin
-            const latinUsername = convertRussianUsernameToLatin(cleanUsername);
+            const latinUsername = convertRussianUsernameToLatin(latestMessageUsername);
 
             // Check if the username is in the ignoreUserList
-            if (latestMessageUsername && ignoreUserList.includes(cleanUsername)) {
+            if (latestMessageUsername && ignoreUserList.includes(latestMessageUsername)) {
               node.classList.add('ignored-user', latinUsername);
               node.style.display = 'none'; // Hide the message
               continue; // Skip the rest of the processing for this message
@@ -5004,7 +5020,6 @@
       usernameElement.className = 'message-username';
       usernameElement.textContent = username;
       usernameElement.style.color = usernameColor;
-      usernameElement.style.filter = 'invert(100%)';
       usernameElement.style.margin = '0.2em';
 
       const messageTextElement = document.createElement('span');

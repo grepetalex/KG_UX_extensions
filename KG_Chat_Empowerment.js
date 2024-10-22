@@ -3055,7 +3055,6 @@
     return { messageText: messageWithPronunciation, usernameText: username };
   }
 
-
   // Prevent the "readNewMessages" function from being called multiple times until all messages in the set have been read
   let isReading = false;
 

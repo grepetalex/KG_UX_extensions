@@ -5133,29 +5133,36 @@
   // CREATE PANEL GRAPHICAL SETTINGS BUTTON (START)
 
   // Global function to handle file input and process uploaded settings
-  function handleUploadSettings(event) {
+  async function handleUploadSettings(event) {
     const file = event.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = function (e) {
-        const jsonData = e.target.result; // Get the raw JSON string
-        try {
-          const settingsData = JSON.parse(jsonData); // Attempt to parse the JSON data
-          // Call a function to process the uploaded settings data
-          processUploadedSettings(settingsData);
-        } catch (error) {
-          console.error('Error parsing JSON data:', error.message); // Log the error message
-          console.error('Invalid JSON:', jsonData); // Log the raw JSON string for debugging
-          // Optional: Notify the user about the error
-          alert('Failed to parse JSON data. Please check the format and try again.');
-        }
-      };
 
-      reader.onerror = function (e) {
-        console.error('Error reading file:', e.target.error); // Handle file reading errors
-      };
+      // Return a Promise to handle the asynchronous reading
+      return new Promise((resolve, reject) => {
+        reader.onload = function (e) {
+          const jsonData = e.target.result; // Get the raw JSON string
+          try {
+            const settingsData = JSON.parse(jsonData); // Attempt to parse the JSON data
+            // Call a function to process the uploaded settings data
+            processUploadedSettings(settingsData);
+            resolve(); // Resolve the promise if successful
+          } catch (error) {
+            console.error('Error parsing JSON data:', error.message); // Log the error message
+            console.error('Invalid JSON:', jsonData); // Log the raw JSON string for debugging
+            // Optional: Notify the user about the error
+            alert('Failed to parse JSON data. Please check the format and try again.');
+            reject(error); // Reject the promise on error
+          }
+        };
 
-      reader.readAsText(file); // Read the file as text
+        reader.onerror = function (e) {
+          console.error('Error reading file:', e.target.error); // Handle file reading errors
+          reject(e.target.error); // Reject the promise on error
+        };
+
+        reader.readAsText(file); // Read the file as text
+      });
     }
   }
 
@@ -5261,13 +5268,13 @@
   `;
 
     // Create a hidden file input for uploading settings
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = '.json'; // Specify the file type if needed (e.g., JSON)
-    fileInput.style.display = 'none'; // Hide the file input
+    const importFileInput = document.createElement('input');
+    importFileInput.type = 'file';
+    importFileInput.accept = '.json'; // Specify the file type if needed (e.g., JSON)
+    importFileInput.style.display = 'none'; // Hide the file input
 
     // Add an event listener to handle file selection
-    fileInput.addEventListener('change', handleUploadSettings);
+    importFileInput.addEventListener('change', handleUploadSettings);
 
     // Add a click event listener to the button
     showSettingsButton.addEventListener('click', function () {
@@ -5281,7 +5288,7 @@
       }
       else if (isCtrlKeyPressed) {
         // Import settings
-        fileInput.click();
+        importFileInput.click();
       }
       else {
         // If Alt or Ctrl is not pressed open settings panel
@@ -5290,7 +5297,7 @@
     });
 
     // Append the file input to the button
-    showSettingsButton.appendChild(fileInput);
+    showSettingsButton.appendChild(importFileInput);
 
     // Append the button to the existing panel
     empowermentButtonsPanel.appendChild(showSettingsButton);
@@ -5643,7 +5650,29 @@
     importFileInput.style.display = 'none'; // Hide the file input
 
     // Add an event listener for the import file input
-    importFileInput.addEventListener('change', handleUploadSettings);
+    importFileInput.addEventListener('change', async (event) => {
+      await handleUploadSettings(event); // Wait for processing uploaded settings
+      // Clear the containers before populating new data
+      clearSettingsContainers();
+      // Populate the UI with updated settings
+      populateSettings();
+    });
+
+    // Function to clear the content of settings containers
+    function clearSettingsContainers() {
+      const containers = [
+        '.settings-tracked-container',
+        '.settings-mention-container',
+        '.settings-ignored-container'
+      ];
+
+      containers.forEach(selector => {
+        const container = document.querySelector(selector);
+        if (container) {
+          container.innerHTML = ''; // Clear the container
+        }
+      });
+    }
 
     // Add a click event listener to the import button
     importSettingsButton.addEventListener('click', () => {
@@ -5678,7 +5707,6 @@
 
     // Append the header to the settings panel
     settingsPanel.appendChild(panelHeaderContainer);
-
 
     // Append the header to the settings panel
     settingsPanel.appendChild(panelHeaderContainer);
@@ -5772,7 +5800,6 @@
         button.style.filter = 'grayscale(0)';
       }
     }
-
 
     // Applies common styles to a select element and its options
     function styleSelect(select) {
@@ -5983,7 +6010,6 @@
 
       return addButton; // Return the created button
     }
-
 
     // Append the settings panel to the body
     document.body.appendChild(settingsPanel);

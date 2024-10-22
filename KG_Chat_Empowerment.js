@@ -5568,27 +5568,63 @@
         // Show or hide the save button based on whether values have changed
         valuesChanged ? showButton() : hideButton();
 
-        // Attach click event to save settings when there are changes
-        saveButton.onclick = () => {
-          processUploadedSettings(currentValues); // Process and save the current settings
-          // Update previousValues to the current state after saving
-          Object.assign(previousValues, currentValues);
-          hideButton(); // Optionally hide the button after saving
-        };
+        return currentValues; // Return current values for saving later
       };
+
+      // Attach click event to save settings when there are changes
+      saveButton.addEventListener('click', () => {
+        const currentValues = handleInputChange(); // Get current values before saving
+        processUploadedSettings(currentValues); // Process and save the current settings
+        // Update previousValues to the current state after saving
+        Object.assign(previousValues, currentValues);
+        hideButton(); // Optionally hide the button after saving
+      });
 
       // Add input listeners to existing fields
       container.querySelectorAll('input, select').forEach(field => {
         field.addEventListener('input', handleInputChange);
       });
 
-      // Monitor dynamic changes inside the container for added and removed fields
-      const observer = new MutationObserver(debounce(() => {
-        handleInputChange(); // Call handleInputChange to check the state after any changes
+      // Function to attach event listeners to dynamically added input and select elements
+      const attachEventListeners = (element) => {
+        if (element.tagName === 'INPUT' || element.tagName === 'SELECT') {
+          element.addEventListener('input', handleInputChange);
+          console.log('Listener attached to:', element);
+        } else {
+          // Check its children for input or select elements
+          element.querySelectorAll('input, select').forEach((child) => {
+            child.addEventListener('input', handleInputChange);
+            console.log('Listener attached to child:', child);
+          });
+        }
+      };
+
+      // Create a mutation observer to monitor changes in the target container
+      const observer = new MutationObserver(debounce((mutationsList) => {
+        mutationsList.forEach((mutation) => {
+          if (mutation.type === 'childList') {
+            mutation.addedNodes.forEach((node) => {
+              if (node.nodeType === Node.ELEMENT_NODE) {
+                console.log('Added:', node);
+                attachEventListeners(node); // Attach event listeners to new elements
+              }
+            });
+
+            mutation.removedNodes.forEach((node) => {
+              if (node.nodeType === Node.ELEMENT_NODE) {
+                console.log('Removed:', node);
+                handleInputChange(); // Call handleInputChange to check the state after any changes
+              }
+            });
+          }
+        });
       }, 300));
 
-      // Observe additions and removals in tracked, mentioned, and ignored items
-      observer.observe(container, { childList: true, subtree: true });
+      // Start observing the target container for child list changes
+      observer.observe(container, {
+        childList: true,
+        subtree: true, // Observe all descendants as well
+      });
     }
 
     // Call the helper function with specific styles for the save button
@@ -5763,7 +5799,7 @@
     }
 
     // Helper function to create a tracked row
-    function createTrackedRow(user) {
+    function createTrackedItem(user) {
       const item = document.createElement('div');
       item.className = 'tracked-item';
       item.style.display = 'flex';
@@ -5870,7 +5906,7 @@
       };
 
       const creators = {
-        usersToTrack: createTrackedRow,
+        usersToTrack: createTrackedItem,
         mentionKeywords: createMentionItem,
         ignoreUserList: createIgnoredItem
       };
@@ -5925,7 +5961,7 @@
 
         if (canCreateNewItem) {
           // Create a new empty item based on the item creator function
-          const emptyItem = itemCreator === createTrackedRow
+          const emptyItem = itemCreator === createTrackedItem
             ? itemCreator({ name: '', pronunciation: '' }) // Remove gender from tracked item creation
             : itemCreator('');
 

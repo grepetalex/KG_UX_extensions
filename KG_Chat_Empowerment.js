@@ -5160,7 +5160,7 @@
     }
   }
 
-  // Global function to handle downloading current settings
+  // Function to download settings as a JSON file
   function handleDownloadSettings(settingsData) {
     if (!settingsData || typeof settingsData !== 'object') {
       console.error('Invalid settings data for download.');
@@ -5169,37 +5169,36 @@
     }
 
     try {
-      // Convert settings data to JSON string
-      const jsonData = JSON.stringify(settingsData, null, 2);
+      // Convert 'usersToTrack' to single-line entries and join with commas
+      const usersToTrackFormatted = settingsData.usersToTrack
+        .map(user => JSON.stringify(user))
+        .join(', '); // Compact inline format
 
-      // Format date as 'YYYY-MM-DD'
+      // Build the JSON structure with users on one line and pretty keywords/lists
+      const jsonData = `{
+  "usersToTrack": [ ${usersToTrackFormatted} ],
+  "mentionKeywords": ${JSON.stringify(settingsData.mentionKeywords, null, 2)},
+  "ignoreUserList": ${JSON.stringify(settingsData.ignoreUserList, null, 2)}
+}`;
+
+      // Generate a filename with the current date (YYYY-MM-DD)
       const currentDate = new Intl.DateTimeFormat('en-CA').format(new Date());
-
-      // Generate filename with the current date
       const filename = `KG_Chat_Empowerment_Settings_${currentDate}.json`;
 
-      // Create a Blob object from the JSON string
+      // Create a Blob from the JSON string and prepare it for download
       const blob = new Blob([jsonData], { type: 'application/json' });
-
-      // Create a URL for the Blob
       const url = URL.createObjectURL(blob);
 
-      // Create a temporary link element to trigger the download
+      // Create a temporary link to trigger the download
       const tempLink = document.createElement('a');
       tempLink.href = url;
       tempLink.download = filename;
+      document.body.appendChild(tempLink); // Append link to body
 
-      // Append the link to the body
-      document.body.appendChild(tempLink);
+      tempLink.click(); // Trigger download
+      document.body.removeChild(tempLink); // Clean up link
 
-      // Trigger the download
-      tempLink.click();
-
-      // Remove the temporary link from the document
-      document.body.removeChild(tempLink);
-
-      // Clean up the Blob URL after the download
-      URL.revokeObjectURL(url);
+      URL.revokeObjectURL(url); // Clean up the Blob URL
     } catch (error) {
       console.error('Error exporting settings:', error);
       alert('Failed to export settings. Please try again.');

@@ -5771,11 +5771,15 @@
       element.style.transform = 'translateX(-50%)';
     }
 
-    // Array of settings types
-    const settingsTypes = ['tracked', 'mention', 'ignored'];
+    // Array of settings types with corresponding emoji
+    const settingsTypes = [
+      { type: 'tracked', emoji: '👀' },
+      { type: 'mention', emoji: '📢' },
+      { type: 'ignored', emoji: '🛑' }
+    ];
 
     // Loop through each type and create description and container elements
-    settingsTypes.forEach(type => {
+    settingsTypes.forEach(({ type, emoji }) => {
       const description = document.createElement('div');
       description.className = `settings-${type}-description`; // Add specific class for description
 
@@ -5785,12 +5789,13 @@
       const container = document.createElement('div');
       container.className = `settings-${type}-container`; // Add specific class for container
 
-      // Set the text content with only the first letter capitalized
-      description.textContent = type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
+      // Set the text content with first letter capitalized and append emoji
+      description.textContent = `${type.charAt(0).toUpperCase()}${type.slice(1).toLowerCase()} ${emoji}`;
 
       settingsContainer.appendChild(description);
       settingsContainer.appendChild(container);
     });
+
 
     // Append the settings content container to the settings panel
     settingsPanel.appendChild(settingsContainer);

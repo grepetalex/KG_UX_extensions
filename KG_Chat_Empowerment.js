@@ -2951,6 +2951,55 @@
     });
   }
 
+  // Convert RGB to HSL and vice versa in a compact manner
+  const rgbToHsl = (r, g, b) => {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h, s, l = (max + min) / 2;
+
+    if (max === min) {
+      h = s = 0; // Achromatic
+    } else {
+      const delta = max - min;
+      s = l < 0.5 ? delta / (max + min) : delta / (2 - max - min);
+      h = (max === r ? (g - b) / delta + (g < b ? 6 : 0) : (max === g ? (b - r) / delta + 2 : (r - g) / delta + 4)) / 6;
+    }
+    return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+  };
+
+  const hslToRgb = (h, s, l) => {
+    s /= 100; l /= 100;
+    let r, g, b;
+    if (s === 0) r = g = b = l * 255; // Achromatic
+    else {
+      const q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+      const hue2rgb = (p, q, t) => {
+        if (t < 0) t += 1;
+        if (t > 1) t -= 1;
+        return t < 1 / 6 ? p + (q - p) * 6 * t :
+          t < 1 / 2 ? q :
+            t < 2 / 3 ? p + (q - p) * (2 / 3 - t) * 6 :
+              p;
+      };
+      r = Math.round(hue2rgb(p, q, h / 360 + 1 / 3) * 255);
+      g = Math.round(hue2rgb(p, q, h / 360) * 255);
+      b = Math.round(hue2rgb(p, q, h / 360 - 1 / 3) * 255);
+    }
+    return `rgb(${r}, ${g}, ${b})`;
+  };
+
+  // Normalize chat username color to be enough readable in the personal messages panel
+  function normalizeUsernameColor(initialColor) {
+    const [r, g, b] = initialColor.match(/\d+/g).map(Number);
+    const { h, s, l } = rgbToHsl(r, g, b);
+
+    // Adjust lightness to ensure it's at least 50
+    const normalizedLightness = l < 50 ? 50 : l;
+    const finalColor = hslToRgb(h, s, normalizedLightness);
+
+    return finalColor;
+  };
+
   // Function to get the cleaned text content of the latest message with username prefix
   function getLatestMessageData() {
     // Select the last <p> element specifically
@@ -3016,7 +3065,8 @@
       const time = messageElement.querySelector('.time')?.textContent || 'N/A';
       const usernameElement = messageElement.querySelector('.username span[data-user]');
       const username = usernameElement ? usernameElement.textContent : systemUsername;
-      const usernameColor = usernameElement ? usernameElement.parentElement.style.color : 'lightgray';
+      const usernameColor = usernameElement ? usernameElement.parentElement.style.color : 'rgb(180, 180, 180)';
+      const normalizedColor = normalizeUsernameColor(usernameColor);
 
       // Create a unique key based on the time and username to avoid collisions
       const messageKey = `${time}_${username}`;
@@ -3026,7 +3076,7 @@
         time,
         date: getCurrentDate(),
         username,
-        usernameColor,
+        usernameColor: normalizedColor,
         message: messageText,
         type: messageType
       };
@@ -5007,7 +5057,7 @@
       const timeElement = document.createElement('span');
       timeElement.className = 'message-time';
       timeElement.textContent = formattedTime;
-      timeElement.style.margin = '0.2em';
+      timeElement.style.margin = '0.4em';
 
       // Change the timeElement color based on type
       const timeColors = {
@@ -5043,7 +5093,7 @@
       usernameElement.className = 'message-username';
       usernameElement.textContent = username;
       usernameElement.style.color = usernameColor;
-      usernameElement.style.margin = '0.2em';
+      usernameElement.style.margin = '0.4em';
 
       const messageTextElement = document.createElement('span');
       messageTextElement.className = 'message-text';

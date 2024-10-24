@@ -3896,23 +3896,23 @@
     if (mode === 'one') {
       // Directly process the single username element
       const userSpan = usernameElements.querySelector('span[data-user]'); // Get the span[data-user] inside the .username element
-      if (userSpan) { // Check if the userSpan exists
-        const computedColor = getComputedStyle(usernameElements).color; // Get the computed color of the usernameElement
-        const normalizedColor = normalizeUsernameColor(computedColor); // Normalize the color
-        usernameElements.style.setProperty('color', normalizedColor, 'important'); // Apply the normalized color to usernameElement
-        userSpan.style.setProperty('filter', 'invert(0)', 'important'); // Reset the filter for userSpan
-      }
+      if (!userSpan) return; // Exit if userSpan does not exist
+
+      const computedColor = getComputedStyle(usernameElements).color; // Get the computed color of the usernameElement
+      const normalizedColor = normalizeUsernameColor(computedColor); // Normalize the color
+      usernameElements.style.setProperty('color', normalizedColor, 'important'); // Apply the normalized color to usernameElement
+      userSpan.style.setProperty('filter', 'invert(0)', 'important'); // Reset the filter for userSpan
     } else if (mode === 'all') {
       // Process all username elements within the context of the provided NodeList
       const elementsToProcess = Array.from(usernameElements); // Convert NodeList to an array
       elementsToProcess.forEach(usernameElement => {
         const userSpan = usernameElement.querySelector('span[data-user]'); // Get the span[data-user] inside the .username element
-        if (userSpan) { // Check if the userSpan exists
-          const computedColor = getComputedStyle(usernameElement).color; // Get the computed color of the usernameElement
-          const normalizedColor = normalizeUsernameColor(computedColor); // Normalize the color
-          usernameElement.style.setProperty('color', normalizedColor, 'important'); // Apply the normalized color to usernameElement
-          userSpan.style.setProperty('filter', 'invert(0)', 'important'); // Reset the filter for userSpan
-        }
+        if (!userSpan) return; // Exit if userSpan does not exist
+
+        const computedColor = getComputedStyle(usernameElement).color; // Get the computed color of the usernameElement
+        const normalizedColor = normalizeUsernameColor(computedColor); // Normalize the color
+        usernameElement.style.setProperty('color', normalizedColor, 'important'); // Apply the normalized color to usernameElement
+        userSpan.style.setProperty('filter', 'invert(0)', 'important'); // Reset the filter for userSpan
       });
     } else {
       console.error("Invalid mode. Use 'one' or 'all'.");

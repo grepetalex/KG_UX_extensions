@@ -3129,8 +3129,8 @@
     if (privateMessageText) {
       finalMessageText = `${privateMessageText}`; // If it's a private message
       handleMessage('private', finalMessageText);
-    } else if (systemMessageText) {
-      finalMessageText = `${systemMessageText}`; // If there's a system message
+    } else if (systemMessageText && isMentionForMe(systemMessageText)) {
+      finalMessageText = `${systemMessageText}`; // If there's a system message with a mention
       handleMessage('system', finalMessageText);
     }
 
@@ -3152,8 +3152,8 @@
 
     // Return all relevant message data including the system message
     return {
-      modifiedMessageText: messageWithPronunciation || systemMessageText, // If messageText is null, assign systemMessageText
-      originalMessageText: finalMessageText,
+      modifiedMessageText: messageWithPronunciation || systemMessageText, // If messageWithPronunciation is null, assign systemMessageText
+      originalMessageText: finalMessageText || systemMessageText, // If finalMessageText is null, assign systemMessageText
       usernameText: usernameText // Always return usernameText
     };
   }

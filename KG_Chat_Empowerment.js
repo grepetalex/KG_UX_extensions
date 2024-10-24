@@ -94,19 +94,26 @@
   // Notify if someone addresses me using these aliases (case-insensitive)
   let mentionKeywords = [];
 
+  // Define a list of moderators whose new user nicknames in the chat list should have a shield icon.
+  let moderators = [];
+
+
   // Define user list of users whose messages should be hidden
   let ignoreUserList = [];
 
   // Check and load settings from localStorage if available and not empty
-  const storedUsersToTrack = JSON.parse(localStorage.getItem('usersToTrack'));
-  const storedMentionKeywords = JSON.parse(localStorage.getItem('mentionKeywords'));
-  const storedIgnoreUserList = JSON.parse(localStorage.getItem('ignoreUserList'));
+  const storedUsersToTrack = JSON.parse(localStorage.getItem('usersToTrack')) || [];
+  const storedMentionKeywords = JSON.parse(localStorage.getItem('mentionKeywords')) || [];
+  const storedModerators = JSON.parse(localStorage.getItem('moderators')) || [];
+  const storedIgnoreUserList = JSON.parse(localStorage.getItem('ignoreUserList')) || [];
 
   // Replace usersToTrack with stored value if it exists and is not empty
   usersToTrack = storedUsersToTrack?.length ? storedUsersToTrack : usersToTrack;
   // Replace mentionKeywords with stored value if it exists and is not empty
   mentionKeywords = storedMentionKeywords?.length ? storedMentionKeywords : mentionKeywords;
   mentionKeywords.push(myNickname); // Actual nickname
+  // Replace moderators with stored value if it exists and is not empty
+  moderators = storedModerators?.length ? storedModerators : moderators;
   // Replace ignoreUserList with stored value if it exists and is not empty
   ignoreUserList = storedIgnoreUserList?.length ? storedIgnoreUserList : ignoreUserList;
 
@@ -2441,10 +2448,10 @@
     }
 
     // Check if the user is in the ignore list
-    const isIgnoredUser = (userName) => ignoreUserList.includes(userName);
+    const isIgnoredUser = ignoreUserList.includes(userName);
 
     // Create and hide a message element if the user is in ignoreUserList
-    if (isIgnoredUser(userName)) {
+    if (isIgnoredUser) {
       const ignoredIcon = document.createElement('div');
       ignoredIcon.title = 'Ignored user';
       ignoredIcon.classList.add('ignored');
@@ -2452,13 +2459,17 @@
       newUserElement.appendChild(ignoredIcon);
     }
 
-    // Check if there is an <img> element with a src attribute containing the word "moderator" inside the ins element
+    // Check if there is an <img> element with a src attribute containing the word "moderator" inside the <ins> element
     const hasModeratorIcon = document.querySelector(`.userlist-content ins.user${userId} img[src*="moderator"]`);
 
-    if (hasModeratorIcon) {
+    // Check if the user is in the moderators list
+    const isModerator = moderators.includes(userName);
+
+    // If a moderator icon is found or the current user is in the moderators array, append the moderator icon.
+    if (hasModeratorIcon || isModerator) {
       const moderatorIcon = document.createElement('div');
       moderatorIcon.classList.add('moderator');
-      moderatorIcon.innerHTML = moderatorSVG;
+      moderatorIcon.innerHTML = moderatorSVG; // Assuming 'moderatorSVG' contains the SVG for the icon
       newUserElement.appendChild(moderatorIcon);
     }
 
@@ -5337,6 +5348,9 @@
         `${tabSize2}"mentionKeywords": [\n` +
         `${settingsData.mentionKeywords.map(keyword => `${tabSize4}"${keyword}"`).join(',\n')}\n` +
         `${tabSize2}],\n` +
+        `${tabSize2}"moderators": [\n` + // Added moderators
+        `${settingsData.moderators.map(moderator => `${tabSize4}"${moderator}"`).join(',\n')}\n` +
+        `${tabSize2}],\n` +
         `${tabSize2}"ignoreUserList": [\n` +
         `${settingsData.ignoreUserList.map(user => `${tabSize4}"${user}"`).join(',\n')}\n` +
         `${tabSize2}]\n` +
@@ -5371,13 +5385,15 @@
     // Retrieve data from localStorage using the appropriate keys
     const usersToTrack = JSON.parse(localStorage.getItem('usersToTrack')) || [];
     const mentionKeywords = JSON.parse(localStorage.getItem('mentionKeywords')) || [];
+    const moderators = JSON.parse(localStorage.getItem('moderators')) || [];
     const ignoreUserList = JSON.parse(localStorage.getItem('ignoreUserList')) || [];
 
     // Combine the retrieved data into a single object
     const settingsData = {
       usersToTrack: usersToTrack,
       mentionKeywords: mentionKeywords,
-      ignoreUserList: ignoreUserList,
+      moderators: moderators,
+      ignoreUserList: ignoreUserList
     };
 
     return settingsData;
@@ -5455,19 +5471,21 @@
   function saveSettingsToLocalStorage() {
     localStorage.setItem('usersToTrack', JSON.stringify(usersToTrack));
     localStorage.setItem('mentionKeywords', JSON.stringify(mentionKeywords));
+    localStorage.setItem('moderators', JSON.stringify(moderators));
     localStorage.setItem('ignoreUserList', JSON.stringify(ignoreUserList));
   }
 
   // Process and apply uploaded settings
-  function processUploadedSettings({ usersToTrack: u = [], mentionKeywords: m = [], ignoreUserList: i = [] }) {
+  function processUploadedSettings({ usersToTrack: u = [], mentionKeywords: mk = [], moderators: md = [], ignoreUserList: i = [] }) {
     // Ensure the uploaded values are valid arrays or default to the existing ones
     usersToTrack = Array.isArray(u) ? u : usersToTrack;
-    mentionKeywords = Array.isArray(m) ? m : mentionKeywords;
+    mentionKeywords = Array.isArray(mk) ? mk : mentionKeywords;
+    moderators = Array.isArray(md) ? md : moderators;
     ignoreUserList = Array.isArray(i) ? i : ignoreUserList;
 
     // Save to localStorage after applying the settings
     saveSettingsToLocalStorage();
-    console.log('Uploaded settings applied:', { usersToTrack, mentionKeywords, ignoreUserList });
+    console.log('Uploaded settings applied:', { usersToTrack, mentionKeywords, moderators, ignoreUserList });
   }
 
   // Function to display the settings panel
@@ -5683,6 +5701,7 @@
         const currentValues = {
           usersToTrack: [],
           mentionKeywords: [],
+          moderators: [],
           ignoreUserList: []
         };
 
@@ -5709,6 +5728,13 @@
           const mentionField = item.querySelector('.mention-field');
           const mentionValue = mentionField ? mentionField.value.trim() : '';
           currentValues.mentionKeywords.push(mentionValue);
+        });
+
+        // Process moderators
+        container.querySelectorAll('.settings-moderators-container .moderator-item').forEach(item => {
+          const moderatorField = item.querySelector('.moderator-field');
+          const moderatorValue = moderatorField ? moderatorField.value.trim() : '';
+          currentValues.moderators.push(moderatorValue);
         });
 
         // Process ignored items
@@ -5808,6 +5834,7 @@
       const containers = [
         '.settings-tracked-container',
         '.settings-mention-container',
+        '.settings-moderators-container',
         '.settings-ignored-container'
       ];
 
@@ -5882,6 +5909,7 @@
     const settingsTypes = [
       { type: 'tracked', emoji: '👀' },
       { type: 'mention', emoji: '📢' },
+      { type: 'moderators', emoji: '⚔️' },
       { type: 'ignored', emoji: '🛑' }
     ];
 
@@ -5999,15 +6027,6 @@
         { value: 'Female', emoji: '👩' }
       ];
 
-      // const genderSelect = document.createElement('select');
-      // genderSelect.className = 'tracked-gender';
-      // ['Male', 'Female'].forEach(gender => {
-      //   const option = document.createElement('option');
-      //   option.value = gender;
-      //   option.textContent = gender.charAt(0).toUpperCase() + gender.slice(1);
-      //   if (user.gender === gender) option.selected = true;
-      //   genderSelect.appendChild(option);
-      // });
       const genderSelect = document.createElement('select');
       genderSelect.className = 'tracked-gender';
 
@@ -6068,6 +6087,32 @@
       return item;
     }
 
+    // Helper function to create a moderator item
+    function createModeratorItem(moderator) {
+      const item = document.createElement('div');
+      item.className = 'moderator-item';
+      item.style.display = 'inline-flex';
+      item.style.gap = '0.5em';
+      item.style.padding = '0.6em';
+
+      const moderatorInput = document.createElement('input');
+      moderatorInput.className = 'moderator-field';
+      moderatorInput.value = moderator; // Changed from keyword to moderatorName
+      moderatorInput.placeholder = 'Moderator Name'; // Updated placeholder
+      styleInput(moderatorInput);
+
+      const removeButton = document.createElement('div');
+      removeButton.className = 'remove-moderator-word'; // Updated class name
+      removeButton.innerHTML = removeSVG; // Assuming removeSVG is defined
+      attachRemoveListener(removeButton, item); // Assuming this function is defined
+      styleButton(removeButton, '#ee9090', '#6b2f2f', false); // Assuming this function is defined
+
+      item.appendChild(moderatorInput);
+      item.appendChild(removeButton);
+
+      return item;
+    }
+
     // Helper function to create an ignored item
     function createIgnoredItem(user) {
       const item = document.createElement('div');
@@ -6079,7 +6124,7 @@
       const ignoredInput = document.createElement('input');
       ignoredInput.className = 'ignored-field';
       ignoredInput.value = user;
-      ignoredInput.placeholder = 'Ignored User';
+      ignoredInput.placeholder = 'Ignored Username';
       styleInput(ignoredInput);
 
       const removeButton = document.createElement('div');
@@ -6099,12 +6144,14 @@
       const containers = {
         usersToTrack: '.settings-tracked-container',
         mentionKeywords: '.settings-mention-container',
+        moderators: '.settings-moderators-container',
         ignoreUserList: '.settings-ignored-container'
       };
 
       const creators = {
         usersToTrack: createTrackedItem,
         mentionKeywords: createMentionItem,
+        moderators: createModeratorItem,
         ignoreUserList: createIgnoredItem
       };
 
@@ -6115,7 +6162,7 @@
         container.style.width = '100%';
 
         // Apply specific styles for mention and ignored containers
-        if (key === 'mentionKeywords' || key === 'ignoreUserList') {
+        if (key === 'mentionKeywords' || key === 'moderators' || key === 'ignoreUserList') {
           container.style.display = 'inline-flex';
           container.style.flexWrap = 'wrap';
           container.style.alignItems = 'center';

@@ -3016,7 +3016,7 @@
     return `rgb(${r}, ${g}, ${b})`;
   };
 
-  // Normalize chat username color to be enough readable in the personal messages panel
+  // Normalize chat username color to be readable in the personal messages panel
   function normalizeUsernameColor(initialColor) {
     const [r, g, b] = initialColor.match(/\d+/g).map(Number);
     const { h, s, l } = rgbToHsl(r, g, b);
@@ -3025,8 +3025,9 @@
     const normalizedLightness = l < 50 ? 50 : l;
     const finalColor = hslToRgb(h, s, normalizedLightness);
 
-    return finalColor;
-  };
+    // Round the RGB values in one go
+    return `rgb(${finalColor.map(Math.round).join(', ')})`;
+  }
 
   // Function to get the cleaned text content of the latest message with username prefix
   function getLatestMessageData() {

@@ -3026,7 +3026,7 @@
     const finalColor = hslToRgb(h, s, normalizedLightness);
 
     // Round the RGB values in one go
-    return `rgb(${finalColor.map(Math.round).join(', ')})`;
+    return finalColor;
   }
 
   // Function to get the cleaned text content of the latest message with username prefix

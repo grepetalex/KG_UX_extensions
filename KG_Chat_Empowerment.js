@@ -3992,9 +3992,6 @@
               localStorage.setItem('sessionChatMessages', JSON.stringify(sessionMessages)); // Update localStorage with the new sessionMessages
             }
 
-            // Optional: Log messagesForSimilarityCheck to see all messages for each user
-            console.log("User Messages for Similarity Check:", Array.from(messagesForSimilarityCheck.entries()));
-
             // Convert Cyrillic username to Latin
             const latinUsername = convertRussianUsernameToLatin(latestMessageUsername);
 

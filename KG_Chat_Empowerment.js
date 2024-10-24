@@ -3826,11 +3826,48 @@
     return ['Клавобот', 'Пользователь', 'заблокирован'].every(word => messageText.includes(word));
   }
 
+  /**
+   * Normalizes the color of usernames and resets their filter based on the specified mode.
+   *
+   * @param {NodeList|Element} usernameElements - A NodeList of username elements or a single username element.
+   * @param {string} mode - The mode of operation; either 'one' to process a single username or 'all' to process multiple.
+   */
+  function normalizeAndResetUsernames(usernameElements, mode) {
+    if (mode === 'one') {
+      // Directly process the single username element
+      const userSpan = usernameElements.querySelector('span[data-user]'); // Get the span[data-user] inside the .username element
+      if (userSpan) { // Check if the userSpan exists
+        const computedColor = getComputedStyle(usernameElements).color; // Get the computed color of the usernameElement
+        const normalizedColor = normalizeUsernameColor(computedColor); // Normalize the color
+        usernameElements.style.setProperty('color', normalizedColor, 'important'); // Apply the normalized color to usernameElement
+        userSpan.style.setProperty('filter', 'invert(0)', 'important'); // Reset the filter for userSpan
+      }
+    } else if (mode === 'all') {
+      // Process all username elements within the context of the provided NodeList
+      const elementsToProcess = Array.from(usernameElements); // Convert NodeList to an array
+      elementsToProcess.forEach(usernameElement => {
+        const userSpan = usernameElement.querySelector('span[data-user]'); // Get the span[data-user] inside the .username element
+        if (userSpan) { // Check if the userSpan exists
+          const computedColor = getComputedStyle(usernameElement).color; // Get the computed color of the usernameElement
+          const normalizedColor = normalizeUsernameColor(computedColor); // Normalize the color
+          usernameElement.style.setProperty('color', normalizedColor, 'important'); // Apply the normalized color to usernameElement
+          userSpan.style.setProperty('filter', 'invert(0)', 'important'); // Reset the filter for userSpan
+        }
+      });
+    } else {
+      console.error("Invalid mode. Use 'one' or 'all'.");
+    }
+  }
+
   // Create a mutation observer to watch for new messages being added
   const newMessagesObserver = new MutationObserver(mutations => {
     // If isInitialized is false, return without doing anything
     if (!isInitialized) {
       isInitialized = true;
+
+      const allUsernameElements = document.querySelectorAll('.username'); // Get all username elements
+      normalizeAndResetUsernames(allUsernameElements, 'all'); // Process all username elements
+
       return; // Stop processing further
     }
 
@@ -3838,6 +3875,9 @@
       if (mutation.type === 'childList') {
         for (let node of mutation.addedNodes) {
           if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'P') {
+            const singleUsernameElement = node.querySelector('.username'); // Get a single username element
+            normalizeAndResetUsernames(singleUsernameElement, 'one'); // Process the single username element
+
             // Read the text content of the new message and speak it
             let latestMessageTextContent = localStorage.getItem('latestMessageTextContent');
 

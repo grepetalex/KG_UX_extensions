@@ -3892,11 +3892,12 @@
    * @param {string} mode - The mode of operation; either 'one' to process a single username or 'all' to process multiple.
    */
   function normalizeAndResetUsernames(usernameElements, mode) {
+    // Exit if usernameElements is null or undefined
+    if (!usernameElements) return console.error("usernameElements is null or undefined.");
+
     if (mode === 'one') {
       // Directly process the single username element
       const userSpan = usernameElements.querySelector('span[data-user]'); // Get the span[data-user] inside the .username element
-      if (!userSpan) return; // Exit if userSpan does not exist
-
       const computedColor = getComputedStyle(usernameElements).color; // Get the computed color of the usernameElement
       const normalizedColor = normalizeUsernameColor(computedColor); // Normalize the color
       usernameElements.style.setProperty('color', normalizedColor, 'important'); // Apply the normalized color to usernameElement

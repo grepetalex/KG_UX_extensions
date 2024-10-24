@@ -5938,6 +5938,8 @@
     // Applies common styles to an settings input field element
     function styleInput(input) {
       input.style.height = '30px';
+      input.style.maxWidth = '200px';
+      input.style.minWidth = '150px';
       input.style.padding = '0.4em';
       input.style.font = '1em Montserrat';
       input.style.fontFamily = 'Montserrat';
@@ -5982,6 +5984,8 @@
     // Applies common styles to a select element and its options
     function styleSelect(select) {
       select.style.height = '30px';
+      select.style.maxWidth = '120px';
+      select.style.minWidth = '105px';
       select.style.padding = '0.4em';
       select.style.font = '1em Montserrat';
       select.style.fontFamily = 'Montserrat';

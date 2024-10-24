@@ -3303,9 +3303,6 @@
   // Call the function to apply chat message grouping
   applyChatMessageGrouping();
 
-  // Set a similarity threshold (you can adjust this value as needed)
-  const similarityThreshold = 0.8;
-
   // Algorithm to check for similarity between two strings
   function similarity(s1, s2) {
     const [longer, shorter] = s1.length >= s2.length ? [s1, s2] : [s2, s1];
@@ -3855,6 +3852,8 @@
   let isInitialized = false;
   // Define the maximum number of messages per user
   const maxMessagesPerUser = 10;
+  // Set a similarity threshold (you can adjust this value as needed)
+  const similarityThreshold = 0.8;
   // Create a map to hold messages for each user
   const messagesForSimilarityCheck = new Map();
 

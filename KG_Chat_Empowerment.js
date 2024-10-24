@@ -5061,7 +5061,7 @@
         const dateItem = document.createElement('div');
         dateItem.className = 'date-item';
         // show "Today" if date matches
-        dateItem.textContent = date === today ? 'Today' : date;
+        dateItem.textContent = date === today ? 'Today ⏳' : `${date} 📅`;
         dateItem.style.position = 'relative';
         dateItem.style.font = '1em Montserrat';
         dateItem.style.color = 'burlywood';

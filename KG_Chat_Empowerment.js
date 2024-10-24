@@ -3303,6 +3303,34 @@
   // Call the function to apply chat message grouping
   applyChatMessageGrouping();
 
+  // Set a similarity threshold (you can adjust this value as needed)
+  const similarityThreshold = 0.8;
+
+  // Algorithm to check for similarity between two strings
+  function similarity(s1, s2) {
+    const [longer, shorter] = s1.length >= s2.length ? [s1, s2] : [s2, s1];
+    const longerLength = longer.length;
+    if (longerLength === 0) return 1.0;
+    return (longerLength - editDistance(longer, shorter)) / longerLength;
+  }
+
+  function editDistance(s1, s2) {
+    s1 = s1.toLowerCase();
+    s2 = s2.toLowerCase();
+
+    const costs = Array(s2.length + 1).fill(0).map((_, j) => j);
+    for (let i = 1; i <= s1.length; i++) {
+      let lastValue = costs[0];
+      costs[0] = i;
+      for (let j = 1; j <= s2.length; j++) {
+        const newValue = costs[j];
+        costs[j] = s1.charAt(i - 1) === s2.charAt(j - 1) ? lastValue : Math.min(Math.min(newValue, lastValue), costs[j - 1]) + 1;
+        lastValue = newValue;
+      }
+    }
+    return costs[s2.length];
+  }
+
   // Time difference threshold (in milliseconds) to identify spam
   const timeDifferenceThreshold = 400;
   // Message limit per timeDifferenceThreshold
@@ -3825,6 +3853,10 @@
 
   // Skip reading the messages on page load to read them normally when the user is present and the page is stable
   let isInitialized = false;
+  // Define the maximum number of messages per user
+  const maxMessagesPerUser = 10;
+  // Create a map to hold messages for each user
+  const messagesForSimilarityCheck = new Map();
 
   // Function to remove all messages from users in the ignoreUserList
   function removeIgnoredUserMessages() {
@@ -3893,6 +3925,10 @@
     if (!isInitialized) {
       isInitialized = true;
 
+      // Remove the 'sessionChatMessages' key from localStorage if it exists
+      localStorage.getItem('sessionChatMessages') && localStorage.removeItem('sessionChatMessages');
+
+      // Normalize chat usernames color for dark theme
       const allUsernameElements = document.querySelectorAll('.username'); // Get all username elements
       normalizeAndResetUsernames(allUsernameElements, 'all'); // Process all username elements
 
@@ -3906,16 +3942,58 @@
             const singleUsernameElement = node.querySelector('.username'); // Get a single username element
             normalizeAndResetUsernames(singleUsernameElement, 'one'); // Process the single username element
 
-            // Read the text content of the new message and speak it
+            // Get previous message from localStorage
             let latestMessageTextContent = localStorage.getItem('latestMessageTextContent');
 
             // Get the latest message data
             let latestMessageData = getLatestMessageData();
 
-            // Get the message of the user who sent the latest message
+            // Get the actual message of the user who sent the latest message
             let newMessageTextContent = latestMessageData?.messageText || null;
-            // Get the username of the user who sent the latest message
+            // Get the actual username of the user who sent the latest message
             let latestMessageUsername = latestMessageData?.usernameText || null;
+
+            // Initialize the user's message array if it doesn't exist
+            messagesForSimilarityCheck.set(latestMessageUsername, messagesForSimilarityCheck.get(latestMessageUsername) || []);
+
+            // Get the user's messages
+            const userMessages = messagesForSimilarityCheck.get(latestMessageUsername);
+
+            // Check if the new message is similar to any existing message in the user's message array
+            const isSimilarMessage = userMessages.some(msg => {
+              const messageSimilarity = similarity(newMessageTextContent, msg); // Store similarity value in a constant
+              return messageSimilarity > similarityThreshold;
+            });
+
+            // If the message is similar, set the opacity of the node to 0.5
+            if (isSimilarMessage) {
+              node.style.opacity = '0.5'; // Set opacity to 0.5 for the similar message
+            } else {
+              // Add the new message to the user's message array and update the map
+              userMessages.push(newMessageTextContent); // Push the new message into the user's message array
+              messagesForSimilarityCheck.set(latestMessageUsername, userMessages); // Update the map with the latest messages for the user
+
+              // Prepare the sessionMessages object to store chat messages in the desired format
+              let sessionMessages = JSON.parse(localStorage.getItem('sessionChatMessages')) || {}; // Retrieve existing session messages or initialize an empty object
+
+              // Ensure there's an entry for the current user in sessionMessages
+              sessionMessages[latestMessageUsername] = sessionMessages[latestMessageUsername] || []; // Create an array if the username doesn't exist
+
+              // Add the new message to the user's array in sessionMessages
+              sessionMessages[latestMessageUsername].push(newMessageTextContent); // Append the new message to the user's message array
+
+              // Check if the number of messages for the user exceeds the maximum allowed
+              if (userMessages.length > maxMessagesPerUser) {
+                messagesForSimilarityCheck.delete(latestMessageUsername); // Remove the user from the messagesForSimilarityCheck map
+                delete sessionMessages[latestMessageUsername]; // Delete the user's messages from sessionMessages
+              }
+
+              // Save the updated session messages back to localStorage to persist changes
+              localStorage.setItem('sessionChatMessages', JSON.stringify(sessionMessages)); // Update localStorage with the new sessionMessages
+            }
+
+            // Optional: Log messagesForSimilarityCheck to see all messages for each user
+            console.log("User Messages for Similarity Check:", Array.from(messagesForSimilarityCheck.entries()));
 
             // Convert Cyrillic username to Latin
             const latinUsername = convertRussianUsernameToLatin(latestMessageUsername);

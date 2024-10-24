@@ -3152,7 +3152,8 @@
 
     // Return all relevant message data including the system message
     return {
-      messageText: messageWithPronunciation || systemMessageText, // If messageText is null, assign systemMessageText
+      modifiedMessageText: messageWithPronunciation || systemMessageText, // If messageText is null, assign systemMessageText
+      originalMessageText: finalMessageText,
       usernameText: usernameText // Always return usernameText
     };
   }
@@ -3943,13 +3944,14 @@
             normalizeAndResetUsernames(singleUsernameElement, 'one'); // Process the single username element
 
             // Get previous message from localStorage
-            let latestMessageTextContent = localStorage.getItem('latestMessageTextContent');
+            let previousMessageText = localStorage.getItem('previousMessageText');
 
             // Get the latest message data
             let latestMessageData = getLatestMessageData();
 
-            // Get the actual message of the user who sent the latest message
-            let newMessageTextContent = latestMessageData?.messageText || null;
+            // Get the modified and original actual messages of the user who sent it
+            let actualModifiedMessageText = latestMessageData?.modifiedMessageText || null;
+            let actualOriginalMessageText = latestMessageData?.originalMessageText || null;
             // Get the actual username of the user who sent the latest message
             let latestMessageUsername = latestMessageData?.usernameText || null;
 
@@ -3961,7 +3963,7 @@
 
             // Check if the new message is similar to any existing message in the user's message array
             const isSimilarMessage = userMessages.some(msg => {
-              const messageSimilarity = similarity(newMessageTextContent, msg); // Store similarity value in a constant
+              const messageSimilarity = similarity(actualOriginalMessageText, msg); // Store similarity value in a constant
               return messageSimilarity > similarityThreshold;
             });
 
@@ -3970,7 +3972,7 @@
               node.style.opacity = '0.5'; // Set opacity to 0.5 for the similar message
             } else {
               // Add the new message to the user's message array and update the map
-              userMessages.push(newMessageTextContent); // Push the new message into the user's message array
+              userMessages.push(actualOriginalMessageText); // Push the new message into the user's message array
               messagesForSimilarityCheck.set(latestMessageUsername, userMessages); // Update the map with the latest messages for the user
 
               // Prepare the sessionMessages object to store chat messages in the desired format
@@ -3980,7 +3982,7 @@
               sessionMessages[latestMessageUsername] = sessionMessages[latestMessageUsername] || []; // Create an array if the username doesn't exist
 
               // Add the new message to the user's array in sessionMessages
-              sessionMessages[latestMessageUsername].push(newMessageTextContent); // Append the new message to the user's message array
+              sessionMessages[latestMessageUsername].push(actualOriginalMessageText); // Append the new message to the user's message array
 
               // Check if the number of messages for the user exceeds the maximum allowed
               if (userMessages.length > maxMessagesPerUser) {
@@ -3996,8 +3998,8 @@
             const latinUsername = convertRussianUsernameToLatin(latestMessageUsername);
 
             // Detect and handle the ban message (play sound if detected)
-            if (isBanMessageFromSystem(newMessageTextContent)) {
-              console.log('Ban message detected:', newMessageTextContent);
+            if (isBanMessageFromSystem(actualModifiedMessageText)) {
+              console.log('Ban message detected:', actualModifiedMessageText);
               playSound(); // Play the Mario Game Over sound
             }
 
@@ -4025,9 +4027,9 @@
             const isPrivateMessage = privateMessageContainer && privateMessageContainer.textContent.includes(privateMessageIndicator);
 
             // If mode is voice, speak the new message and update the latest message content in local storage
-            if (isVoice && isInitialized && newMessageTextContent && newMessageTextContent !== latestMessageTextContent) {
-              // Update localStorage key "latestMessageTextContent"
-              localStorage.setItem('latestMessageTextContent', newMessageTextContent);
+            if (isVoice && isInitialized && actualModifiedMessageText && actualModifiedMessageText !== previousMessageText) {
+              // Update localStorage key "previousMessageText"
+              localStorage.setItem('previousMessageText', actualModifiedMessageText);
 
               // Do not read personal messages. Only unique other people's messages.
               if (latestMessageUsername && !latestMessageUsername.includes(myNickname)) {
@@ -4035,17 +4037,17 @@
                 // Read all messages in every-message mode
                 if (isEveryMessageMode) {
                   console.log('Triggered Voice: Every message mode');
-                  addNewMessage(newMessageTextContent);
+                  addNewMessage(actualModifiedMessageText);
                 }
                 // Read mention messages only in mention-message mode
                 else if (isMentionMessageMode && isMention) {
                   console.log('Triggered Voice: Mention message mode');
-                  addNewMessage(newMessageTextContent);
+                  addNewMessage(actualModifiedMessageText);
                 }
                 // Read when private messages is addressed to you
                 else if (isPrivateMessage) {
                   console.log('Triggered Voice: Private message');
-                  addNewMessage(newMessageTextContent);
+                  addNewMessage(actualModifiedMessageText);
                 }
                 else {
                   console.log('No matching condition for Voice Mode');
@@ -4055,10 +4057,10 @@
             }
 
             // If mode is beep, play the beep sound for the new message
-            if (isBeep && isInitialized && newMessageTextContent && newMessageTextContent !== latestMessageTextContent) {
+            if (isBeep && isInitialized && actualModifiedMessageText && actualModifiedMessageText !== previousMessageText) {
 
-              // Update localStorage key "latestMessageTextContent"
-              localStorage.setItem('latestMessageTextContent', newMessageTextContent);
+              // Update localStorage key "previousMessageText"
+              localStorage.setItem('previousMessageText', actualModifiedMessageText);
 
               // Do not read personal messages. Only unique other people's messages.
               if (latestMessageUsername && !latestMessageUsername.includes(myNickname)) {

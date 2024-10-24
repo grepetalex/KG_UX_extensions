@@ -1240,21 +1240,38 @@
     dropTime.style.display = 'flex';
     dropTime.style.justifyContent = 'center';
     dropTime.style.alignItems = 'center';
+    dropTime.style.minWidth = 'fit-content';
 
     // Create span with description for threshold time element
     const dropTimeThresholdDescription = document.createElement('span');
     dropTimeThresholdDescription.className = 'drop-time-threshold-description';
-    dropTimeThresholdDescription.textContent = 'Threshold';
+    dropTimeThresholdDescription.textContent = '🚧 Threshold';
     dropTimeThresholdDescription.style.padding = '0.6em';
-    dropTimeThresholdDescription.style.color = 'gray';
+    dropTimeThresholdDescription.style.color = '#c6b209';
 
     const dropTimeThreshold = document.createElement('span');
     dropTimeThreshold.className = 'drop-time-threshold';
     dropTimeThreshold.style.padding = '0.6em';
-    dropTimeThreshold.style.color = 'chocolate';
+    dropTimeThreshold.style.color = 'lightcoral';
     dropTimeThreshold.style.fontFamily = "'Roboto Mono', monospace";
     dropTimeThreshold.style.fontSize = '1.1em';
+    dropTimeThreshold.style.fontWeight = 'bold';
+    dropTimeThreshold.style.setProperty('border-radius', '0.2em', 'important');
+    dropTimeThreshold.style.border = '1px solid rgba(240, 128, 128, 0.20)';
+    dropTimeThreshold.style.backgroundColor = 'rgba(240, 128, 128, 0.05)';
+    dropTimeThreshold.style.transition = 'filter 0.3s';
     dropTimeThreshold.style.cursor = 'pointer';
+
+    // Add mouseover event to apply brightness filter
+    dropTimeThreshold.addEventListener('mouseover', () => {
+      dropTimeThreshold.style.filter = 'sepia(1)'; // Increase brightness on hover
+    });
+
+    // Add mouseout event to reset filter
+    dropTimeThreshold.addEventListener('mouseout', () => {
+      dropTimeThreshold.style.filter = 'sepia(0)'; // Reset brightness on mouse out
+    });
+
     // Get the value from the localStorage key 'cacheRefreshThresholdHours'
     const storedThresholdTime = localStorage.getItem('cacheRefreshThresholdHours');
     // Update the innerHTML with the stored value (default to '00:00:00' if the key is not set)
@@ -1265,9 +1282,9 @@
     // Create span with description for expiration time element
     const dropTimeExpirationDescription = document.createElement('span');
     dropTimeExpirationDescription.className = 'drop-time-expiration-description';
-    dropTimeExpirationDescription.textContent = 'Countdown';
+    dropTimeExpirationDescription.textContent = '💣 Countdown';
     dropTimeExpirationDescription.style.padding = '0.6em';
-    dropTimeExpirationDescription.style.color = 'gray';
+    dropTimeExpirationDescription.style.color = '#d0562c';
 
     const dropTimeExpiration = document.createElement('span');
     dropTimeExpiration.className = 'drop-time-expiration';
@@ -1351,7 +1368,7 @@
     searchInput.style.fontSize = '1em';
     searchInput.style.fontFamily = 'Montserrat';
     searchInput.style.setProperty('color', 'bisque', 'important');
-    searchInput.style.setProperty('border-radius', '5px', 'important');
+    searchInput.style.setProperty('border-radius', '0.2em', 'important');
     searchInput.style.boxSizing = 'border-box';
     searchInput.style.backgroundColor = '#111';
     searchInput.style.border = '1px solid #222';

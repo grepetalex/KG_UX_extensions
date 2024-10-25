@@ -3970,7 +3970,7 @@
 
             // If the message is similar, set the opacity of the node to 0.5
             if (isSimilarMessage) {
-              node.style.opacity = '0.5'; // Set opacity to 0.5 for the similar message
+              node.style.opacity = '0.3'; // Set opacity to 0.3 for the similar message
             } else {
               // Add the new message to the user's message array and update the map
               userMessages.push(actualOriginalMessageText); // Push the new message into the user's message array

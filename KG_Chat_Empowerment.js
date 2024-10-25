@@ -5173,9 +5173,9 @@
         dateItem.style.color = 'burlywood';
         // burlywood with transparency 0.1
         dateItem.style.backgroundColor = 'rgba(222, 184, 135, 0.1)';
-        dateItem.style.width = '100px';
-        dateItem.style.margin = '1em 0 0.5em';
-        dateItem.style.padding = '0.4em';
+        dateItem.style.width = 'fit-content';
+        dateItem.style.margin = '2em 1em 1em';
+        dateItem.style.padding = '0.4em 0.8em';
         dateItem.style.textAlign = 'center';
         dateItem.style.setProperty('border-radius', '0.4em', 'important');
         dateItem.style.left = '50%';
@@ -5975,8 +5975,8 @@
       element.style.color = 'burlywood';
       element.style.backgroundColor = 'rgba(222, 184, 135, 0.1)';
       element.style.width = 'fit-content';
-      element.style.margin = '2em 0';
-      element.style.padding = '0.4em';
+      element.style.margin = '2em 1em 1em';
+      element.style.padding = '0.4em 0.8em';
       element.style.textAlign = 'center';
       element.style.setProperty('border-radius', '0.4em', 'important');
       element.style.left = '50%';
@@ -6149,7 +6149,7 @@
       item.className = 'mention-item';
       item.style.display = 'inline-flex';
       item.style.gap = '0.5em';
-      item.style.padding = '0.6em';
+      item.style.padding = '0.25em';
 
       const mentionInput = document.createElement('input');
       mentionInput.className = 'mention-field';
@@ -6175,7 +6175,7 @@
       item.className = 'moderator-item';
       item.style.display = 'inline-flex';
       item.style.gap = '0.5em';
-      item.style.padding = '0.6em';
+      item.style.padding = '0.25em';
 
       const moderatorInput = document.createElement('input');
       moderatorInput.className = 'moderator-field';
@@ -6201,7 +6201,7 @@
       item.className = 'ignored-item';
       item.style.display = 'inline-flex';
       item.style.gap = '0.5em';
-      item.style.padding = '0.6em';
+      item.style.padding = '0.25em';
 
       const ignoredInput = document.createElement('input');
       ignoredInput.className = 'ignored-field';
@@ -6268,7 +6268,7 @@
       addButton.className = `add-${middleWord}-item`;
       addButton.innerHTML = addSVG; // Add SVG icon to the button
       styleButton(addButton, '#d190ee', '#502f6b', false); // Style the button
-      if (middleWord === 'tracked') addButton.style.margin = '0.4em'; // Add margin for tracked items
+      addButton.style.margin = '0.4em';
 
       // On click, validate the last item and create a new one if valid
       addButton.addEventListener('click', () => {

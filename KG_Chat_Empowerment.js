@@ -3853,7 +3853,7 @@
   // Skip reading the messages on page load to read them normally when the user is present and the page is stable
   let isInitialized = false;
   // Define the maximum number of messages per user
-  const maxMessagesPerUser = 10;
+  const maxMessagesPerUser = 5;
   // Set a similarity threshold (you can adjust this value as needed)
   const similarityThreshold = 0.8;
   // Create a map to hold messages for each user

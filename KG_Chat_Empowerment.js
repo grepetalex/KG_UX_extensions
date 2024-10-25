@@ -1021,7 +1021,7 @@
 
   } // end convertYoutubeLinkToIframe
 
-  const empowermentButtonsMargin = 2;
+  const empowermentButtonsMargin = 4;
 
   // Retrieve body element to inject this beast elements
   const bodyElement = document.querySelector('body');
@@ -5670,7 +5670,7 @@
         height="16"
         viewBox="0 0 24 24"
         fill="none"
-        stroke="currentColor"
+        stroke="#ee9090"
         stroke-width="2"
         stroke-linecap="round"
         stroke-linejoin="round"
@@ -5686,7 +5686,7 @@
         height="16"
         viewBox="0 0 24 24"
         fill="none"
-        stroke="currentColor"
+        stroke="#d190ee"
         stroke-width="2"
         stroke-linecap="round"
         stroke-linejoin="round"

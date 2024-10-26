@@ -94,28 +94,27 @@
   // Notify if someone addresses me using these aliases (case-insensitive)
   let mentionKeywords = [];
 
-  // Define a list of moderators whose new user nicknames in the chat list should have a shield icon.
-  let moderators = [];
-
+  // Define a list of moderator whose new user nicknames in the chat list should have a shield icon.
+  let moderator = [];
 
   // Define user list of users whose messages should be hidden
-  let ignoreUserList = [];
+  let ignored = [];
 
   // Check and load settings from localStorage if available and not empty
   const storedUsersToTrack = JSON.parse(localStorage.getItem('usersToTrack')) || [];
   const storedMentionKeywords = JSON.parse(localStorage.getItem('mentionKeywords')) || [];
-  const storedModerators = JSON.parse(localStorage.getItem('moderators')) || [];
-  const storedIgnoreUserList = JSON.parse(localStorage.getItem('ignoreUserList')) || [];
+  const storedModerators = JSON.parse(localStorage.getItem('moderator')) || [];
+  const storedIgnoreUserList = JSON.parse(localStorage.getItem('ignored')) || [];
 
   // Replace usersToTrack with stored value if it exists and is not empty
   usersToTrack = storedUsersToTrack?.length ? storedUsersToTrack : usersToTrack;
   // Replace mentionKeywords with stored value if it exists and is not empty
   mentionKeywords = storedMentionKeywords?.length ? storedMentionKeywords : mentionKeywords;
   mentionKeywords.push(myNickname); // Actual nickname
-  // Replace moderators with stored value if it exists and is not empty
-  moderators = storedModerators?.length ? storedModerators : moderators;
-  // Replace ignoreUserList with stored value if it exists and is not empty
-  ignoreUserList = storedIgnoreUserList?.length ? storedIgnoreUserList : ignoreUserList;
+  // Replace moderator with stored value if it exists and is not empty
+  moderator = storedModerators?.length ? storedModerators : moderator;
+  // Replace ignored with stored value if it exists and is not empty
+  ignored = storedIgnoreUserList?.length ? storedIgnoreUserList : ignored;
 
   // Key Events: CTRL and ALT
 
@@ -2448,9 +2447,9 @@
     }
 
     // Check if the user is in the ignore list
-    const isIgnoredUser = ignoreUserList.includes(userName);
+    const isIgnoredUser = ignored.includes(userName);
 
-    // Create and hide a message element if the user is in ignoreUserList
+    // Create and hide a message element if the user is in ignored
     if (isIgnoredUser) {
       const ignoredIcon = document.createElement('div');
       ignoredIcon.title = 'Ignored user';
@@ -2462,10 +2461,10 @@
     // Check if there is an <img> element with a src attribute containing the word "moderator" inside the <ins> element
     const hasModeratorIcon = document.querySelector(`.userlist-content ins.user${userId} img[src*="moderator"]`);
 
-    // Check if the user is in the moderators list
-    const isModerator = moderators.includes(userName);
+    // Check if the user is in the moderator list
+    const isModerator = moderator.includes(userName);
 
-    // If a moderator icon is found or the current user is in the moderators array, append the moderator icon.
+    // If a moderator icon is found or the current user is in the moderator array, append the moderator icon.
     if (hasModeratorIcon || isModerator) {
       const moderatorIcon = document.createElement('div');
       moderatorIcon.classList.add('moderator');
@@ -3110,8 +3109,8 @@
         type: messageType
       };
 
-      // Save to localStorage only if the user is not in the ignoreUserList
-      if (!ignoreUserList.includes(username)) {
+      // Save to localStorage only if the user is not in the ignored
+      if (!ignored.includes(username)) {
         localStorage.setItem('personalMessages', JSON.stringify(personalMessages));
       }
     };
@@ -3859,13 +3858,13 @@
   // Create a map to hold messages for each user
   const messagesForSimilarityCheck = new Map();
 
-  // Function to remove all messages from users in the ignoreUserList
+  // Function to remove all messages from users in the ignored
   function removeIgnoredUserMessages() {
     document.querySelectorAll('.messages-content p').forEach(message => {
       const usernameElement = message.querySelector('.username'); // Adjust selector if needed
       const username = usernameElement?.textContent?.replace(/[<>]/g, '') || null;
 
-      if (username && ignoreUserList.includes(username)) {
+      if (username && ignored.includes(username)) {
         // console.log(`Hidden message from ignored user: ${username}`);
         // Convert Cyrillic username to Latin
         const latinUsername = convertRussianUsernameToLatin(username);
@@ -4004,8 +4003,8 @@
               playSound(); // Play the Mario Game Over sound
             }
 
-            // Check if the username is in the ignoreUserList
-            if (latestMessageUsername && ignoreUserList.includes(latestMessageUsername)) {
+            // Check if the username is in the ignored
+            if (latestMessageUsername && ignored.includes(latestMessageUsername)) {
               node.classList.add('ignored-user', latinUsername);
               node.style.display = 'none'; // Hide the message
               continue; // Skip the rest of the processing for this message
@@ -5426,11 +5425,11 @@
         `${tabSize2}"mentionKeywords": [\n` +
         `${settingsData.mentionKeywords.map(keyword => `${tabSize4}"${keyword}"`).join(',\n')}\n` +
         `${tabSize2}],\n` +
-        `${tabSize2}"moderators": [\n` + // Added moderators
-        `${settingsData.moderators.map(moderator => `${tabSize4}"${moderator}"`).join(',\n')}\n` +
+        `${tabSize2}"moderator": [\n` + // Added moderator
+        `${settingsData.moderator.map(moderator => `${tabSize4}"${moderator}"`).join(',\n')}\n` +
         `${tabSize2}],\n` +
-        `${tabSize2}"ignoreUserList": [\n` +
-        `${settingsData.ignoreUserList.map(user => `${tabSize4}"${user}"`).join(',\n')}\n` +
+        `${tabSize2}"ignored": [\n` +
+        `${settingsData.ignored.map(user => `${tabSize4}"${user}"`).join(',\n')}\n` +
         `${tabSize2}]\n` +
         '}';
 
@@ -5463,15 +5462,15 @@
     // Retrieve data from localStorage using the appropriate keys
     const usersToTrack = JSON.parse(localStorage.getItem('usersToTrack')) || [];
     const mentionKeywords = JSON.parse(localStorage.getItem('mentionKeywords')) || [];
-    const moderators = JSON.parse(localStorage.getItem('moderators')) || [];
-    const ignoreUserList = JSON.parse(localStorage.getItem('ignoreUserList')) || [];
+    const moderator = JSON.parse(localStorage.getItem('moderator')) || [];
+    const ignored = JSON.parse(localStorage.getItem('ignored')) || [];
 
     // Combine the retrieved data into a single object
     const settingsData = {
       usersToTrack: usersToTrack,
       mentionKeywords: mentionKeywords,
-      moderators: moderators,
-      ignoreUserList: ignoreUserList
+      moderator: moderator,
+      ignored: ignored
     };
 
     return settingsData;
@@ -5549,21 +5548,21 @@
   function saveSettingsToLocalStorage() {
     localStorage.setItem('usersToTrack', JSON.stringify(usersToTrack));
     localStorage.setItem('mentionKeywords', JSON.stringify(mentionKeywords));
-    localStorage.setItem('moderators', JSON.stringify(moderators));
-    localStorage.setItem('ignoreUserList', JSON.stringify(ignoreUserList));
+    localStorage.setItem('moderator', JSON.stringify(moderator));
+    localStorage.setItem('ignored', JSON.stringify(ignored));
   }
 
   // Process and apply uploaded settings
-  function processUploadedSettings({ usersToTrack: u = [], mentionKeywords: mk = [], moderators: md = [], ignoreUserList: i = [] }) {
+  function processUploadedSettings({ usersToTrack: u = [], mentionKeywords: mk = [], moderator: md = [], ignored: i = [] }) {
     // Ensure the uploaded values are valid arrays or default to the existing ones
     usersToTrack = Array.isArray(u) ? u : usersToTrack;
     mentionKeywords = Array.isArray(mk) ? mk : mentionKeywords;
-    moderators = Array.isArray(md) ? md : moderators;
-    ignoreUserList = Array.isArray(i) ? i : ignoreUserList;
+    moderator = Array.isArray(md) ? md : moderator;
+    ignored = Array.isArray(i) ? i : ignored;
 
     // Save to localStorage after applying the settings
     saveSettingsToLocalStorage();
-    console.log('Uploaded settings applied:', { usersToTrack, mentionKeywords, moderators, ignoreUserList });
+    console.log('Uploaded settings applied:', { usersToTrack, mentionKeywords, moderator, ignored });
   }
 
   // Function to display the settings panel
@@ -5779,8 +5778,8 @@
         const currentValues = {
           usersToTrack: [],
           mentionKeywords: [],
-          moderators: [],
-          ignoreUserList: []
+          moderator: [],
+          ignored: []
         };
 
         // Process tracked items
@@ -5808,18 +5807,18 @@
           currentValues.mentionKeywords.push(mentionValue);
         });
 
-        // Process moderators
-        container.querySelectorAll('.settings-moderators-container .moderator-item').forEach(item => {
+        // Process moderator
+        container.querySelectorAll('.settings-moderator-container .moderator-item').forEach(item => {
           const moderatorField = item.querySelector('.moderator-field');
           const moderatorValue = moderatorField ? moderatorField.value.trim() : '';
-          currentValues.moderators.push(moderatorValue);
+          currentValues.moderator.push(moderatorValue);
         });
 
         // Process ignored items
         container.querySelectorAll('.settings-ignored-container .ignored-item').forEach(item => {
           const ignoredField = item.querySelector('.ignored-field');
           const ignoredValue = ignoredField ? ignoredField.value.trim() : '';
-          currentValues.ignoreUserList.push(ignoredValue);
+          currentValues.ignored.push(ignoredValue);
         });
 
         // Check if any values have changed compared to previous state
@@ -5912,7 +5911,7 @@
       const containers = [
         '.settings-tracked-container',
         '.settings-mention-container',
-        '.settings-moderators-container',
+        '.settings-moderator-container',
         '.settings-ignored-container'
       ];
 
@@ -5987,7 +5986,7 @@
     const settingsTypes = [
       { type: 'tracked', emoji: '👀' },
       { type: 'mention', emoji: '📢' },
-      { type: 'moderators', emoji: '⚔️' },
+      { type: 'moderator', emoji: '⚔️' },
       { type: 'ignored', emoji: '🛑' }
     ];
 
@@ -6226,15 +6225,15 @@
       const containers = {
         usersToTrack: '.settings-tracked-container',
         mentionKeywords: '.settings-mention-container',
-        moderators: '.settings-moderators-container',
-        ignoreUserList: '.settings-ignored-container'
+        moderator: '.settings-moderator-container',
+        ignored: '.settings-ignored-container'
       };
 
       const creators = {
         usersToTrack: createTrackedItem,
         mentionKeywords: createMentionItem,
-        moderators: createModeratorItem,
-        ignoreUserList: createIgnoredItem
+        moderator: createModeratorItem,
+        ignored: createIgnoredItem
       };
 
       const data = getSettingsData();
@@ -6244,7 +6243,7 @@
         container.style.width = '100%';
 
         // Apply specific styles for mention and ignored containers
-        if (key === 'mentionKeywords' || key === 'moderators' || key === 'ignoreUserList') {
+        if (key === 'mentionKeywords' || key === 'moderator' || key === 'ignored') {
           container.style.display = 'inline-flex';
           container.style.flexWrap = 'wrap';
           container.style.alignItems = 'center';

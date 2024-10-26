@@ -6176,7 +6176,7 @@
     // Function to create an ignored item
     function createIgnoredItem(user) {
       const item = createContainer('ignored');
-      const ignoredInput = createInput('ignored', user, 'Ignored Username');
+      const ignoredInput = createInput('ignored', user, 'Ignored User');
       const removeButton = createRemoveButton('ignored', item);
 
       item.appendChild(ignoredInput);

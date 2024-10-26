@@ -1429,22 +1429,11 @@
     panelControlButtons.className = 'panel-control-buttons';
     panelControlButtons.style.display = 'flex';
 
-    // Inline SVG source for the trash icon
-    const trashIconSVG = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-      fill="none" stroke="darkorange" stroke-width="2" stroke-linecap="round"
-      stroke-linejoin="round" class="feather feather-trash-2">
-      <polyline points="3 6 5 6 21 6"></polyline>
-      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-      <line x1="10" y1="11" x2="10" y2="17"></line>
-      <line x1="14" y1="11" x2="14" y2="17"></line>
-    </svg>`;
-
     // Create a clear cache button with the provided SVG icon
     const clearCacheButton = document.createElement('div');
     clearCacheButton.className = 'clear-cache-button';
     clearCacheButton.title = 'Clear cache';
-    clearCacheButton.innerHTML = trashIconSVG;
+    clearCacheButton.innerHTML = trashSVG;
     clearCacheButton.style.backgroundColor = 'brown';
     clearCacheButton.style.width = '48px';
     clearCacheButton.style.height = '48px';
@@ -5024,22 +5013,11 @@
     panelControlButtons.className = 'panel-control-buttons';
     panelControlButtons.style.display = 'flex';
 
-    // Inline SVG source for the trash icon
-    const trashIconSVG = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-      fill="none" stroke="darkorange" stroke-width="2" stroke-linecap="round"
-      stroke-linejoin="round" class="feather feather-trash-2">
-      <polyline points="3 6 5 6 21 6"></polyline>
-      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-      <line x1="10" y1="11" x2="10" y2="17"></line>
-      <line x1="14" y1="11" x2="14" y2="17"></line>
-    </svg>`;
-
     // Create a clear cache button with the provided SVG icon
     const clearCacheButton = document.createElement('div');
     clearCacheButton.className = 'clear-cache-button';
     clearCacheButton.title = 'Clear messages';
-    clearCacheButton.innerHTML = trashIconSVG;
+    clearCacheButton.innerHTML = trashSVG;
     clearCacheButton.style.backgroundColor = 'brown';
     clearCacheButton.style.width = '48px';
     clearCacheButton.style.height = '48px';
@@ -5565,6 +5543,116 @@
     console.log('Uploaded settings applied:', { usersToTrack, mentionKeywords, moderator, ignored });
   }
 
+  // Inline SVG source for the "x" icon (close button)
+  const closeSVG = `
+    <svg xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="lightgreen"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="feather feather-x">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>`;
+
+  // Inline SVG source for the trash icon
+  const trashSVG = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+      fill="none" stroke="darkorange" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round" class="feather feather-trash-2">
+      <polyline points="3 6 5 6 21 6"></polyline>
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+      <line x1="10" y1="11" x2="10" y2="17"></line>
+      <line x1="14" y1="11" x2="14" y2="17"></line>
+    </svg>`;
+
+  // Inline SVG source for the "download" icon (export button)
+  const exportSVG = `
+    <svg xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#90b9ee"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="feather feather-download">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="7 10 12 15 17 10"></polyline>
+        <line x1="12" y1="15" x2="12" y2="3"></line>
+    </svg>`;
+
+  // Inline SVG source for the "upload" icon (import button)
+  const importSVG = `
+    <svg xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#d190ee"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="feather feather-upload">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="17 8 12 3 7 8"></polyline>
+        <line x1="12" y1="3" x2="12" y2="15"></line>
+    </svg>`;
+
+  // Inline SVG source for the "save" icon (save button)
+  const saveSVG = `
+    <svg xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#90eedc"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="feather feather-save">
+        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+        <polyline points="7 3 7 8 15 8"></polyline>
+    </svg>`;
+
+  // Inline SVG source for the "remove" icon (remove button)
+  const removeSVG = `
+    <svg xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#ee9090"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="feather feather-trash">
+        <polyline points="3 6 5 6 21 6"></polyline>
+        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+    </svg>`;
+
+  // Inline SVG source for the "add" icon (add button)
+  const addSVG = `
+    <svg xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#d190ee"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="feather feather-plus">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+    </svg>`;
+
   // Function to display the settings panel
   function showSettingsPanel() {
     // Check if the settings panel already exists
@@ -5594,105 +5682,6 @@
     panelHeaderContainer.style.flexDirection = 'row';
     panelHeaderContainer.style.justifyContent = 'flex-end'; // Aligns to the right
     panelHeaderContainer.style.padding = '0.6em';
-
-    // Inline SVG source for the "x" icon (close button)
-    const closeSVG = `
-    <svg xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="lightgreen"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        class="feather feather-x">
-        <line x1="18" y1="6" x2="6" y2="18"></line>
-        <line x1="6" y1="6" x2="18" y2="18"></line>
-    </svg>`;
-
-    // Inline SVG source for the "download" icon (export button)
-    const exportSVG = `
-    <svg xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="#90b9ee"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        class="feather feather-download">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-        <polyline points="7 10 12 15 17 10"></polyline>
-        <line x1="12" y1="15" x2="12" y2="3"></line>
-    </svg>`;
-
-    // Inline SVG source for the "upload" icon (import button)
-    const importSVG = `
-    <svg xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="#d190ee"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        class="feather feather-upload">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-        <polyline points="17 8 12 3 7 8"></polyline>
-        <line x1="12" y1="3" x2="12" y2="15"></line>
-    </svg>`;
-
-    // Inline SVG source for the "save" icon (save button)
-    const saveSVG = `
-    <svg xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="#90eedc"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        class="feather feather-save">
-        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-        <polyline points="17 21 17 13 7 13 7 21"></polyline>
-        <polyline points="7 3 7 8 15 8"></polyline>
-    </svg>`;
-
-    // Inline SVG source for the "remove" icon (remove button)
-    const removeSVG = `
-    <svg xmlns="http://www.w3.org/2000/svg"
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="#ee9090"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        class="feather feather-trash">
-        <polyline points="3 6 5 6 21 6"></polyline>
-        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-    </svg>`;
-
-    // Inline SVG source for the "add" icon (add button)
-    const addSVG = `
-    <svg xmlns="http://www.w3.org/2000/svg"
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="#d190ee"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        class="feather feather-plus">
-        <line x1="12" y1="5" x2="12" y2="19"></line>
-        <line x1="5" y1="12" x2="19" y2="12"></line>
-    </svg>`;
 
     // Helper function to assign common styles to header buttons
     function assignHeaderButtonsStyles(buttonElement, specificStyles, isFirstButton = false) {
@@ -5734,7 +5723,7 @@
     closePanelButton.innerHTML = closeSVG;
     closePanelButton.title = 'Close panel';
 
-    // Call the helper function for the close button without marginRight
+    // Assign base styles for the close button
     assignHeaderButtonsStyles(closePanelButton, {
       backgroundColor: 'darkolivegreen',
     }, true); // Pass true for isFirstButton
@@ -5745,6 +5734,22 @@
       fadeTargetElement(settingsPanel, 'hide');
       fadeDimmingElement('hide');
     });
+
+    // Create a clear cache button with the provided SVG icon
+    const clearCacheButton = document.createElement('div');
+    clearCacheButton.className = 'clear-cache-button';
+    clearCacheButton.innerHTML = trashSVG;
+    clearCacheButton.title = 'Clear settings';
+
+    // Assign base styles for the clear button
+    assignHeaderButtonsStyles(clearCacheButton, {
+      backgroundColor: 'brown'
+    })
+
+    // Add a click event listener to the clear cache button
+    clearCacheButton.addEventListener('click', () => {
+      clearSettingsContainers();
+    })
 
     // Create an import button with the provided SVG icon
     const importSettingsButton = document.createElement('div');
@@ -5784,9 +5789,9 @@
 
         // Process tracked items
         container.querySelectorAll('.settings-tracked-container .tracked-item').forEach(item => {
-          const usernameField = item.querySelector('.tracked-username');
-          const genderField = item.querySelector('.tracked-gender');
-          const pronunciationField = item.querySelector('.tracked-pronunciation');
+          const usernameField = item.querySelector('.tracked-username-field');
+          const genderField = item.querySelector('.tracked-gender-select');
+          const pronunciationField = item.querySelector('.tracked-pronunciation-field');
 
           const usernameValue = usernameField ? usernameField.value.trim() : '';
           const genderValue = genderField ? genderField.value.trim() : '';
@@ -5917,9 +5922,13 @@
 
       containers.forEach(selector => {
         const container = document.querySelector(selector);
+        // Find the .add-setting-button if it exists
+        const addButton = container.querySelector('.add-setting-button');
         if (container) {
           container.innerHTML = ''; // Clear the container
         }
+        // Re-add the .add-setting-button if it was found
+        addButton && container.appendChild(addButton);
       });
     }
 
@@ -5952,6 +5961,7 @@
     panelHeaderContainer.appendChild(saveSettingsButton);
     panelHeaderContainer.appendChild(importSettingsButton);
     panelHeaderContainer.appendChild(exportSettingsButton);
+    panelHeaderContainer.appendChild(clearCacheButton);
     panelHeaderContainer.appendChild(closePanelButton);
 
     // Append the header to the settings panel
@@ -6127,7 +6137,7 @@
       const removeButton = createRemoveButton('tracked', item);
 
       const genderSelect = document.createElement('select');
-      genderSelect.className = 'tracked-gender';
+      genderSelect.className = 'tracked-gender-select';
       const genders = [
         { value: 'Male', emoji: '👨' },
         { value: 'Female', emoji: '👩' },
@@ -6227,9 +6237,12 @@
     function createAddButton(containerSelector, itemCreator) {
       const addButton = document.createElement('div');
       const middleWord = containerSelector.split('-')[1]; // Extract key type (e.g., tracked, mention)
+      const existingButton = document.querySelector(`.add-${middleWord}-item`); // Check if the button already exists
+
+      if (existingButton) return existingButton; // Return the existing button if it exists
 
       // Set class, content, and style for the button
-      addButton.className = `add-${middleWord}-item`;
+      addButton.className = `add-setting-button add-${middleWord}-item`;
       addButton.innerHTML = addSVG; // Add SVG icon to the button
       styleButton(addButton, '#d190ee', '#502f6b', false); // Style the button
       addButton.style.margin = '0.4em';

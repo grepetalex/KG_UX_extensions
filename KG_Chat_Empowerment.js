@@ -104,7 +104,7 @@
   const storedUsersToTrack = JSON.parse(localStorage.getItem('usersToTrack')) || [];
   const storedMentionKeywords = JSON.parse(localStorage.getItem('mentionKeywords')) || [];
   const storedModerators = JSON.parse(localStorage.getItem('moderator')) || [];
-  const storedIgnoreUserList = JSON.parse(localStorage.getItem('ignored')) || [];
+  const storedIgnored = JSON.parse(localStorage.getItem('ignored')) || [];
 
   // Replace usersToTrack with stored value if it exists and is not empty
   usersToTrack = storedUsersToTrack?.length ? storedUsersToTrack : usersToTrack;
@@ -114,7 +114,7 @@
   // Replace moderator with stored value if it exists and is not empty
   moderator = storedModerators?.length ? storedModerators : moderator;
   // Replace ignored with stored value if it exists and is not empty
-  ignored = storedIgnoreUserList?.length ? storedIgnoreUserList : ignored;
+  ignored = storedIgnored?.length ? storedIgnored : ignored;
 
   // Key Events: CTRL and ALT
 

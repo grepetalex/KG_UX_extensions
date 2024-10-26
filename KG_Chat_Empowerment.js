@@ -6088,51 +6088,58 @@
       });
     }
 
-    // Helper function to create a tracked row
-    function createTrackedItem(user) {
+    // Helper function to create a container element
+    function createContainer(type, layout = 'inline-flex') {
       const item = document.createElement('div');
-      item.className = 'tracked-item';
-      item.style.display = 'flex';
+      item.className = `${type}-item`;
+      item.style.display = layout;
       item.style.gap = '0.5em';
       item.style.padding = '0.25em';
+      return item;
+    }
 
-      const usernameInput = document.createElement('input');
-      usernameInput.className = 'tracked-username';
-      usernameInput.value = user.name;
-      usernameInput.placeholder = 'Username';
-      styleInput(usernameInput);
+    // Helper function to create an input element
+    function createInput(type, value = '', placeholder = '') {
+      const input = document.createElement('input');
+      input.className = `${type}-field`;
+      input.value = value;
+      input.placeholder = placeholder;
+      styleInput(input);
+      return input;
+    }
 
-      // Array of genders with their corresponding emojis
-      const genders = [
-        { value: 'Male', emoji: '👨' },
-        { value: 'Female', emoji: '👩' }
-      ];
-
-      const genderSelect = document.createElement('select');
-      genderSelect.className = 'tracked-gender';
-
-      genders.forEach(({ value, emoji }) => {
-        const option = document.createElement('option');
-        option.value = value;
-        option.textContent = `${emoji} ${value.charAt(0).toUpperCase() + value.slice(1)}`; // Add emoji here
-        if (user.gender === value) option.selected = true; // Check user gender for selected option
-        genderSelect.appendChild(option);
-      });
-
-      // Apply styles to the select element
-      styleSelect(genderSelect);
-
-      const pronunciationInput = document.createElement('input');
-      pronunciationInput.className = 'tracked-pronunciation';
-      pronunciationInput.value = user.pronunciation;
-      pronunciationInput.placeholder = 'Pronunciation';
-      styleInput(pronunciationInput);
-
+    // Helper function to create a remove button with styles and event listener
+    function createRemoveButton(type, item) {
       const removeButton = document.createElement('div');
-      removeButton.className = 'remove-tracked-item';
+      removeButton.className = `remove-${type}-word`;
       removeButton.innerHTML = removeSVG;
       attachRemoveListener(removeButton, item);
       styleButton(removeButton, '#ee9090', '#6b2f2f', false);
+      return removeButton;
+    }
+
+    // Function to create a tracked item (with gender select)
+    function createTrackedItem(user) {
+      const item = createContainer('tracked', 'flex');
+
+      const usernameInput = createInput('tracked-username', user.name, 'Username');
+      const pronunciationInput = createInput('tracked-pronunciation', user.pronunciation, 'Pronunciation');
+      const removeButton = createRemoveButton('tracked', item);
+
+      const genderSelect = document.createElement('select');
+      genderSelect.className = 'tracked-gender';
+      const genders = [
+        { value: 'Male', emoji: '👨' },
+        { value: 'Female', emoji: '👩' },
+      ];
+      genders.forEach(({ value, emoji }) => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = `${emoji} ${value}`;
+        if (user.gender === value) option.selected = true;
+        genderSelect.appendChild(option);
+      });
+      styleSelect(genderSelect);
 
       item.appendChild(usernameInput);
       item.appendChild(genderSelect);
@@ -6142,25 +6149,11 @@
       return item;
     }
 
-    // Helper function to create a mention item
+    // Function to create a mention item
     function createMentionItem(keyword) {
-      const item = document.createElement('div');
-      item.className = 'mention-item';
-      item.style.display = 'inline-flex';
-      item.style.gap = '0.5em';
-      item.style.padding = '0.25em';
-
-      const mentionInput = document.createElement('input');
-      mentionInput.className = 'mention-field';
-      mentionInput.value = keyword;
-      mentionInput.placeholder = 'Mention Keyword';
-      styleInput(mentionInput);
-
-      const removeButton = document.createElement('div');
-      removeButton.className = 'remove-mention-word';
-      removeButton.innerHTML = removeSVG;
-      attachRemoveListener(removeButton, item);
-      styleButton(removeButton, '#ee9090', '#6b2f2f', false);
+      const item = createContainer('mention');
+      const mentionInput = createInput('mention', keyword, 'Mention Keyword');
+      const removeButton = createRemoveButton('mention', item);
 
       item.appendChild(mentionInput);
       item.appendChild(removeButton);
@@ -6168,25 +6161,11 @@
       return item;
     }
 
-    // Helper function to create a moderator item
+    // Function to create a moderator item
     function createModeratorItem(moderator) {
-      const item = document.createElement('div');
-      item.className = 'moderator-item';
-      item.style.display = 'inline-flex';
-      item.style.gap = '0.5em';
-      item.style.padding = '0.25em';
-
-      const moderatorInput = document.createElement('input');
-      moderatorInput.className = 'moderator-field';
-      moderatorInput.value = moderator; // Changed from keyword to moderatorName
-      moderatorInput.placeholder = 'Moderator Name'; // Updated placeholder
-      styleInput(moderatorInput);
-
-      const removeButton = document.createElement('div');
-      removeButton.className = 'remove-moderator-word'; // Updated class name
-      removeButton.innerHTML = removeSVG; // Assuming removeSVG is defined
-      attachRemoveListener(removeButton, item); // Assuming this function is defined
-      styleButton(removeButton, '#ee9090', '#6b2f2f', false); // Assuming this function is defined
+      const item = createContainer('moderator');
+      const moderatorInput = createInput('moderator', moderator, 'Moderator Name');
+      const removeButton = createRemoveButton('moderator', item);
 
       item.appendChild(moderatorInput);
       item.appendChild(removeButton);
@@ -6194,25 +6173,11 @@
       return item;
     }
 
-    // Helper function to create an ignored item
+    // Function to create an ignored item
     function createIgnoredItem(user) {
-      const item = document.createElement('div');
-      item.className = 'ignored-item';
-      item.style.display = 'inline-flex';
-      item.style.gap = '0.5em';
-      item.style.padding = '0.25em';
-
-      const ignoredInput = document.createElement('input');
-      ignoredInput.className = 'ignored-field';
-      ignoredInput.value = user;
-      ignoredInput.placeholder = 'Ignored Username';
-      styleInput(ignoredInput);
-
-      const removeButton = document.createElement('div');
-      removeButton.className = 'remove-ignored-word';
-      removeButton.innerHTML = removeSVG;
-      attachRemoveListener(removeButton, item);
-      styleButton(removeButton, '#ee9090', '#6b2f2f', false);
+      const item = createContainer('ignored');
+      const ignoredInput = createInput('ignored', user, 'Ignored Username');
+      const removeButton = createRemoveButton('ignored', item);
 
       item.appendChild(ignoredInput);
       item.appendChild(removeButton);

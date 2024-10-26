@@ -1846,6 +1846,25 @@
       }
     }
 
+    // Variable to keep track of the last displayed emoji
+    let lastDisplayedEmoji = '🕛'; // Default to the first emoji
+
+    // Create a mapping of seconds to clock emojis
+    const emojiMap = {
+      0: '🕛',
+      5: '🕐',
+      10: '🕑',
+      15: '🕒',
+      20: '🕓',
+      25: '🕔',
+      30: '🕕',
+      35: '🕖',
+      40: '🕗',
+      45: '🕘',
+      50: '🕙',
+      55: '🕚',
+    };
+
     // Function to update the drop-time-expiration span
     function updatedropTimeExpiration(dropTimeExpiration, remainingTime) {
       // Calculate hours, minutes, and seconds
@@ -1857,7 +1876,19 @@
       const remainingTimeString = `${hours}:${minutes}:${seconds}`;
 
       // Update the drop-time-expiration span using the cached reference
-      dropTimeExpiration.textContent = remainingTimeString;
+      // dropTimeExpiration.textContent = remainingTimeString;
+
+      // Extract the last two digits from the formatted string to get the seconds
+      const lastTwoDigits = remainingTimeString.slice(-2); // Get the last two characters
+      const parsedSeconds = parseInt(lastTwoDigits, 10); // Parse it as an integer
+
+      // Check if we need to update the emoji
+      if (parsedSeconds % 5 === 0 && lastDisplayedEmoji !== emojiMap[parsedSeconds]) {
+        lastDisplayedEmoji = emojiMap[parsedSeconds] || '🕛'; // Update emoji only if it's a significant change
+      }
+
+      // Update the drop-time-expiration span using the cached reference
+      dropTimeExpiration.textContent = `${remainingTimeString} ${lastDisplayedEmoji}`; // Combine time and emoji
     }
 
     // Call the function to update the remaining time every second

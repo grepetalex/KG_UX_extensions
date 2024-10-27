@@ -4234,6 +4234,12 @@
       <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
       <polyline points="22,6 12,13 2,6"></polyline>
       </svg>`;
+  // Icon for chat logs
+  const iconChatLogs = `<svg xmlns="${svgUrl}" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" 
+    stroke="cornflowerblue" stroke-width="${iconStrokeWidth}" stroke-linecap="round" stroke-linejoin="round" 
+    class="feather feather-message-circle">
+    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+  </svg>`;
 
 
   // Declare variables for the sound switcher button and its icon
@@ -4811,7 +4817,7 @@
 
     // Add cache-specific styles directly
     showUserListCacheButton.style.position = 'relative';
-    showUserListCacheButton.style.zIndex = '2';
+    showUserListCacheButton.style.zIndex = '3';
 
     // Add data base icon to the button
     showUserListCacheButton.innerHTML = iconUserlistCache;
@@ -4890,7 +4896,7 @@
 
     // Add personal messages-specific styles
     showPersonalMessagesButton.style.position = 'relative';
-    showPersonalMessagesButton.style.zIndex = '1';
+    showPersonalMessagesButton.style.zIndex = '2';
     showPersonalMessagesButton.innerHTML = iconPersonalMessages; // Add icon
 
     // Create the small indicator for all message count
@@ -5127,22 +5133,6 @@
 
     // Append the clear cache button to the panel header container
     panelControlButtons.appendChild(clearCacheButton);
-
-    // Inline SVG source for the "x" icon (close button)
-    const closeSVG = `
-    <svg xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="lightgreen"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        class="feather feather-x">
-        <line x1="18" y1="6" x2="6" y2="18"></line>
-        <line x1="6" y1="6" x2="18" y2="18"></line>
-    </svg>`;
 
     // Create a close button with the provided SVG icon
     const closePanelButton = document.createElement('div');
@@ -5405,6 +5395,278 @@
   }
 
   // CREATE PERSONAL MESSAGES BUTTON (END)
+
+
+  // CREATE CHAT LOGS BUTTON (START)
+
+  // Function to create the button for opening chat logs
+  function createChatLogsButton() {
+    const showChatLogsButton = document.createElement('div');
+    showChatLogsButton.classList.add('chat-logs-button');
+
+    // Apply base button styles
+    applyBaseButtonStyles(showChatLogsButton);
+
+    showChatLogsButton.style.position = 'relative';
+    showChatLogsButton.style.zIndex = '1';
+    showChatLogsButton.innerHTML = iconChatLogs; // Add icon
+
+    showChatLogsButton.title = 'Show Chat Logs';
+
+    showChatLogsButton.addEventListener('click', function () {
+      addPulseEffect(showChatLogsButton); // Add pulse effect
+      showChatLogs();
+    });
+
+    empowermentButtonsPanel.appendChild(showChatLogsButton);
+  }
+
+  // Call the function to create the button
+  createChatLogsButton();
+
+  // Function to fetch today's chat logs from the specified URL and parse the HTML to extract message details
+  const fetchChatLogs = async () => {
+    // Get today's date in 'YYYY-MM-DD' format
+    const today = new Intl.DateTimeFormat('en-CA').format(new Date());
+
+    // Construct the URL to fetch chat logs for today
+    const url = `https://klavogonki.ru/chatlogs/${today}.html`;
+
+    // Function to parse the HTML and extract chat log entries
+    const parseChatLog = html => {
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+
+      return [...doc.querySelectorAll('.ts')].map(timeElement => {
+        const usernameElement = timeElement.nextElementSibling; // Get the username element
+        const messageNode = usernameElement?.nextSibling; // Get the message node
+
+        // Function to extract message text until the next <br> tag
+        const extractMessageText = node => {
+          if (!node) return '';
+
+          return [...node.childNodes].reduce((acc, child) => {
+            if (child.nodeType === Node.TEXT_NODE) {
+              acc += child.textContent; // Concatenate text from text nodes
+            } else if (child.nodeType === Node.ELEMENT_NODE) {
+              if (child.tagName === 'A') {
+                acc += child.textContent; // Concatenate text from <a> elements
+              } else if (child.tagName === 'BR') {
+                return acc; // Stop processing and return accumulated text at <br> tag
+              }
+            }
+            return acc;
+          }, '').trim(); // Return the accumulated text, trimmed
+        };
+
+        // Check if the username and message are valid, then return an object
+        if (usernameElement?.classList.contains('mn') && messageNode) {
+          let messageText = '';
+
+          if (messageNode.nodeType === Node.ELEMENT_NODE) {
+            messageText = extractMessageText(messageNode); // Extract from the message node
+          } else if (messageNode.nodeType === Node.TEXT_NODE) {
+            const nextSibling = usernameElement.nextElementSibling; // Check the next sibling
+            if (nextSibling && nextSibling.tagName === 'A') {
+              messageText = `${messageNode.textContent.trim()} ${nextSibling.textContent.trim()}`;
+            } else {
+              messageText = messageNode.textContent.trim(); // Just the text node if no <a> tag follows
+            }
+          }
+
+          // Combine any elements if messageText is still empty
+          if (!messageText) {
+            const combinedText = extractMessageText(usernameElement.nextSibling);
+            messageText = combinedText;
+          }
+
+          return {
+            time: timeElement.textContent.trim().replace(/[\[\]]/g, ''), // Remove square brackets from time
+            username: usernameElement.textContent.trim().replace(/<|>/g, ''), // Remove angle brackets from username
+            message: messageText || null, // Use the extracted message or null if empty
+          };
+        }
+
+        return null; // Return null if username is invalid
+      }).filter(Boolean); // Filter out null entries
+    };
+
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Network response was not ok');
+
+      const html = await response.text();
+      return { chatlogs: parseChatLog(html) };
+    } catch (error) {
+      console.error('Fetch error:', error);
+      return { chatlogs: [] }; // Return an empty array in case of an error
+    }
+  };
+
+  // Function to display the chat logs panel
+  async function showChatLogs() {
+    // Check if the chat logs panel already exists; if it does, exit the function to avoid duplication
+    if (document.querySelector('.chat-logs-panel')) return;
+
+    // Create a container div with class 'chat-logs-panel'
+    const chatLogsPanel = document.createElement('div');
+    chatLogsPanel.className = 'chat-logs-panel';
+
+    // Set initial styles for the chat logs panel
+    chatLogsPanel.style.opacity = '0';
+    chatLogsPanel.style.backgroundColor = '#1b1b1b';
+    chatLogsPanel.style.setProperty('border-radius', '0.6em', 'important');
+    chatLogsPanel.style.position = 'fixed';
+    chatLogsPanel.style.top = '100px';
+    chatLogsPanel.style.left = '50%';
+    chatLogsPanel.style.transform = 'translateX(-50%)';
+    chatLogsPanel.style.width = '50vw';
+    chatLogsPanel.style.height = '80vh';
+    chatLogsPanel.style.zIndex = '999';
+    chatLogsPanel.style.minWidth = '1000px';
+
+    // Create a container div for the panel header
+    const panelHeaderContainer = document.createElement('div');
+    panelHeaderContainer.className = 'panel-header';
+    panelHeaderContainer.style.display = 'flex';
+    panelHeaderContainer.style.flexDirection = 'row';
+    panelHeaderContainer.style.justifyContent = 'flex-end';
+    panelHeaderContainer.style.padding = '0.6em';
+
+    // Create a container div with class 'panel-control-buttons'
+    const panelControlButtons = document.createElement('div');
+    panelControlButtons.className = 'panel-control-buttons';
+    panelControlButtons.style.display = 'flex';
+
+    // Create a close button with the provided SVG icon
+    const closePanelButton = document.createElement('div');
+    closePanelButton.className = 'close-panel-button';
+    closePanelButton.title = 'Close panel';
+    closePanelButton.innerHTML = closeSVG;
+    closePanelButton.style.backgroundColor = 'darkolivegreen';
+    closePanelButton.style.width = '48px';
+    closePanelButton.style.height = '48px';
+    closePanelButton.style.display = 'flex';
+    closePanelButton.style.justifyContent = 'center';
+    closePanelButton.style.alignItems = 'center';
+    closePanelButton.style.cursor = 'pointer';
+    closePanelButton.style.setProperty('border-radius', '0.2em', 'important');
+
+    // Add a hover effect with brightness transition
+    closePanelButton.style.filter = 'brightness(1)';
+    closePanelButton.style.transition = 'filter 0.3s ease';
+
+    // Add a mouseover event listener to the close panel button
+    closePanelButton.addEventListener('mouseover', () => {
+      closePanelButton.style.filter = 'brightness(0.8)';
+    });
+
+    // Add a mouseout event listener to restore the brightness
+    closePanelButton.addEventListener('mouseout', () => {
+      closePanelButton.style.filter = 'brightness(1)';
+    });
+
+    // Add a click event listener to the close panel button
+    closePanelButton.addEventListener('click', () => {
+      // Fade out the chat logs panel when the close button is clicked
+      fadeTargetElement(chatLogsPanel, 'hide');
+      fadeDimmingElement('hide');
+    });
+
+    // Append close button to control buttons, and control buttons to header
+    panelControlButtons.appendChild(closePanelButton);
+    panelHeaderContainer.appendChild(panelControlButtons);
+
+    // Create a container for the chat logs
+    const chatLogsContainer = document.createElement('div');
+    chatLogsContainer.className = 'chat-logs-container';
+    chatLogsContainer.style.overflowY = 'auto'; // Enable scrolling for messages
+    chatLogsContainer.style.height = 'calc(100% - 70px)'; // Adjust height considering header
+    chatLogsContainer.style.padding = '1em';
+    chatLogsContainer.style.color = 'white'; // Text color for logs
+
+    // Append the header and chat logs container to the chat logs panel
+    chatLogsPanel.appendChild(panelHeaderContainer);
+    chatLogsPanel.appendChild(chatLogsContainer);
+
+    // Append the chat logs panel to the body
+    document.body.appendChild(chatLogsPanel);
+
+    // Fade in the chat logs panel and dimming background
+    fadeTargetElement(chatLogsPanel, 'show');
+    fadeDimmingElement('show');
+
+    // Define an object to store the hue for each username
+    const usernameHueMap = {};
+    const hueStep = 15;
+    let lastDisplayedUsername = null; // Variable to track the last displayed username
+
+    // Fetch and display chat logs
+    const { chatlogs } = await fetchChatLogs();
+    chatlogs.forEach(({ time, username, message }) => {
+      // Create a container for each message
+      const messageContainer = document.createElement('div');
+      messageContainer.style.padding = '0.2em'; // Set padding for the message container
+
+      // Create time element
+      const timeElement = document.createElement('span');
+      timeElement.className = 'message-time';
+      timeElement.textContent = time;
+      timeElement.style.color = 'darkseagreen';
+      timeElement.style.margin = '0.4em';
+
+      // Create username element
+      const usernameElement = document.createElement('span');
+      usernameElement.className = 'message-username';
+      usernameElement.textContent = username; // Use the original username for display
+      usernameElement.style.margin = '0.4em';
+
+      // Check if the hue for this username is already stored
+      let hueForUsername = usernameHueMap[username]; // Use the original username as the key
+
+      // If the hue is not stored, generate a new random hue with the specified step
+      if (!hueForUsername) {
+        hueForUsername = Math.floor(Math.random() * (210 / hueStep)) * hueStep; // Limit hue to a maximum of 210
+        // Store the generated hue for this username
+        usernameHueMap[username] = hueForUsername; // Store hue using the original username as the key
+      }
+
+      // Apply the hue color to the username element
+      usernameElement.style.color = `hsl(${hueForUsername}, 100%, 50%)`;
+
+      // Create message text element
+      const messageTextElement = document.createElement('span');
+      messageTextElement.className = 'message-text';
+      messageTextElement.textContent = message;
+      messageTextElement.style.color = 'lightsteelblue';
+      messageTextElement.style.margin = '0.4em';
+
+      // Apply margin for the first message of a new user
+      messageContainer.style.marginTop = lastDisplayedUsername !== username ? '0.6em' : '';
+
+      // Update the last displayed username
+      lastDisplayedUsername = username;
+
+      // Append elements to the message container
+      messageContainer.appendChild(timeElement);
+      messageContainer.appendChild(usernameElement);
+      messageContainer.appendChild(messageTextElement);
+
+      // Append the message container to the chat logs container
+      chatLogsContainer.appendChild(messageContainer);
+    });
+
+    // Attach a keydown event listener to the document object
+    document.addEventListener('keydown', function (event) {
+      // Check if the key pressed was the "Escape" key
+      if (event.key === 'Escape') {
+        // Fade out the chat logs panel
+        fadeTargetElement(chatLogsPanel, 'hide');
+        fadeDimmingElement('hide');
+      }
+    });
+  }
+
+  // CREATE CHAT LOGS BUTTON (END)
 
 
   // CREATE PANEL GRAPHICAL SETTINGS BUTTON (START)

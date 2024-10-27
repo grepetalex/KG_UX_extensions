@@ -1030,6 +1030,7 @@
 
   // Create user count container to store the user count number
   const userCount = document.createElement('div');
+  userCount.title = 'Current Chat Users Count';
   userCount.classList.add('user-count-indicator');
   userCount.style.filter = 'grayscale(100%)';
   userCount.style.transition = '0.2s ease-in-out';
@@ -5790,9 +5791,10 @@
   function createSettingsButton() {
     // Create a new element with class 'settings-button'
     const showSettingsButton = document.createElement('div');
-
     // Add the class 'settings-button' to the button
     showSettingsButton.classList.add('settings-button');
+
+    showSettingsButton.title = 'Show Settings Panel';
 
     // Apply base button styles
     applyBaseButtonStyles(showSettingsButton);

@@ -3040,7 +3040,13 @@
       s = l < 0.5 ? delta / (max + min) : delta / (2 - max - min);
       h = (max === r ? (g - b) / delta + (g < b ? 6 : 0) : (max === g ? (b - r) / delta + 2 : (r - g) / delta + 4)) / 6;
     }
-    return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+
+    // Limit hue to a maximum of 210
+    h = Math.min(Math.round(h * 360), 210);
+    // Limit saturation to a maximum of 90
+    s = Math.min(Math.round(s * 100), 90);
+
+    return { h, s, l: Math.round(l * 100) };
   };
 
   const hslToRgb = (h, s, l) => {

@@ -1671,7 +1671,9 @@
         imgElement.style.objectFit = 'cover';
         avatarElement.appendChild(imgElement);
       } else {
-        avatarElement.innerHTML = getRandomIconSVG();
+        // avatarElement.innerHTML = getRandomIconSVG();
+        avatarElement.style.fontSize = '1.8rem';
+        avatarElement.innerHTML = getRandomEmojiAvatar();
       }
 
       const loginElement = document.createElement('a');
@@ -1846,9 +1848,6 @@
       }
     }
 
-    // Variable to keep track of the last displayed emoji
-    let lastDisplayedEmoji = '🕛'; // Default to the first emoji
-
     // Create a mapping of seconds to clock emojis
     const emojiMap = {
       0: '🕛',
@@ -1872,23 +1871,18 @@
       const minutes = String(Math.floor((remainingTime % (60 * 60 * 1000)) / (60 * 1000))).padStart(2, '0');
       const seconds = String(Math.floor((remainingTime % (60 * 1000)) / 1000)).padStart(2, '0');
 
-      // Create a custom formatted string
+      // Create the formatted time string
       const remainingTimeString = `${hours}:${minutes}:${seconds}`;
 
-      // Update the drop-time-expiration span using the cached reference
-      // dropTimeExpiration.textContent = remainingTimeString;
+      // Determine the current seconds
+      const parsedSeconds = parseInt(seconds, 10);
 
-      // Extract the last two digits from the formatted string to get the seconds
-      const lastTwoDigits = remainingTimeString.slice(-2); // Get the last two characters
-      const parsedSeconds = parseInt(lastTwoDigits, 10); // Parse it as an integer
+      // Use the parsed seconds to find the emoji index, moving one forward
+      const nextInterval = Math.ceil(parsedSeconds / 5) * 5; // Move to the next 5-second mark
+      const currentEmoji = emojiMap[nextInterval] || emojiMap[0]; // Default to 00 if not found
 
-      // Check if we need to update the emoji
-      if (parsedSeconds % 5 === 0 && lastDisplayedEmoji !== emojiMap[parsedSeconds]) {
-        lastDisplayedEmoji = emojiMap[parsedSeconds] || '🕛'; // Update emoji only if it's a significant change
-      }
-
-      // Update the drop-time-expiration span using the cached reference
-      dropTimeExpiration.textContent = `${remainingTimeString} ${lastDisplayedEmoji}`; // Combine time and emoji
+      // Update the drop-time-expiration span with the time and emoji
+      dropTimeExpiration.textContent = `${remainingTimeString} ${currentEmoji}`;
     }
 
     // Call the function to update the remaining time every second
@@ -2398,11 +2392,44 @@
   </svg>`;
 
   // Helper function to get a random SVG
-  function getRandomIconSVG() {
-    const svgs = [mehSVG, smileSVG, frownSVG];
-    const randomIndex = Math.floor(Math.random() * svgs.length);
-    return svgs[randomIndex];
+  // function getRandomIconSVG() {
+  //   const svgs = [mehSVG, smileSVG, frownSVG];
+  //   const randomIndex = Math.floor(Math.random() * svgs.length);
+  //   return svgs[randomIndex];
+  // }
+
+  // Variable to store the last selected emoji
+  let lastEmojiAvatar = null;
+
+  // Helper function to get a random emoji avatar
+  function getRandomEmojiAvatar() {
+    let newEmoji;
+    do {
+      newEmoji = emojiFaces[Math.floor(Math.random() * emojiFaces.length)];
+    } while (newEmoji === lastEmojiAvatar);
+
+    lastEmojiAvatar = newEmoji;
+    return newEmoji;
   }
+
+  const emojiFaces = [
+    // People Emojis
+    '😀', '😁', '😂', '🤣', '😃', '😄', '😅', '😆',
+    '😉', '😊', '😋', '😎', '😏', '😐', '😑', '😒',
+    '😓', '😔', '😕', '😖', '😗', '😘', '😙', '😚',
+    '😜', '😝', '😛', '🤑', '🤗', '🤔', '🤐', '🤨',
+    '😏', '😣', '😥', '😮', '🤯', '😳', '😱', '😨',
+    '😰', '😢', '😥', '😓', '🤪', '😵', '😲', '😵',
+    '🤤', '😷', '🤒', '🤕', '🤢', '🤧', '😇', '🥳',
+    '🥺', '😏', '😬', '😴', '😌', '🤥', '😼', '😺',
+
+    // Animal Emojis
+    '🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼',
+    '🐨', '🐯', '🦁', '🐮', '🐷', '🐽', '🐸', '🐵',
+    '🙈', '🙉', '🙊', '🐔', '🐧', '🐦', '🐤', '🐣',
+    '🦅', '🦆', '🦇', '🐢', '🐍', '🦎', '🦧', '🦄',
+    '🐉', '🐲', '🦙', '🐕', '🐩', '🐾'
+  ];
 
   // Array to store user IDs and their status titles
   let fetchedUsers = JSON.parse(localStorage.getItem('fetchedUsers')) || {};
@@ -2428,7 +2455,9 @@
       newAvatarElement.appendChild(avatarImage);
     } else {
       // Insert a random SVG icon instead of an image when avatarTimestamp is '00'
-      newAvatarElement.innerHTML = getRandomIconSVG();
+      // newAvatarElement.innerHTML = getRandomIconSVG();
+      newAvatarElement.style.fontSize = '1.8rem';
+      newAvatarElement.innerHTML = getRandomEmojiAvatar();
     }
 
     const newNameElement = document.createElement('a');

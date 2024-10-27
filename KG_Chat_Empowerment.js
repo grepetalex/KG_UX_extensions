@@ -5279,7 +5279,7 @@
       messageTextElement.style.cursor = 'pointer'; // Pointer cursor
       messageTextElement.style.margin = '0.4em';
 
-      messageTextElement.innerHTML = message.replace(/:(\w+):/g,
+      messageTextElement.innerHTML = message.replace(/:(?=\w*[a-zA-Z])(\w+):/g,
         (_, word) => `<img src="/img/smilies/${word}.gif" alt=":${word}:" title=":${word}:" class="smile">`
       );
 
@@ -5639,6 +5639,10 @@
       messageTextElement.textContent = message;
       messageTextElement.style.color = 'lightsteelblue';
       messageTextElement.style.margin = '0.4em';
+
+      messageTextElement.innerHTML = message.replace(/:(?=\w*[a-zA-Z])(\w+):/g,
+        (_, word) => `<img src="/img/smilies/${word}.gif" alt=":${word}:" title=":${word}:" class="smile">`
+      );
 
       // Apply margin for the first message of a new user
       messageContainer.style.marginTop = lastDisplayedUsername !== username ? '0.6em' : '';

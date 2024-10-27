@@ -5520,7 +5520,7 @@
     chatLogsPanel.style.top = '100px';
     chatLogsPanel.style.left = '50%';
     chatLogsPanel.style.transform = 'translateX(-50%)';
-    chatLogsPanel.style.width = '50vw';
+    chatLogsPanel.style.width = '80vw';
     chatLogsPanel.style.height = '80vh';
     chatLogsPanel.style.zIndex = '999';
     chatLogsPanel.style.minWidth = '1000px';

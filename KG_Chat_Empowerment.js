@@ -3028,10 +3028,13 @@
     });
   }
 
-  // Convert RGB to HSL and vice versa in a compact manner
   const rgbToHsl = (r, g, b) => {
-    r /= 255; g /= 255; b /= 255;
-    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    r /= 255;
+    g /= 255;
+    b /= 255;
+
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
     let h, s, l = (max + min) / 2;
 
     if (max === min) {
@@ -3039,16 +3042,32 @@
     } else {
       const delta = max - min;
       s = l < 0.5 ? delta / (max + min) : delta / (2 - max - min);
-      h = (max === r ? (g - b) / delta + (g < b ? 6 : 0) : (max === g ? (b - r) / delta + 2 : (r - g) / delta + 4)) / 6;
+      h = (
+        max === r
+          ? (g - b) / delta + (g < b ? 6 : 0)
+          : max === g
+            ? (b - r) / delta + 2
+            : (r - g) / delta + 4
+      ) / 6;
     }
 
-    // Limit hue to a maximum of 210
-    h = Math.min(Math.round(h * 360), 210);
-    // Limit saturation to a maximum of 90
-    s = Math.min(Math.round(s * 100), 90);
+    h = Math.round(h * 360); // Convert to degrees
+    s = Math.min(Math.round(s * 100), 90); // Cap saturation at 90
+    l = Math.round(l * 100); // Convert lightness to 0–100
 
-    return { h, s, l: Math.round(l * 100) };
+    // Bypass lightness range 230–280
+    if (l >= 230 && l <= 280) {
+      l = l < 255 ? 229 : 281; // Shift to nearest boundary
+    }
+
+    // Adjust hue to allow only 0–230 and 280–360 ranges
+    if (h > 230 && h < 280) {
+      h = h < 255 ? 230 : 280; // Shift to nearest valid range
+    }
+
+    return { h, s, l };
   };
+
 
   const hslToRgb = (h, s, l) => {
     s /= 100; l /= 100;

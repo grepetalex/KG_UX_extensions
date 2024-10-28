@@ -8,6 +8,12 @@
 // @icon           https://www.google.com/s2/favicons?sz=64&domain=klavogonki.ru
 // ==/UserScript==
 
+// Check if the 'KG_HideGamesStyle' key exists in localStorage
+if (!localStorage.getItem('KG_HideGamesStyle')) {
+    // If the key does not exist, set it with the default value
+    localStorage.setItem('KG_HideGamesStyle', '#gamelist{display:none;}');
+}
+
 // Constants for SVG icon properties
 const toggleButtonIconSize = 16;
 const toggleButtonStrokeWidth = 2;

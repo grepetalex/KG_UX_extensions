@@ -5538,6 +5538,33 @@
     panelControlButtons.className = 'panel-control-buttons';
     panelControlButtons.style.display = 'flex';
 
+    // Create a container div for the search input
+    const searchContainer = document.createElement('div');
+    searchContainer.className = 'search-for-messages';
+    searchContainer.style.width = '100%';
+    searchContainer.style.margin = '0 20px';
+    searchContainer.style.display = 'flex';
+
+    // Create the input field for searching users
+    const searchInput = document.createElement('input');
+    searchInput.className = 'chatlogs-search-input';
+    searchInput.type = 'text';
+    searchInput.style.width = '100%';
+    searchInput.style.padding = '10px';
+    searchInput.style.margin = '0 1em';
+    searchInput.style.fontSize = '1em';
+    searchInput.style.fontFamily = 'Montserrat';
+    searchInput.style.setProperty('color', 'bisque', 'important');
+    searchInput.style.setProperty('border-radius', '0.2em', 'important');
+    searchInput.style.boxSizing = 'border-box';
+    searchInput.style.backgroundColor = '#111';
+    searchInput.style.border = '1px solid #222';
+
+    // Append search input to the search container
+    searchContainer.appendChild(searchInput);
+    // Append the search container to the panel header container
+    panelHeaderContainer.appendChild(searchContainer);
+
     // Create a close button with the provided SVG icon
     const closePanelButton = document.createElement('div');
     closePanelButton.className = 'close-panel-button';
@@ -5584,6 +5611,8 @@
     chatLogsContainer.style.height = 'calc(100% - 70px)'; // Adjust height considering header
     chatLogsContainer.style.padding = '1em';
     chatLogsContainer.style.color = 'white'; // Text color for logs
+    chatLogsContainer.style.display = 'flex';
+    chatLogsContainer.style.flexDirection = 'column';
 
     // Append the header and chat logs container to the chat logs panel
     chatLogsPanel.appendChild(panelHeaderContainer);
@@ -5606,20 +5635,22 @@
     chatlogs.forEach(({ time, username, message }) => {
       // Create a container for each message
       const messageContainer = document.createElement('div');
+      messageContainer.classList.add('message-item');
       messageContainer.style.padding = '0.2em'; // Set padding for the message container
+      messageContainer.style.display = 'inline-flex';
 
       // Create time element
       const timeElement = document.createElement('span');
       timeElement.className = 'message-time';
       timeElement.textContent = time;
       timeElement.style.color = 'darkseagreen';
-      timeElement.style.margin = '0.4em';
+      timeElement.style.margin = '0 0.4em';
 
       // Create username element
       const usernameElement = document.createElement('span');
       usernameElement.className = 'message-username';
       usernameElement.textContent = username; // Use the original username for display
-      usernameElement.style.margin = '0.4em';
+      usernameElement.style.margin = '0 0.4em';
 
       // Check if the hue for this username is already stored
       let hueForUsername = usernameHueMap[username]; // Use the original username as the key
@@ -5639,7 +5670,7 @@
       messageTextElement.className = 'message-text';
       messageTextElement.textContent = message;
       messageTextElement.style.color = 'lightsteelblue';
-      messageTextElement.style.margin = '0.4em';
+      messageTextElement.style.margin = '0 0.4em';
 
       messageTextElement.innerHTML = message.replace(/:(?=\w*[a-zA-Z])(\w+):/g,
         (_, word) => `<img src="/img/smilies/${word}.gif" alt=":${word}:" title=":${word}:" class="smile">`
@@ -5659,6 +5690,65 @@
       // Append the message container to the chat logs container
       chatLogsContainer.appendChild(messageContainer);
     });
+
+    const messageItems = Array.from(document.querySelectorAll('.chat-logs-container > .message-item'));
+
+    // Cache message details including text, username, and message content
+    const messageDetails = messageItems.map(item => {
+      const usernameElement = item.querySelector('.message-username');
+      const username = usernameElement ? usernameElement.textContent.toLowerCase().trim() : ''; // Get username text, if available
+      const messageTextElement = item.querySelector('.message-text');
+      const messageText = messageTextElement ? messageTextElement.textContent.toLowerCase().trim() : ''; // Get message text, if available
+      return { username, messageText };
+    });
+
+    // Filter items based on input query
+    const filterItems = query => {
+      const trimmedQuery = query.trim().toLowerCase();
+      const isEmptyQuery = !trimmedQuery;
+
+      // Split query by commas and trim parts
+      const queryParts = trimmedQuery.split(',').map(part => part.trim()).filter(Boolean);
+
+      // Count matching usernames
+      const matchingUsernamesCount = queryParts.filter(part =>
+        messageDetails.some(detail => detail.username === part)
+      ).length;
+
+      // Determine if User Mode is active (2 or more matching usernames)
+      const isUserMode = matchingUsernamesCount >= 2;
+
+      // Loop through message items to apply filtering
+      messageItems.forEach((item, index) => {
+        const messageContainer = item.closest('.message-item'); // Get the closest message item container
+        const messageDetailsItem = messageDetails[index];
+
+        let shouldDisplay = false;
+
+        if (isEmptyQuery) {
+          // Display all messages if the query is empty
+          shouldDisplay = true;
+        }
+        else if (isUserMode) {
+          // User Mode: Match only by username
+          shouldDisplay = queryParts.some(part => messageDetailsItem.username === part);
+        }
+        else {
+          // Simple Mode: Treat the entire query (including commas) as part of the text search
+          shouldDisplay = messageDetailsItem.username.includes(trimmedQuery) ||
+            messageDetailsItem.messageText.includes(trimmedQuery);
+        }
+
+        // Apply visibility based on shouldDisplay
+        messageContainer.style.display = shouldDisplay ? 'inline-flex' : 'none';
+      });
+    };
+
+    // Add input event listener to filter items as the user types
+    searchInput.addEventListener('input', () => filterItems(searchInput.value));
+
+    // Set focus to the search input field
+    searchInput.focus();
 
     // Attach a keydown event listener to the document object
     document.addEventListener('keydown', function (event) {

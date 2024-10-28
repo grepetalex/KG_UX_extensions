@@ -5430,8 +5430,11 @@
     // Get today's date in 'YYYY-MM-DD' format
     const today = new Intl.DateTimeFormat('en-CA').format(new Date());
 
-    // Construct the URL to fetch chat logs for today
-    const url = `https://klavogonki.ru/chatlogs/${today}.html`;
+    // Generate a random 20-digit number
+    const randomParam = Math.floor(Math.random() * 10 ** 20);
+
+    // Construct the URL to fetch chat logs for today with the random parameter
+    const url = `https://klavogonki.ru/chatlogs/${today}.html?rand=${randomParam}`;
 
     // Function to parse the HTML and extract chat log entries
     const parseChatLog = html => {

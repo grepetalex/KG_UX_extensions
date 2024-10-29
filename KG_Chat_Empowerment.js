@@ -3629,55 +3629,6 @@
 
   const popupMessageIconSize = 16;
 
-  // SVG markup for a clock icon
-  const clockSVG = `
-  <svg xmlns="http://www.w3.org/2000/svg"
-       width="${popupMessageIconSize - 2}"
-       height="${popupMessageIconSize - 2}"
-       viewBox="0 0 24 24"
-       fill="none"
-       stroke="currentColor"
-       stroke-width="2"
-       stroke-linecap="round"
-       stroke-linejoin="round"
-       class="feather feather-clock">
-    <circle cx="12" cy="12" r="10"></circle>
-    <polyline points="12 6 12 12 16 14"></polyline>
-  </svg>
-`;
-
-  // SVG markup for a user icon
-  const userSVG = `
-  <svg xmlns="http://www.w3.org/2000/svg"
-       width="${popupMessageIconSize - 2}"
-       height="${popupMessageIconSize - 2}"
-       viewBox="0 0 24 24"
-       fill="none"
-       stroke="currentColor"
-       stroke-width="2"
-       stroke-linecap="round"
-       stroke-linejoin="round"
-       class="feather feather-user">
-    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-    <circle cx="12" cy="7" r="4"></circle>
-  </svg>
-`;
-
-  // SVG markup for a chevrons-right icon
-  const chevronRightSVG = `
-  <svg xmlns="http://www.w3.org/2000/svg"
-       width="${popupMessageIconSize}"
-       height="${popupMessageIconSize}"
-       viewBox="0 0 24 24"
-       fill="none"
-       stroke="currentColor"
-       stroke-width="2"
-       stroke-linecap="round"
-       stroke-linejoin="round">
-    <polyline points="9 18 15 12 9 6"></polyline>
-  </svg>
-`;
-
   const popupChatMessageStyles = document.createElement('style');
   popupChatMessageStyles.textContent = `
     .popup-messages-container {
@@ -5521,6 +5472,25 @@
     }
   };
 
+  function getRandomDateInRange() {
+    const startDate = new Date('2012-02-12'); // Start date
+    const endDate = new Date(); // Current date
+
+    // Calculate the difference in milliseconds
+    const dateDifference = endDate - startDate;
+
+    // Generate a random number of milliseconds between 0 and dateDifference
+    const randomMilliseconds = Math.floor(Math.random() * dateDifference);
+
+    // Create a random date by adding the random milliseconds to the start date
+    const randomDate = new Date(startDate.getTime() + randomMilliseconds);
+
+    // Format the date to 'YYYY-MM-DD' using Intl.DateTimeFormat
+    const formattedDate = new Intl.DateTimeFormat('en-CA').format(randomDate);
+
+    return formattedDate;
+  }
+
   // Function to display the chat logs panel
   async function showChatLogs() {
     // Check if the chat logs panel already exists; if it does, exit the function to avoid duplication
@@ -5581,20 +5551,26 @@
     // Append search input to the search container
     searchContainer.appendChild(searchInput);
 
+    // Helper function to apply common styles to a button
+    function applyButtonStyles(button, backgroundColor, margin = '0 0.5em') {
+      button.style.backgroundColor = backgroundColor;
+      button.style.width = '48px';
+      button.style.height = '48px';
+      button.style.display = 'flex';
+      button.style.justifyContent = 'center';
+      button.style.alignItems = 'center';
+      button.style.cursor = 'pointer';
+      button.style.setProperty('border-radius', '0.2em', 'important');
+      button.style.margin = margin; // Set margin using the provided value
+    }
+
     // Create a date button with similar styles as the close button
     const datePanelButton = document.createElement('div');
     datePanelButton.className = 'date-panel-button';
-    datePanelButton.title = 'Select a date';
     datePanelButton.innerHTML = calendarSVG;
-    datePanelButton.style.backgroundColor = 'steelblue'; // Different background color
-    datePanelButton.style.width = '48px';
-    datePanelButton.style.height = '48px';
-    datePanelButton.style.display = 'flex';
-    datePanelButton.style.justifyContent = 'center';
-    datePanelButton.style.alignItems = 'center';
-    datePanelButton.style.cursor = 'pointer';
-    datePanelButton.style.setProperty('border-radius', '0.2em', 'important');
-    datePanelButton.style.marginRight = '1em';
+    // Apply common styles using the helper function with a different background color
+    applyButtonStyles(datePanelButton, 'steelblue');
+    datePanelButton.style.margin = '0px 0.5em 0 0';
 
     // Add a hover effect with brightness transition
     datePanelButton.style.filter = 'brightness(1)';
@@ -5631,7 +5607,7 @@
     dateInput.style.display = 'none'; // Hidden by default
     dateInput.style.setProperty('border-radius', '0.2em', 'important');
     dateInput.style.boxSizing = 'border-box';
-    dateInput.style.margin = '0 1em 0 0';
+    dateInput.style.margin = '0 0.5em';
 
     // Append the date button and input field to the control buttons container
     panelControlButtons.appendChild(datePanelButton);
@@ -5640,19 +5616,73 @@
     // Append the search container to the panel header container
     panelHeaderContainer.appendChild(searchContainer);
 
+    // Create and style the chevron left button
+    const oneDayBackward = document.createElement('div');
+    oneDayBackward.className = 'chevron-left-button';
+    oneDayBackward.title = 'Previous Day';
+    oneDayBackward.innerHTML = chevronLeftSVG; // Assuming you have chevronLeftSVG defined
+    applyButtonStyles(oneDayBackward, 'darkcyan');
+
+    // Create and style the chevron right button
+    const oneDayForward = document.createElement('div');
+    oneDayForward.className = 'chevron-right-button';
+    oneDayForward.title = 'Next Day';
+    oneDayForward.innerHTML = chevronRightSVG; // Assuming you have chevronRightSVG defined
+    applyButtonStyles(oneDayForward, 'darkcyan');
+
+    // Create and style the shuffle button
+    const randomDay = document.createElement('div');
+    randomDay.className = 'shuffle-button';
+    randomDay.title = 'Random Date';
+    randomDay.innerHTML = shuffleSVG; // Assuming you have shuffleSVG defined
+    applyButtonStyles(randomDay, 'darkslateblue');
+
+    // Function to get current date or fallback to today's date
+    function getEffectiveDate() {
+      return dateInput.value ? new Date(dateInput.value) : new Date(); // Use dateInput value or today's date
+    }
+
+    // Event listener for the chevron left button
+    oneDayBackward.addEventListener('click', async () => {
+      const currentDate = getEffectiveDate(); // Get the effective date
+      currentDate.setDate(currentDate.getDate() - 1); // Go one day back
+      const formattedDate = new Intl.DateTimeFormat('en-CA').format(currentDate);
+      dateInput.value = formattedDate; // Update the date input
+      datePanelButton.title = `Current date: ${formattedDate}`; // Update title
+      await loadChatLogs(currentDate); // Load chat logs for the updated date
+    });
+
+    // Event listener for the chevron right button
+    oneDayForward.addEventListener('click', async () => {
+      const currentDate = getEffectiveDate(); // Get the effective date
+      currentDate.setDate(currentDate.getDate() + 1); // Go one day forward
+      const formattedDate = new Intl.DateTimeFormat('en-CA').format(currentDate);
+      dateInput.value = formattedDate; // Update the date input
+      datePanelButton.title = `Current date: ${formattedDate}`; // Update title
+      await loadChatLogs(currentDate); // Load chat logs for the updated date
+    });
+
+    // Event listener for the shuffle button
+    randomDay.addEventListener('click', async () => {
+      const randomDate = getRandomDateInRange(); // Get a random date
+      const formattedDate = new Intl.DateTimeFormat('en-CA').format(new Date(randomDate));
+      dateInput.value = formattedDate; // Update the date input
+      datePanelButton.title = `Current date: ${formattedDate}`; // Update title
+      await loadChatLogs(randomDate); // Load chat logs for the random date
+    });
+
+    // Append buttons to the control buttons container
+    panelControlButtons.appendChild(oneDayBackward);
+    panelControlButtons.appendChild(oneDayForward);
+    panelControlButtons.appendChild(randomDay);
+
     // Create a close button with the provided SVG icon
     const closePanelButton = document.createElement('div');
     closePanelButton.className = 'close-panel-button';
     closePanelButton.title = 'Close panel';
     closePanelButton.innerHTML = closeSVG;
-    closePanelButton.style.backgroundColor = 'darkolivegreen';
-    closePanelButton.style.width = '48px';
-    closePanelButton.style.height = '48px';
-    closePanelButton.style.display = 'flex';
-    closePanelButton.style.justifyContent = 'center';
-    closePanelButton.style.alignItems = 'center';
-    closePanelButton.style.cursor = 'pointer';
-    closePanelButton.style.setProperty('border-radius', '0.2em', 'important');
+    // Apply common styles using the helper function
+    applyButtonStyles(closePanelButton, 'darkolivegreen', '0 0 0 0.5em');
 
     // Add a hover effect with brightness transition
     closePanelButton.style.filter = 'brightness(1)';
@@ -6095,6 +6125,55 @@
         <line x1="8" y1="2" x2="8" y2="6"></line>
         <line x1="3" y1="10" x2="21" y2="10"></line>
   </svg>`;
+
+  // SVG for the "chevron left" icon, used to change chat logs one day backward
+  const chevronLeftSVG = `
+    <svg xmlns="http://www.w3.org/2000/svg" 
+        width="24" 
+        height="24" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="#1ce5e5" 
+        stroke-width="2" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        class="feather feather-chevron-left">
+      <polyline points="15 18 9 12 15 6"></polyline>
+    </svg>`;
+
+  // SVG for the "chevron right" icon, used to change chat logs one day forward
+  const chevronRightSVG = `
+    <svg xmlns="http://www.w3.org/2000/svg" 
+        width="24" 
+        height="24" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="#1ce5e5" 
+        stroke-width="2" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        class="feather feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>`;
+
+  // SVG for the "shuffle" icon, used to select a random year, month, and day
+  const shuffleSVG = `
+    <svg xmlns="http://www.w3.org/2000/svg" 
+        width="24" 
+        height="24" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="#a99bff" 
+        stroke-width="2" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        class="feather feather-shuffle">
+      <polyline points="16 3 21 3 21 8"></polyline>
+      <line x1="4" y1="20" x2="21" y2="3"></line>
+      <polyline points="21 16 21 21 16 21"></polyline>
+      <line x1="15" y1="15" x2="21" y2="21"></line>
+      <line x1="4" y1="4" x2="9" y2="9"></line>
+    </svg>`;
 
   // Inline SVG source for the trash icon
   const trashSVG = `

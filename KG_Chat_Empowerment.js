@@ -5775,6 +5775,8 @@
     const today = new Date().toISOString().split('T')[0]; // Get today's date in 'YYYY-MM-DD' format
     await loadChatLogs(today); // Load today's logs
 
+    // Set the max attribute to today's date
+    dateInput.max = today; // Disable future dates
     datePanelButton.title = `Current date: ${today}`; // Set the title with the current date
 
     // Add an event listener for the date input change

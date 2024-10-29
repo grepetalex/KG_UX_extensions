@@ -5444,73 +5444,69 @@
   // Call the function to create the button
   createChatLogsButton();
 
-  // Function to fetch today's chat logs from the specified URL and parse the HTML to extract message details
-  const fetchChatLogs = async () => {
-    // Get today's date in 'YYYY-MM-DD' format
-    const today = new Intl.DateTimeFormat('en-CA').format(new Date());
+  // Function to fetch chat logs from the specified URL for a given date
+  const fetchChatLogs = async (date) => {
+    // Format date to 'YYYY-MM-DD'
+    const formattedDate = new Intl.DateTimeFormat('en-CA').format(new Date(date));
 
     // Generate a random 20-digit number
     const randomParam = Math.floor(Math.random() * 10 ** 20);
 
-    // Construct the URL to fetch chat logs for today with the random parameter
-    const url = `https://klavogonki.ru/chatlogs/${today}.html?rand=${randomParam}`;
+    // Construct the URL to fetch chat logs for the specified date with the random parameter
+    const url = `https://klavogonki.ru/chatlogs/${formattedDate}.html?rand=${randomParam}`;
 
     // Function to parse the HTML and extract chat log entries
-    const parseChatLog = html => {
+    const parseChatLog = (html) => {
       const doc = new DOMParser().parseFromString(html, 'text/html');
 
-      return [...doc.querySelectorAll('.ts')].map(timeElement => {
-        const usernameElement = timeElement.nextElementSibling; // Get the username element
-        const messageNode = usernameElement?.nextSibling; // Get the message node
+      return [...doc.querySelectorAll('.ts')].map((timeElement) => {
+        const usernameElement = timeElement.nextElementSibling;
+        const messageNode = usernameElement?.nextSibling;
 
-        // Function to extract message text until the next <br> tag
-        const extractMessageText = node => {
+        const extractMessageText = (node) => {
           if (!node) return '';
-
           return [...node.childNodes].reduce((acc, child) => {
             if (child.nodeType === Node.TEXT_NODE) {
-              acc += child.textContent; // Concatenate text from text nodes
+              acc += child.textContent;
             } else if (child.nodeType === Node.ELEMENT_NODE) {
               if (child.tagName === 'A') {
-                acc += child.textContent; // Concatenate text from <a> elements
+                acc += child.textContent;
               } else if (child.tagName === 'BR') {
-                return acc; // Stop processing and return accumulated text at <br> tag
+                return acc;
               }
             }
             return acc;
-          }, '').trim(); // Return the accumulated text, trimmed
+          }, '').trim();
         };
 
-        // Check if the username and message are valid, then return an object
         if (usernameElement?.classList.contains('mn') && messageNode) {
           let messageText = '';
 
           if (messageNode.nodeType === Node.ELEMENT_NODE) {
-            messageText = extractMessageText(messageNode); // Extract from the message node
+            messageText = extractMessageText(messageNode);
           } else if (messageNode.nodeType === Node.TEXT_NODE) {
-            const nextSibling = usernameElement.nextElementSibling; // Check the next sibling
+            const nextSibling = usernameElement.nextElementSibling;
             if (nextSibling && nextSibling.tagName === 'A') {
               messageText = `${messageNode.textContent.trim()} ${nextSibling.textContent.trim()}`;
             } else {
-              messageText = messageNode.textContent.trim(); // Just the text node if no <a> tag follows
+              messageText = messageNode.textContent.trim();
             }
           }
 
-          // Combine any elements if messageText is still empty
           if (!messageText) {
             const combinedText = extractMessageText(usernameElement.nextSibling);
             messageText = combinedText;
           }
 
           return {
-            time: timeElement.textContent.trim().replace(/[\[\]]/g, ''), // Remove square brackets from time
-            username: usernameElement.textContent.trim().replace(/<|>/g, ''), // Remove angle brackets from username
-            message: messageText || null, // Use the extracted message or null if empty
+            time: timeElement.textContent.trim().replace(/[\[\]]/g, ''),
+            username: usernameElement.textContent.trim().replace(/<|>/g, ''),
+            message: messageText || null,
           };
         }
 
-        return null; // Return null if username is invalid
-      }).filter(Boolean); // Filter out null entries
+        return null;
+      }).filter(Boolean);
     };
 
     try {
@@ -5584,6 +5580,63 @@
 
     // Append search input to the search container
     searchContainer.appendChild(searchInput);
+
+    // Create a date button with similar styles as the close button
+    const datePanelButton = document.createElement('div');
+    datePanelButton.className = 'date-panel-button';
+    datePanelButton.title = 'Select a date';
+    datePanelButton.innerHTML = calendarSVG;
+    datePanelButton.style.backgroundColor = 'steelblue'; // Different background color
+    datePanelButton.style.width = '48px';
+    datePanelButton.style.height = '48px';
+    datePanelButton.style.display = 'flex';
+    datePanelButton.style.justifyContent = 'center';
+    datePanelButton.style.alignItems = 'center';
+    datePanelButton.style.cursor = 'pointer';
+    datePanelButton.style.setProperty('border-radius', '0.2em', 'important');
+    datePanelButton.style.marginRight = '1em';
+
+    // Add a hover effect with brightness transition
+    datePanelButton.style.filter = 'brightness(1)';
+    datePanelButton.style.transition = 'filter 0.3s ease';
+
+    // Add event listeners for hover effects
+    datePanelButton.addEventListener('mouseover', () => {
+      datePanelButton.style.filter = 'brightness(0.8)';
+    });
+
+    datePanelButton.addEventListener('mouseout', () => {
+      datePanelButton.style.filter = 'brightness(1)';
+    });
+
+    // Toggle the visibility of the date input when the button is clicked
+    datePanelButton.addEventListener('click', () => {
+      dateInput.style.display = dateInput.style.display === 'none' ? 'block' : 'none';
+    });
+
+    // Create the date input field
+    const dateInput = document.createElement('input');
+    dateInput.type = 'date';
+    dateInput.className = 'chatlogs-date-input';
+
+    // Apply consistent styles
+    dateInput.style.backgroundColor = '#111';
+    dateInput.style.color = 'bisque';
+    dateInput.style.border = '1px solid #222';
+    dateInput.style.width = 'fit-content';
+    dateInput.style.height = '48px';
+    dateInput.style.padding = '10px';
+    dateInput.style.fontSize = '1em';
+    dateInput.style.fontFamily = 'Montserrat';
+    dateInput.style.display = 'none'; // Hidden by default
+    dateInput.style.setProperty('border-radius', '0.2em', 'important');
+    dateInput.style.boxSizing = 'border-box';
+    dateInput.style.margin = '0 1em 0 0';
+
+    // Append the date button and input field to the control buttons container
+    panelControlButtons.appendChild(datePanelButton);
+    panelControlButtons.appendChild(dateInput);
+
     // Append the search container to the panel header container
     panelHeaderContainer.appendChild(searchContainer);
 
@@ -5652,65 +5705,83 @@
     const hueStep = 15;
     let lastDisplayedUsername = null; // Variable to track the last displayed username
 
-    // Fetch and display chat logs
-    const { chatlogs } = await fetchChatLogs();
-    chatlogs.forEach(({ time, username, message }) => {
-      // Create a container for each message
-      const messageContainer = document.createElement('div');
-      messageContainer.classList.add('message-item');
-      messageContainer.style.padding = '0.2em'; // Set padding for the message container
-      messageContainer.style.display = 'inline-flex';
+    // Function to load and display chat logs into the container
+    const loadChatLogs = async (date) => {
+      // Fetch and display chat logs
+      const { chatlogs } = await fetchChatLogs(date);
+      chatLogsContainer.innerHTML = ''; // Clear existing logs
 
-      // Create time element
-      const timeElement = document.createElement('span');
-      timeElement.className = 'message-time';
-      timeElement.textContent = time;
-      timeElement.style.color = 'darkseagreen';
-      timeElement.style.margin = '0 0.4em';
+      chatlogs.forEach(({ time, username, message }) => {
+        // Create a container for each message
+        const messageContainer = document.createElement('div');
+        messageContainer.classList.add('message-item');
+        messageContainer.style.padding = '0.2em'; // Set padding for the message container
+        messageContainer.style.display = 'inline-flex';
 
-      // Create username element
-      const usernameElement = document.createElement('span');
-      usernameElement.className = 'message-username';
-      usernameElement.textContent = username; // Use the original username for display
-      usernameElement.style.margin = '0 0.4em';
+        // Create time element
+        const timeElement = document.createElement('span');
+        timeElement.className = 'message-time';
+        timeElement.textContent = time;
+        timeElement.style.color = 'darkseagreen';
+        timeElement.style.margin = '0 0.4em';
 
-      // Check if the hue for this username is already stored
-      let hueForUsername = usernameHueMap[username]; // Use the original username as the key
+        // Create username element
+        const usernameElement = document.createElement('span');
+        usernameElement.className = 'message-username';
+        usernameElement.textContent = username; // Use the original username for display
+        usernameElement.style.margin = '0 0.4em';
 
-      // If the hue is not stored, generate a new random hue with the specified step
-      if (!hueForUsername) {
-        hueForUsername = Math.floor(Math.random() * (210 / hueStep)) * hueStep; // Limit hue to a maximum of 210
-        // Store the generated hue for this username
-        usernameHueMap[username] = hueForUsername; // Store hue using the original username as the key
-      }
+        // Check if the hue for this username is already stored
+        let hueForUsername = usernameHueMap[username]; // Use the original username as the key
 
-      // Apply the hue color to the username element
-      usernameElement.style.color = `hsl(${hueForUsername}, 100%, 50%)`;
+        // If the hue is not stored, generate a new random hue with the specified step
+        if (!hueForUsername) {
+          hueForUsername = Math.floor(Math.random() * (210 / hueStep)) * hueStep; // Limit hue to a maximum of 210
+          // Store the generated hue for this username
+          usernameHueMap[username] = hueForUsername; // Store hue using the original username as the key
+        }
 
-      // Create message text element
-      const messageTextElement = document.createElement('span');
-      messageTextElement.className = 'message-text';
-      messageTextElement.textContent = message;
-      messageTextElement.style.color = 'lightsteelblue';
-      messageTextElement.style.margin = '0 0.4em';
+        // Apply the hue color to the username element
+        usernameElement.style.color = `hsl(${hueForUsername}, 100%, 50%)`;
 
-      messageTextElement.innerHTML = message.replace(/:(?=\w*[a-zA-Z])(\w+):/g,
-        (_, word) => `<img src="/img/smilies/${word}.gif" alt=":${word}:" title=":${word}:" class="smile">`
-      );
+        // Create message text element
+        const messageTextElement = document.createElement('span');
+        messageTextElement.className = 'message-text';
+        messageTextElement.style.color = 'lightsteelblue';
+        messageTextElement.style.margin = '0 0.4em';
 
-      // Apply margin for the first message of a new user
-      messageContainer.style.marginTop = lastDisplayedUsername !== username ? '0.6em' : '';
+        // Replace emoticons with images
+        messageTextElement.innerHTML = message.replace(/:(?=\w*[a-zA-Z])(\w+):/g,
+          (_, word) => `<img src="/img/smilies/${word}.gif" alt=":${word}:" title=":${word}:" class="smile">`
+        );
 
-      // Update the last displayed username
-      lastDisplayedUsername = username;
+        // Apply margin for the first message of a new user
+        messageContainer.style.marginTop = lastDisplayedUsername !== username ? '0.6em' : '';
 
-      // Append elements to the message container
-      messageContainer.appendChild(timeElement);
-      messageContainer.appendChild(usernameElement);
-      messageContainer.appendChild(messageTextElement);
+        // Update the last displayed username
+        lastDisplayedUsername = username;
 
-      // Append the message container to the chat logs container
-      chatLogsContainer.appendChild(messageContainer);
+        // Append elements to the message container
+        messageContainer.appendChild(timeElement);
+        messageContainer.appendChild(usernameElement);
+        messageContainer.appendChild(messageTextElement);
+
+        // Append the message container to the chat logs container
+        chatLogsContainer.appendChild(messageContainer);
+      });
+    };
+
+    // Load today's chat logs initially
+    const today = new Date().toISOString().split('T')[0]; // Get today's date in 'YYYY-MM-DD' format
+    await loadChatLogs(today); // Load today's logs
+
+    datePanelButton.title = `Current date: ${today}`; // Set the title with the current date
+
+    // Add an event listener for the date input change
+    dateInput.addEventListener('change', async (event) => {
+      const selectedDate = event.target.value; // Get the selected date
+      await loadChatLogs(selectedDate); // Load chat logs for the selected date
+      datePanelButton.title = `Current date: ${selectedDate}`; // Update the title with the selected date
     });
 
     const messageItems = Array.from(document.querySelectorAll('.chat-logs-container > .message-item'));
@@ -6004,6 +6075,24 @@
         <line x1="18" y1="6" x2="6" y2="18"></line>
         <line x1="6" y1="6" x2="18" y2="18"></line>
     </svg>`;
+
+  // Inline SVG source for the "calendar" icon
+  const calendarSVG = `
+    <svg xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="lightsteelblue"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="feather feather-calendar">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+        <line x1="16" y1="2" x2="16" y2="6"></line>
+        <line x1="8" y1="2" x2="8" y2="6"></line>
+        <line x1="3" y1="10" x2="21" y2="10"></line>
+  </svg>`;
 
   // Inline SVG source for the trash icon
   const trashSVG = `

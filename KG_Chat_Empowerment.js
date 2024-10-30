@@ -1497,7 +1497,7 @@
     searchInput.addEventListener('input', debounce((event) => {
       const inputValue = event.target.value.trim();
       // Process 'user' prefix search or search when cachePanelSearchMode is 'fetch'
-      if (inputValue.startsWith('user ') && localStorage.getItem('cachePanelSearchMode') === 'fetch') {
+      if (inputValue.startsWith('user ') || localStorage.getItem('cachePanelSearchMode') === 'fetch') {
         const username = inputValue.substring(5).trim(); // Extract username
         handleSearch(username); // Call the search function
       }

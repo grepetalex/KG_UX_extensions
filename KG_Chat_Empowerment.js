@@ -1407,9 +1407,6 @@
         if (inputValue.length === 0) {
           event.preventDefault(); // Prevent the default behavior
           event.target.value = 'user '; // Set input to 'user '
-        } else if (inputValue.startsWith('user ')) {
-          const username = inputValue.substring(5).trim(); // Extract username
-          handleSearch(username); // Call the search function
         }
       }
     });
@@ -1499,7 +1496,8 @@
     // Debounce the handleSearch function to prevent excessive calls
     searchInput.addEventListener('input', debounce((event) => {
       const inputValue = event.target.value.trim();
-      if (inputValue.startsWith('user ')) {
+      // Process 'user' prefix search or search when cachePanelSearchMode is 'fetch'
+      if (inputValue.startsWith('user ') && localStorage.getItem('cachePanelSearchMode') === 'fetch') {
         const username = inputValue.substring(5).trim(); // Extract username
         handleSearch(username); // Call the search function
       }
@@ -1566,6 +1564,54 @@
       button.style.filter = 'brightness(1)';
       button.style.transition = 'filter 0.3s ease';
     }
+
+    // Create cache panel search mode button with the provided SVG icon
+    const cachePanelSearchMode = document.createElement('div');
+    cachePanelSearchMode.className = 'user-mode-button';
+    cachePanelSearchMode.title = 'Activate user mode';
+    cachePanelSearchMode.innerHTML = usersSVG;
+    // Apply common styles using the helper function
+    applyHeaderButtonStyles(cachePanelSearchMode, 'darkslateblue');
+
+    // Set the initial value for cachePanelSearchMode if it doesn't exist
+    const initialSearchMode = localStorage.getItem('cachePanelSearchMode') || (localStorage.setItem('cachePanelSearchMode', 'cache'), 'cache');
+
+    // Function to update styles based on the current mode
+    function updateStyles(mode) {
+      const backgroundColor = mode === 'fetch' ? '#b2a4f9' : 'darkslateblue';
+      const strokeColor = mode === 'fetch' ? 'darkslateblue' : '#b2a4f9';
+
+      // Apply the new background color using the helper function
+      applyHeaderButtonStyles(cachePanelSearchMode, backgroundColor);
+
+      // Update the SVG stroke color
+      const svg = cachePanelSearchMode.querySelector('svg');
+      if (svg) {
+        svg.setAttribute('stroke', strokeColor);
+      }
+    }
+
+    // Initial mode setup
+    updateStyles(initialSearchMode);
+
+    // Add click event listener to the cache panel search mode button
+    cachePanelSearchMode.addEventListener('click', () => {
+      // Toggle between 'cache' and 'fetch' values
+      const currentMode = localStorage.getItem('cachePanelSearchMode');
+      const newMode = currentMode === 'cache' ? 'fetch' : 'cache';
+
+      // Set new mode in localStorage
+      localStorage.setItem('cachePanelSearchMode', newMode);
+
+      // Update styles based on the new mode
+      updateStyles(newMode);
+
+      // Optional: Log the current mode for debugging
+      console.log(`Current mode: ${newMode}`);
+    });
+
+    // Append the search mode button to the panel header container
+    panelControlButtons.appendChild(cachePanelSearchMode);
 
     // Create a clear cache button with the provided SVG icon
     const clearCacheButton = document.createElement('div');
@@ -1949,224 +1995,29 @@
       };
     };
 
-    // Function to create a user element
-    // const createCachePanelUserElement = (userId, userData) => {
-    //   // Create a div for each user with class 'user'
-    //   const userElement = document.createElement('div');
-    //   userElement.className = 'user';
-    //   userElement.style.padding = '0.2em';
-    //   userElement.style.margin = '0.4em 0.2em';
-    //   userElement.style.display = 'grid';
-    //   userElement.style.gridTemplateColumns = 'auto 1fr';
-    //   userElement.style.alignItems = 'center';
-    //   userElement.style.height = 'fit-content';
+    // Check if the current mode is 'cache'
+    if (localStorage.getItem('cachePanelSearchMode') === 'cache') {
+      // Iterate through each user
+      Object.keys(users).forEach(async (userId) => {
+        const userData = users[userId];
+        const userElementData = createCachePanelUserElement(userId, userData);
+        userElements.push(userElementData);
+      });
 
-    //   // Base styles shared by both tracked and untracked users
-    //   const baseStyle = {
-    //     marginLeft: '8px', // Shared margin-left
-    //     borderRadius: '2px !important'
-    //   };
+      // Sort userElements by rank and best speed
+      userElements.sort((a, b) =>
+        // First by rank, then by speed
+        a.order !== b.order ? a.order - b.order : b.bestSpeed - a.bestSpeed
+      );
 
-    //   // Define styles for tracked and untracked users
-    //   const styles = {
-    //     tracked: {
-    //       ...baseStyle,
-    //       color: 'greenyellow',
-    //       backgroundColor: 'darkgreen',
-    //       fontWeight: 'bold',
-    //       padding: '0 6px'
-    //     },
-    //     untracked: {
-    //       ...baseStyle,
-    //       color: 'orange',
-    //       fontWeight: 'normal'
-    //     }
-    //   };
-
-    //   // Function to generate the styles string
-    //   const generateStylesString = (styles) => {
-    //     return Object.entries(styles)
-    //       .map(([key, value]) => {
-    //         const cssProperty = key.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-    //         return `${cssProperty}: ${value}`;
-    //       })
-    //       .join('; ');
-    //   };
-
-    //   // Choose styles based on whether the user is tracked or untracked
-    //   const chosenStyles = userData.tracked ? styles.tracked : styles.untracked;
-
-    //   // Create the avatar div container
-    //   const avatarElement = document.createElement('div');
-    //   avatarElement.className = 'avatar';
-    //   avatarElement.style.marginRight = '8px';
-
-    //   // Retrieve the avatar timestamp for the user
-    //   const avatarTimestamp = fetchedUsers[userId]?.avatarTimestamp;
-
-    //   // Construct the base avatar URL
-    //   const bigAvatarUrl = `/storage/avatars/${userId}_big.png`;
-
-    //   // Check if avatarTimestamp is defined and not '00', or if userData.avatar is valid
-    //   if ((avatarTimestamp && avatarTimestamp !== '00') || (userData.avatar && Object.keys(userData.avatar).length > 0)) {
-    //     const finalAvatarUrl = `${bigAvatarUrl}?updated=${avatarTimestamp}`;
-    //     const imgElement = document.createElement('img');
-    //     imgElement.src = finalAvatarUrl;
-    //     imgElement.alt = `${userData.login}'s avatar`;
-    //     imgElement.style.height = '24px';
-    //     imgElement.style.width = '24px';
-    //     imgElement.style.objectFit = 'cover';
-    //     avatarElement.appendChild(imgElement);
-    //   } else {
-    //     avatarElement.style.fontSize = '1.8rem';
-    //     avatarElement.innerHTML = getRandomEmojiAvatar();
-    //   }
-
-    //   const loginElement = document.createElement('a');
-    //   loginElement.className = 'login';
-    //   loginElement.textContent = userData.login;
-
-    //   if (userData.visits !== undefined) {
-    //     loginElement.innerHTML += `<span style="${generateStylesString(chosenStyles)}">${userData.visits}</span>`;
-    //   }
-
-    //   loginElement.href = `https://klavogonki.ru/profile/${userId}`;
-    //   loginElement.target = '_blank';
-    //   loginElement.style.setProperty('color', 'skyblue', 'important');
-    //   loginElement.style.textDecoration = 'none';
-    //   loginElement.style.fontFamily = "Montserrat";
-    //   loginElement.style.transition = 'color 0.3s ease';
-
-    //   loginElement.addEventListener('mouseover', () => {
-    //     loginElement.style.setProperty('color', 'cornsilk', 'important');
-    //   });
-    //   loginElement.addEventListener('mouseout', () => {
-    //     loginElement.style.setProperty('color', 'skyblue', 'important');
-    //   });
-
-    //   const rankElement = document.createElement('div');
-    //   rankElement.className = 'rank';
-    //   rankElement.textContent = userData.rank || 'N/A'; // Provide a fallback if undefined
-    //   rankElement.style.color = rankColors[userData.rank] || 'white';
-    //   rankElement.style.padding = '2px 0';
-
-    //   const userDataElement = document.createElement('div');
-    //   userDataElement.className = 'user-data';
-
-    //   const registeredElement = document.createElement('div');
-    //   registeredElement.className = 'registered';
-    //   registeredElement.textContent = userData.registered || 'N/A'; // Provide a fallback if undefined
-    //   registeredElement.style.color = 'cadetblue';
-    //   registeredElement.style.fontSize = '12px';
-
-    //   const originalContent = registeredElement.textContent;
-    //   let hoverTimer;
-
-    //   registeredElement.addEventListener('mouseover', () => {
-    //     clearTimeout(hoverTimer);
-    //     hoverTimer = setTimeout(() => {
-    //       registeredElement.textContent = calculateTimeOnSite(userData.registered);
-    //     }, 300);
-    //   });
-
-    //   registeredElement.addEventListener('mouseout', () => {
-    //     clearTimeout(hoverTimer);
-    //     registeredElement.textContent = originalContent;
-    //   });
-
-    //   userDataElement.appendChild(loginElement);
-    //   userDataElement.appendChild(rankElement);
-    //   userDataElement.appendChild(registeredElement);
-
-    //   const userMetrics = document.createElement('div');
-    //   userMetrics.className = 'user-metrics';
-    //   userMetrics.style.marginTop = '4px';
-    //   userMetrics.style.gridColumn = 'span 2';
-
-    //   const doubleSpace = '&nbsp;&nbsp;';
-
-    //   const bestSpeedElement = document.createElement('span');
-    //   bestSpeedElement.style.color = 'cyan';
-    //   bestSpeedElement.innerHTML = `🚀${userData.bestSpeed || 0}${doubleSpace}`;
-    //   bestSpeedElement.title = 'Best speed';
-    //   bestSpeedElement.className = 'best-speed';
-
-    //   const ratingLevelElement = document.createElement('span');
-    //   ratingLevelElement.style.color = 'gold';
-    //   ratingLevelElement.innerHTML = `⭐${userData.ratingLevel || 0}${doubleSpace}`;
-    //   ratingLevelElement.title = 'Rating level';
-    //   ratingLevelElement.className = 'rating-level';
-
-    //   const carsElement = document.createElement('span');
-    //   carsElement.style.color = 'lightblue';
-    //   carsElement.innerHTML = `🚖${userData.cars || 0}${doubleSpace}`;
-    //   carsElement.title = 'Cars count';
-    //   carsElement.className = 'cars-count';
-
-    //   const friendsElement = document.createElement('span');
-    //   friendsElement.style.color = 'lightgreen';
-    //   friendsElement.innerHTML = `🤝${userData.friends || 0}${doubleSpace}`;
-    //   friendsElement.title = 'Friends count';
-    //   friendsElement.className = 'friends-count';
-
-    //   const elements = [bestSpeedElement, ratingLevelElement, carsElement, friendsElement];
-
-    //   elements.forEach(element => {
-    //     element.style.cursor = 'pointer';
-    //   });
-
-    //   userMetrics.appendChild(bestSpeedElement);
-    //   userMetrics.appendChild(ratingLevelElement);
-    //   userMetrics.appendChild(carsElement);
-    //   userMetrics.appendChild(friendsElement);
-
-    //   userMetrics.addEventListener('click', (event) => {
-    //     const target = event.target;
-
-    //     if (target.classList.contains('best-speed')) {
-    //       window.open(`https://klavogonki.ru/u/#/${userId}/stats/normal/`, '_blank');
-    //     } else if (target.classList.contains('rating-level')) {
-    //       window.open(`https://klavogonki.ru/top/rating/today?s=${userData.login}`, '_blank');
-    //     } else if (target.classList.contains('cars-count')) {
-    //       window.open(`https://klavogonki.ru/u/#/${userId}/car/`, '_blank');
-    //     } else if (target.classList.contains('friends-count')) {
-    //       window.open(`https://klavogonki.ru/u/#/${userId}/friends/list/`, '_blank');
-    //     }
-    //   });
-
-    //   userElement.appendChild(avatarElement);
-    //   userElement.appendChild(userDataElement);
-    //   userElement.appendChild(userMetrics);
-
-    //   // Append the user div to the userElements array
-    //   return {
-    //     userElement,
-    //     order: rankOrder[userData.rank] || 10,
-    //     bestSpeed: userData.bestSpeed || 0,
-    //     registered: userData.registered // Store the registered date
-    //   };
-    // };
-
-    // Iterate through each user
-    Object.keys(users).forEach(async (userId) => {
-      const userData = users[userId];
-      const userElementData = createCachePanelUserElement(userId, userData);
-      userElements.push(userElementData);
-    });
-
-    // Sort userElements by rank and best speed
-    userElements.sort((a, b) =>
-      // First by rank, then by speed
-      a.order !== b.order ? a.order - b.order : b.bestSpeed - a.bestSpeed
-    );
-
-    // Distribute userElements into new or old users containers
-    userElements.forEach(({ userElement, registered }) => {
-      // Choose container
-      const targetContainer = isNewUser(registered) ? newUsersContainer : oldUsersContainer;
-      // Append userElement
-      targetContainer.appendChild(userElement);
-    });
+      // Distribute userElements into new or old users containers
+      userElements.forEach(({ userElement, registered }) => {
+        // Choose container
+        const targetContainer = isNewUser(registered) ? newUsersContainer : oldUsersContainer;
+        // Append userElement
+        targetContainer.appendChild(userElement);
+      });
+    }
 
     // Append the panel-header container to the cached-users-panel
     cachedUsersPanel.appendChild(panelHeaderContainer);
@@ -6581,6 +6432,17 @@
       <line x1="10" y1="11" x2="10" y2="17"></line>
       <line x1="14" y1="11" x2="14" y2="17"></line>
     </svg>`;
+
+  // Inline SVG source for the users icon
+  const usersSVG = `
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" 
+    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" 
+    stroke-linejoin="round" class="feather feather-users">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+    <circle cx="9" cy="7" r="4"></circle>
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+  </svg>`;
 
   // Inline SVG source for the "download" icon (export button)
   const exportSVG = `

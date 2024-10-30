@@ -1399,6 +1399,19 @@
           fetchedUsersContainer.removeChild(searchResultsContainer);
         }
       }
+      // Handle Enter key
+      else if (event.key === 'Enter') {
+        const inputValue = event.target.value.trim();
+
+        // If input is empty, set it to 'user '
+        if (inputValue.length === 0) {
+          event.preventDefault(); // Prevent the default behavior
+          event.target.value = 'user '; // Set input to 'user '
+        } else if (inputValue.startsWith('user ')) {
+          const username = inputValue.substring(5).trim(); // Extract username
+          handleSearch(username); // Call the search function
+        }
+      }
     });
 
     // Create a function to handle the search process

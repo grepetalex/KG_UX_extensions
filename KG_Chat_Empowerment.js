@@ -1845,6 +1845,9 @@
           // Add event listener for the iframe's contentWindow to listen for space key presses.
           profileIframe.contentWindow.addEventListener('keydown', handleSpaceKey);
 
+          // Add event listener for double click to remove the iframe.
+          profileIframe.contentWindow.addEventListener('dblclick', removeIframe);
+
           // Create the MutationObserver to watch for specific elements being removed.
           const observer = new MutationObserver((mutations) => {
             if (mutations.some(mutation =>

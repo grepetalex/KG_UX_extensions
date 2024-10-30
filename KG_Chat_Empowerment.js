@@ -1482,6 +1482,16 @@
 
         } catch (error) {
           console.error('Error fetching user profile:', error);
+
+          // Create an error message element and append it to the container
+          const errorMessage = document.createElement('div');
+          errorMessage.className = 'error-message';
+          errorMessage.textContent = `Error fetching user profile: ${error.message}`;
+          errorMessage.style.width = 'fit-content';
+          errorMessage.style.whiteSpace = 'nowrap';
+          errorMessage.style.fontFamily = 'Montserrat';
+          errorMessage.style.color = 'lightcoral';
+          searchResultsContainer.appendChild(errorMessage);
         }
       }
     };

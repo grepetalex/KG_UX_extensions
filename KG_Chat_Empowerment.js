@@ -1444,7 +1444,7 @@
           // Iterate over each user ID and retrieve profile data
           await Promise.all(userIds.map(async (userId) => {
             // Retrieve the user's profile data once
-            const profileData = await getUserProfileData(userId);
+            const profileData = await getUserProfileData(userId, false); // Do not touch localStorage key "fetchedUsers"
 
             // Create user element data using the retrieved profile data
             const userData = {
@@ -2176,13 +2176,13 @@
   }
 
   // Function to get profile summary and registration data
-  async function getUserProfileData(userId) {
+  async function getUserProfileData(userId, useLocalStorage = true) {
     return new Promise(async (resolve, reject) => {
-      const cachedUserInfo = JSON.parse(localStorage.getItem('fetchedUsers')) || {};
+      let cachedUserInfo = useLocalStorage ? JSON.parse(localStorage.getItem('fetchedUsers')) || {} : {};
       const user = cachedUserInfo[userId];
 
       // Validate if user data exists and has the required properties
-      if (validateUserData(user)) {
+      if (useLocalStorage && validateUserData(user)) {
         // If all data is cached, resolve with the cached data
         resolve({
           rank: user.rank,
@@ -2239,21 +2239,23 @@
             const usec = summaryData.user.avatar?.usec || 0; // Default to 0 if undefined or null
             const avatarTimestamp = convertToUpdatedTimestamp(sec, usec); // Combine sec and usec to get avatar timestamp
 
-            // Cache the fetched data, excluding the avatar
-            cachedUserInfo[userId] = {
-              rank: rank,
-              login: login,
-              registered: registered,
-              bestSpeed: bestSpeed,
-              ratingLevel: ratingLevel,
-              friends: friends, // Cache friends count
-              cars: cars, // Cache cars count
-              avatar: avatar,
-              avatarTimestamp: avatarTimestamp // Cache avatar timestamp
-            };
+            // Cache the fetched data if useLocalStorage is true, excluding the avatar
+            if (useLocalStorage) {
+              cachedUserInfo[userId] = {
+                rank: rank,
+                login: login,
+                registered: registered,
+                bestSpeed: bestSpeed,
+                ratingLevel: ratingLevel,
+                friends: friends, // Cache friends count
+                cars: cars, // Cache cars count
+                avatar: avatar,
+                avatarTimestamp: avatarTimestamp // Cache avatar timestamp
+              };
 
-            // Update localStorage with the new cached data
-            localStorage.setItem('fetchedUsers', JSON.stringify(cachedUserInfo));
+              // Update localStorage with the new cached data
+              localStorage.setItem('fetchedUsers', JSON.stringify(cachedUserInfo));
+            }
 
             // Resolve with the combined data
             resolve({

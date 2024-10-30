@@ -1552,34 +1552,28 @@
     panelControlButtons.className = 'panel-control-buttons';
     panelControlButtons.style.display = 'flex';
 
+    // Helper function to apply common styles to a button
+    function applyHeaderButtonStyles(button, backgroundColor, margin = '0 0.5em') {
+      button.style.backgroundColor = backgroundColor;
+      button.style.width = '48px';
+      button.style.height = '48px';
+      button.style.display = 'flex';
+      button.style.justifyContent = 'center';
+      button.style.alignItems = 'center';
+      button.style.cursor = 'pointer';
+      button.style.setProperty('border-radius', '0.2em', 'important');
+      button.style.margin = margin; // Set margin using the provided value
+      button.style.filter = 'brightness(1)';
+      button.style.transition = 'filter 0.3s ease';
+    }
+
     // Create a clear cache button with the provided SVG icon
     const clearCacheButton = document.createElement('div');
     clearCacheButton.className = 'clear-cache-button';
     clearCacheButton.title = 'Clear cache';
     clearCacheButton.innerHTML = trashSVG;
-    clearCacheButton.style.backgroundColor = 'brown';
-    clearCacheButton.style.width = '48px';
-    clearCacheButton.style.height = '48px';
-    clearCacheButton.style.display = 'flex';
-    clearCacheButton.style.justifyContent = 'center';
-    clearCacheButton.style.alignItems = 'center';
-    clearCacheButton.style.cursor = 'pointer';
-    clearCacheButton.style.setProperty('border-radius', '0.2em', 'important');
-    clearCacheButton.style.marginRight = '16px'; // Adjust the margin as needed
-
-    // Add a hover effect with brightness transition
-    clearCacheButton.style.filter = 'brightness(1)';
-    clearCacheButton.style.transition = 'filter 0.3s ease';
-
-    // Add a mouseover event listener to the clear cache button
-    clearCacheButton.addEventListener('mouseover', () => {
-      clearCacheButton.style.filter = 'brightness(0.8)';
-    });
-
-    // Add a mouseout event listener to the clear cache button
-    clearCacheButton.addEventListener('mouseout', () => {
-      clearCacheButton.style.filter = 'brightness(1)';
-    });
+    // Apply common styles using the helper function
+    applyHeaderButtonStyles(clearCacheButton, 'brown');
 
     // Add a click event listener to the clear cache button
     clearCacheButton.addEventListener('click', () => {
@@ -1596,54 +1590,34 @@
     // Append the clear cache button to the panel header container
     panelControlButtons.appendChild(clearCacheButton);
 
-    // Inline SVG source for the "x" icon (close button)
-    const closeSVG = `
-    <svg xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="lightgreen"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        class="feather feather-x">
-        <line x1="18" y1="6" x2="6" y2="18"></line>
-        <line x1="6" y1="6" x2="18" y2="18"></line>
-    </svg>`;
-
     // Create a close button with the provided SVG icon
     const closePanelButton = document.createElement('div');
     closePanelButton.className = 'close-panel-button';
     closePanelButton.title = 'Close panel';
     closePanelButton.innerHTML = closeSVG;
-    closePanelButton.style.backgroundColor = 'darkolivegreen';
-    closePanelButton.style.width = '48px';
-    closePanelButton.style.height = '48px';
-    closePanelButton.style.display = 'flex';
-    closePanelButton.style.justifyContent = 'center';
-    closePanelButton.style.alignItems = 'center';
-    closePanelButton.style.cursor = 'pointer';
-    closePanelButton.style.setProperty('border-radius', '0.2em', 'important');
-
-    // Add a hover effect with brightness transition
-    closePanelButton.style.filter = 'brightness(1)';
-    closePanelButton.style.transition = 'filter 0.3s ease';
-
-    // Add a mouseover event listener to the close panel button
-    closePanelButton.addEventListener('mouseover', () => {
-      closePanelButton.style.filter = 'brightness(0.8)';
-    });
-
-    // Add a mouseout event listener to the close panel button
-    closePanelButton.addEventListener('mouseout', () => {
-      closePanelButton.style.filter = 'brightness(1)';
-    });
+    // Apply common styles using the helper function
+    applyHeaderButtonStyles(closePanelButton, 'darkolivegreen', '0 0 0 0.5em');
 
     // Add a click event listener to the close panel button
     closePanelButton.addEventListener('click', () => {
       // Remove the cached-users-panel when the close button is clicked
       hideCachePanel();
+    });
+
+    // Create an array containing the buttons we want to apply the events to
+    const buttons = [clearCacheButton, closePanelButton];
+
+    // Iterate through each button in the array
+    buttons.forEach(button => {
+      // Add a mouseover event listener to change the button's brightness on hover
+      button.addEventListener('mouseover', () => {
+        button.style.filter = 'brightness(0.8)'; // Dim the button
+      });
+
+      // Add a mouseout event listener to reset the button's brightness when not hovered
+      button.addEventListener('mouseout', () => {
+        button.style.filter = 'brightness(1)'; // Reset to original brightness
+      });
     });
 
     // Append the close button to the panel header container
@@ -5493,34 +5467,27 @@
     panelControlButtons.className = 'panel-control-buttons';
     panelControlButtons.style.display = 'flex';
 
+    // Helper function to apply common styles to a button
+    function applyHeaderButtonStyles(button, backgroundColor, margin = '0 0.5em') {
+      button.style.backgroundColor = backgroundColor;
+      button.style.width = '48px';
+      button.style.height = '48px';
+      button.style.display = 'flex';
+      button.style.justifyContent = 'center';
+      button.style.alignItems = 'center';
+      button.style.cursor = 'pointer';
+      button.style.setProperty('border-radius', '0.2em', 'important');
+      button.style.margin = margin; // Set margin using the provided value
+      button.style.filter = 'brightness(1)';
+      button.style.transition = 'filter 0.3s ease';
+    }
+
     // Create a clear cache button with the provided SVG icon
     const clearCacheButton = document.createElement('div');
     clearCacheButton.className = 'clear-cache-button';
     clearCacheButton.title = 'Clear messages';
     clearCacheButton.innerHTML = trashSVG;
-    clearCacheButton.style.backgroundColor = 'brown';
-    clearCacheButton.style.width = '48px';
-    clearCacheButton.style.height = '48px';
-    clearCacheButton.style.display = 'flex';
-    clearCacheButton.style.justifyContent = 'center';
-    clearCacheButton.style.alignItems = 'center';
-    clearCacheButton.style.cursor = 'pointer';
-    clearCacheButton.style.setProperty('border-radius', '0.2em', 'important');
-    clearCacheButton.style.marginRight = '16px';
-
-    // Add a hover effect with brightness transition
-    clearCacheButton.style.filter = 'brightness(1)';
-    clearCacheButton.style.transition = 'filter 0.3s ease';
-
-    // Add a mouseover event listener to the clear cache button
-    clearCacheButton.addEventListener('mouseover', () => {
-      clearCacheButton.style.filter = 'brightness(0.8)';
-    });
-
-    // Add a mouseout event listener to the clear cache button
-    clearCacheButton.addEventListener('mouseout', () => {
-      clearCacheButton.style.filter = 'brightness(1)';
-    });
+    applyHeaderButtonStyles(clearCacheButton, 'brown');
 
     // Add a click event listener to the clear cache button
     clearCacheButton.addEventListener('click', () => {
@@ -5547,34 +5514,29 @@
     closePanelButton.className = 'close-panel-button';
     closePanelButton.title = 'Close panel';
     closePanelButton.innerHTML = closeSVG;
-    closePanelButton.style.backgroundColor = 'darkolivegreen';
-    closePanelButton.style.width = '48px';
-    closePanelButton.style.height = '48px';
-    closePanelButton.style.display = 'flex';
-    closePanelButton.style.justifyContent = 'center';
-    closePanelButton.style.alignItems = 'center';
-    closePanelButton.style.cursor = 'pointer';
-    closePanelButton.style.setProperty('border-radius', '0.2em', 'important');
-
-    // Add a hover effect with brightness transition
-    closePanelButton.style.filter = 'brightness(1)';
-    closePanelButton.style.transition = 'filter 0.3s ease';
-
-    // Add a mouseover event listener to the close panel button
-    closePanelButton.addEventListener('mouseover', () => {
-      closePanelButton.style.filter = 'brightness(0.8)';
-    });
-
-    // Add a mouseout event listener to the close panel button
-    closePanelButton.addEventListener('mouseout', () => {
-      closePanelButton.style.filter = 'brightness(1)';
-    });
+    applyHeaderButtonStyles(closePanelButton, 'darkolivegreen', '0 0 0 0.5em');
 
     // Add a click event listener to the close panel button
     closePanelButton.addEventListener('click', () => {
       // Fade out the cached messages panel when the close button is clicked
       fadeTargetElement(cachedMessagesPanel, 'hide');
       fadeDimmingElement('hide');
+    });
+
+    // Create an array containing the buttons we want to apply the events to
+    const buttons = [clearCacheButton, closePanelButton];
+
+    // Iterate through each button in the array
+    buttons.forEach(button => {
+      // Add a mouseover event listener to change the button's brightness on hover
+      button.addEventListener('mouseover', () => {
+        button.style.filter = 'brightness(0.8)'; // Dim the button
+      });
+
+      // Add a mouseout event listener to reset the button's brightness when not hovered
+      button.addEventListener('mouseout', () => {
+        button.style.filter = 'brightness(1)'; // Reset to original brightness
+      });
     });
 
     // Append the close button to the panel control buttons
@@ -5989,7 +5951,7 @@
     searchContainer.appendChild(searchInput);
 
     // Helper function to apply common styles to a button
-    function applyButtonStyles(button, backgroundColor, margin = '0 0.5em') {
+    function applyHeaderButtonStyles(button, backgroundColor, margin = '0 0.5em') {
       button.style.backgroundColor = backgroundColor;
       button.style.width = '48px';
       button.style.height = '48px';
@@ -5999,6 +5961,8 @@
       button.style.cursor = 'pointer';
       button.style.setProperty('border-radius', '0.2em', 'important');
       button.style.margin = margin; // Set margin using the provided value
+      button.style.filter = 'brightness(1)';
+      button.style.transition = 'filter 0.3s ease';
     }
 
     // Create a date button with similar styles as the close button
@@ -6006,21 +5970,8 @@
     datePanelButton.className = 'date-panel-button';
     datePanelButton.innerHTML = calendarSVG;
     // Apply common styles using the helper function with a different background color
-    applyButtonStyles(datePanelButton, 'steelblue');
+    applyHeaderButtonStyles(datePanelButton, 'steelblue');
     datePanelButton.style.margin = '0px 0.5em 0 0';
-
-    // Add a hover effect with brightness transition
-    datePanelButton.style.filter = 'brightness(1)';
-    datePanelButton.style.transition = 'filter 0.3s ease';
-
-    // Add event listeners for hover effects
-    datePanelButton.addEventListener('mouseover', () => {
-      datePanelButton.style.filter = 'brightness(0.8)';
-    });
-
-    datePanelButton.addEventListener('mouseout', () => {
-      datePanelButton.style.filter = 'brightness(1)';
-    });
 
     // Toggle the visibility of the date input when the button is clicked
     datePanelButton.addEventListener('click', () => {
@@ -6058,21 +6009,21 @@
     oneDayBackward.className = 'chevron-left-button';
     oneDayBackward.title = 'Previous Day';
     oneDayBackward.innerHTML = chevronLeftSVG; // Assuming you have chevronLeftSVG defined
-    applyButtonStyles(oneDayBackward, 'darkcyan');
+    applyHeaderButtonStyles(oneDayBackward, 'darkcyan');
 
     // Create and style the chevron right button
     const oneDayForward = document.createElement('div');
     oneDayForward.className = 'chevron-right-button';
     oneDayForward.title = 'Next Day';
     oneDayForward.innerHTML = chevronRightSVG; // Assuming you have chevronRightSVG defined
-    applyButtonStyles(oneDayForward, 'darkcyan');
+    applyHeaderButtonStyles(oneDayForward, 'darkcyan');
 
     // Create and style the shuffle button
     const randomDay = document.createElement('div');
     randomDay.className = 'shuffle-button';
     randomDay.title = 'Random Date';
     randomDay.innerHTML = shuffleSVG; // Assuming you have shuffleSVG defined
-    applyButtonStyles(randomDay, 'darkslateblue');
+    applyHeaderButtonStyles(randomDay, 'darkslateblue');
 
     // Function to get current date or fallback to today's date
     function getEffectiveDate() {
@@ -6119,21 +6070,7 @@
     closePanelButton.title = 'Close panel';
     closePanelButton.innerHTML = closeSVG;
     // Apply common styles using the helper function
-    applyButtonStyles(closePanelButton, 'darkolivegreen', '0 0 0 0.5em');
-
-    // Add a hover effect with brightness transition
-    closePanelButton.style.filter = 'brightness(1)';
-    closePanelButton.style.transition = 'filter 0.3s ease';
-
-    // Add a mouseover event listener to the close panel button
-    closePanelButton.addEventListener('mouseover', () => {
-      closePanelButton.style.filter = 'brightness(0.8)';
-    });
-
-    // Add a mouseout event listener to restore the brightness
-    closePanelButton.addEventListener('mouseout', () => {
-      closePanelButton.style.filter = 'brightness(1)';
-    });
+    applyHeaderButtonStyles(closePanelButton, 'darkolivegreen', '0 0 0 0.5em');
 
     // Add a click event listener to the close panel button
     closePanelButton.addEventListener('click', () => {
@@ -6145,6 +6082,28 @@
     // Append close button to control buttons, and control buttons to header
     panelControlButtons.appendChild(closePanelButton);
     panelHeaderContainer.appendChild(panelControlButtons);
+
+    // Create an array containing the buttons we want to apply the events to
+    const buttons = [
+      datePanelButton,
+      oneDayBackward,
+      oneDayForward,
+      randomDay,
+      closePanelButton
+    ];
+
+    // Iterate through each button in the array
+    buttons.forEach(button => {
+      // Add a mouseover event listener to change the button's brightness on hover
+      button.addEventListener('mouseover', () => {
+        button.style.filter = 'brightness(0.8)'; // Dim the button
+      });
+
+      // Add a mouseout event listener to reset the button's brightness when not hovered
+      button.addEventListener('mouseout', () => {
+        button.style.filter = 'brightness(1)'; // Reset to original brightness
+      });
+    });
 
     // Create a container for the chat logs
     const chatLogsContainer = document.createElement('div');
@@ -6736,38 +6695,19 @@
     panelHeaderContainer.style.justifyContent = 'flex-end'; // Aligns to the right
     panelHeaderContainer.style.padding = '0.6em';
 
-    // Helper function to assign common styles to header buttons
-    function assignHeaderButtonsStyles(buttonElement, specificStyles, isFirstButton = false) {
-      // Common styles
-      buttonElement.style.width = '48px';
-      buttonElement.style.height = '48px';
-      buttonElement.style.display = 'flex';
-      buttonElement.style.justifyContent = 'center';
-      buttonElement.style.alignItems = 'center';
-      buttonElement.style.cursor = 'pointer';
-      buttonElement.style.setProperty('border-radius', '0.2em', 'important');
-
-      // Apply marginRight only if it's not the first button
-      if (!isFirstButton) {
-        buttonElement.style.marginRight = '1em';
-      }
-
-      // Apply specific styles
-      for (const property in specificStyles) {
-        buttonElement.style[property] = specificStyles[property];
-      }
-
-      // Add a hover effect with brightness transition
-      buttonElement.style.filter = 'brightness(1)';
-      buttonElement.style.transition = 'filter 0.3s ease, opacity 0.3s ease';
-
-      // Add mouseover and mouseout event listeners for the button
-      buttonElement.addEventListener('mouseover', () => {
-        buttonElement.style.filter = 'brightness(0.8)';
-      });
-      buttonElement.addEventListener('mouseout', () => {
-        buttonElement.style.filter = 'brightness(1)';
-      });
+    // Helper function to apply common styles to a button
+    function applyHeaderButtonStyles(button, backgroundColor, margin = '0 0.5em') {
+      button.style.backgroundColor = backgroundColor;
+      button.style.width = '48px';
+      button.style.height = '48px';
+      button.style.display = 'flex';
+      button.style.justifyContent = 'center';
+      button.style.alignItems = 'center';
+      button.style.cursor = 'pointer';
+      button.style.setProperty('border-radius', '0.2em', 'important');
+      button.style.margin = margin; // Set margin using the provided value
+      button.style.filter = 'brightness(1)';
+      button.style.transition = 'filter 0.3s ease';
     }
 
     // Create a close button with the provided SVG icon
@@ -6775,11 +6715,8 @@
     closePanelButton.className = 'close-panel-button';
     closePanelButton.innerHTML = closeSVG;
     closePanelButton.title = 'Close panel';
-
-    // Assign base styles for the close button
-    assignHeaderButtonsStyles(closePanelButton, {
-      backgroundColor: 'darkolivegreen',
-    }, true); // Pass true for isFirstButton
+    // Apply common styles using the helper function
+    applyHeaderButtonStyles(closePanelButton, 'darkolivegreen', '0 0 0 0.5em');
 
     // Add a click event listener to the close panel button
     closePanelButton.addEventListener('click', () => {
@@ -6794,10 +6731,8 @@
     clearCacheButton.innerHTML = trashSVG;
     clearCacheButton.title = 'Clear settings';
 
-    // Assign base styles for the clear button
-    assignHeaderButtonsStyles(clearCacheButton, {
-      backgroundColor: 'brown'
-    })
+    // Apply common styles using the helper function
+    applyHeaderButtonStyles(clearCacheButton, 'brown');
 
     // Add a click event listener to the clear cache button
     clearCacheButton.addEventListener('click', () => {
@@ -6810,10 +6745,8 @@
     importSettingsButton.innerHTML = importSVG;
     importSettingsButton.title = 'Import settings';
 
-    // Call the helper function with specific styles for the import button
-    assignHeaderButtonsStyles(importSettingsButton, {
-      backgroundColor: '#502f6b',
-    });
+    // Apply common styles using the helper function
+    applyHeaderButtonStyles(importSettingsButton, '#502f6b');
 
     // Create a save button with the provided SVG icon
     const saveSettingsButton = document.createElement('div');
@@ -6944,10 +6877,8 @@
       });
     }
 
-    // Call the helper function with specific styles for the save button
-    assignHeaderButtonsStyles(saveSettingsButton, {
-      backgroundColor: '#2f6b63',
-    });
+    // Apply common styles using the helper function
+    applyHeaderButtonStyles(saveSettingsButton, '#2f6b63');
 
     // Create a hidden file input for importing settings
     const importFileInput = document.createElement('input');
@@ -6999,15 +6930,34 @@
     exportSettingsButton.innerHTML = exportSVG;
     exportSettingsButton.title = 'Export settings';
 
+    // Apply common styles using the helper function
+    applyHeaderButtonStyles(exportSettingsButton, '#2f4c6b');
+
     // Example of how to use the getSettingsData function in the export event
     exportSettingsButton.addEventListener('click', function () {
       const settingsData = getSettingsData(); // Retrieve the settings data
       handleDownloadSettings(settingsData); // Pass the retrieved settings data to the download function
     });
 
-    // Call the helper function with specific styles for the export button
-    assignHeaderButtonsStyles(exportSettingsButton, {
-      backgroundColor: '#2f4c6b',
+    // Create an array containing the buttons we want to apply the events to
+    const buttons = [
+      clearCacheButton,
+      closePanelButton,
+      importSettingsButton,
+      exportSettingsButton
+    ];
+
+    // Iterate through each button in the array
+    buttons.forEach(button => {
+      // Add a mouseover event listener to change the button's brightness on hover
+      button.addEventListener('mouseover', () => {
+        button.style.filter = 'brightness(0.8)'; // Dim the button
+      });
+
+      // Add a mouseout event listener to reset the button's brightness when not hovered
+      button.addEventListener('mouseout', () => {
+        button.style.filter = 'brightness(1)'; // Reset to original brightness
+      });
     });
 
     // Append the buttons to the panel header container

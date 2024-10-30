@@ -1575,13 +1575,15 @@
     // Create cache panel search mode button with the provided SVG icon
     const cachePanelSearchMode = document.createElement('div');
     cachePanelSearchMode.className = 'user-mode-button';
-    cachePanelSearchMode.title = 'Activate user mode';
     cachePanelSearchMode.innerHTML = usersSVG;
     // Apply common styles using the helper function
     applyHeaderButtonStyles(cachePanelSearchMode, 'darkslateblue');
 
-    // Set the initial value for cachePanelSearchMode if it doesn't exist
-    const initialSearchMode = localStorage.getItem('cachePanelSearchMode') || (localStorage.setItem('cachePanelSearchMode', 'cache'), 'cache');
+    // Set the initial value or existing for cachePanelSearchMode if it doesn't exist
+    const currentSearchMode = localStorage.getItem('cachePanelSearchMode') || (localStorage.setItem('cachePanelSearchMode', 'cache'), 'cache');
+
+    // Set the title dynamically
+    cachePanelSearchMode.title = `Current active mode: ${currentSearchMode}`;
 
     // Function to update styles based on the current mode
     function updateStyles(mode) {
@@ -1599,22 +1601,21 @@
     }
 
     // Initial mode setup
-    updateStyles(initialSearchMode);
+    updateStyles(currentSearchMode);
 
     // Add click event listener to the cache panel search mode button
     cachePanelSearchMode.addEventListener('click', () => {
       // Toggle between 'cache' and 'fetch' values
       const currentMode = localStorage.getItem('cachePanelSearchMode');
       const newMode = currentMode === 'cache' ? 'fetch' : 'cache';
-
       // Set new mode in localStorage
       localStorage.setItem('cachePanelSearchMode', newMode);
-
       // Update styles based on the new mode
       updateStyles(newMode);
-
+      // Set the title dynamically based on the new mode
+      cachePanelSearchMode.title = `Current active mode: ${newMode}`;
       // Optional: Log the current mode for debugging
-      console.log(`Current mode: ${newMode}`);
+      // console.log(`Current mode: ${newMode}`);
     });
 
     // Append the search mode button to the panel header container

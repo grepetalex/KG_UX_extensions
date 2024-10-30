@@ -1494,14 +1494,21 @@
     };
 
     // Debounce the handleSearch function to prevent excessive calls
-    searchInput.addEventListener('input', debounce((event) => {
-      const inputValue = event.target.value.trim();
-      // Process 'user' prefix search or search when cachePanelSearchMode is 'fetch'
-      if (inputValue.startsWith('user ') || localStorage.getItem('cachePanelSearchMode') === 'fetch') {
-        const username = inputValue.substring(5).trim(); // Extract username
-        handleSearch(username); // Call the search function
-      }
-    }, debounceTimeout));
+    searchInput.addEventListener(
+      'input',
+      debounce((event) => {
+        const inputValue = event.target.value.trim();
+        const searchMode = localStorage.getItem('cachePanelSearchMode');
+
+        // Extract username if input starts with 'user ', or use input directly in 'fetch' mode
+        const username = inputValue.startsWith('user ')
+          ? inputValue.substring(5).trim()
+          : (searchMode === 'fetch' ? inputValue : '');
+
+        // Trigger search if a valid username exists
+        if (username) handleSearch(username);
+      }, debounceTimeout)
+    );
 
     // Append the search container to the panel header container
     panelHeaderContainer.appendChild(searchContainer);

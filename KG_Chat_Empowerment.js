@@ -1723,9 +1723,9 @@
       return timeDifference <= 24 * 60 * 60 * 1000; // 24 hours in milliseconds
     };
 
-    // Function to create a user element
+    // This function creates a user element for the cache panel with detailed user information and metrics.
     const createCachePanelUserElement = (userId, userData) => {
-      // Create a div for each user with class 'user'
+      // Create the main container for the user.
       const userElement = document.createElement('div');
       userElement.className = 'user';
       userElement.style.padding = '0.2em';
@@ -1735,53 +1735,36 @@
       userElement.style.alignItems = 'center';
       userElement.style.height = 'fit-content';
 
-      // Base styles shared by both tracked and untracked users
+      // Define base styling for tracked and untracked users.
       const baseStyle = {
-        marginLeft: '8px', // Shared margin-left
+        marginLeft: '8px',
         borderRadius: '2px !important'
       };
 
-      // Define styles for tracked and untracked users
+      // Styles for tracked and untracked users.
       const styles = {
-        tracked: {
-          ...baseStyle,
-          color: 'greenyellow',
-          backgroundColor: 'darkgreen',
-          fontWeight: 'bold',
-          padding: '0 6px'
-        },
-        untracked: {
-          ...baseStyle,
-          color: 'orange',
-          fontWeight: 'normal'
-        }
+        tracked: { ...baseStyle, color: 'greenyellow', backgroundColor: 'darkgreen', fontWeight: 'bold', padding: '0 6px' },
+        untracked: { ...baseStyle, color: 'orange', fontWeight: 'normal' }
       };
 
-      // Function to generate the styles string
-      const generateStylesString = (styles) => {
-        return Object.entries(styles)
-          .map(([key, value]) => {
-            const cssProperty = key.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-            return `${cssProperty}: ${value}`;
-          })
+      // Helper function to convert styles into a CSS string.
+      const generateStylesString = (styles) =>
+        Object.entries(styles)
+          .map(([key, value]) => `${key.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()}: ${value}`)
           .join('; ');
-      };
 
-      // Choose styles based on whether the user is tracked or untracked
+      // Choose the appropriate style based on whether the user is tracked.
       const chosenStyles = userData.tracked ? styles.tracked : styles.untracked;
 
-      // Create the avatar div container
+      // Create an avatar container.
       const avatarElement = document.createElement('div');
       avatarElement.className = 'avatar';
       avatarElement.style.marginRight = '8px';
 
-      // Retrieve the avatar timestamp for the user
+      // Handle avatar URL and display logic.
       const avatarTimestamp = fetchedUsers[userId]?.avatarTimestamp;
-
-      // Construct the base avatar URL
       const bigAvatarUrl = `/storage/avatars/${userId}_big.png`;
 
-      // Check if avatarTimestamp is defined and not '00', or if userData.avatar is valid
       if ((avatarTimestamp && avatarTimestamp !== '00') || (userData.avatar && Object.keys(userData.avatar).length > 0)) {
         const finalAvatarUrl = `${bigAvatarUrl}?updated=${avatarTimestamp}`;
         const imgElement = document.createElement('img');
@@ -1792,49 +1775,177 @@
         imgElement.style.objectFit = 'cover';
         avatarElement.appendChild(imgElement);
       } else {
+        // Display a random emoji avatar if no avatar is available.
         avatarElement.style.fontSize = '1.8rem';
         avatarElement.innerHTML = getRandomEmojiAvatar();
       }
 
+      // Create the login element with a link to the user's profile.
       const loginElement = document.createElement('a');
       loginElement.className = 'login';
       loginElement.textContent = userData.login;
+      loginElement.href = `https://klavogonki.ru/profile/${userId}`;
 
+      // If the user has visit data, display it.
       if (userData.visits !== undefined) {
         loginElement.innerHTML += `<span style="${generateStylesString(chosenStyles)}">${userData.visits}</span>`;
       }
 
-      loginElement.href = `https://klavogonki.ru/profile/${userId}`;
-      loginElement.target = '_blank';
+      // Set styles and hover behavior for the login link.
       loginElement.style.setProperty('color', 'skyblue', 'important');
       loginElement.style.textDecoration = 'none';
-      loginElement.style.fontFamily = "Montserrat";
+      loginElement.style.fontFamily = 'Montserrat';
       loginElement.style.transition = 'color 0.3s ease';
 
       loginElement.addEventListener('mouseover', () => {
         loginElement.style.setProperty('color', 'cornsilk', 'important');
       });
+
       loginElement.addEventListener('mouseout', () => {
         loginElement.style.setProperty('color', 'skyblue', 'important');
       });
 
-      const rankElement = document.createElement('div');
-      rankElement.className = 'rank';
-      rankElement.textContent = userData.rank || 'N/A'; // Provide a fallback if undefined
-      rankElement.style.color = rankColors[userData.rank] || 'white';
-      rankElement.style.padding = '2px 0';
+      // Load a given URL into the iframe.
+      const loadProfileInIframe = (url) => {
+        // Create an iframe to display user profile pages.
+        const profileIframe = document.createElement('iframe');
+        profileIframe.classList.add('profile-iframe-container');
+        profileIframe.style.border = 'none';
+        profileIframe.src = url;
+        profileIframe.style.display = 'flex';
+        profileIframe.style.position = 'fixed';
+        profileIframe.style.zIndex = '999';
+        profileIframe.style.width = '75vw';
+        profileIframe.style.minWidth = '1000px';
+        profileIframe.style.height = '80vh';
+        profileIframe.style.top = '48.5vh';
+        profileIframe.style.left = '50vw';
+        profileIframe.style.transform = 'translate(-50%, -50%)';
 
+        document.body.appendChild(profileIframe); // Append iframe to the document body.
+
+        // Function to handle the space key press.
+        const removeIframe = () => {
+          profileIframe.remove(); // Remove the iframe from the document.
+          document.removeEventListener('keydown', handleSpaceKey); // Clean up the event listener from the document.
+        };
+
+        const handleSpaceKey = (event) => {
+          if (event.code === 'Space') {
+            event.preventDefault(); // Prevent scroll caused by the space key.
+            removeIframe(); // Call the remove function.
+          }
+        };
+
+        // Add event listener for the 'keydown' event to listen for space key presses.
+        document.addEventListener('keydown', handleSpaceKey);
+
+        // Prevent space key scrolling inside the iframe.
+        profileIframe.onload = () => {
+          // Add event listener for the iframe's contentWindow to listen for space key presses.
+          profileIframe.contentWindow.addEventListener('keydown', handleSpaceKey);
+
+          // Create the MutationObserver to watch for specific elements being removed.
+          const observer = new MutationObserver((mutations) => {
+            if (mutations.some(mutation =>
+              Array.from(mutation.removedNodes).some(node =>
+                node.nodeType === Node.ELEMENT_NODE &&
+                (node.classList.contains('dimming-background') || node.classList.contains('cached-users-panel'))
+              )
+            )) {
+              removeIframe(); // Call the remove function.
+              observer.disconnect(); // Stop observing.
+            }
+          });
+
+          // Start observing the document body for changes.
+          observer.observe(document.body, { childList: true, subtree: true });
+        };
+      };
+
+      // Load the user's profile in the iframe on click.
+      loginElement.addEventListener('click', (event) => {
+        event.preventDefault(); // Prevent page navigation.
+        loadProfileInIframe(loginElement.href);
+      });
+
+      // Helper function to create metric elements (speed, rating, etc.).
+      const createMetricElement = (className, color, icon, value, title, url) => {
+        const element = document.createElement('span');
+        element.className = className;
+        element.style.color = color;
+        element.innerHTML = `${icon}${value || 0}&nbsp;&nbsp;`;
+        element.title = title;
+        element.style.cursor = 'pointer';
+        element.addEventListener('click', () => loadProfileInIframe(url));
+        return element;
+      };
+
+      // Create individual metric elements for the user.
+      const bestSpeedElement = createMetricElement(
+        'best-speed',
+        'cyan',
+        '🚀',
+        userData.bestSpeed,
+        'Best speed',
+        `https://klavogonki.ru/u/#/${userId}/stats/normal/`
+      );
+
+      const ratingLevelElement = createMetricElement(
+        'rating-level',
+        'gold',
+        '⭐',
+        userData.ratingLevel,
+        'Rating level',
+        `https://klavogonki.ru/top/rating/today?s=${userData.login}`
+      );
+
+      const carsElement = createMetricElement(
+        'cars-count',
+        'lightblue',
+        '🚖',
+        userData.cars,
+        'Cars count',
+        `https://klavogonki.ru/u/#/${userId}/car/`
+      );
+
+      const friendsElement = createMetricElement(
+        'friends-count',
+        'lightgreen',
+        '🤝',
+        userData.friends,
+        'Friends count',
+        `https://klavogonki.ru/u/#/${userId}/friends/list/`
+      );
+
+      // Group all metrics into a container.
+      const userMetrics = document.createElement('div');
+      userMetrics.className = 'user-metrics';
+      userMetrics.style.marginTop = '4px';
+      userMetrics.style.gridColumn = 'span 2';
+      userMetrics.append(bestSpeedElement, ratingLevelElement, carsElement, friendsElement);
+
+      // Create the user data container and append login and rank elements.
       const userDataElement = document.createElement('div');
       userDataElement.className = 'user-data';
+      userDataElement.appendChild(loginElement);
 
+      const rankElement = document.createElement('div');
+      rankElement.className = 'rank';
+      rankElement.textContent = userData.rank || 'N/A';
+      rankElement.style.color = rankColors[userData.rank] || 'white';
+      rankElement.style.padding = '2px 0';
+      userDataElement.appendChild(rankElement);
+
+      // Add a registered date element with hover behavior.
       const registeredElement = document.createElement('div');
       registeredElement.className = 'registered';
-      registeredElement.textContent = userData.registered || 'N/A'; // Provide a fallback if undefined
+      registeredElement.textContent = userData.registered || 'N/A';
       registeredElement.style.color = 'cadetblue';
       registeredElement.style.fontSize = '12px';
 
-      const originalContent = registeredElement.textContent;
       let hoverTimer;
+      const originalContent = registeredElement.textContent;
 
       registeredElement.addEventListener('mouseover', () => {
         clearTimeout(hoverTimer);
@@ -1848,78 +1959,216 @@
         registeredElement.textContent = originalContent;
       });
 
-      userDataElement.appendChild(loginElement);
-      userDataElement.appendChild(rankElement);
+      // Append registered element to user data and user data to user element.
       userDataElement.appendChild(registeredElement);
+      userElement.append(avatarElement, userDataElement, userMetrics);
 
-      const userMetrics = document.createElement('div');
-      userMetrics.className = 'user-metrics';
-      userMetrics.style.marginTop = '4px';
-      userMetrics.style.gridColumn = 'span 2';
-
-      const doubleSpace = '&nbsp;&nbsp;';
-
-      const bestSpeedElement = document.createElement('span');
-      bestSpeedElement.style.color = 'cyan';
-      bestSpeedElement.innerHTML = `🚀${userData.bestSpeed || 0}${doubleSpace}`;
-      bestSpeedElement.title = 'Best speed';
-      bestSpeedElement.className = 'best-speed';
-
-      const ratingLevelElement = document.createElement('span');
-      ratingLevelElement.style.color = 'gold';
-      ratingLevelElement.innerHTML = `⭐${userData.ratingLevel || 0}${doubleSpace}`;
-      ratingLevelElement.title = 'Rating level';
-      ratingLevelElement.className = 'rating-level';
-
-      const carsElement = document.createElement('span');
-      carsElement.style.color = 'lightblue';
-      carsElement.innerHTML = `🚖${userData.cars || 0}${doubleSpace}`;
-      carsElement.title = 'Cars count';
-      carsElement.className = 'cars-count';
-
-      const friendsElement = document.createElement('span');
-      friendsElement.style.color = 'lightgreen';
-      friendsElement.innerHTML = `🤝${userData.friends || 0}${doubleSpace}`;
-      friendsElement.title = 'Friends count';
-      friendsElement.className = 'friends-count';
-
-      const elements = [bestSpeedElement, ratingLevelElement, carsElement, friendsElement];
-
-      elements.forEach(element => {
-        element.style.cursor = 'pointer';
-      });
-
-      userMetrics.appendChild(bestSpeedElement);
-      userMetrics.appendChild(ratingLevelElement);
-      userMetrics.appendChild(carsElement);
-      userMetrics.appendChild(friendsElement);
-
-      userMetrics.addEventListener('click', (event) => {
-        const target = event.target;
-
-        if (target.classList.contains('best-speed')) {
-          window.open(`https://klavogonki.ru/u/#/${userId}/stats/normal/`, '_blank');
-        } else if (target.classList.contains('rating-level')) {
-          window.open(`https://klavogonki.ru/top/rating/today?s=${userData.login}`, '_blank');
-        } else if (target.classList.contains('cars-count')) {
-          window.open(`https://klavogonki.ru/u/#/${userId}/car/`, '_blank');
-        } else if (target.classList.contains('friends-count')) {
-          window.open(`https://klavogonki.ru/u/#/${userId}/friends/list/`, '_blank');
-        }
-      });
-
-      userElement.appendChild(avatarElement);
-      userElement.appendChild(userDataElement);
-      userElement.appendChild(userMetrics);
-
-      // Append the user div to the userElements array
+      // Return the created user element and its relevant data.
       return {
         userElement,
         order: rankOrder[userData.rank] || 10,
         bestSpeed: userData.bestSpeed || 0,
-        registered: userData.registered // Store the registered date
+        registered: userData.registered
       };
     };
+
+    // Function to create a user element
+    // const createCachePanelUserElement = (userId, userData) => {
+    //   // Create a div for each user with class 'user'
+    //   const userElement = document.createElement('div');
+    //   userElement.className = 'user';
+    //   userElement.style.padding = '0.2em';
+    //   userElement.style.margin = '0.4em 0.2em';
+    //   userElement.style.display = 'grid';
+    //   userElement.style.gridTemplateColumns = 'auto 1fr';
+    //   userElement.style.alignItems = 'center';
+    //   userElement.style.height = 'fit-content';
+
+    //   // Base styles shared by both tracked and untracked users
+    //   const baseStyle = {
+    //     marginLeft: '8px', // Shared margin-left
+    //     borderRadius: '2px !important'
+    //   };
+
+    //   // Define styles for tracked and untracked users
+    //   const styles = {
+    //     tracked: {
+    //       ...baseStyle,
+    //       color: 'greenyellow',
+    //       backgroundColor: 'darkgreen',
+    //       fontWeight: 'bold',
+    //       padding: '0 6px'
+    //     },
+    //     untracked: {
+    //       ...baseStyle,
+    //       color: 'orange',
+    //       fontWeight: 'normal'
+    //     }
+    //   };
+
+    //   // Function to generate the styles string
+    //   const generateStylesString = (styles) => {
+    //     return Object.entries(styles)
+    //       .map(([key, value]) => {
+    //         const cssProperty = key.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+    //         return `${cssProperty}: ${value}`;
+    //       })
+    //       .join('; ');
+    //   };
+
+    //   // Choose styles based on whether the user is tracked or untracked
+    //   const chosenStyles = userData.tracked ? styles.tracked : styles.untracked;
+
+    //   // Create the avatar div container
+    //   const avatarElement = document.createElement('div');
+    //   avatarElement.className = 'avatar';
+    //   avatarElement.style.marginRight = '8px';
+
+    //   // Retrieve the avatar timestamp for the user
+    //   const avatarTimestamp = fetchedUsers[userId]?.avatarTimestamp;
+
+    //   // Construct the base avatar URL
+    //   const bigAvatarUrl = `/storage/avatars/${userId}_big.png`;
+
+    //   // Check if avatarTimestamp is defined and not '00', or if userData.avatar is valid
+    //   if ((avatarTimestamp && avatarTimestamp !== '00') || (userData.avatar && Object.keys(userData.avatar).length > 0)) {
+    //     const finalAvatarUrl = `${bigAvatarUrl}?updated=${avatarTimestamp}`;
+    //     const imgElement = document.createElement('img');
+    //     imgElement.src = finalAvatarUrl;
+    //     imgElement.alt = `${userData.login}'s avatar`;
+    //     imgElement.style.height = '24px';
+    //     imgElement.style.width = '24px';
+    //     imgElement.style.objectFit = 'cover';
+    //     avatarElement.appendChild(imgElement);
+    //   } else {
+    //     avatarElement.style.fontSize = '1.8rem';
+    //     avatarElement.innerHTML = getRandomEmojiAvatar();
+    //   }
+
+    //   const loginElement = document.createElement('a');
+    //   loginElement.className = 'login';
+    //   loginElement.textContent = userData.login;
+
+    //   if (userData.visits !== undefined) {
+    //     loginElement.innerHTML += `<span style="${generateStylesString(chosenStyles)}">${userData.visits}</span>`;
+    //   }
+
+    //   loginElement.href = `https://klavogonki.ru/profile/${userId}`;
+    //   loginElement.target = '_blank';
+    //   loginElement.style.setProperty('color', 'skyblue', 'important');
+    //   loginElement.style.textDecoration = 'none';
+    //   loginElement.style.fontFamily = "Montserrat";
+    //   loginElement.style.transition = 'color 0.3s ease';
+
+    //   loginElement.addEventListener('mouseover', () => {
+    //     loginElement.style.setProperty('color', 'cornsilk', 'important');
+    //   });
+    //   loginElement.addEventListener('mouseout', () => {
+    //     loginElement.style.setProperty('color', 'skyblue', 'important');
+    //   });
+
+    //   const rankElement = document.createElement('div');
+    //   rankElement.className = 'rank';
+    //   rankElement.textContent = userData.rank || 'N/A'; // Provide a fallback if undefined
+    //   rankElement.style.color = rankColors[userData.rank] || 'white';
+    //   rankElement.style.padding = '2px 0';
+
+    //   const userDataElement = document.createElement('div');
+    //   userDataElement.className = 'user-data';
+
+    //   const registeredElement = document.createElement('div');
+    //   registeredElement.className = 'registered';
+    //   registeredElement.textContent = userData.registered || 'N/A'; // Provide a fallback if undefined
+    //   registeredElement.style.color = 'cadetblue';
+    //   registeredElement.style.fontSize = '12px';
+
+    //   const originalContent = registeredElement.textContent;
+    //   let hoverTimer;
+
+    //   registeredElement.addEventListener('mouseover', () => {
+    //     clearTimeout(hoverTimer);
+    //     hoverTimer = setTimeout(() => {
+    //       registeredElement.textContent = calculateTimeOnSite(userData.registered);
+    //     }, 300);
+    //   });
+
+    //   registeredElement.addEventListener('mouseout', () => {
+    //     clearTimeout(hoverTimer);
+    //     registeredElement.textContent = originalContent;
+    //   });
+
+    //   userDataElement.appendChild(loginElement);
+    //   userDataElement.appendChild(rankElement);
+    //   userDataElement.appendChild(registeredElement);
+
+    //   const userMetrics = document.createElement('div');
+    //   userMetrics.className = 'user-metrics';
+    //   userMetrics.style.marginTop = '4px';
+    //   userMetrics.style.gridColumn = 'span 2';
+
+    //   const doubleSpace = '&nbsp;&nbsp;';
+
+    //   const bestSpeedElement = document.createElement('span');
+    //   bestSpeedElement.style.color = 'cyan';
+    //   bestSpeedElement.innerHTML = `🚀${userData.bestSpeed || 0}${doubleSpace}`;
+    //   bestSpeedElement.title = 'Best speed';
+    //   bestSpeedElement.className = 'best-speed';
+
+    //   const ratingLevelElement = document.createElement('span');
+    //   ratingLevelElement.style.color = 'gold';
+    //   ratingLevelElement.innerHTML = `⭐${userData.ratingLevel || 0}${doubleSpace}`;
+    //   ratingLevelElement.title = 'Rating level';
+    //   ratingLevelElement.className = 'rating-level';
+
+    //   const carsElement = document.createElement('span');
+    //   carsElement.style.color = 'lightblue';
+    //   carsElement.innerHTML = `🚖${userData.cars || 0}${doubleSpace}`;
+    //   carsElement.title = 'Cars count';
+    //   carsElement.className = 'cars-count';
+
+    //   const friendsElement = document.createElement('span');
+    //   friendsElement.style.color = 'lightgreen';
+    //   friendsElement.innerHTML = `🤝${userData.friends || 0}${doubleSpace}`;
+    //   friendsElement.title = 'Friends count';
+    //   friendsElement.className = 'friends-count';
+
+    //   const elements = [bestSpeedElement, ratingLevelElement, carsElement, friendsElement];
+
+    //   elements.forEach(element => {
+    //     element.style.cursor = 'pointer';
+    //   });
+
+    //   userMetrics.appendChild(bestSpeedElement);
+    //   userMetrics.appendChild(ratingLevelElement);
+    //   userMetrics.appendChild(carsElement);
+    //   userMetrics.appendChild(friendsElement);
+
+    //   userMetrics.addEventListener('click', (event) => {
+    //     const target = event.target;
+
+    //     if (target.classList.contains('best-speed')) {
+    //       window.open(`https://klavogonki.ru/u/#/${userId}/stats/normal/`, '_blank');
+    //     } else if (target.classList.contains('rating-level')) {
+    //       window.open(`https://klavogonki.ru/top/rating/today?s=${userData.login}`, '_blank');
+    //     } else if (target.classList.contains('cars-count')) {
+    //       window.open(`https://klavogonki.ru/u/#/${userId}/car/`, '_blank');
+    //     } else if (target.classList.contains('friends-count')) {
+    //       window.open(`https://klavogonki.ru/u/#/${userId}/friends/list/`, '_blank');
+    //     }
+    //   });
+
+    //   userElement.appendChild(avatarElement);
+    //   userElement.appendChild(userDataElement);
+    //   userElement.appendChild(userMetrics);
+
+    //   // Append the user div to the userElements array
+    //   return {
+    //     userElement,
+    //     order: rankOrder[userData.rank] || 10,
+    //     bestSpeed: userData.bestSpeed || 0,
+    //     registered: userData.registered // Store the registered date
+    //   };
+    // };
 
     // Iterate through each user
     Object.keys(users).forEach(async (userId) => {

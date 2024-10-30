@@ -5520,6 +5520,7 @@ code {
     font: 26px Consolas !important;
     color: white !important;
     display: flex !important;
+    align-items: center !important;
 }
 
 .chat .messages table td div:nth-child(1) {

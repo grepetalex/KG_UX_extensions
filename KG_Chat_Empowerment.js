@@ -1455,7 +1455,8 @@
               ratingLevel: profileData.ratingLevel,
               friends: profileData.friends,
               cars: profileData.cars,
-              avatarTimestamp: profileData.avatarTimestamp
+              avatarTimestamp: profileData.avatarTimestamp,
+              avatar: profileData.avatar // Include avatar in userData
             };
 
             // Create the user element with userId and userData
@@ -1770,8 +1771,8 @@
       // Construct the base avatar URL
       const bigAvatarUrl = `/storage/avatars/${userId}_big.png`;
 
-      // Check if avatarTimestamp is defined and not '00'
-      if (avatarTimestamp && avatarTimestamp !== '00') {
+      // Check if avatarTimestamp is defined and not '00', or if userData.avatar is valid
+      if ((avatarTimestamp && avatarTimestamp !== '00') || (userData.avatar && Object.keys(userData.avatar).length > 0)) {
         const finalAvatarUrl = `${bigAvatarUrl}?updated=${avatarTimestamp}`;
         const imgElement = document.createElement('img');
         imgElement.src = finalAvatarUrl;
@@ -2191,6 +2192,7 @@
           ratingLevel: user.ratingLevel,
           friends: user.friends, // Use cached friends count
           cars: user.cars, // Use cached cars count
+          avatar: user.avatar, // Get avatar availability state
           avatarTimestamp: user.avatarTimestamp // Cached avatar timestamp
         });
       } else {
@@ -2232,11 +2234,12 @@
             const cars = profileData.stats.cars_cnt || 0; // Extract cars count
 
             // Extract sec and usec from user.avatar, with null check
+            const avatar = summaryData.user?.avatar || null; // Default to null if undefined or not present
             const sec = summaryData.user.avatar?.sec || 0; // Default to 0 if undefined or null
             const usec = summaryData.user.avatar?.usec || 0; // Default to 0 if undefined or null
             const avatarTimestamp = convertToUpdatedTimestamp(sec, usec); // Combine sec and usec to get avatar timestamp
 
-            // Cache the fetched data with the converted registered date and avatar timestamp
+            // Cache the fetched data, excluding the avatar
             cachedUserInfo[userId] = {
               rank: rank,
               login: login,
@@ -2245,6 +2248,7 @@
               ratingLevel: ratingLevel,
               friends: friends, // Cache friends count
               cars: cars, // Cache cars count
+              avatar: avatar,
               avatarTimestamp: avatarTimestamp // Cache avatar timestamp
             };
 
@@ -2260,6 +2264,7 @@
               ratingLevel: ratingLevel,
               friends: friends,
               cars: cars,
+              avatar: avatar, // Return avatar for current session
               avatarTimestamp: avatarTimestamp // Include avatar timestamp in the result
             });
           } else {

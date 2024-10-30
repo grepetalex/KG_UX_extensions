@@ -1389,95 +1389,97 @@
       const newUsersContainer = document.querySelector('.new-users');
       const fetchedUsersContainer = document.querySelector('.fetched-users');
 
-      if (event.key === 'Enter') {
-        const inputValue = event.target.value.trim();
+      // Handle Backspace key
+      if (event.key === 'Backspace' && event.target.value.length === 0) {
+        oldUsersContainer.style.display = 'grid';
+        newUsersContainer.style.display = 'grid';
 
-        if (inputValue.startsWith('user')) {
-          const username = inputValue.substring(5).trim(); // Extract username
-
-          if (username) {
-            // Temporarily hide old and new user containers
-            oldUsersContainer.style.display = 'none';
-            newUsersContainer.style.display = 'none';
-
-            // Find or create the search results container
-            let searchResultsContainer = document.querySelector('.search-results');
-            if (!searchResultsContainer) {
-              searchResultsContainer = createUserContainer('search-results');
-              fetchedUsersContainer.appendChild(searchResultsContainer); // Append if it's newly created
-            } else {
-              // Clear previous search results if the container already exists
-              searchResultsContainer.innerHTML = null; // Clear existing elements
-            }
-
-            const userElements = []; // Initialize userElements array
-
-            try {
-              // Fetch user IDs by username
-              const userIds = await getUserIdsByName(username);
-
-              // Iterate over each user ID and retrieve profile data
-              await Promise.all(userIds.map(async (userId) => {
-
-                // Retrieve the user's profile data once
-                const profileData = await getUserProfileData(userId);
-
-                // Create user element data using the retrieved profile data
-                const userData = {
-                  rank: profileData.rank, // Assign rank directly
-                  login: profileData.login,
-                  registered: profileData.registeredDate, // Set registered to registeredDate
-                  bestSpeed: profileData.bestSpeed,
-                  ratingLevel: profileData.ratingLevel,
-                  friends: profileData.friends,
-                  cars: profileData.cars,
-                  avatarTimestamp: profileData.avatarTimestamp
-                };
-
-                // Create the user element with userId and userData
-                const userElementData = createCachePanelUserElement(userId, userData);
-                if (userElementData) {
-                  userElements.push(userElementData);
-                }
-
-              }));
-
-              // Sort userElements by rank and best speed
-              userElements.sort((a, b) =>
-                a.order !== b.order ? a.order - b.order : b.bestSpeed - a.bestSpeed
-              );
-
-              // Append user elements to the search results container
-              userElements.forEach(({ userElement }) => {
-                searchResultsContainer.appendChild(userElement);
-              });
-
-              // Append the search results container to fetched users container
-              if (fetchedUsersContainer) {
-                // Create and append the description for user groups
-                const searchDescription = createDescription(`Search Results for: ${username}`, 'search-results-description');
-                // Append the description as the first element in the search results container
-                searchResultsContainer.prepend(searchDescription);
-
-                fetchedUsersContainer.appendChild(searchResultsContainer);
-              }
-            } catch (error) {
-              console.error('Error fetching user profile:', error);
-            }
-          }
-        }
-      } else if (event.key === 'Backspace') {
-        if (event.target.value.length === 0) {
-          oldUsersContainer.style.display = 'grid';
-          newUsersContainer.style.display = 'grid';
-
-          const searchResultsContainer = document.querySelector('.search-results');
-          if (searchResultsContainer && fetchedUsersContainer) {
-            fetchedUsersContainer.removeChild(searchResultsContainer);
-          }
+        const searchResultsContainer = document.querySelector('.search-results');
+        if (searchResultsContainer && fetchedUsersContainer) {
+          fetchedUsersContainer.removeChild(searchResultsContainer);
         }
       }
     });
+
+    // Create a function to handle the search process
+    const handleSearch = async (username) => {
+      const oldUsersContainer = document.querySelector('.old-users');
+      const newUsersContainer = document.querySelector('.new-users');
+      const fetchedUsersContainer = document.querySelector('.fetched-users');
+
+      if (username) {
+        // Temporarily hide old and new user containers
+        oldUsersContainer.style.display = 'none';
+        newUsersContainer.style.display = 'none';
+
+        // Find or create the search results container
+        let searchResultsContainer = document.querySelector('.search-results');
+        if (!searchResultsContainer) {
+          searchResultsContainer = createUserContainer('search-results');
+          fetchedUsersContainer.appendChild(searchResultsContainer); // Append if it's newly created
+        } else {
+          // Clear previous search results if the container already exists
+          searchResultsContainer.innerHTML = null; // Clear existing elements
+        }
+
+        const userElements = []; // Initialize userElements array
+
+        try {
+          // Fetch user IDs by username
+          const userIds = await getUserIdsByName(username);
+
+          // Iterate over each user ID and retrieve profile data
+          await Promise.all(userIds.map(async (userId) => {
+            // Retrieve the user's profile data once
+            const profileData = await getUserProfileData(userId);
+
+            // Create user element data using the retrieved profile data
+            const userData = {
+              rank: profileData.rank, // Assign rank directly
+              login: profileData.login,
+              registered: profileData.registeredDate, // Set registered to registeredDate
+              bestSpeed: profileData.bestSpeed,
+              ratingLevel: profileData.ratingLevel,
+              friends: profileData.friends,
+              cars: profileData.cars,
+              avatarTimestamp: profileData.avatarTimestamp
+            };
+
+            // Create the user element with userId and userData
+            const userElementData = createCachePanelUserElement(userId, userData);
+            if (userElementData) {
+              userElements.push(userElementData);
+            }
+          }));
+
+          // Sort userElements by rank and best speed
+          userElements.sort((a, b) =>
+            a.order !== b.order ? a.order - b.order : b.bestSpeed - a.bestSpeed
+          );
+
+          // Append user elements to the search results container
+          userElements.forEach(({ userElement }) => {
+            searchResultsContainer.appendChild(userElement);
+          });
+
+          // Create and append the description for search results
+          const searchDescription = createDescription(`Search Results for: ${username}`, 'search-results-description');
+          searchResultsContainer.prepend(searchDescription); // Append description as the first element
+
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+        }
+      }
+    };
+
+    // Debounce the handleSearch function to prevent excessive calls
+    searchInput.addEventListener('input', debounce((event) => {
+      const inputValue = event.target.value.trim();
+      if (inputValue.startsWith('user ')) {
+        const username = inputValue.substring(5).trim(); // Extract username
+        handleSearch(username); // Call the search function
+      }
+    }, debounceTimeout));
 
     // Append the search container to the panel header container
     panelHeaderContainer.appendChild(searchContainer);

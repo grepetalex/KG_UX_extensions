@@ -100,6 +100,9 @@
   // Define user list of users whose messages should be hidden
   let ignored = [];
 
+  // Define empty array for the toggle settings
+  let toggle = [];
+
   // Check and load settings from localStorage if available and not empty
   const storedUsersToTrack = JSON.parse(localStorage.getItem('usersToTrack')) || [];
   const storedMentionKeywords = JSON.parse(localStorage.getItem('mentionKeywords')) || [];
@@ -433,6 +436,22 @@
   </svg>
 `;
 
+  // Function to check if notifications should be shown based on localStorage settings
+  function shouldShowNotifications(type) {
+    const toggleData = JSON.parse(localStorage.getItem('toggle')) || []; // Retrieve toggle settings or default to empty array
+
+    // Define toggle names based on notification type
+    const toggleNames = {
+      static: 'showChatStaticNotifications',
+      dynamic: 'showGlobalDynamicNotifications'
+    };
+
+    // Check if the specified notification toggle is set to 'yes'
+    return toggleData.some(toggle =>
+      toggle.name === toggleNames[type] && toggle.option === 'yes'
+    );
+  }
+
   // Timeout before the dynamicChatNotification should be removed
   const dynamicChatNotificationTimeout = 5000;
   // Set the initial top distance for the first dynamicChatNotification
@@ -453,7 +472,8 @@
     actionIcon.innerHTML = iconType;
 
     // Append containers with notifications inside the chat only for the tracked users
-    if (isTrackedUser) {
+    // Ensure static notifications are enabled for tracked users
+    if (isTrackedUser && shouldShowNotifications('static')) {
       // Get the container for all chat messages
       const messagesContainer = document.querySelector('.messages-content div');
 
@@ -514,72 +534,76 @@
 
       // Call the function to scroll to the bottom of the chat
       scrollMessages();
-    }
+    } // Static notifications END
 
-    // Check dynamicChatNotificationsContainer for accessibility
-    let dynamicChatNotificationsContainer = document.querySelector('.dynamic-chat-notifications-container');
-    // Create container for dynamic chat notifications if not exist in DOM
-    if (!dynamicChatNotificationsContainer) {
-      // Container doesn't exist, so create it
-      dynamicChatNotificationsContainer = document.createElement('div');
-      dynamicChatNotificationsContainer.classList.add('dynamic-chat-notifications-container');
-      dynamicChatNotificationsContainer.style.pointerEvents = 'none';
-      dynamicChatNotificationsContainer.style.position = 'fixed';
-      dynamicChatNotificationsContainer.style.display = 'flex';
-      dynamicChatNotificationsContainer.style.flexDirection = 'column';
-      dynamicChatNotificationsContainer.style.top = '0';
-      dynamicChatNotificationsContainer.style.bottom = '0';
-      dynamicChatNotificationsContainer.style.left = '0';
-      dynamicChatNotificationsContainer.style.right = '0';
-      dynamicChatNotificationsContainer.style.paddingTop = dynamicChatNotificationTopOffset + 'px';
+    // Handle dynamic notifications only if dynamic notifications are enabled for all users
+    if (shouldShowNotifications('dynamic')) {
 
-      // Append the container to the body
-      document.body.appendChild(dynamicChatNotificationsContainer);
-    }
+      // Check dynamicChatNotificationsContainer for accessibility
+      let dynamicChatNotificationsContainer = document.querySelector('.dynamic-chat-notifications-container');
+      // Create container for dynamic chat notifications if not exist in DOM
+      if (!dynamicChatNotificationsContainer) {
+        // Container doesn't exist, so create it
+        dynamicChatNotificationsContainer = document.createElement('div');
+        dynamicChatNotificationsContainer.classList.add('dynamic-chat-notifications-container');
+        dynamicChatNotificationsContainer.style.pointerEvents = 'none';
+        dynamicChatNotificationsContainer.style.position = 'fixed';
+        dynamicChatNotificationsContainer.style.display = 'flex';
+        dynamicChatNotificationsContainer.style.flexDirection = 'column';
+        dynamicChatNotificationsContainer.style.top = '0';
+        dynamicChatNotificationsContainer.style.bottom = '0';
+        dynamicChatNotificationsContainer.style.left = '0';
+        dynamicChatNotificationsContainer.style.right = '0';
+        dynamicChatNotificationsContainer.style.paddingTop = dynamicChatNotificationTopOffset + 'px';
 
-    // Create dynamicChatNotification element
-    const dynamicChatNotification = document.createElement('div');
-    dynamicChatNotification.classList.add('dynamic-chat-notification');
+        // Append the container to the body
+        document.body.appendChild(dynamicChatNotificationsContainer);
+      }
 
-    // Set the text content of the dynamicChatNotification to include the user and append the icon
-    dynamicChatNotification.insertAdjacentHTML('beforeend', `${user}${actionIcon.outerHTML}${time}`);
+      // Create dynamicChatNotification element
+      const dynamicChatNotification = document.createElement('div');
+      dynamicChatNotification.classList.add('dynamic-chat-notification');
 
-    // Set the initial static styles for the dynamicChatNotification
-    dynamicChatNotification.style.position = 'relative';
-    dynamicChatNotification.style.width = 'fit-content';
-    dynamicChatNotification.style.display = 'flex';
-    dynamicChatNotification.style.marginBottom = '0.2em';
-    dynamicChatNotification.style.padding = '8px 16px 8px 12px';
-    dynamicChatNotification.style.alignItems = 'center';
-    dynamicChatNotification.style.left = '0';
-    // Set the initial dynamicChatNotification transform beyond the screen of its 100% width
-    dynamicChatNotification.style.transform = 'translateX(-100%)';
-    dynamicChatNotification.style.opacity = '1';
-    dynamicChatNotification.style.transition = 'transform 0.3s cubic-bezier(0.83, 0, 0.17, 1), opacity 0.3s cubic-bezier(0.83, 0, 0.17, 1)';
-    // Set the dynamic colorization of the dynamicChatNotification
-    dynamicChatNotification.style.color = presence ? getHSLColor(100, 50, 50) : getHSLColor(0, 50, 70); // fontColor green && red
-    dynamicChatNotification.style.backgroundColor = presence ? getHSLColor(100, 50, 10) : getHSLColor(0, 50, 15); // backgroundColor green && red
-    dynamicChatNotification.style.border = presence ? `1px solid ${getHSLColor(100, 50, 25)}` : `1px solid ${getHSLColor(0, 50, 40)}`; // borderColor green && red
-    dynamicChatNotification.style.setProperty('border-radius', '0 4px 4px 0', 'important');
+      // Set the text content of the dynamicChatNotification to include the user and append the icon
+      dynamicChatNotification.insertAdjacentHTML('beforeend', `${user}${actionIcon.outerHTML}${time}`);
 
-    // Append dynamicChatNotification to dynamicChatNotificationsContainer
-    dynamicChatNotificationsContainer.appendChild(dynamicChatNotification);
+      // Set the initial static styles for the dynamicChatNotification
+      dynamicChatNotification.style.position = 'relative';
+      dynamicChatNotification.style.width = 'fit-content';
+      dynamicChatNotification.style.display = 'flex';
+      dynamicChatNotification.style.marginBottom = '0.2em';
+      dynamicChatNotification.style.padding = '8px 16px 8px 12px';
+      dynamicChatNotification.style.alignItems = 'center';
+      dynamicChatNotification.style.left = '0';
+      // Set the initial dynamicChatNotification transform beyond the screen of its 100% width
+      dynamicChatNotification.style.transform = 'translateX(-100%)';
+      dynamicChatNotification.style.opacity = '1';
+      dynamicChatNotification.style.transition = 'transform 0.3s cubic-bezier(0.83, 0, 0.17, 1), opacity 0.3s cubic-bezier(0.83, 0, 0.17, 1)';
+      // Set the dynamic colorization of the dynamicChatNotification
+      dynamicChatNotification.style.color = presence ? getHSLColor(100, 50, 50) : getHSLColor(0, 50, 70); // fontColor green && red
+      dynamicChatNotification.style.backgroundColor = presence ? getHSLColor(100, 50, 10) : getHSLColor(0, 50, 15); // backgroundColor green && red
+      dynamicChatNotification.style.border = presence ? `1px solid ${getHSLColor(100, 50, 25)}` : `1px solid ${getHSLColor(0, 50, 40)}`; // borderColor green && red
+      dynamicChatNotification.style.setProperty('border-radius', '0 4px 4px 0', 'important');
 
-    // Animate dynamicChatNotification
-    setTimeout(() => {
-      // Initiate the animation by showing the dynamicChatNotification
-      dynamicChatNotification.style.transform = 'translateX(0)';
+      // Append dynamicChatNotification to dynamicChatNotificationsContainer
+      dynamicChatNotificationsContainer.appendChild(dynamicChatNotification);
 
+      // Animate dynamicChatNotification
       setTimeout(() => {
-        // After (N) seconds, hide it beyond the screen
-        dynamicChatNotification.style.transform = 'translateX(-100%)';
+        // Initiate the animation by showing the dynamicChatNotification
+        dynamicChatNotification.style.transform = 'translateX(0)';
 
         setTimeout(() => {
-          // Remove the dynamicChatNotification from DOM after 300ms
-          dynamicChatNotificationsContainer.removeChild(dynamicChatNotification);
-        }, 300); // Remove
-      }, dynamicChatNotificationTimeout); // Hide
-    }, 300); // show
+          // After (N) seconds, hide it beyond the screen
+          dynamicChatNotification.style.transform = 'translateX(-100%)';
+
+          setTimeout(() => {
+            // Remove the dynamicChatNotification from DOM after 300ms
+            dynamicChatNotificationsContainer.removeChild(dynamicChatNotification);
+          }, 300); // Remove
+        }, dynamicChatNotificationTimeout); // Hide
+      }, 300);
+    } // Dynamic notifications END
 
   }
 
@@ -6198,6 +6222,11 @@
         .map((user) => `${tabSize4}${JSON.stringify(user)}`) // Use defined const for indentation
         .join(',\n'); // Join with a new line for better formatting
 
+      // Convert 'toggle' to formatted entries with proper indentation
+      const toggleFormatted = settingsData.toggle
+        .map(toggle => `${tabSize4}${JSON.stringify(toggle)}`) // Format each toggle item
+        .join(',\n'); // Join with a new line for better formatting
+
       // Build the JSON structure with appropriate formatting using string concatenation
       const jsonData = '{\n' +
         `${tabSize2}"usersToTrack": [\n` +
@@ -6211,6 +6240,9 @@
         `${tabSize2}],\n` +
         `${tabSize2}"ignored": [\n` +
         `${settingsData.ignored.map(user => `${tabSize4}"${user}"`).join(',\n')}\n` +
+        `${tabSize2}],\n` +
+        `${tabSize2}"toggle": [\n` + // Added toggle
+        `${toggleFormatted}\n` +
         `${tabSize2}]\n` +
         '}';
 
@@ -6245,13 +6277,15 @@
     const mentionKeywords = JSON.parse(localStorage.getItem('mentionKeywords')) || [];
     const moderator = JSON.parse(localStorage.getItem('moderator')) || [];
     const ignored = JSON.parse(localStorage.getItem('ignored')) || [];
+    const toggle = JSON.parse(localStorage.getItem('toggle')) || [];
 
     // Combine the retrieved data into a single object
     const settingsData = {
       usersToTrack: usersToTrack,
       mentionKeywords: mentionKeywords,
       moderator: moderator,
-      ignored: ignored
+      ignored: ignored,
+      toggle: toggle
     };
 
     return settingsData;
@@ -6332,19 +6366,27 @@
     localStorage.setItem('mentionKeywords', JSON.stringify(mentionKeywords));
     localStorage.setItem('moderator', JSON.stringify(moderator));
     localStorage.setItem('ignored', JSON.stringify(ignored));
+    localStorage.setItem('toggle', JSON.stringify(toggle));
   }
 
   // Process and apply uploaded settings
-  function processUploadedSettings({ usersToTrack: u = [], mentionKeywords: mk = [], moderator: md = [], ignored: i = [] }) {
+  function processUploadedSettings({
+    usersToTrack: u = [],
+    mentionKeywords: mk = [],
+    moderator: md = [],
+    ignored: i = [],
+    toggle: t = []
+  }) {
     // Ensure the uploaded values are valid arrays or default to the existing ones
     usersToTrack = Array.isArray(u) ? u : usersToTrack;
     mentionKeywords = Array.isArray(mk) ? mk : mentionKeywords;
     moderator = Array.isArray(md) ? md : moderator;
     ignored = Array.isArray(i) ? i : ignored;
+    toggle = Array.isArray(t) ? t : toggle;
 
     // Save to localStorage after applying the settings
     saveSettingsToLocalStorage();
-    console.log('Uploaded settings applied:', { usersToTrack, mentionKeywords, moderator, ignored });
+    console.log('Uploaded settings applied:', { usersToTrack, mentionKeywords, moderator, ignored, toggle });
   }
 
   // Inline SVG source for the "x" icon (close button)
@@ -6640,7 +6682,8 @@
           usersToTrack: [],
           mentionKeywords: [],
           moderator: [],
-          ignored: []
+          ignored: [],
+          toggle: []
         };
 
         // Process tracked items
@@ -6680,6 +6723,24 @@
           const ignoredField = item.querySelector('.ignored-field');
           const ignoredValue = ignoredField ? ignoredField.value.trim() : '';
           currentValues.ignored.push(ignoredValue);
+        });
+
+        // Process toggle (yes/no) settings based on select elements within each toggle-setting item
+        container.querySelectorAll('.settings-toggle-container .toggle-item').forEach(item => {
+          const descriptionElement = item.querySelector('.toggle-description'); // Get the description element
+          const selectElement = item.querySelector('.toggle-select'); // Select the toggle (select) element within the current toggle-item
+          const selectedValue = selectElement ? selectElement.value.trim() : 'no'; // Default to 'no' if not selected
+
+          // Get the data-toggle-name attribute value from the descriptionElement
+          const toggleName = descriptionElement.getAttribute('data-toggle-name');
+
+          // Push the current toggle setting as an object into the toggle array
+          if (toggleName) {
+            currentValues.toggle.push({
+              name: toggleName, // Store the toggle name
+              option: selectedValue // Store the selected value directly
+            });
+          }
         });
 
         // Check if any values have changed compared to previous state
@@ -6870,7 +6931,8 @@
       { type: 'tracked', emoji: '👀' },
       { type: 'mention', emoji: '📢' },
       { type: 'moderator', emoji: '⚔️' },
-      { type: 'ignored', emoji: '🛑' }
+      { type: 'ignored', emoji: '🛑' },
+      { type: 'toggle', emoji: '🔘' }
     ];
 
     // Loop through each type and create description and container elements
@@ -7068,6 +7130,49 @@
       return item;
     }
 
+    // Function to create a toggle item with a description and select for yes/no options
+    function createToggleItem(toggle, name, optionValue) {
+      const item = createContainer('toggle', 'flex');
+      item.style.alignItems = 'center';
+
+      // Create the select element for yes/no
+      const select = document.createElement('select');
+      select.className = 'toggle-select';
+
+      // Create the description element
+      const description = document.createElement('span');
+      description.className = 'toggle-description';
+      description.innerText = toggle.description;
+      // Set the custom data attribute for the setting using the name parameter
+      description.setAttribute('data-toggle-name', name); // Set data-toggle-name to the name parameter
+
+      // Define options with emojis for yes and no
+      const options = [
+        { value: 'yes', emoji: '✔️' },
+        { value: 'no', emoji: '❌' }
+      ];
+
+      // Create options for the select element
+      options.forEach(({ value, emoji }) => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = `${emoji} ${value}`; // Format text as "✔️ yes" or "❌ no"
+        select.appendChild(option);
+      });
+
+      // Set the initial value of the select based on the optionValue parameter
+      select.value = optionValue; // Assign the optionValue to the select element
+
+      // Style the select element
+      styleSelect(select); // Call the styling function
+
+      // Append the description and select to the toggle item
+      item.appendChild(select);
+      item.appendChild(description);
+
+      return item; // Return the created toggle item
+    }
+
     // Populate settings dynamically
     function populateSettings() {
       const containers = {
@@ -7088,6 +7193,7 @@
 
       Object.entries(data).forEach(([key, items]) => {
         const container = document.querySelector(containers[key]);
+        if (!container) return; // Skip if the container is null
         container.style.width = '100%';
 
         // Apply specific styles for mention and ignored containers
@@ -7104,6 +7210,26 @@
         const addButton = createAddButton(containers[key], creators[key]);
         container.appendChild(addButton);
       });
+
+      // Retrieve the toggle settings from localStorage
+      const storedToggleSettings = JSON.parse(localStorage.getItem('toggle')) || [];
+
+      // Create and append toggle items directly for the toggle settings
+      const toggleContainer = document.querySelector('.settings-toggle-container');
+      const toggleSettings = [
+        { name: 'showChatStaticNotifications', description: 'Show chat static notifications' },
+        { name: 'showGlobalDynamicNotifications', description: 'Show global dynamic notifications' },
+      ];
+
+      // Create and append toggle items directly
+      toggleSettings.forEach(toggle => {
+        // Find the stored setting for the current toggle or default to 'yes'
+        const storedSetting = storedToggleSettings.find(item => item.name === toggle.name);
+        const optionValue = storedSetting ? storedSetting.option : 'yes'; // Default to 'yes' if not set
+        const toggleItem = createToggleItem(toggle, toggle.name, optionValue); // Pass the toggle and name
+        toggleContainer.appendChild(toggleItem); // Append the toggle item to the container
+      });
+
     }
 
     // Function to create an "Add" button for dynamic item creation

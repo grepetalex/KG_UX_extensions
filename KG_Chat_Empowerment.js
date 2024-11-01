@@ -7146,6 +7146,21 @@
       // Set the custom data attribute for the setting using the name parameter
       description.setAttribute('data-toggle-name', name); // Set data-toggle-name to the name parameter
 
+      // Add click event to open the image in a new tab
+      description.style.cursor = 'pointer'; // Add pointer cursor to indicate it's clickable
+      description.style.color = 'burlywood';
+      description.style.transition = 'color 0.15s ease-in-out';
+
+      description.addEventListener('click', () => {
+        if (toggle.image) {
+          window.open(toggle.image, '_blank'); // Open the image in a new tab
+        }
+      });
+
+      // Compact mouseover and mouseout events
+      description.addEventListener('mouseover', function () { description.style.color = 'lightgoldenrodyellow'; })
+      description.addEventListener('mouseout', function () { description.style.color = 'burlywood'; });
+
       // Define options with emojis for yes and no
       const options = [
         { value: 'yes', emoji: '✔️' },
@@ -7217,9 +7232,18 @@
       // Create and append toggle items directly for the toggle settings
       const toggleContainer = document.querySelector('.settings-toggle-container');
       const toggleSettings = [
-        { name: 'showChatStaticNotifications', description: 'Show chat static notifications' },
-        { name: 'showGlobalDynamicNotifications', description: 'Show global dynamic notifications' },
+        {
+          name: 'showChatStaticNotifications',
+          description: 'Show chat static notifications',
+          image: 'https://i.imgur.com/oUPSi9I.jpeg'
+        },
+        {
+          name: 'showGlobalDynamicNotifications',
+          description: 'Show global dynamic notifications',
+          image: 'https://i.imgur.com/8ffCdUG.jpeg'
+        }
       ];
+
 
       // Create and append toggle items directly
       toggleSettings.forEach(toggle => {

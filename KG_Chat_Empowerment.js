@@ -2638,15 +2638,15 @@
 
   // SVG icon for ignored users
   const ignoredSVG = `
-  <svg xmlns="http://www.w3.org/2000/svg" 
-      width="16" 
-      height="16" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="lightsalmon" 
-      stroke-width="2" 
-      stroke-linecap="round" 
-      stroke-linejoin="round" 
+  <svg xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="lightsalmon"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
       class="feather feather-slash">
     <circle cx="12" cy="12" r="10"></circle>
     <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
@@ -4500,8 +4500,8 @@
       <polyline points="22,6 12,13 2,6"></polyline>
       </svg>`;
   // Icon for chat logs
-  const iconChatLogs = `<svg xmlns="${svgUrl}" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" 
-    stroke="cornflowerblue" stroke-width="${iconStrokeWidth}" stroke-linecap="round" stroke-linejoin="round" 
+  const iconChatLogs = `<svg xmlns="${svgUrl}" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none"
+    stroke="cornflowerblue" stroke-width="${iconStrokeWidth}" stroke-linecap="round" stroke-linejoin="round"
     class="feather feather-message-circle">
     <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
   </svg>`;
@@ -5843,6 +5843,9 @@
     // Append search input to the search container
     searchContainer.appendChild(searchInput);
 
+    // Focus on the search input using requestAnimationFrame
+    function focusOnSearchField() { requestAnimationFrame(function () { searchInput.focus(); }); } focusOnSearchField();
+
     // Helper function to apply common styles to a button
     function applyHeaderButtonStyles(button, backgroundColor, margin = '0 0.5em') {
       button.style.backgroundColor = backgroundColor;
@@ -5931,6 +5934,7 @@
       dateInput.value = formattedDate; // Update the date input
       datePanelButton.title = `Current date: ${formattedDate}`; // Update title
       await loadChatLogs(currentDate); // Load chat logs for the updated date
+      focusOnSearchField();
     });
 
     // Event listener for the chevron right button
@@ -5941,6 +5945,7 @@
       dateInput.value = formattedDate; // Update the date input
       datePanelButton.title = `Current date: ${formattedDate}`; // Update title
       await loadChatLogs(currentDate); // Load chat logs for the updated date
+      focusOnSearchField();
     });
 
     // Event listener for the shuffle button
@@ -5950,6 +5955,7 @@
       dateInput.value = formattedDate; // Update the date input
       datePanelButton.title = `Current date: ${formattedDate}`; // Update title
       await loadChatLogs(randomDate); // Load chat logs for the random date
+      focusOnSearchField();
     });
 
     // Append buttons to the control buttons container
@@ -6172,19 +6178,24 @@
       datePanelButton.title = `Current date: ${selectedDate}`; // Update the title with the selected date
     });
 
-    const messageItems = Array.from(document.querySelectorAll('.chat-logs-container > .message-item'));
+    // Retrieves details from message items including usernames and message text.
+    function getMessageDetails(messageItems) {
+      // Cache message details including text, username, and message content
+      return messageItems.map(item => {
+        const usernameElement = item.querySelector('.message-username');
+        const username = usernameElement ? usernameElement.textContent.toLowerCase().trim() : ''; // Get username text, if available
+        const messageTextElement = item.querySelector('.message-text');
+        const messageText = messageTextElement ? messageTextElement.textContent.toLowerCase().trim() : ''; // Get message text, if available
+        return { username, messageText };
+      });
+    }
 
-    // Cache message details including text, username, and message content
-    const messageDetails = messageItems.map(item => {
-      const usernameElement = item.querySelector('.message-username');
-      const username = usernameElement ? usernameElement.textContent.toLowerCase().trim() : ''; // Get username text, if available
-      const messageTextElement = item.querySelector('.message-text');
-      const messageText = messageTextElement ? messageTextElement.textContent.toLowerCase().trim() : ''; // Get message text, if available
-      return { username, messageText };
-    });
+    // Filters message items based on the provided query and displays matching messages.
+    function filterItems(query) {
+      // Retrieve message items within the filterItems function
+      const messageItems = Array.from(document.querySelectorAll('.chat-logs-container > .message-item'));
 
-    // Filter items based on input query
-    const filterItems = query => {
+      const messageDetails = getMessageDetails(messageItems); // Get the message details
       const trimmedQuery = query.trim().toLowerCase();
       const isEmptyQuery = !trimmedQuery;
 
@@ -6199,7 +6210,7 @@
       // Determine if User Mode is active (2 or more matching usernames)
       const isUserMode = matchingUsernamesCount >= 2;
 
-      // Loop through message items to apply filtering
+      // Filter message items based on the query
       messageItems.forEach((item, index) => {
         const messageContainer = item.closest('.message-item'); // Get the closest message item container
         const messageDetailsItem = messageDetails[index];
@@ -6209,12 +6220,10 @@
         if (isEmptyQuery) {
           // Display all messages if the query is empty
           shouldDisplay = true;
-        }
-        else if (isUserMode) {
+        } else if (isUserMode) {
           // User Mode: Match only by username
           shouldDisplay = queryParts.some(part => messageDetailsItem.username === part);
-        }
-        else {
+        } else {
           // Simple Mode: Treat the entire query (including commas) as part of the text search
           shouldDisplay = messageDetailsItem.username.includes(trimmedQuery) ||
             messageDetailsItem.messageText.includes(trimmedQuery);
@@ -6223,13 +6232,10 @@
         // Apply visibility based on shouldDisplay
         messageContainer.style.display = shouldDisplay ? 'inline-flex' : 'none';
       });
-    };
+    }
 
     // Add input event listener to filter items as the user types
     searchInput.addEventListener('input', () => filterItems(searchInput.value));
-
-    // Set focus to the search input field
-    searchInput.focus();
 
     // Attach a keydown event listener to the document object
     document.addEventListener('keydown', function (event) {
@@ -6502,45 +6508,45 @@
 
   // SVG for the "chevron left" icon, used to change chat logs one day backward
   const chevronLeftSVG = `
-    <svg xmlns="http://www.w3.org/2000/svg" 
-        width="24" 
-        height="24" 
-        viewBox="0 0 24 24" 
-        fill="none" 
-        stroke="#1ce5e5" 
-        stroke-width="2" 
-        stroke-linecap="round" 
-        stroke-linejoin="round" 
+    <svg xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#1ce5e5"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
         class="feather feather-chevron-left">
       <polyline points="15 18 9 12 15 6"></polyline>
     </svg>`;
 
   // SVG for the "chevron right" icon, used to change chat logs one day forward
   const chevronRightSVG = `
-    <svg xmlns="http://www.w3.org/2000/svg" 
-        width="24" 
-        height="24" 
-        viewBox="0 0 24 24" 
-        fill="none" 
-        stroke="#1ce5e5" 
-        stroke-width="2" 
-        stroke-linecap="round" 
-        stroke-linejoin="round" 
+    <svg xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#1ce5e5"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
         class="feather feather-chevron-right">
       <polyline points="9 18 15 12 9 6"></polyline>
     </svg>`;
 
   // SVG for the "shuffle" icon, used to select a random year, month, and day
   const shuffleSVG = `
-    <svg xmlns="http://www.w3.org/2000/svg" 
-        width="24" 
-        height="24" 
-        viewBox="0 0 24 24" 
-        fill="none" 
-        stroke="#a99bff" 
-        stroke-width="2" 
-        stroke-linecap="round" 
-        stroke-linejoin="round" 
+    <svg xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#a99bff"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
         class="feather feather-shuffle">
       <polyline points="16 3 21 3 21 8"></polyline>
       <line x1="4" y1="20" x2="21" y2="3"></line>
@@ -6562,8 +6568,8 @@
 
   // Inline SVG source for the users icon
   const usersSVG = `
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" 
-    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" 
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
     stroke-linejoin="round" class="feather feather-users">
     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
     <circle cx="9" cy="7" r="4"></circle>

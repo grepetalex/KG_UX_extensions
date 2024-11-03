@@ -5531,7 +5531,6 @@
       messageTextElement.className = 'message-text';
       messageTextElement.style.cursor = 'pointer'; // Pointer cursor
       messageTextElement.style.margin = '0.4em';
-      messageTextElement.style.overflowWrap = 'anywhere';
 
       messageTextElement.innerHTML = message.replace(/:(?=\w*[a-zA-Z])(\w+):/g,
         (_, word) => `<img src="/img/smilies/${word}.gif" alt=":${word}:" title=":${word}:" class="smile">`
@@ -6122,6 +6121,7 @@
         messageTextElement.className = 'message-text';
         messageTextElement.style.color = 'lightsteelblue';
         messageTextElement.style.margin = '0 0.4em';
+        messageTextElement.style.overflowWrap = 'anywhere';
 
         // Replace emoticons with images
         messageTextElement.innerHTML = message.replace(/:(?=\w*[a-zA-Z])(\w+):/g,
@@ -6152,17 +6152,25 @@
     function renderActiveUsers(usernameMessageCountMap, parentContainer) {
       // Check if active users should be shown
       if (localStorage.getItem('shouldShowActiveUsers') === 'shown') {
-        // Create a container for the active users
-        const activeUsers = document.createElement('div');
-        activeUsers.className = 'active-users';
-        activeUsers.style.padding = '1em';
-        activeUsers.style.height = 'calc(100% - 1em)';
-        activeUsers.style.width = 'fit-content';
-        activeUsers.style.overflowY = 'auto';
-        activeUsers.style.overflowX = 'hidden';
-        activeUsers.style.gridArea = 'users';
-        activeUsers.style.display = 'flex';
-        activeUsers.style.flexDirection = 'column';
+        // Check if the activeUsers container already exists
+        let activeUsers = parentContainer.querySelector('.active-users');
+
+        // If it doesn't exist, create it
+        if (!activeUsers) {
+          activeUsers = document.createElement('div');
+          activeUsers.className = 'active-users';
+          activeUsers.style.padding = '1em';
+          activeUsers.style.height = 'calc(100% - 1em)';
+          activeUsers.style.width = 'fit-content';
+          activeUsers.style.overflowY = 'auto';
+          activeUsers.style.overflowX = 'hidden';
+          activeUsers.style.gridArea = 'users';
+          activeUsers.style.display = 'flex';
+          activeUsers.style.flexDirection = 'column';
+
+          // Append the newly created activeUsers container to the parent container
+          parentContainer.appendChild(activeUsers);
+        }
 
         // Sort usernames by message count in descending order
         const sortedUsernames = Array.from(usernameMessageCountMap.entries())
@@ -6208,10 +6216,6 @@
           // Append user element to activeUsers container
           activeUsers.appendChild(userElement);
         });
-
-        // Append activeUsers to the appropriate parent container
-        // Assuming you have a parent container, for example, `parentContainer`
-        parentContainer.appendChild(activeUsers);
       }
     }
 

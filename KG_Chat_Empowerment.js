@@ -6014,6 +6014,7 @@
     activeUsers.style.height = 'calc(100% - 1em)';
     activeUsers.style.width = 'fit-content';
     activeUsers.style.overflowY = 'auto';
+    activeUsers.style.overflowX = 'hidden';
     activeUsers.style.gridArea = 'users';
     activeUsers.style.display = 'flex';
     activeUsers.style.flexDirection = 'column';

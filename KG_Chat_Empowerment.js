@@ -6220,7 +6220,7 @@
     }
 
     // Load today's chat logs initially
-    const today = new Date().toISOString().split('T')[0]; // Get today's date in 'YYYY-MM-DD' format
+    const today = new Intl.DateTimeFormat('en-CA').format(new Date()); // 'en-CA' gives 'YYYY-MM-DD' format
     await loadChatLogs(today); // Load today's logs
 
     // Set the max attribute to today's date

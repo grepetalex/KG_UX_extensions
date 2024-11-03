@@ -5794,12 +5794,20 @@
     chatLogsPanel.style.height = '80vh';
     chatLogsPanel.style.zIndex = '999';
     chatLogsPanel.style.minWidth = '1000px';
+    chatLogsPanel.style.display = 'grid';
+    chatLogsPanel.style.flexDirection = 'column';
+    chatLogsPanel.style.gridTemplateColumns = '1fr';
+    chatLogsPanel.style.gridTemplateAreas = `
+      "header header"
+      "messages users"
+    `;
 
     // Create a container div for the panel header
     const panelHeaderContainer = document.createElement('div');
     panelHeaderContainer.className = 'panel-header';
     panelHeaderContainer.style.display = 'flex';
     panelHeaderContainer.style.flexDirection = 'row';
+    panelHeaderContainer.style.gridArea = 'header';
     panelHeaderContainer.style.justifyContent = 'flex-end';
     panelHeaderContainer.style.padding = '0.6em';
 
@@ -5819,6 +5827,7 @@
     const searchInput = document.createElement('input');
     searchInput.className = 'chatlogs-search-input';
     searchInput.type = 'text';
+    searchInput.style.height = '48px';
     searchInput.style.width = '100%';
     searchInput.style.padding = '10px';
     searchInput.style.margin = '0 1em';
@@ -5991,16 +6000,28 @@
     // Create a container for the chat logs
     const chatLogsContainer = document.createElement('div');
     chatLogsContainer.className = 'chat-logs-container';
-    chatLogsContainer.style.overflowY = 'auto'; // Enable scrolling for messages
-    chatLogsContainer.style.height = 'calc(100% - 70px)'; // Adjust height considering header
+    chatLogsContainer.style.overflowY = 'auto';
+    chatLogsContainer.style.height = 'calc(100% - 1em)';
     chatLogsContainer.style.padding = '1em';
-    chatLogsContainer.style.color = 'white'; // Text color for logs
     chatLogsContainer.style.display = 'flex';
+    chatLogsContainer.style.gridArea = 'messages';
     chatLogsContainer.style.flexDirection = 'column';
+
+    // Create a container for the active users
+    const activeUsers = document.createElement('div');
+    activeUsers.className = 'active-users';
+    activeUsers.style.padding = '1em';
+    activeUsers.style.height = 'calc(100% - 1em)';
+    activeUsers.style.width = 'fit-content';
+    activeUsers.style.overflowY = 'auto';
+    activeUsers.style.gridArea = 'users';
+    activeUsers.style.display = 'flex';
+    activeUsers.style.flexDirection = 'column';
 
     // Append the header and chat logs container to the chat logs panel
     chatLogsPanel.appendChild(panelHeaderContainer);
     chatLogsPanel.appendChild(chatLogsContainer);
+    chatLogsPanel.appendChild(activeUsers);
 
     // Append the chat logs panel to the body
     document.body.appendChild(chatLogsPanel);
@@ -6013,6 +6034,8 @@
     const usernameHueMap = {};
     const hueStep = 15;
     let lastDisplayedUsername = null; // Variable to track the last displayed username
+    // Initialize a map to track message counts for unique usernames
+    const usernameMessageCountMap = new Map();
 
     // Function to load and display chat logs into the container
     const loadChatLogs = async (date) => {
@@ -6020,7 +6043,13 @@
       const { chatlogs } = await fetchChatLogs(date);
       chatLogsContainer.innerHTML = ''; // Clear existing logs
 
+      // Clear previous counts
+      usernameMessageCountMap.clear();
+
       chatlogs.forEach(({ time, username, message }) => {
+        // Update message count for each unique username
+        usernameMessageCountMap.set(username, (usernameMessageCountMap.get(username) || 0) + 1);
+
         // Create a container for each message
         const messageContainer = document.createElement('div');
         messageContainer.classList.add('message-item');
@@ -6051,7 +6080,7 @@
         }
 
         // Apply the hue color to the username element
-        usernameElement.style.color = `hsl(${hueForUsername}, 100%, 50%)`;
+        usernameElement.style.color = `hsl(${hueForUsername}, 80%, 50%)`;
 
         // Create message text element
         const messageTextElement = document.createElement('span');
@@ -6078,6 +6107,52 @@
         // Append the message container to the chat logs container
         chatLogsContainer.appendChild(messageContainer);
       });
+
+      // After processing all chat logs, update the active users display
+      const sortedUsernames = Array.from(usernameMessageCountMap.entries())
+        .sort(([, countA], [, countB]) => countB - countA); // Sort in descending order
+
+      // Clear previous user list in the activeUsers container
+      activeUsers.innerHTML = ''; // Clear previous user list
+
+      // Append sorted users to the activeUsers container
+      sortedUsernames.forEach(([username, count]) => {
+        // Create a user element
+        const userElement = document.createElement('div');
+        userElement.className = 'active-user-item';
+        userElement.style.display = 'flex';
+        userElement.style.height = 'fit-content';
+        userElement.style.alignItems = 'center';
+        userElement.style.justifyContent = 'left';
+        userElement.style.margin = '0.2em 0';
+
+        // Create nickname element
+        const nicknameElement = document.createElement('span');
+        nicknameElement.className = 'active-user-name';
+        nicknameElement.textContent = username;
+        nicknameElement.style.padding = '0.4em';
+
+        // Fetch the color for the username from the hue map
+        const userHue = usernameHueMap[username] || 0; // Fallback to 0 if hue not found
+        nicknameElement.style.color = `hsl(${userHue}, 80%, 50%)`; // Apply the hue color
+
+        // Create message count element
+        const messageCountElement = document.createElement('span');
+        messageCountElement.className = 'active-user-messages-count';
+        messageCountElement.textContent = count;
+        messageCountElement.style.padding = '0.4em';
+        messageCountElement.style.color = `hsl(${userHue}, 80%, 50%)`; // Apply the hue color
+        messageCountElement.style.backgroundColor = `hsla(${userHue}, 80%, 50%, 0.2)`;
+        messageCountElement.style.setProperty('border-radius', '0.2em', 'important');
+
+        // Append elements to user element
+        userElement.appendChild(messageCountElement);
+        userElement.appendChild(nicknameElement);
+
+        // Append user element to activeUsers container
+        activeUsers.appendChild(userElement);
+      });
+
     };
 
     // Load today's chat logs initially

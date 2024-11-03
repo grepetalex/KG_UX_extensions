@@ -5115,7 +5115,7 @@
     showUserListCacheButton.appendChild(userCount);
 
     // Assign a title to the button
-    showUserListCacheButton.title = 'Show User List Cache Panel';
+    showUserListCacheButton.title = 'Show Cache Panel';
 
     // Add a click event listener to the button
     showUserListCacheButton.addEventListener('click', function () {
@@ -5900,6 +5900,44 @@
     // Append the search container to the panel header container
     panelHeaderContainer.appendChild(searchContainer);
 
+    // Retrieve `shouldShowActiveUsers` from localStorage or set it to 'shown' if it doesn't exist
+    const shouldShowActiveUsers = localStorage.getItem('shouldShowActiveUsers') || (localStorage.setItem('shouldShowActiveUsers', 'shown'), 'shown');
+
+    // Create a toggle active users button
+    const toggleActiveUsers = document.createElement('div');
+    toggleActiveUsers.className = 'toggle-active-users';
+    updateToggleButtonSVG(shouldShowActiveUsers); // Set initial SVG based on stored state
+    applyHeaderButtonStyles(toggleActiveUsers, '#144e9d'); // Apply common styles
+
+    // Function to update the toggle button's SVG based on current state
+    function updateToggleButtonSVG(state) {
+      toggleActiveUsers.innerHTML = state === 'shown' ? toggleLeftSVG : toggleRightSVG; // Toggle between SVGs
+    }
+
+    // Function to toggle active users and update localStorage and SVG
+    function toggleActiveUsersState() {
+      const newState = localStorage.getItem('shouldShowActiveUsers') === 'shown' ? 'hidden' : 'shown'; // Determine new state
+      localStorage.setItem('shouldShowActiveUsers', newState); // Update localStorage
+      updateToggleButtonSVG(newState); // Update the displayed SVG
+
+      if (newState === 'shown') {
+        // Call renderActiveUsers to update the display of active users based on their message counts
+        renderActiveUsers(usernameMessageCountMap, chatLogsPanel);
+      } else {
+        // Remove the active users container if the state is hidden
+        const activeUsersContainer = chatLogsPanel.querySelector('.active-users');
+        if (activeUsersContainer) {
+          chatLogsPanel.removeChild(activeUsersContainer);
+        }
+      }
+    }
+
+    // Add click event to toggle active users
+    toggleActiveUsers.addEventListener('click', toggleActiveUsersState);
+
+    // Append the toggle active users to the panel control buttons
+    panelControlButtons.appendChild(toggleActiveUsers);
+
     // Create and style the chevron left button
     const oneDayBackward = document.createElement('div');
     oneDayBackward.className = 'chevron-left-button';
@@ -5984,6 +6022,7 @@
 
     // Create an array containing the buttons we want to apply the events to
     const buttons = [
+      toggleActiveUsers,
       datePanelButton,
       oneDayBackward,
       oneDayForward,
@@ -6014,22 +6053,9 @@
     chatLogsContainer.style.gridArea = 'messages';
     chatLogsContainer.style.flexDirection = 'column';
 
-    // Create a container for the active users
-    const activeUsers = document.createElement('div');
-    activeUsers.className = 'active-users';
-    activeUsers.style.padding = '1em';
-    activeUsers.style.height = 'calc(100% - 1em)';
-    activeUsers.style.width = 'fit-content';
-    activeUsers.style.overflowY = 'auto';
-    activeUsers.style.overflowX = 'hidden';
-    activeUsers.style.gridArea = 'users';
-    activeUsers.style.display = 'flex';
-    activeUsers.style.flexDirection = 'column';
-
     // Append the header and chat logs container to the chat logs panel
     chatLogsPanel.appendChild(panelHeaderContainer);
     chatLogsPanel.appendChild(chatLogsContainer);
-    chatLogsPanel.appendChild(activeUsers);
 
     // Append the chat logs panel to the body
     document.body.appendChild(chatLogsPanel);
@@ -6116,52 +6142,77 @@
         chatLogsContainer.appendChild(messageContainer);
       });
 
-      // After processing all chat logs, update the active users display
-      const sortedUsernames = Array.from(usernameMessageCountMap.entries())
-        .sort(([, countA], [, countB]) => countB - countA); // Sort in descending order
-
-      // Clear previous user list in the activeUsers container
-      activeUsers.innerHTML = ''; // Clear previous user list
-
-      // Append sorted users to the activeUsers container
-      sortedUsernames.forEach(([username, count]) => {
-        // Create a user element
-        const userElement = document.createElement('div');
-        userElement.className = 'active-user-item';
-        userElement.style.display = 'flex';
-        userElement.style.height = 'fit-content';
-        userElement.style.alignItems = 'center';
-        userElement.style.justifyContent = 'left';
-        userElement.style.margin = '0.2em 0';
-
-        // Create nickname element
-        const nicknameElement = document.createElement('span');
-        nicknameElement.className = 'active-user-name';
-        nicknameElement.textContent = username;
-        nicknameElement.style.padding = '0.4em';
-
-        // Fetch the color for the username from the hue map
-        const userHue = usernameHueMap[username] || 0; // Fallback to 0 if hue not found
-        nicknameElement.style.color = `hsl(${userHue}, 80%, 50%)`; // Apply the hue color
-
-        // Create message count element
-        const messageCountElement = document.createElement('span');
-        messageCountElement.className = 'active-user-messages-count';
-        messageCountElement.textContent = count;
-        messageCountElement.style.padding = '0.4em';
-        messageCountElement.style.color = `hsl(${userHue}, 80%, 50%)`; // Apply the hue color
-        messageCountElement.style.backgroundColor = `hsla(${userHue}, 80%, 50%, 0.2)`;
-        messageCountElement.style.setProperty('border-radius', '0.2em', 'important');
-
-        // Append elements to user element
-        userElement.appendChild(messageCountElement);
-        userElement.appendChild(nicknameElement);
-
-        // Append user element to activeUsers container
-        activeUsers.appendChild(userElement);
-      });
+      // Call renderActiveUsers to update the display of active users based on their message counts
+      renderActiveUsers(usernameMessageCountMap, chatLogsPanel);
 
     };
+
+    // Renders the active users based on their message counts from the provided map
+    function renderActiveUsers(usernameMessageCountMap, parentContainer) {
+      // Check if active users should be shown
+      if (localStorage.getItem('shouldShowActiveUsers') === 'shown') {
+        // Create a container for the active users
+        const activeUsers = document.createElement('div');
+        activeUsers.className = 'active-users';
+        activeUsers.style.padding = '1em';
+        activeUsers.style.height = 'calc(100% - 1em)';
+        activeUsers.style.width = 'fit-content';
+        activeUsers.style.overflowY = 'auto';
+        activeUsers.style.overflowX = 'hidden';
+        activeUsers.style.gridArea = 'users';
+        activeUsers.style.display = 'flex';
+        activeUsers.style.flexDirection = 'column';
+
+        // Sort usernames by message count in descending order
+        const sortedUsernames = Array.from(usernameMessageCountMap.entries())
+          .sort(([, countA], [, countB]) => countB - countA); // Sort in descending order
+
+        // Clear previous user list in the activeUsers container
+        activeUsers.innerHTML = ''; // Clear previous user list
+
+        // Append sorted users to the activeUsers container
+        sortedUsernames.forEach(([username, count]) => {
+          // Create a user element
+          const userElement = document.createElement('div');
+          userElement.className = 'active-user-item';
+          userElement.style.display = 'flex';
+          userElement.style.height = 'fit-content';
+          userElement.style.alignItems = 'center';
+          userElement.style.justifyContent = 'left';
+          userElement.style.margin = '0.2em 0';
+
+          // Create nickname element
+          const nicknameElement = document.createElement('span');
+          nicknameElement.className = 'active-user-name';
+          nicknameElement.textContent = username;
+          nicknameElement.style.padding = '0.4em';
+
+          // Fetch the color for the username from the hue map
+          const userHue = usernameHueMap[username] || 0; // Fallback to 0 if hue not found
+          nicknameElement.style.color = `hsl(${userHue}, 80%, 50%)`; // Apply the hue color
+
+          // Create message count element
+          const messageCountElement = document.createElement('span');
+          messageCountElement.className = 'active-user-messages-count';
+          messageCountElement.textContent = count;
+          messageCountElement.style.padding = '0.4em';
+          messageCountElement.style.color = `hsl(${userHue}, 80%, 50%)`; // Apply the hue color
+          messageCountElement.style.backgroundColor = `hsla(${userHue}, 80%, 50%, 0.2)`;
+          messageCountElement.style.setProperty('border-radius', '0.2em', 'important');
+
+          // Append elements to user element
+          userElement.appendChild(messageCountElement);
+          userElement.appendChild(nicknameElement);
+
+          // Append user element to activeUsers container
+          activeUsers.appendChild(userElement);
+        });
+
+        // Append activeUsers to the appropriate parent container
+        // Assuming you have a parent container, for example, `parentContainer`
+        parentContainer.appendChild(activeUsers);
+      }
+    }
 
     // Load today's chat logs initially
     const today = new Date().toISOString().split('T')[0]; // Get today's date in 'YYYY-MM-DD' format
@@ -6487,6 +6538,39 @@
         <line x1="18" y1="6" x2="6" y2="18"></line>
         <line x1="6" y1="6" x2="18" y2="18"></line>
     </svg>`;
+
+  // Inline SVG source for the "toggle-right" icon
+  const toggleRightSVG = `
+  <svg xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 25 25"
+      fill="none"
+      stroke="#89bbff"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      class="feather feather-toggle-right">
+      <rect x="1" y="5" width="22" height="14" rx="7" ry="7"></rect>
+      <circle cx="16" cy="12" r="3"></circle>
+  </svg>`;
+
+  // Inline SVG source for the "toggle-left" icon
+  const toggleLeftSVG = `
+  <svg xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 25 25"
+      fill="none"
+      stroke="#89bbff"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      class="feather feather-toggle-left">
+      <rect x="1" y="5" width="22" height="14" rx="7" ry="7"></rect>
+      <circle cx="8" cy="12" r="3"></circle>
+  </svg>
+  `;
 
   // Inline SVG source for the "calendar" icon
   const calendarSVG = `

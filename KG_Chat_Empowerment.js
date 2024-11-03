@@ -5797,6 +5797,7 @@
     chatLogsPanel.style.display = 'grid';
     chatLogsPanel.style.flexDirection = 'column';
     chatLogsPanel.style.gridTemplateColumns = '1fr';
+    chatLogsPanel.style.gridTemplateRows = 'min-content';
     chatLogsPanel.style.gridTemplateAreas = `
       "header header"
       "messages users"

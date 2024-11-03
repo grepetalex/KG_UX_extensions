@@ -6225,6 +6225,7 @@
 
     // Set the max attribute to today's date
     dateInput.max = today; // Disable future dates
+    dateInput.value = today; // Set the initial value to today's date
     datePanelButton.title = `Current date: ${today}`; // Set the title with the current date
 
     // Add an event listener for the date input change

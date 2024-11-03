@@ -5531,6 +5531,7 @@
       messageTextElement.className = 'message-text';
       messageTextElement.style.cursor = 'pointer'; // Pointer cursor
       messageTextElement.style.margin = '0.4em';
+      messageTextElement.style.overflowWrap = 'anywhere';
 
       messageTextElement.innerHTML = message.replace(/:(?=\w*[a-zA-Z])(\w+):/g,
         (_, word) => `<img src="/img/smilies/${word}.gif" alt=":${word}:" title=":${word}:" class="smile">`

@@ -6075,6 +6075,28 @@
         } else if (direction === 'down') {
           chatLogsContainer.scrollBy({ top: scrollAmount, behavior: 'smooth' });
         }
+
+        // Update button opacity after scrolling
+        updateScrollButtonOpacity();
+      }
+    }
+
+    // Compact function to update scroll button styles based on scroll position
+    function updateScrollButtonOpacity() {
+      if (chatLogsContainer) {
+        const tolerance = 3; // Account for minor discrepancies
+        const isAtTop = chatLogsContainer.scrollTop === 0;
+        const isAtBottom = chatLogsContainer.scrollTop + chatLogsContainer.clientHeight >= chatLogsContainer.scrollHeight - tolerance;
+
+        // Helper to set opacity and pointer-events
+        const setButtonState = (button, condition) => {
+          button.style.opacity = condition ? '0.3' : '1';
+          button.style.pointerEvents = condition ? 'none' : 'auto';
+        };
+
+        // Apply state to buttons
+        [fullScrollUpButton, partialScrollUpButton].forEach(btn => setButtonState(btn, isAtTop));
+        [fullScrollDownButton, partialScrollDownButton].forEach(btn => setButtonState(btn, isAtBottom));
       }
     }
 
@@ -6085,14 +6107,6 @@
     fullScrollUpButton.title = 'Scroll Up (Full)';
     fullScrollUpButton.addEventListener('click', () => scrollChatLogs('up', true)); // Full scroll up
     scrollButtonsContainer.appendChild(fullScrollUpButton);
-
-    // Create the "Full Scroll Down" button (chevrons)
-    const fullScrollDownButton = document.createElement('div');
-    fullScrollDownButton.innerHTML = chevronsDownSVG;
-    applyScrollButtonStyles(fullScrollDownButton);
-    fullScrollDownButton.title = 'Scroll Down (Full)';
-    fullScrollDownButton.addEventListener('click', () => scrollChatLogs('down', true)); // Full scroll down
-    scrollButtonsContainer.appendChild(fullScrollDownButton);
 
     // Create the "Partial Scroll Up" button (single chevron)
     const partialScrollUpButton = document.createElement('div');
@@ -6109,6 +6123,20 @@
     partialScrollDownButton.title = 'Scroll Down (Partial)';
     partialScrollDownButton.addEventListener('click', () => scrollChatLogs('down', false)); // Single scroll down
     scrollButtonsContainer.appendChild(partialScrollDownButton);
+
+    // Create the "Full Scroll Down" button (chevrons)
+    const fullScrollDownButton = document.createElement('div');
+    fullScrollDownButton.innerHTML = chevronsDownSVG;
+    applyScrollButtonStyles(fullScrollDownButton);
+    fullScrollDownButton.title = 'Scroll Down (Full)';
+    fullScrollDownButton.addEventListener('click', () => scrollChatLogs('down', true)); // Full scroll down
+    scrollButtonsContainer.appendChild(fullScrollDownButton);
+
+    // Initial check for button opacity
+    updateScrollButtonOpacity();
+
+    // Listen for scroll events to dynamically update button opacity
+    chatLogsContainer.addEventListener('scroll', updateScrollButtonOpacity);
 
     // Append the header and chat logs container to the chat logs panel
     chatLogsPanel.appendChild(panelHeaderContainer);

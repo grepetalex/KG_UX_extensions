@@ -5802,8 +5802,8 @@
     chatLogsPanel.style.gridTemplateColumns = '1fr';
     chatLogsPanel.style.gridTemplateRows = 'min-content';
     chatLogsPanel.style.gridTemplateAreas = `
-      "header header"
-      "messages users"
+      "header header header"
+      "messages scroll-buttons users"
     `;
 
     // Create a container div for the panel header
@@ -5849,7 +5849,7 @@
     // Focus on the search input using requestAnimationFrame
     function focusOnSearchField() { requestAnimationFrame(function () { searchInput.focus(); }); } focusOnSearchField();
 
-    // Helper function to apply common styles to a button
+    // Helper function to apply common styles to a header button
     function applyHeaderButtonStyles(button, backgroundColor, margin = '0 0.5em') {
       button.style.backgroundColor = backgroundColor;
       button.style.width = '48px';
@@ -5860,6 +5860,21 @@
       button.style.cursor = 'pointer';
       button.style.setProperty('border-radius', '0.2em', 'important');
       button.style.margin = margin; // Set margin using the provided value
+      button.style.filter = 'brightness(1)';
+      button.style.transition = 'filter 0.3s ease';
+    }
+
+    // Helper function to apply common styles to a scroll button
+    function applyScrollButtonStyles(button) {
+      button.style.width = '48px';
+      button.style.height = '48px';
+      button.style.display = 'flex';
+      button.style.justifyContent = 'center';
+      button.style.alignItems = 'center';
+      button.style.cursor = 'pointer';
+      button.style.setProperty('border-radius', '0.2em', 'important');
+      button.style.backgroundColor = '#282b2f';
+      button.style.margin = '0.5em 0';
       button.style.filter = 'brightness(1)';
       button.style.transition = 'filter 0.3s ease';
     }
@@ -6023,8 +6038,83 @@
     panelControlButtons.appendChild(closePanelButton);
     panelHeaderContainer.appendChild(panelControlButtons);
 
+
+    // Create a container for the chat logs
+    const chatLogsContainer = document.createElement('div');
+    chatLogsContainer.className = 'chat-logs-container';
+    chatLogsContainer.style.overflowY = 'auto';
+    chatLogsContainer.style.height = 'calc(100% - 1em)';
+    chatLogsContainer.style.padding = '1em';
+    chatLogsContainer.style.display = 'flex';
+    chatLogsContainer.style.gridArea = 'messages';
+    chatLogsContainer.style.flexDirection = 'column';
+
+    // Create a container for the chat logs scroll buttons
+    const scrollButtonsContainer = document.createElement('div');
+    scrollButtonsContainer.className = 'scroll-buttons-container';
+    scrollButtonsContainer.style.display = 'flex';
+    scrollButtonsContainer.style.justifyContent = 'center';
+    scrollButtonsContainer.style.gridArea = 'scroll-buttons';
+    scrollButtonsContainer.style.flexDirection = 'column';
+    scrollButtonsContainer.style.height = 'calc(100% - 1em)';
+    scrollButtonsContainer.style.padding = '1em';
+
+    // Function to scroll the chat logs
+    function scrollChatLogs(direction, isFullScroll) {
+      if (chatLogsContainer) {
+        const scrollAmount = isFullScroll ? chatLogsContainer.scrollHeight : chatLogsContainer.clientHeight;
+
+        if (direction === 'up') {
+          chatLogsContainer.scrollBy({ top: -scrollAmount, behavior: 'smooth' });
+        } else if (direction === 'down') {
+          chatLogsContainer.scrollBy({ top: scrollAmount, behavior: 'smooth' });
+        }
+      }
+    }
+
+    // Create the "Full Scroll Up" button (chevrons)
+    const fullScrollUpButton = document.createElement('div');
+    fullScrollUpButton.innerHTML = chevronsUpSVG;
+    applyScrollButtonStyles(fullScrollUpButton);
+    fullScrollUpButton.title = 'Scroll Up (Full)';
+    fullScrollUpButton.addEventListener('click', () => scrollChatLogs('up', true)); // Full scroll up
+    scrollButtonsContainer.appendChild(fullScrollUpButton);
+
+    // Create the "Full Scroll Down" button (chevrons)
+    const fullScrollDownButton = document.createElement('div');
+    fullScrollDownButton.innerHTML = chevronsDownSVG;
+    applyScrollButtonStyles(fullScrollDownButton);
+    fullScrollDownButton.title = 'Scroll Down (Full)';
+    fullScrollDownButton.addEventListener('click', () => scrollChatLogs('down', true)); // Full scroll down
+    scrollButtonsContainer.appendChild(fullScrollDownButton);
+
+    // Create the "Partial Scroll Up" button (single chevron)
+    const partialScrollUpButton = document.createElement('div');
+    partialScrollUpButton.innerHTML = chevronUpSVG;
+    applyScrollButtonStyles(partialScrollUpButton);
+    partialScrollUpButton.title = 'Scroll Up (Partial)';
+    partialScrollUpButton.addEventListener('click', () => scrollChatLogs('up', false)); // Single scroll up
+    scrollButtonsContainer.appendChild(partialScrollUpButton);
+
+    // Create the "Partial Scroll Down" button (single chevron)
+    const partialScrollDownButton = document.createElement('div');
+    partialScrollDownButton.innerHTML = chevronDownSVG;
+    applyScrollButtonStyles(partialScrollDownButton);
+    partialScrollDownButton.title = 'Scroll Down (Partial)';
+    partialScrollDownButton.addEventListener('click', () => scrollChatLogs('down', false)); // Single scroll down
+    scrollButtonsContainer.appendChild(partialScrollDownButton);
+
+    // Append the header and chat logs container to the chat logs panel
+    chatLogsPanel.appendChild(panelHeaderContainer);
+    chatLogsPanel.appendChild(chatLogsContainer);
+    chatLogsPanel.appendChild(scrollButtonsContainer);
+
     // Create an array containing the buttons we want to apply the events to
     const buttons = [
+      fullScrollUpButton,
+      fullScrollDownButton,
+      partialScrollUpButton,
+      partialScrollDownButton,
       toggleActiveUsers,
       datePanelButton,
       oneDayBackward,
@@ -6045,20 +6135,6 @@
         button.style.filter = 'brightness(1)'; // Reset to original brightness
       });
     });
-
-    // Create a container for the chat logs
-    const chatLogsContainer = document.createElement('div');
-    chatLogsContainer.className = 'chat-logs-container';
-    chatLogsContainer.style.overflowY = 'auto';
-    chatLogsContainer.style.height = 'calc(100% - 1em)';
-    chatLogsContainer.style.padding = '1em';
-    chatLogsContainer.style.display = 'flex';
-    chatLogsContainer.style.gridArea = 'messages';
-    chatLogsContainer.style.flexDirection = 'column';
-
-    // Append the header and chat logs container to the chat logs panel
-    chatLogsPanel.appendChild(panelHeaderContainer);
-    chatLogsPanel.appendChild(chatLogsContainer);
 
     // Append the chat logs panel to the body
     document.body.appendChild(chatLogsPanel);
@@ -6147,6 +6223,10 @@
 
       // Call renderActiveUsers to update the display of active users based on their message counts
       renderActiveUsers(usernameMessageCountMap, chatLogsPanel);
+
+      requestAnimationFrame(() => {
+        chatLogsContainer.scrollTop = chatLogsContainer.scrollHeight; // Scroll to the very bottom
+      });
 
     };
 
@@ -6546,6 +6626,68 @@
         <line x1="18" y1="6" x2="6" y2="18"></line>
         <line x1="6" y1="6" x2="18" y2="18"></line>
     </svg>`;
+
+  // Inline SVG source for the "chevrons up" icon
+  const chevronsUpSVG = `
+  <svg xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      class="feather feather-chevrons-up">
+      <polyline points="17 11 12 6 7 11"></polyline>
+      <polyline points="17 18 12 13 7 18"></polyline>
+  </svg>`;
+
+  // Inline SVG source for the "chevron up" icon
+  const chevronUpSVG = `
+  <svg xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      class="feather feather-chevron-up">
+      <polyline points="18 15 12 9 6 15"></polyline>
+  </svg>`;
+
+  // Inline SVG source for the "chevron down" icon
+  const chevronDownSVG = `
+  <svg xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      class="feather feather-chevron-down">
+      <polyline points="6 9 12 15 18 9"></polyline>
+  </svg>`;
+
+  // Inline SVG source for the "chevrons down" icon
+  const chevronsDownSVG = `
+  <svg xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      class="feather feather-chevrons-down">
+      <polyline points="7 13 12 18 17 13"></polyline>
+      <polyline points="7 6 12 11 17 6"></polyline>
+  </svg>`;
 
   // Inline SVG source for the "toggle-right" icon
   const toggleRightSVG = `

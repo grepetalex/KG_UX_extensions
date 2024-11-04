@@ -6222,7 +6222,7 @@
       });
 
       // Call renderActiveUsers to update the display of active users based on their message counts
-      renderActiveUsers(usernameMessageCountMap, chatLogsPanel);
+      renderActiveUsers(usernameMessageCountMap, chatLogsPanel, searchInput);
 
       requestAnimationFrame(() => {
         chatLogsContainer.scrollTop = chatLogsContainer.scrollHeight; // Scroll to the very bottom
@@ -6231,7 +6231,7 @@
     };
 
     // Renders the active users based on their message counts from the provided map
-    function renderActiveUsers(usernameMessageCountMap, parentContainer) {
+    function renderActiveUsers(usernameMessageCountMap, parentContainer, searchField) {
       // Check if active users should be shown
       if (localStorage.getItem('shouldShowActiveUsers') === 'shown') {
         // Check if the activeUsers container already exists
@@ -6271,6 +6271,32 @@
           userElement.style.alignItems = 'center';
           userElement.style.justifyContent = 'left';
           userElement.style.margin = '0.2em 0';
+          userElement.style.cursor = 'pointer';
+          userElement.style.transition = 'filter 0.15s';
+
+          // Compact event listeners for mouse over and mouse out
+          userElement.addEventListener('mouseover', () => (userElement.style.filter = 'brightness(0.8)'));
+          userElement.addEventListener('mouseout', () => (userElement.style.filter = 'brightness(1)'));
+
+          // Add click event to populate the search input with the clicked username
+          userElement.addEventListener('click', () => {
+            const currentValue = searchInput.value.trim();
+            const usernameEntry = isCtrlKeyPressed ? `, ${username}` : username;
+
+            if (isCtrlKeyPressed) {
+              // Only add the username if it's not already present
+              if (!currentValue.includes(username)) {
+                searchInput.value += currentValue ? usernameEntry : username;
+              }
+            } else {
+              // If Ctrl key isn't pressed, replace the input value with the clicked username
+              searchInput.value = username;
+            }
+
+            // Call the filter function with the updated input value
+            filterItems(searchInput.value);
+          });
+
 
           // Create nickname element
           const nicknameElement = document.createElement('span');

@@ -5678,7 +5678,10 @@
   createChatLogsButton();
 
   // Function to fetch chat logs from the specified URL for a given date
-  const fetchChatLogs = async (date) => {
+  const fetchChatLogs = async (date, messagesContainer) => {
+    // Clear the messagesContainer if it exists
+    messagesContainer && (messagesContainer.innerHTML = '');
+
     // Format date to 'YYYY-MM-DD'
     const formattedDate = new Intl.DateTimeFormat('en-CA').format(new Date(date));
 
@@ -6073,9 +6076,8 @@
 
     // Function to load and display chat logs into the container
     const loadChatLogs = async (date) => {
-      // Fetch and display chat logs
-      const { chatlogs } = await fetchChatLogs(date);
-      chatLogsContainer.innerHTML = ''; // Clear existing logs
+      // Fetch chat logs and pass the chatLogsContainer as the parent container
+      const { chatlogs } = await fetchChatLogs(date, chatLogsContainer);
 
       // Clear previous counts
       usernameMessageCountMap.clear();

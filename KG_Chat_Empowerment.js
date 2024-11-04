@@ -6948,6 +6948,15 @@
     settingsPanel.style.zIndex = '999';
     settingsPanel.style.minWidth = '1000px';
 
+    // Add a keydown event listener for the Esc key
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        // Fade out the settings panel and dimming element when the Esc key is pressed
+        fadeTargetElement(settingsPanel, 'hide');
+        fadeDimmingElement('hide');
+      }
+    });
+
     // Create a container div for the panel header
     const panelHeaderContainer = document.createElement('div');
     panelHeaderContainer.className = 'panel-header';

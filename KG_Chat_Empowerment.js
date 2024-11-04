@@ -1404,6 +1404,9 @@
     searchInput.style.backgroundColor = '#111';
     searchInput.style.border = '1px solid #222';
 
+    // Add click event listener to clear the search input by LMB click with Ctrl key pressed
+    searchInput.addEventListener('click', () => isCtrlKeyPressed && (searchInput.value = ''));
+
     // Append search input to the search container
     searchContainer.appendChild(searchInput);
 
@@ -5842,6 +5845,9 @@
     searchInput.style.boxSizing = 'border-box';
     searchInput.style.backgroundColor = '#111';
     searchInput.style.border = '1px solid #222';
+
+    // Add click event listener to clear the search input by LMB click with Ctrl key pressed
+    searchInput.addEventListener('click', () => isCtrlKeyPressed && (searchInput.value = ''));
 
     // Append search input to the search container
     searchContainer.appendChild(searchInput);

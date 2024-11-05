@@ -458,8 +458,11 @@
   const dynamicChatNotificationTopOffset = 160;
 
   function showUserAction(user, iconType, presence) {
-    // Make sure if the user is tracked to notify about presence in the chat to leave static stamps
-    const isTrackedUser = usersToTrack.some((trackedUser) => trackedUser.name === user);
+    // Make sure if the user is tracked and has the state 'thawed' (watched) to notify about presence in the chat to leave static stamps
+    const isTrackedUser = usersToTrack.some((trackedUser) =>
+      trackedUser.name === user && trackedUser.state === 'thawed'
+    );
+
     // Get current time in format "[hour:minutes:seconds]"
     const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
@@ -3058,7 +3061,9 @@
             if (!previousUsers.includes(newUser)) {
               const userGender = getUserGender(newUser) || 'male'; // use 'male' as default
               // Check if the user is in the usersToTrack array for 'enter'
-              const isUserToTrackEnter = usersToTrack.some(user => user.name === newUser);
+              const isUserToTrackEnter = usersToTrack.some(user =>
+                user.name === newUser && user.state === 'thawed'
+              );
               const iconType = enterIcon;
               showUserAction(newUser, iconType, true);
               // Pass 'enter' as the action type and the user's login to refreshUserList
@@ -3073,7 +3078,9 @@
           leftUsers.forEach((leftUser) => {
             const userGender = getUserGender(leftUser) || 'male'; // use 'male' as default
             // Check if the user is in the usersToTrack array for 'leave'
-            const isUserToTrackLeave = usersToTrack.some(user => user.name === leftUser);
+            const isUserToTrackLeave = usersToTrack.some(user =>
+              user.name === leftUser && user.state === 'thawed'
+            );
             const iconType = leaveIcon;
             showUserAction(leftUser, iconType, false);
             // Pass 'leave' as the action type and the user's login to refreshUserList
@@ -7167,16 +7174,20 @@
           const usernameField = item.querySelector('.tracked-username-field');
           const genderField = item.querySelector('.tracked-gender-select');
           const pronunciationField = item.querySelector('.tracked-pronunciation-field');
+          const snowflakeButton = item.querySelector('.assigned-thawed-config, .assigned-frozen-config');
 
           const usernameValue = usernameField ? usernameField.value.trim() : '';
           const genderValue = genderField ? genderField.value.trim() : '';
           const pronunciationValue = pronunciationField ? pronunciationField.value.trim() : '';
+          // Determine the state based on the button's class
+          const state = snowflakeButton.classList.contains('assigned-frozen-config') ? 'frozen' : 'thawed';
 
           // Push current values to usersToTrack
           currentValues.usersToTrack.push({
             name: usernameValue,
             gender: genderValue,
             pronunciation: pronunciationValue,
+            state
           });
         });
 
@@ -7509,6 +7520,20 @@
       });
     }
 
+    // Function to attach click event for toggling between "assigned-thawed-config" and "assigned-frozen-config"
+    function attachSnowflakeListener(snowflakeButton, username) {
+      snowflakeButton.addEventListener('click', () => {
+        const isFrozen = snowflakeButton.classList.toggle('assigned-frozen-config');
+        snowflakeButton.classList.toggle('assigned-thawed-config');
+
+        // Set opacity based on the assigned class
+        snowflakeButton.style.opacity = isFrozen ? '1' : '0.3';
+
+        // Update localStorage using the helper function
+        updateUserState(username, isFrozen ? 'frozen' : 'thawed');
+      });
+    }
+
     // Helper function to create a container element
     function createContainer(type, layout = 'inline-flex') {
       const item = document.createElement('div');
@@ -7539,6 +7564,32 @@
       return removeButton;
     }
 
+    // Helper function to create a snowflake button with styles and event listener
+    function createSnowflakeButton(state = 'thawed', username) {
+      const snowflakeButton = document.createElement('div');
+      snowflakeButton.className = `assigned-${state}-config`;
+
+      // Set initial opacity based on the state
+      snowflakeButton.style.opacity = state === 'thawed' ? '0.3' : '1';
+      snowflakeButton.innerHTML = snowflakeSVG;
+
+      attachSnowflakeListener(snowflakeButton, username); // Pass username here
+      styleButton(snowflakeButton, 'lightsteelblue', 'steelblue', false);
+
+      return snowflakeButton;
+    }
+
+    // Function to update a specific user in localStorage to add the state property
+    function updateUserState(username, state) {
+      const usersData = localStorage.getItem("usersToTrack");
+      if (usersData) {
+        const updatedUsers = JSON.parse(usersData).map(user =>
+          user.name === username ? { ...user, state } : user
+        );
+        localStorage.setItem("usersToTrack", JSON.stringify(updatedUsers));
+      }
+    }
+
     // Function to create a tracked item (with gender select)
     function createTrackedItem(user) {
       const item = createContainer('tracked', 'flex');
@@ -7546,6 +7597,10 @@
       const usernameInput = createInput('tracked-username', user.name, 'Username');
       const pronunciationInput = createInput('tracked-pronunciation', user.pronunciation, 'Pronunciation');
       const removeButton = createRemoveButton('tracked', item);
+
+      // Set the initial state based on the user's state property, defaulting to 'thawed' if it doesn't exist
+      const initialState = (user.state === 'frozen') ? 'frozen' : 'thawed';
+      const snowflakeButton = createSnowflakeButton(initialState, user.name); // Pass username
 
       const genderSelect = document.createElement('select');
       genderSelect.className = 'tracked-gender-select';
@@ -7566,6 +7621,7 @@
       item.appendChild(genderSelect);
       item.appendChild(pronunciationInput);
       item.appendChild(removeButton);
+      item.appendChild(snowflakeButton);
 
       return item;
     }

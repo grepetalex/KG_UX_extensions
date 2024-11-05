@@ -4509,7 +4509,6 @@
     <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
   </svg>`;
 
-
   // Declare variables for the sound switcher button and its icon
   let soundSwitcher, soundSwitcherIcon;
   // Declare variables for the message mode button and its icon
@@ -4524,19 +4523,19 @@
   }
 
   // Helper function to add jump effect like a ball with more keyframes
-  function addJumpEffect(element) {
+  function addJumpEffect(element, initialTranslateX = 50, initialTranslateY = 50) {
     const transforms = [
-      'translate(50%, 50%)', // Initial start position
-      'translate(50%, 20%)', // Jump up
-      'translate(50%, 10%)', // Higher jump peak
-      'translate(50%, 50%)', // Return to original position
-      'translate(50%, 30%)', // Slight bounce down
-      'translate(50%, 40%)', // Adjust slightly up
-      'translate(50%, 50%)' // Final position (original)
+      `translate(${initialTranslateX}%, ${initialTranslateY}%)`, // Initial start position
+      `translate(${initialTranslateX}%, ${initialTranslateY - 30}%)`, // Jump up
+      `translate(${initialTranslateX}%, ${initialTranslateY - 50}%)`, // Higher jump peak
+      `translate(${initialTranslateX}%, ${initialTranslateY}%)`, // Return to original position
+      `translate(${initialTranslateX}%, ${initialTranslateY + 10}%)`, // Slight bounce down
+      `translate(${initialTranslateX}%, ${initialTranslateY + 20}%)`, // Adjust slightly up
+      `translate(${initialTranslateX}%, ${initialTranslateY}%)`  // Final position (original)
     ];
 
     // Define an initial delay and a decrement factor for timing
-    let delay = 300; // Start with 200ms
+    let delay = 300; // Start with 300ms
     const decrement = 40; // Decrease the delay by 40ms for each keyframe
 
     transforms.forEach((transform, index) => {
@@ -5753,7 +5752,7 @@
       if (!response.ok) throw new Error('Network response was not ok');
 
       const html = await response.text();
-      return { chatlogs: parseChatLog(html) };
+      return { chatlogs: parseChatLog(html), url }; // Return chat logs and the URL
     } catch (error) {
       console.error('Fetch error:', error);
       return { chatlogs: [] }; // Return an empty array in case of an error
@@ -5851,6 +5850,8 @@
 
     // Append search input to the search container
     searchContainer.appendChild(searchInput);
+    // Append the search container to the panel header container
+    panelHeaderContainer.appendChild(searchContainer);
 
     // Focus on the search input using requestAnimationFrame
     function focusOnSearchField() { requestAnimationFrame(function () { searchInput.focus(); }); } focusOnSearchField();
@@ -5885,16 +5886,16 @@
       button.style.transition = 'filter 0.3s ease';
     }
 
-    // Create a date button with similar styles as the close button
-    const datePanelButton = document.createElement('div');
-    datePanelButton.className = 'date-panel-button';
-    datePanelButton.innerHTML = calendarSVG;
+    // Create a date input toggle with similar styles as the close button
+    const dateInputToggle = document.createElement('div');
+    dateInputToggle.className = 'date-panel-button';
+    dateInputToggle.innerHTML = calendarSVG;
     // Apply common styles using the helper function with a different background color
-    applyHeaderButtonStyles(datePanelButton, 'steelblue');
-    datePanelButton.style.margin = '0px 0.5em 0 0';
+    applyHeaderButtonStyles(dateInputToggle, 'steelblue');
+    dateInputToggle.style.margin = '0px 0.5em 0 0';
 
-    // Toggle the visibility of the date input when the button is clicked
-    datePanelButton.addEventListener('click', () => {
+    // Toggle the visibility of the date input when the toggle is clicked
+    dateInputToggle.addEventListener('click', () => {
       dateInput.style.display = dateInput.style.display === 'none' ? 'block' : 'none';
     });
 
@@ -5918,11 +5919,32 @@
     dateInput.style.margin = '0 0.5em';
 
     // Append the date button and input field to the control buttons container
-    panelControlButtons.appendChild(datePanelButton);
+    panelControlButtons.appendChild(dateInputToggle);
     panelControlButtons.appendChild(dateInput);
 
-    // Append the search container to the panel header container
-    panelHeaderContainer.appendChild(searchContainer);
+    // Create a toggle active users button element
+    const copyChatLogsUrl = document.createElement('div');
+    copyChatLogsUrl.className = 'toggle-active-users';
+    // Set the inner HTML of the copy chat logs element with the clipboard SVG
+    copyChatLogsUrl.innerHTML = clipboardSVG;
+    copyChatLogsUrl.title = 'Copy Chat Logs Url';
+    // Apply common styles to the button element
+    applyHeaderButtonStyles(copyChatLogsUrl, 'steelblue');
+
+    // Add a click event listener to copy chatLogsUrlForCopy to the clipboard
+    copyChatLogsUrl.addEventListener('click', () => {
+      addJumpEffect(copyChatLogsUrl, 0, 0);
+      navigator.clipboard.writeText(chatLogsUrlForCopy)
+        .then(() => {
+          console.log('Chat logs URL copied to clipboard:', chatLogsUrlForCopy);
+          // Optionally, you can provide user feedback here (e.g., show a message)
+        })
+        .catch(err => {
+          console.error('Failed to copy: ', err);
+        });
+    });
+
+    panelControlButtons.appendChild(copyChatLogsUrl);
 
     // Retrieve `shouldShowActiveUsers` from localStorage or set it to 'shown' if it doesn't exist
     const shouldShowActiveUsers = localStorage.getItem('shouldShowActiveUsers') || (localStorage.setItem('shouldShowActiveUsers', 'shown'), 'shown');
@@ -5930,19 +5952,23 @@
     // Create a toggle active users button
     const toggleActiveUsers = document.createElement('div');
     toggleActiveUsers.className = 'toggle-active-users';
-    updateToggleButtonSVG(shouldShowActiveUsers); // Set initial SVG based on stored state
+    updateActiveUsersToggle(shouldShowActiveUsers); // Set initial SVG based on stored state
     applyHeaderButtonStyles(toggleActiveUsers, '#144e9d'); // Apply common styles
 
-    // Function to update the toggle button's SVG based on current state
-    function updateToggleButtonSVG(state) {
+    // Set initial title based on stored state
+    toggleActiveUsers.title = shouldShowActiveUsers === 'shown' ? 'Hide User List' : 'Show User List';
+
+    // Function to update the toggle button's SVG and title based on current state
+    function updateActiveUsersToggle(state) {
       toggleActiveUsers.innerHTML = state === 'shown' ? toggleLeftSVG : toggleRightSVG; // Toggle between SVGs
+      toggleActiveUsers.title = state === 'shown' ? 'Hide User List' : 'Show User List'; // Update title based on state
     }
 
-    // Function to toggle active users and update localStorage and SVG
+    // Function to toggle active users and update localStorage, SVG, and title
     function toggleActiveUsersState() {
       const newState = localStorage.getItem('shouldShowActiveUsers') === 'shown' ? 'hidden' : 'shown'; // Determine new state
       localStorage.setItem('shouldShowActiveUsers', newState); // Update localStorage
-      updateToggleButtonSVG(newState); // Update the displayed SVG
+      updateActiveUsersToggle(newState); // Update the displayed SVG and title
 
       if (newState === 'shown') {
         // Call renderActiveUsers to update the display of active users based on their message counts
@@ -5994,7 +6020,7 @@
       currentDate.setDate(currentDate.getDate() - 1); // Go one day back
       const formattedDate = new Intl.DateTimeFormat('en-CA').format(currentDate);
       dateInput.value = formattedDate; // Update the date input
-      datePanelButton.title = `Current date: ${formattedDate}`; // Update title
+      dateInputToggle.title = `Current date: ${formattedDate}`; // Update title
       await loadChatLogs(currentDate); // Load chat logs for the updated date
       focusOnSearchField();
     });
@@ -6005,7 +6031,7 @@
       currentDate.setDate(currentDate.getDate() + 1); // Go one day forward
       const formattedDate = new Intl.DateTimeFormat('en-CA').format(currentDate);
       dateInput.value = formattedDate; // Update the date input
-      datePanelButton.title = `Current date: ${formattedDate}`; // Update title
+      dateInputToggle.title = `Current date: ${formattedDate}`; // Update title
       await loadChatLogs(currentDate); // Load chat logs for the updated date
       focusOnSearchField();
     });
@@ -6015,7 +6041,7 @@
       const randomDate = getRandomDateInRange(); // Get a random date
       const formattedDate = new Intl.DateTimeFormat('en-CA').format(new Date(randomDate));
       dateInput.value = formattedDate; // Update the date input
-      datePanelButton.title = `Current date: ${formattedDate}`; // Update title
+      dateInputToggle.title = `Current date: ${formattedDate}`; // Update title
       await loadChatLogs(randomDate); // Load chat logs for the random date
       focusOnSearchField();
     });
@@ -6149,8 +6175,9 @@
       fullScrollDownButton,
       partialScrollUpButton,
       partialScrollDownButton,
+      copyChatLogsUrl,
       toggleActiveUsers,
-      datePanelButton,
+      dateInputToggle,
       oneDayBackward,
       oneDayForward,
       randomDay,
@@ -6183,11 +6210,16 @@
     let lastDisplayedUsername = null; // Variable to track the last displayed username
     // Initialize a map to track message counts for unique usernames
     const usernameMessageCountMap = new Map();
+    // Store the current chat logs URL for clipboard copy.
+    let chatLogsUrlForCopy = ''; // Store the current chat logs URL for copying
 
     // Function to load and display chat logs into the container
     const loadChatLogs = async (date) => {
       // Fetch chat logs and pass the chatLogsContainer as the parent container
-      const { chatlogs } = await fetchChatLogs(date, chatLogsContainer);
+      const { chatlogs, url } = await fetchChatLogs(date, chatLogsContainer);
+
+      // Assign the fetched URL to the chatLogsUrlForCopy variable
+      chatLogsUrlForCopy = url;
 
       // Clear previous counts
       usernameMessageCountMap.clear();
@@ -6368,13 +6400,13 @@
     // Set the max attribute to today's date
     dateInput.max = today; // Disable future dates
     dateInput.value = today; // Set the initial value to today's date
-    datePanelButton.title = `Current date: ${today}`; // Set the title with the current date
+    dateInputToggle.title = `Current date: ${today}`; // Set the title with the current date
 
     // Add an event listener for the date input change
     dateInput.addEventListener('change', async (event) => {
       const selectedDate = event.target.value; // Get the selected date
       await loadChatLogs(selectedDate); // Load chat logs for the selected date
-      datePanelButton.title = `Current date: ${selectedDate}`; // Update the title with the selected date
+      dateInputToggle.title = `Current date: ${selectedDate}`; // Update the title with the selected date
     });
 
     // Retrieves details from message items including usernames and message text.
@@ -6799,6 +6831,22 @@
         <line x1="8" y1="2" x2="8" y2="6"></line>
         <line x1="3" y1="10" x2="21" y2="10"></line>
   </svg>`;
+
+  // Inline SVG source for the "clipboard" icon
+  const clipboardSVG = `
+    <svg xmlns="http://www.w3.org/2000/svg" 
+        width="24" 
+        height="24" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="lightsteelblue" 
+        stroke-width="2" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        class="feather feather-clipboard">
+        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+    </svg>`;
 
   // SVG for the "chevron left" icon, used to change chat logs one day backward
   const chevronLeftSVG = `

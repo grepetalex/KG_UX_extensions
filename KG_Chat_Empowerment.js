@@ -5894,9 +5894,19 @@
     applyHeaderButtonStyles(dateInputToggle, 'steelblue');
     dateInputToggle.style.margin = '0px 0.5em 0 0';
 
+    // Function to toggle visibility of an element
+    function toggleDateInputVisibility(element) {
+      element.style.display = element.style.display === 'none' ? 'flex' : 'none';
+    }
+
+    // Function to show the date input if it is currently hidden
+    function showDateInput(element) {
+      if (element.style.display === 'none') element.style.display = 'flex';
+    }
+
     // Toggle the visibility of the date input when the toggle is clicked
     dateInputToggle.addEventListener('click', () => {
-      dateInput.style.display = dateInput.style.display === 'none' ? 'block' : 'none';
+      toggleDateInputVisibility(dateInput);
     });
 
     // Create the date input field
@@ -6022,6 +6032,7 @@
       dateInput.value = formattedDate; // Update the date input
       dateInputToggle.title = `Current date: ${formattedDate}`; // Update title
       await loadChatLogs(currentDate); // Load chat logs for the updated date
+      showDateInput(dateInput);
       focusOnSearchField();
     });
 
@@ -6033,6 +6044,7 @@
       dateInput.value = formattedDate; // Update the date input
       dateInputToggle.title = `Current date: ${formattedDate}`; // Update title
       await loadChatLogs(currentDate); // Load chat logs for the updated date
+      showDateInput(dateInput);
       focusOnSearchField();
     });
 
@@ -6043,6 +6055,7 @@
       dateInput.value = formattedDate; // Update the date input
       dateInputToggle.title = `Current date: ${formattedDate}`; // Update title
       await loadChatLogs(randomDate); // Load chat logs for the random date
+      showDateInput(dateInput);
       focusOnSearchField();
     });
 

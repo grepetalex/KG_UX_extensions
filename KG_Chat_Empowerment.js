@@ -2751,8 +2751,10 @@
     newUserElement.appendChild(newNameElement);
     newUserElement.appendChild(newProfileElement);
 
-    // Check if there is a user in 'usersToTrack' array by their name
-    const userToTrack = usersToTrack.find((user) => user.name === userName);
+    // Check if there is a user in 'usersToTrack' array by their name and state
+    const userToTrack = usersToTrack.find((user) =>
+      user.name === userName && user.state === 'thawed'
+    );
 
     if (userToTrack) {
       const trackedIcon = document.createElement('div');

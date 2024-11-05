@@ -6999,6 +6999,35 @@
         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
     </svg>`;
 
+  // Inline SVG source for the "snowflake" icon
+  const snowflakeSVG = `
+  <svg xmlns="http://www.w3.org/2000/svg" 
+       width="24" 
+       height="24" 
+       viewBox="0 0 24 24" 
+       fill="none" 
+       stroke="currentColor" 
+       stroke-width="2" 
+       stroke-linecap="round" 
+       stroke-linejoin="round" 
+       class="feather feather-snowflake">
+    <g id="snowflake">
+      <line x1="12.06" y1="2.74" x2="12.06" y2="12.06" />
+      <line x1="20.12" y1="7.4" x2="12.06" y2="12.06" />
+      <line x1="20.12" y1="16.71" x2="12.06" y2="12.06" />
+      <line x1="12.06" y1="21.37" x2="12.06" y2="12.06" />
+      <line x1="3.99" y1="16.71" x2="12.06" y2="12.06" />
+      <line x1="3.99" y1="7.4" x2="12.06" y2="12.06" />
+      <polyline points="8.96,4.67 12.06,7.77 15.16,4.67"/>
+      <polyline points="16.9,5.68 15.76,9.92 20,11.05"/>
+      <polyline points="20,13.06 15.76,14.2 16.9,18.43"/>
+      <polyline points="15.16,19.44 12.06,16.34 8.96,19.44"/>
+      <polyline points="7.21,18.43 8.35,14.2 4.11,13.06"/>
+      <polyline points="4.11,11.05 8.35,9.92 7.21,5.68"/>
+    </g>
+  </svg>
+`;
+
   // Inline SVG source for the "add" icon (add button)
   const addSVG = `
     <svg xmlns="http://www.w3.org/2000/svg"

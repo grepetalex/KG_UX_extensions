@@ -4531,7 +4531,7 @@
       `translate(${initialTranslateX}%, ${initialTranslateY}%)`, // Return to original position
       `translate(${initialTranslateX}%, ${initialTranslateY + 10}%)`, // Slight bounce down
       `translate(${initialTranslateX}%, ${initialTranslateY + 20}%)`, // Adjust slightly up
-      `translate(${initialTranslateX}%, ${initialTranslateY}%)`  // Final position (original)
+      `translate(${initialTranslateX}%, ${initialTranslateY}%)` // Final position (original)
     ];
 
     // Define an initial delay and a decrement factor for timing

@@ -2761,7 +2761,6 @@
       trackedIcon.title = 'Tracked user';
       trackedIcon.classList.add('tracked');
       trackedIcon.innerHTML = trackedSVG;
-      newUserElement.style.background = 'linear-gradient(to left, rgba(55, 200, 250, 0.1), transparent)';
       newUserElement.appendChild(trackedIcon);
     }
 

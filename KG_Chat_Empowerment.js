@@ -3327,14 +3327,9 @@
     s = Math.min(Math.round(s * 100), 90); // Cap saturation at 90
     l = Math.round(l * 100); // Convert lightness to 0–100
 
-    // Bypass lightness range 230–280
-    if (l >= 230 && l <= 280) {
-      l = l < 255 ? 229 : 281; // Shift to nearest boundary
-    }
-
     // Adjust hue to allow only 0–230 and 280–360 ranges
-    if (h > 230 && h < 280) {
-      h = h < 255 ? 230 : 280; // Shift to nearest valid range
+    if (h > 215 && h < 280) {
+      h = h < 255 ? 215 : 280; // Shift to nearest valid range
     }
 
     return { h, s, l };

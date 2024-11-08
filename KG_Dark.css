@@ -5367,6 +5367,10 @@ ins.revoked a {
     padding: 8px !important;
 }
 
+p:has(.system-message) {
+    margin: 12px 0 !important;
+}
+
 /* code tag preview in chat */
 code {
     color: var(--red) !important;
@@ -5629,8 +5633,8 @@ code {
     visibility: hidden !important;
 }
 
-/* chat messages simple message time */
-.chat .messages .time .clickable {
+/* chat messages usual message time */
+.chat .messages .time span {
     cursor: pointer !important;
     visibility: visible !important;
     color: var(--blue) !important;

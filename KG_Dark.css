@@ -5865,7 +5865,7 @@ body #status-inner #racing {
 
 #waiting_timeout {
     position: absolute !important;
-    color: var(--red) !important;
+    color: lightcoral !important;
     font-size: 25px !important;
     display: flex !important;
     align-items: center;
@@ -5894,6 +5894,7 @@ body #status-inner #racing {
 }
 
 body #params {
+    order: 1 !important;
     width: 270px !important;
 }
 
@@ -5961,9 +5962,7 @@ body #sort-panel div[style*="float: left"] input {
 }
 
 #play-right #invite {
-    position: absolute !important;
-    top: -10px !important;
-    right: 1030px !important;
+    order: 0 !important;
     width: 270px !important;
 }
 
@@ -7799,8 +7798,12 @@ label[for='autosort'] {
 /* hide additional panels */
 /* race ads block rm */
 body #play-right {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1em !important;
     position: absolute !important;
-    margin-left: 5px !important;
+    margin-left: 1em !important;
+    left: 0 !important;
 }
 
 body #play-right[style*="margin-right: 0"] #invite {

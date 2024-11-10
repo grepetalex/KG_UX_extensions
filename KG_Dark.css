@@ -6028,8 +6028,22 @@ body #play-right>div.play-right-toggle .glyphicon {
     border-bottom: 1px solid var(--middlegray) !important;
 }
 
+.player .rating {
+    display: flex !important;
+    width: 70% !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    height: 30px !important;
+}
+
 .player .rating .stats {
     color: var(--middlegray) !important;
+    left: 135px !important;
+    height: 30px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-around !important;
+    gap: 1em !important;
 }
 
 .player .rating .rating_gained {
@@ -6051,7 +6065,7 @@ body #play-right>div.play-right-toggle .glyphicon {
 
 #rating_loading {
     background: none !important;
-    bottom: 53px !important;
+    bottom: 45px !important;
     left: -50px !important;
     font-size: 12px !important;
     color: var(--blue) !important;
@@ -6670,7 +6684,6 @@ span[style*='061956'] {
     transition: opacity 0.2s !important;
     display: flex !important;
     font-size: 5px !important;
-    /*         max-width: 280px !important; */
 }
 
 /* forum title edit your post img */
@@ -7746,6 +7759,10 @@ body #toplist .gametype-voc a[href*="/vocs/"] {
     color: var(--white) !important;
 }
 
+.player .rating div {
+    margin-right: 0 !important;
+}
+
 /* klavotols race statistics */
 #spectrumcanvas {
     background: var(--deepgray) !important;
@@ -7986,8 +8003,9 @@ img[src*='loading'] {
 
 /* race delete result button */
 .delresult {
-    left: 105px !important;
-    bottom: 0 !important;
+    margin-right: unset !important;
+    left: 95px !important;
+    bottom: unset !important;
 }
 
 .delresult a {
@@ -8379,6 +8397,24 @@ table.flaggedrevs_viewnotice {
         width: 50% !important;
         padding: 5px !important;
         text-align: center !important;
+    }
+
+    .player .rating {
+        font-size: 12px !important;
+        margin-right: 8px !important;
+    }
+
+    .player .rating .delresult {
+        left: 75px !important;
+        margin: 0 !important;
+    }
+
+    .player .rating .stats {
+        left: 115px !important;
+    }
+
+    .player table.car {
+        left: clamp(0px, calc(100% - 40px), 360px) !important;
     }
 
     .modal2 .modal2-dialog {

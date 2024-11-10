@@ -8413,10 +8413,6 @@ table.flaggedrevs_viewnotice {
         left: 115px !important;
     }
 
-    .player table.car {
-        left: clamp(0px, calc(100% - 40px), 360px) !important;
-    }
-
     .modal2 .modal2-dialog {
         width: 100% !important;
     }

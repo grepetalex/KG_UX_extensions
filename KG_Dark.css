@@ -8366,6 +8366,19 @@ table.flaggedrevs_viewnotice {
         width: 100% !important;
     }
 
+    #errors_tab {
+        float: left !important;
+        width: 50% !important;
+        padding: 5px !important;
+    }
+
+    #errorwork {
+        float: right !important;
+        width: 50% !important;
+        padding: 5px !important;
+        text-align: center !important;
+    }
+
     .modal2 .modal2-dialog {
         width: 100% !important;
     }
@@ -8759,9 +8772,10 @@ table.flaggedrevs_viewnotice {
         top: 70px !important;
     }
 
-    /* main menu position */
     #head .right .menu {
+        display: flex !important;
         top: 170px !important;
+        width: 100% !important;
     }
 
     /* navigation menu position */

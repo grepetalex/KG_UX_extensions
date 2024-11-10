@@ -8353,7 +8353,8 @@ table.flaggedrevs_viewnotice {
     }
 
     .gameblock,
-    #typeblock {
+    #typeblock,
+    .player {
         width: 90vw !important;
     }
 

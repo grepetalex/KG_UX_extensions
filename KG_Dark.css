@@ -5809,11 +5809,6 @@ body #status #host_start {
     align-items: center !important;
 }
 
-#status #status-inner {
-    width: 100% !important;
-    justify-content: center !important;
-}
-
 body #status #gamedesc {
     vertical-align: middle !important;
     padding-bottom: 0 !important;
@@ -5821,7 +5816,9 @@ body #status #gamedesc {
 
 body #status-inner {
     display: flex !important;
+    width: 100% !important;
     align-items: center !important;
+    justify-content: center;
 }
 
 body #status-inner #waiting[style*="none"] {
@@ -5861,6 +5858,11 @@ body #status-inner #racing {
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
+}
+
+body #status-inner #paused {
+    width: 100% !important;
+    margin-left: 70px !important;
 }
 
 #waiting_timeout {

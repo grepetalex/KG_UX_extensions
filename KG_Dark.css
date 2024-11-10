@@ -8358,6 +8358,10 @@ table.flaggedrevs_viewnotice {
         width: 90vw !important;
     }
 
+    .player {
+        overflow: hidden !important;
+    }
+
     #inputtext {
         width: 100% !important;
     }

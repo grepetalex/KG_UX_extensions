@@ -5410,6 +5410,7 @@
     // Event listener to copy the text content of the messages container
     copyPersonalMessagesButton.addEventListener('click', () => {
       const textContent = Array.from(document.querySelector('.messages-container').children)
+        .filter(node => window.getComputedStyle(node).display !== 'none') // Ignore hidden messages
         .map(node => node.classList.contains('date-item') ? node.textContent.trim() :
           [node.querySelector('.message-time'), node.querySelector('.message-username'), node.querySelector('.message-text')]
             .map(el => el?.textContent.trim()).filter(Boolean).join(' '))

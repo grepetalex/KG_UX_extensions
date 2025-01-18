@@ -5398,10 +5398,31 @@
       button.style.transition = 'filter 0.3s ease';
     }
 
+    // Create a copy personal messages button element
+    const copyPersonalMessagesButton = document.createElement('div');
+    copyPersonalMessagesButton.className = 'copy-personal-messages-button';
+    // Set the inner HTML of the copy personal messages button element with the clipboard SVG
+    copyPersonalMessagesButton.innerHTML = clipboardSVG;
+    copyPersonalMessagesButton.title = 'Copy Personal Messages';
+    // Apply common styles to the button element
+    applyHeaderButtonStyles(copyPersonalMessagesButton, 'steelblue');
+
+    // Event listener to copy the text content of the messages container
+    copyPersonalMessagesButton.addEventListener('click', () => {
+      const textContent = Array.from(document.querySelector('.messages-container').children)
+        .map(node => node.classList.contains('date-item') ? node.textContent.trim() :
+          [node.querySelector('.message-time'), node.querySelector('.message-username'), node.querySelector('.message-text')]
+            .map(el => el?.textContent.trim()).filter(Boolean).join(' '))
+        .filter(Boolean).join(' \n');
+
+      // Copy to clipboard
+      navigator.clipboard.writeText(textContent).catch(console.error);
+    });
+
     // Create a clear cache button with the provided SVG icon
     const clearCacheButton = document.createElement('div');
     clearCacheButton.className = 'clear-cache-button';
-    clearCacheButton.title = 'Clear messages';
+    clearCacheButton.title = 'Clear personal messages';
     clearCacheButton.innerHTML = trashSVG;
     applyHeaderButtonStyles(clearCacheButton, 'brown');
 
@@ -5421,9 +5442,6 @@
       const messagesCountElement = document.querySelector('.personal-messages-button .total-message-count');
       if (messagesCountElement) messagesCountElement.textContent = '0';
     });
-
-    // Append the clear cache button to the panel header container
-    panelControlButtons.appendChild(clearCacheButton);
 
     // Create a close button with the provided SVG icon
     const closePanelButton = document.createElement('div');
@@ -5457,6 +5475,11 @@
 
     // Append the search container to the panel header container
     panelHeaderContainer.appendChild(messagesSearchContainer);
+
+    panelControlButtons.appendChild(copyPersonalMessagesButton);
+
+    // Append the clear cache button to the panel header container
+    panelControlButtons.appendChild(clearCacheButton);
 
     // Append the close button to the panel control buttons
     panelControlButtons.appendChild(closePanelButton);
@@ -5733,7 +5756,7 @@
 
     showChatLogsButton.addEventListener('click', function () {
       addPulseEffect(showChatLogsButton); // Add pulse effect
-      showChatLogs();
+      showChatLogsPanel();
     });
 
     empowermentButtonsPanel.appendChild(showChatLogsButton);
@@ -5842,7 +5865,7 @@
   }
 
   // Function to display the chat logs panel
-  async function showChatLogs() {
+  async function showChatLogsPanel() {
     // Check if the chat logs panel already exists; if it does, exit the function to avoid duplication
     if (document.querySelector('.chat-logs-panel')) return;
 
@@ -5996,9 +6019,9 @@
     panelControlButtons.appendChild(dateInputToggle);
     panelControlButtons.appendChild(dateInput);
 
-    // Create a toggle active users button element
+    // Create a copy chatlogs button element
     const copyChatLogsUrl = document.createElement('div');
-    copyChatLogsUrl.className = 'toggle-active-users';
+    copyChatLogsUrl.className = 'copy-current-chatlogs-url';
     // Set the inner HTML of the copy chat logs element with the clipboard SVG
     copyChatLogsUrl.innerHTML = clipboardSVG;
     copyChatLogsUrl.title = 'Copy Chat Logs Url';

@@ -1386,35 +1386,36 @@
     panelHeaderContainer.appendChild(dropTime);
 
     // Create a container div for the search input
-    const searchContainer = document.createElement('div');
-    searchContainer.className = 'search-for-users';
-    searchContainer.style.width = '100%';
-    searchContainer.style.margin = '0 20px';
-    searchContainer.style.display = 'flex';
+    const cachesearchContainer = document.createElement('div');
+    cachesearchContainer.className = 'search-for-cached-users';
+    cachesearchContainer.style.width = '100%';
+    cachesearchContainer.style.margin = '0 20px';
+    cachesearchContainer.style.display = 'flex';
 
     // Create the input field for searching users
-    const searchInput = document.createElement('input');
-    searchInput.className = 'user-search-input';
-    searchInput.type = 'text';
-    searchInput.style.width = '100%';
-    searchInput.style.padding = '10px';
-    searchInput.style.margin = '0 1em';
-    searchInput.style.fontSize = '1em';
-    searchInput.style.fontFamily = 'Montserrat';
-    searchInput.style.setProperty('color', 'bisque', 'important');
-    searchInput.style.setProperty('border-radius', '0.2em', 'important');
-    searchInput.style.boxSizing = 'border-box';
-    searchInput.style.backgroundColor = '#111';
-    searchInput.style.border = '1px solid #222';
+    const cacheSearchInput = document.createElement('input');
+    cacheSearchInput.className = 'cached-users-search-input';
+    cacheSearchInput.type = 'text';
+    cacheSearchInput.style.outline = 'none';
+    cacheSearchInput.style.width = '100%';
+    cacheSearchInput.style.padding = '10px';
+    cacheSearchInput.style.margin = '0 1em';
+    cacheSearchInput.style.fontSize = '1em';
+    cacheSearchInput.style.fontFamily = 'Montserrat';
+    cacheSearchInput.style.setProperty('color', 'bisque', 'important');
+    cacheSearchInput.style.setProperty('border-radius', '0.2em', 'important');
+    cacheSearchInput.style.boxSizing = 'border-box';
+    cacheSearchInput.style.backgroundColor = '#111';
+    cacheSearchInput.style.border = '1px solid #222';
 
     // Add click event listener to clear the search input by LMB click with Ctrl key pressed
-    searchInput.addEventListener('click', () => isCtrlKeyPressed && (searchInput.value = ''));
+    cacheSearchInput.addEventListener('click', () => isCtrlKeyPressed && (cacheSearchInput.value = ''));
 
     // Append search input to the search container
-    searchContainer.appendChild(searchInput);
+    cachesearchContainer.appendChild(cacheSearchInput);
 
     // Add event listener to listen for keydown events
-    searchInput.addEventListener('keydown', async (event) => {
+    cacheSearchInput.addEventListener('keydown', async (event) => {
       const oldUsersContainer = document.querySelector('.old-users');
       const newUsersContainer = document.querySelector('.new-users');
       const fetchedUsersContainer = document.querySelector('.fetched-users');
@@ -1524,7 +1525,7 @@
     };
 
     // Debounce the handleSearch function to prevent excessive calls
-    searchInput.addEventListener(
+    cacheSearchInput.addEventListener(
       'input',
       debounce((event) => {
         const inputValue = event.target.value.trim();
@@ -1541,12 +1542,12 @@
     );
 
     // Append the search container to the panel header container
-    panelHeaderContainer.appendChild(searchContainer);
+    panelHeaderContainer.appendChild(cachesearchContainer);
 
     // Use a mutation observer to wait for the element to appear in the DOM
     const observer = new MutationObserver(mutations => {
       if (mutations.some(mutation => mutation.type === 'childList' && mutation.addedNodes.length > 0)) {
-        const cachePanelSearchInput = document.querySelector('.user-search-input');
+        const cachePanelSearchInput = document.querySelector('.cached-users-search-input');
         const cachePanelLogins = Array.from(document.querySelectorAll('.fetched-users .login'));
 
         // Fuzzy match scoring function
@@ -5353,15 +5354,16 @@
 
     // Create the search input container and append it to the panel header
     const messagesSearchContainer = document.createElement('div');
-    messagesSearchContainer.className = 'search-for-messages';
+    messagesSearchContainer.className = 'search-for-personal-messages';
     messagesSearchContainer.style.width = '100%';
     messagesSearchContainer.style.margin = '0 20px';
     messagesSearchContainer.style.display = 'flex';
 
     // Create the input field for searching personal messages
     const messagesSearchInput = document.createElement('input');
-    messagesSearchInput.className = 'messages-search-input';
+    messagesSearchInput.className = 'personal-messages-search-input';
     messagesSearchInput.type = 'text';
+    messagesSearchInput.style.outline = 'none';
     messagesSearchInput.style.width = '100%';
     messagesSearchInput.style.padding = '10px';
     messagesSearchInput.style.margin = '0 1em';
@@ -5658,6 +5660,9 @@
       });
     });
 
+    // Focus on the search input using requestAnimationFrame
+    function focusOnSearchField() { requestAnimationFrame(function () { messagesSearchInput.focus(); }); } focusOnSearchField();
+
     // Attach a keydown event listener to the document object
     document.addEventListener('keydown', function (event) {
       // Check if the key pressed was the "Escape" key
@@ -5881,38 +5886,39 @@
     panelControlButtons.style.display = 'flex';
 
     // Create a container div for the search input
-    const searchContainer = document.createElement('div');
-    searchContainer.className = 'search-for-messages';
-    searchContainer.style.width = '100%';
-    searchContainer.style.margin = '0 20px';
-    searchContainer.style.display = 'flex';
+    const chatlogsSearchContainer = document.createElement('div');
+    chatlogsSearchContainer.className = 'search-for-chatlogs-messages';
+    chatlogsSearchContainer.style.width = '100%';
+    chatlogsSearchContainer.style.margin = '0 20px';
+    chatlogsSearchContainer.style.display = 'flex';
 
     // Create the input field for searching users
-    const searchInput = document.createElement('input');
-    searchInput.className = 'chatlogs-search-input';
-    searchInput.type = 'text';
-    searchInput.style.height = '48px';
-    searchInput.style.width = '100%';
-    searchInput.style.padding = '10px';
-    searchInput.style.margin = '0 1em';
-    searchInput.style.fontSize = '1em';
-    searchInput.style.fontFamily = 'Montserrat';
-    searchInput.style.setProperty('color', 'bisque', 'important');
-    searchInput.style.setProperty('border-radius', '0.2em', 'important');
-    searchInput.style.boxSizing = 'border-box';
-    searchInput.style.backgroundColor = '#111';
-    searchInput.style.border = '1px solid #222';
+    const chatlogsSearchInput = document.createElement('input');
+    chatlogsSearchInput.className = 'chatlogs-search-input';
+    chatlogsSearchInput.type = 'text';
+    chatlogsSearchInput.style.outline = 'none';
+    chatlogsSearchInput.style.height = '48px';
+    chatlogsSearchInput.style.width = '100%';
+    chatlogsSearchInput.style.padding = '10px';
+    chatlogsSearchInput.style.margin = '0 1em';
+    chatlogsSearchInput.style.fontSize = '1em';
+    chatlogsSearchInput.style.fontFamily = 'Montserrat';
+    chatlogsSearchInput.style.setProperty('color', 'bisque', 'important');
+    chatlogsSearchInput.style.setProperty('border-radius', '0.2em', 'important');
+    chatlogsSearchInput.style.boxSizing = 'border-box';
+    chatlogsSearchInput.style.backgroundColor = '#111';
+    chatlogsSearchInput.style.border = '1px solid #222';
 
     // Add click event listener to clear the search input by LMB click with Ctrl key pressed
-    searchInput.addEventListener('click', () => isCtrlKeyPressed && (searchInput.value = ''));
+    chatlogsSearchInput.addEventListener('click', () => isCtrlKeyPressed && (chatlogsSearchInput.value = ''));
 
     // Append search input to the search container
-    searchContainer.appendChild(searchInput);
+    chatlogsSearchContainer.appendChild(chatlogsSearchInput);
     // Append the search container to the panel header container
-    panelHeaderContainer.appendChild(searchContainer);
+    panelHeaderContainer.appendChild(chatlogsSearchContainer);
 
     // Focus on the search input using requestAnimationFrame
-    function focusOnSearchField() { requestAnimationFrame(function () { searchInput.focus(); }); } focusOnSearchField();
+    function focusOnSearchField() { requestAnimationFrame(function () { chatlogsSearchInput.focus(); }); } focusOnSearchField();
 
     // Helper function to apply common styles to a header button
     function applyHeaderButtonStyles(button, backgroundColor, margin = '0 0.5em') {
@@ -6359,7 +6365,7 @@
       });
 
       // Call renderActiveUsers to update the display of active users based on their message counts
-      renderActiveUsers(usernameMessageCountMap, chatLogsPanel, searchInput);
+      renderActiveUsers(usernameMessageCountMap, chatLogsPanel, chatlogsSearchInput);
 
       requestAnimationFrame(() => {
         chatLogsContainer.scrollTop = chatLogsContainer.scrollHeight; // Scroll to the very bottom
@@ -6417,21 +6423,21 @@
 
           // Add click event to populate the search input with the clicked username
           userElement.addEventListener('click', () => {
-            const currentValue = searchInput.value.trim();
+            const currentValue = chatlogsSearchInput.value.trim();
             const usernameEntry = isCtrlKeyPressed ? `, ${username}` : username;
 
             if (isCtrlKeyPressed) {
               // Only add the username if it's not already present
               if (!currentValue.includes(username)) {
-                searchInput.value += currentValue ? usernameEntry : username;
+                chatlogsSearchInput.value += currentValue ? usernameEntry : username;
               }
             } else {
               // If Ctrl key isn't pressed, replace the input value with the clicked username
-              searchInput.value = username;
+              chatlogsSearchInput.value = username;
             }
 
             // Call the filter function with the updated input value
-            filterItems(searchInput.value);
+            filterItems(chatlogsSearchInput.value);
           });
 
 
@@ -6537,7 +6543,7 @@
     }
 
     // Add input event listener to filter items as the user types
-    searchInput.addEventListener('input', () => filterItems(searchInput.value));
+    chatlogsSearchInput.addEventListener('input', () => filterItems(chatlogsSearchInput.value));
 
     // Attach a keydown event listener to the document object
     document.addEventListener('keydown', function (event) {

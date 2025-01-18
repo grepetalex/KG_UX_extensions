@@ -5351,6 +5351,31 @@
     panelHeaderContainer.style.justifyContent = 'flex-end'; // Aligns to the right
     panelHeaderContainer.style.padding = '0.6em';
 
+    // Create the search input container and append it to the panel header
+    const messagesSearchContainer = document.createElement('div');
+    messagesSearchContainer.className = 'search-for-messages';
+    messagesSearchContainer.style.width = '100%';
+    messagesSearchContainer.style.margin = '0 20px';
+    messagesSearchContainer.style.display = 'flex';
+
+    // Create the input field for searching personal messages
+    const messagesSearchInput = document.createElement('input');
+    messagesSearchInput.className = 'messages-search-input';
+    messagesSearchInput.type = 'text';
+    messagesSearchInput.style.width = '100%';
+    messagesSearchInput.style.padding = '10px';
+    messagesSearchInput.style.margin = '0 1em';
+    messagesSearchInput.style.fontSize = '1em';
+    messagesSearchInput.style.fontFamily = 'Montserrat';
+    messagesSearchInput.style.color = 'bisque';
+    messagesSearchInput.style.setProperty('border-radius', '0.2em', 'important');
+    messagesSearchInput.style.boxSizing = 'border-box';
+    messagesSearchInput.style.backgroundColor = '#111';
+    messagesSearchInput.style.border = '1px solid #222';
+
+    // Append the search input to the search container
+    messagesSearchContainer.appendChild(messagesSearchInput);
+
     // Create a container div with class 'panel-control-buttons'
     const panelControlButtons = document.createElement('div');
     panelControlButtons.className = 'panel-control-buttons';
@@ -5427,6 +5452,9 @@
         button.style.filter = 'brightness(1)'; // Reset to original brightness
       });
     });
+
+    // Append the search container to the panel header container
+    panelHeaderContainer.appendChild(messagesSearchContainer);
 
     // Append the close button to the panel control buttons
     panelControlButtons.appendChild(closePanelButton);
@@ -5603,6 +5631,32 @@
     fadeTargetElement(cachedMessagesPanel, 'show');
     // Show the dimming background
     fadeDimmingElement('show');
+
+    // Event listener to handle input search for matching personal messages
+    // It searches through messages grouped by date and displays the corresponding date 
+    // Only if there are matching messages in that group.
+    messagesSearchInput.addEventListener('input', () => {
+      const query = messagesSearchInput.value.toLowerCase().replace(/_/g, ' ');
+
+      messagesContainer.querySelectorAll('.date-item').forEach(dateEl => {
+        let showDateForGroup = false;
+        let nextEl = dateEl.nextElementSibling;
+
+        // Iterate through messages in the current group (until the next date item)
+        while (nextEl && !nextEl.classList.contains('date-item')) {
+          const match = (nextEl.querySelector('.message-time')?.textContent.toLowerCase().replace(/_/g, ' ') + ' ' +
+            nextEl.querySelector('.message-username')?.textContent.toLowerCase().replace(/_/g, ' ') + ' ' +
+            nextEl.querySelector('.message-text')?.textContent.toLowerCase().replace(/_/g, ' ')).includes(query);
+
+          nextEl.style.display = match ? '' : 'none';
+          showDateForGroup = showDateForGroup || match; // Show date if any match found in the group
+
+          nextEl = nextEl.nextElementSibling;
+        }
+
+        dateEl.style.display = showDateForGroup ? '' : 'none'; // Show or hide the date based on the match results in the group
+      });
+    });
 
     // Attach a keydown event listener to the document object
     document.addEventListener('keydown', function (event) {

@@ -1386,11 +1386,11 @@
     panelHeaderContainer.appendChild(dropTime);
 
     // Create a container div for the search input
-    const cachesearchContainer = document.createElement('div');
-    cachesearchContainer.className = 'search-for-cached-users';
-    cachesearchContainer.style.width = '100%';
-    cachesearchContainer.style.margin = '0 20px';
-    cachesearchContainer.style.display = 'flex';
+    const cacheSearchContainer = document.createElement('div');
+    cacheSearchContainer.className = 'search-for-cached-users';
+    cacheSearchContainer.style.width = '100%';
+    cacheSearchContainer.style.margin = '0 20px';
+    cacheSearchContainer.style.display = 'flex';
 
     // Create the input field for searching users
     const cacheSearchInput = document.createElement('input');
@@ -1408,11 +1408,11 @@
     cacheSearchInput.style.backgroundColor = '#111';
     cacheSearchInput.style.border = '1px solid #222';
 
+    // Append search input to the search container
+    cacheSearchContainer.appendChild(cacheSearchInput);
+
     // Add click event listener to clear the search input by LMB click with Ctrl key pressed
     cacheSearchInput.addEventListener('click', () => isCtrlKeyPressed && (cacheSearchInput.value = ''));
-
-    // Append search input to the search container
-    cachesearchContainer.appendChild(cacheSearchInput);
 
     // Add event listener to listen for keydown events
     cacheSearchInput.addEventListener('keydown', async (event) => {
@@ -1542,7 +1542,7 @@
     );
 
     // Append the search container to the panel header container
-    panelHeaderContainer.appendChild(cachesearchContainer);
+    panelHeaderContainer.appendChild(cacheSearchContainer);
 
     // Use a mutation observer to wait for the element to appear in the DOM
     const observer = new MutationObserver(mutations => {
@@ -5659,6 +5659,9 @@
     // Show the dimming background
     fadeDimmingElement('show');
 
+    // Add click event listener to clear the search input by LMB click with Ctrl key pressed
+    messagesSearchInput.addEventListener('click', () => isCtrlKeyPressed && (messagesSearchInput.value = ''));
+
     // Event listener to handle input search for matching personal messages
     // It searches through messages grouped by date and displays the corresponding date 
     // Only if there are matching messages in that group.
@@ -5934,13 +5937,16 @@
     chatlogsSearchInput.style.backgroundColor = '#111';
     chatlogsSearchInput.style.border = '1px solid #222';
 
-    // Add click event listener to clear the search input by LMB click with Ctrl key pressed
-    chatlogsSearchInput.addEventListener('click', () => isCtrlKeyPressed && (chatlogsSearchInput.value = ''));
-
     // Append search input to the search container
     chatlogsSearchContainer.appendChild(chatlogsSearchInput);
     // Append the search container to the panel header container
     panelHeaderContainer.appendChild(chatlogsSearchContainer);
+
+    // Add input event listener to filter items as the user types
+    chatlogsSearchInput.addEventListener('input', () => filterItems(chatlogsSearchInput.value));
+
+    // Add click event listener to clear the search input by LMB click with Ctrl key pressed
+    chatlogsSearchInput.addEventListener('click', () => isCtrlKeyPressed && (chatlogsSearchInput.value = ''));
 
     // Focus on the search input using requestAnimationFrame
     function focusOnSearchField() { requestAnimationFrame(function () { chatlogsSearchInput.focus(); }); } focusOnSearchField();
@@ -6525,19 +6531,26 @@
 
     // Filters message items based on the provided query and displays matching messages.
     function filterItems(query) {
+      // Helper function to replace underscores and hyphens with spaces and convert to lowercase
+      function normalizeText(text) {
+        return text.replace(/[_-]/g, ' ').toLowerCase(); // Replaces _ and - with spaces
+      }
+
+      // Normalize query by removing underscores and hyphens, then trimming spaces
+      const queryWithoutSymbols = normalizeText(query).trim();
+
       // Retrieve message items within the filterItems function
       const messageItems = Array.from(document.querySelectorAll('.chat-logs-container > .message-item'));
 
       const messageDetails = getMessageDetails(messageItems); // Get the message details
-      const trimmedQuery = query.trim().toLowerCase();
-      const isEmptyQuery = !trimmedQuery;
+      const isEmptyQuery = !queryWithoutSymbols;
 
       // Split query by commas and trim parts
-      const queryParts = trimmedQuery.split(',').map(part => part.trim()).filter(Boolean);
+      const queryParts = queryWithoutSymbols.split(',').map(part => part.trim()).filter(Boolean);
 
       // Count matching usernames
       const matchingUsernamesCount = queryParts.filter(part =>
-        messageDetails.some(detail => detail.username === part)
+        messageDetails.some(detail => normalizeText(detail.username) === part)
       ).length;
 
       // Determine if User Mode is active (2 or more matching usernames)
@@ -6550,25 +6563,26 @@
 
         let shouldDisplay = false;
 
+        // Normalize underscores and hyphens in the username and message text
+        const normalizedUsername = normalizeText(messageDetailsItem.username);
+        const normalizedMessageText = normalizeText(messageDetailsItem.messageText);
+
         if (isEmptyQuery) {
           // Display all messages if the query is empty
           shouldDisplay = true;
         } else if (isUserMode) {
           // User Mode: Match only by username
-          shouldDisplay = queryParts.some(part => messageDetailsItem.username === part);
+          shouldDisplay = queryParts.some(part => normalizedUsername === part);
         } else {
           // Simple Mode: Treat the entire query (including commas) as part of the text search
-          shouldDisplay = messageDetailsItem.username.includes(trimmedQuery) ||
-            messageDetailsItem.messageText.includes(trimmedQuery);
+          shouldDisplay = normalizedUsername.includes(queryWithoutSymbols) ||
+            normalizedMessageText.includes(queryWithoutSymbols);
         }
 
         // Apply visibility based on shouldDisplay
         messageContainer.style.display = shouldDisplay ? 'inline-flex' : 'none';
       });
     }
-
-    // Add input event listener to filter items as the user types
-    chatlogsSearchInput.addEventListener('input', () => filterItems(chatlogsSearchInput.value));
 
     // Attach a keydown event listener to the document object
     document.addEventListener('keydown', function (event) {

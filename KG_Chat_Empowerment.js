@@ -8545,74 +8545,69 @@
       <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
       </svg>`;
 
-  /**
-   * Monitors the state of the chat field and manages its behavior based on specific conditions.
-   * - Enables or disables the chat field and send button based on certain messages.
-   * - Reloads the page if a connection issue occurs while the tab is active or if it was lost while hidden.
-   */
   function checkForChatState() {
     // Get references to the chat field and send button elements
-    const chatField = document.querySelector('.chat .text');
-    const chatSend = document.querySelector('.chat .send');
+    let chatField = document.querySelector('.chat .text');
+    let chatSend = document.querySelector('.chat .send');
 
     // Define the text patterns to check for in the chatField value
     const blockedChatMessage = 'Вы не можете отправлять сообщения'; // Message indicating sending is blocked
     const lostConnectionMessage = 'Связь с сервером потеряна'; // Message indicating connection loss
 
-    // Flag to track if connection was lost while the tab was hidden
-    let connectionLostWhileHidden = false;
-
-    // Flag to prevent rapid reloads when the connection is lost
-    let debounceReload = false;
+    const initialTimeoutDuration = 5000; // Default timeout duration in milliseconds
+    // Get the previous timeout duration from localStorage, or use 5000 (5 seconds) if not set
+    let timeoutDuration = parseInt(localStorage.getItem('chatTimeoutDuration')) || initialTimeoutDuration;
 
     // Function to handle changes when the chatField gets disabled
     const handleChatStateChange = () => {
-      // Check if the chatField is disabled
-      if (!chatField.disabled) return; // Exit if the chatField is not disabled
+      // Reset timeout to 3 seconds only once at the beginning, if it's not the default
+      if (!chatField.disabled && timeoutDuration !== initialTimeoutDuration) {
+        timeoutDuration = initialTimeoutDuration;
+        localStorage.setItem('chatTimeoutDuration', timeoutDuration.toString());
+        return;
+      }
 
       // Get the current value of chatField
       const chatFieldValue = chatField.value;
 
-      // If the chatField contains the blocked message
-      if (chatFieldValue.includes(blockedChatMessage)) {
-        // Enable the chatField and send button, applying styles to indicate the state
-        chatField.disabled = chatSend.disabled = false; // Enable chatField and send button
-        // Apply styles to the chatSend button with !important
-        chatSend.style.setProperty('background-color', 'rgb(160, 35, 35)', 'important');
-        chatSend.style.setProperty('background-image', `url("data:image/svg+xml,${encodeURIComponent(iconDenied)}")`, 'important');
-        chatSend.style.setProperty('background-repeat', 'no-repeat', 'important');
-        chatSend.style.setProperty('background-position', 'center', 'important');
-        chatSend.style.setProperty('color', 'transparent', 'important');
-        chatField.value = null; // Clear the chatField content
-      }
-      // If the chatField contains the lost connection message
-      else if (chatFieldValue.includes(lostConnectionMessage)) {
-        // Reload the page if the tab is active; otherwise, set a flag to reload later
-        document.hidden ? connectionLostWhileHidden = true : window.location.reload();
+      // If the chatField is disabled, check for the blocked or lost connection messages
+      if (chatField.disabled) {
+        // If the chatField contains the blocked message
+        if (chatFieldValue.includes(blockedChatMessage)) {
+          // Enable the chatField and send button, applying styles to indicate the state
+          chatField.disabled = chatSend.disabled = false; // Enable chatField and send button
+          // Apply styles to the chatSend button with !important
+          chatSend.style.setProperty('background-color', 'rgb(160, 35, 35)', 'important');
+          chatSend.style.setProperty('background-image', `url("data:image/svg+xml,${encodeURIComponent(iconDenied)}")`, 'important');
+          chatSend.style.setProperty('background-repeat', 'no-repeat', 'important');
+          chatSend.style.setProperty('background-position', 'center', 'important');
+          chatSend.style.setProperty('color', 'transparent', 'important');
+          chatField.value = null; // Clear the chatField content
+        }
+        // If the chatField contains the lost connection message
+        else if (chatFieldValue.includes(lostConnectionMessage)) {
+          // Increment the timeout duration by 1 second (1000 ms) and store it in localStorage
+          timeoutDuration += 1000;
+          localStorage.setItem('chatTimeoutDuration', timeoutDuration.toString());
+
+          // Reload the page immediately
+          window.location.reload();
+        }
       }
     };
 
-    // Listen for tab visibility changes
-    document.addEventListener('visibilitychange', () => {
-      // Reload the page when the tab becomes visible if a connection was lost while hidden
-      if (!document.hidden && connectionLostWhileHidden) window.location.reload();
-    });
-
-    // Monitor changes in the disabled attribute of chatField
+    // Observe the chatField for 'disabled' attribute changes
     if (chatField) {
-      const observer = new MutationObserver(mutations => {
-        // For each mutation, check if the 'disabled' attribute has changed
+      new MutationObserver(mutations => {
         mutations.forEach(mutation => {
-          if (mutation.attributeName === 'disabled') handleChatStateChange(); // Handle state change
+          if (mutation.attributeName === 'disabled') handleChatStateChange();
         });
-      });
-      // Start observing the chatField for changes to its attributes
-      observer.observe(chatField, { attributes: true });
+      }).observe(chatField, { attributes: true });
     }
-  }
 
-  // Create a debounced version of the checkForChatState function
-  const debouncedCheckForChatState = debounce(checkForChatState, debounceTimeout);
+    // Handle the chat state change after a dynamic timeout
+    setTimeout(handleChatStateChange, timeoutDuration);
+  }
 
 
   // CHAT SWITCHER
@@ -8862,6 +8857,10 @@
 
     // check if the chat element has been added to the DOM
     if (document.contains(messagesContainer)) {
+
+      // Check for chat state
+      checkForChatState();
+
       // check if there are at least 20 messages in the container
       if (messages.length >= 20) {
         // stop observing the DOM
@@ -8881,8 +8880,6 @@
         highlightMentionWords();
         // Call the function to apply the chat message grouping
         applyChatMessageGrouping();
-        // Check for chat state
-        debouncedCheckForChatState();
         // Call the function to scroll to the bottom of the chat
         scrollMessages();
         // Call the function to refresh the user list and clear the cache if needed

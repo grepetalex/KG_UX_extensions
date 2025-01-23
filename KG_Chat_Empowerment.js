@@ -3028,7 +3028,7 @@
 
         // Check if the user count animation needs to be started only when the chat is not closed
         if (!chatHidden && currentTextContent.length === 0 && newUserList.length > 0 && !isAnimated) {
-          isAnimated = true;
+          isAnimated = true; // Set this to true immediately to prevent starting a new animation
           const actualUserCount = newUserList.length;
           const speed = 20; // Change the speed here (in milliseconds)
           let count = 0;
@@ -3048,8 +3048,8 @@
           setTimeout(userCountIncrement, speed);
         } // Animation END
 
-        // Check if chat is not closed and animation not in progress
-        if (!chatHidden && !isAnimated) {
+        // Check if chat is not closed and animation is finished 
+        if (!chatHidden && isAnimated) {
           // Check if the user count has changed and add pulse animation
           if (userCountValue !== prevUserCountValue) {
             addPulseEffect(userCount);

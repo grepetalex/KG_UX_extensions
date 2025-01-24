@@ -1246,7 +1246,7 @@
     cachedUsersPanel.style.top = '100px';
     cachedUsersPanel.style.left = '50%';
     cachedUsersPanel.style.transform = 'translateX(-50%)';
-    cachedUsersPanel.style.width = '90vw';
+    cachedUsersPanel.style.width = '80vw';
     cachedUsersPanel.style.height = '80vh';
     cachedUsersPanel.style.zIndex = '999';
 

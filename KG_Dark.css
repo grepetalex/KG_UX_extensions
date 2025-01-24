@@ -1545,14 +1545,14 @@ pre {
 }
 
 /* stylize all buttons */
-.btn {
+body .btn {
     font-weight: lighter !important;
     background: var(--middlegray) !important;
-    color: var(--black) !important;
+    color: var(--deepgray) !important;
     border: none !important;
 }
 
-.btn:hover {
+body .btn:hover {
     font-weight: lighter !important;
     background: var(--blue) !important;
     color: var(--deepgray) !important;
@@ -1560,13 +1560,13 @@ pre {
 }
 
 /* close buttons on modal popup window */
-.close {
+body .close {
     background: none !important;
     color: var(--middlegray) !important;
     opacity: 1 !important;
 }
 
-.close:hover {
+body .close:hover {
     background: none !important;
     color: var(--blue) !important;
     opacity: 1 !important;

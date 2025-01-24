@@ -5310,6 +5310,33 @@
     return false; // Return false if no match is found
   }
 
+  // Function to calibrate the given time to Moscow time
+  function calibrateToMoscowTime(inputTime) {
+    // Get the system's current timezone offset in minutes (negative for UTC+)
+    const systemOffset = new Date().getTimezoneOffset();
+
+    // Moscow's timezone offset is UTC+3, so it's -180 minutes
+    const moscowOffset = -180;
+
+    // Calculate the difference between system timezone and Moscow's timezone
+    const difference = systemOffset - moscowOffset;
+
+    // Split the input time string (HH:MM:SS) and convert to numbers
+    const [hours, minutes, seconds] = inputTime.split(':').map(Number);
+
+    // Create a new Date object and set the hours, minutes, and seconds based on the input time
+    const inputDate = new Date().setHours(hours, minutes, seconds, 0);
+
+    // Adjust the input time by the calculated time difference in milliseconds
+    const adjustedTime = new Date(inputDate + difference * 60000); // 1 minute = 60000 milliseconds
+
+    // Format the adjusted time in HH:MM:SS format and return as a string
+    return `${String(adjustedTime.getHours())
+      .padStart(2, '0')}:${String(adjustedTime.getMinutes())
+        .padStart(2, '0')}:${String(adjustedTime.getSeconds())
+          .padStart(2, '0')}`;
+  }
+
   // Function to display the personal messages panel
   function showPersonalMessagesPanel() {
     // Check if the cached messages panel already exists
@@ -5507,6 +5534,21 @@
 
     const today = new Intl.DateTimeFormat('en-CA').format(new Date()); // 'en-CA' gives 'YYYY-MM-DD' format
 
+    // Create an array to store message elements for later appending
+    const messageElements = [];
+
+    // Define messageColors and timeColors inside the loop
+    const timeColors = {
+      private: 'coral',
+      mention: 'darkseagreen'
+    };
+
+    const messageColors = {
+      private: 'coral',
+      mention: 'lightsteelblue',
+      default: 'slategray' // Default color if type is not private or mention
+    };
+
     // Loop through the messages and create elements
     Object.entries(messages).forEach(([, { time, date, username, message, usernameColor, type }]) => {
       // If the current date is different from the last processed one, create a new date-item
@@ -5518,7 +5560,6 @@
         dateItem.style.position = 'relative';
         dateItem.style.font = '1em Montserrat';
         dateItem.style.color = 'burlywood';
-        // burlywood with transparency 0.1
         dateItem.style.backgroundColor = 'rgba(222, 184, 135, 0.1)';
         dateItem.style.width = 'fit-content';
         dateItem.style.margin = '2em 1em 1em';
@@ -5528,7 +5569,7 @@
         dateItem.style.left = '50%';
         dateItem.style.transform = 'translateX(-50%)';
 
-        messagesContainer.appendChild(dateItem); // Add the date-item to the container
+        messagesContainer.appendChild(dateItem); // Append the date-item to the container
         lastDate = date; // Update the last processed date
       }
 
@@ -5552,33 +5593,26 @@
       timeElement.textContent = formattedTime;
       timeElement.style.margin = '0.4em';
 
-      // Change the timeElement color based on type
-      const timeColors = {
-        private: 'coral',
-        mention: 'darkseagreen'
-      }
-
       timeElement.style.color = timeColors[type] || 'slategray';
 
-      // Add click event listener only for "mention" type
+      // Add click event listener for "mention" type
       if (type === 'mention') {
-        timeElement.style.cursor = 'pointer'; // Pointer cursor on hover
-        timeElement.style.transition = 'color 0.2s ease'; // Smooth color change
+        timeElement.style.cursor = 'pointer';
+        timeElement.style.transition = 'color 0.2s ease';
 
-        // Hover effect: change color to light green
-        timeElement.addEventListener('mouseover', () => {
+        // Hover effect to change color
+        timeElement.addEventListener('mouseover', function () {
           timeElement.style.color = 'lightgreen';
         });
 
-        // Revert color on mouseout
-        timeElement.addEventListener('mouseout', () => {
+        timeElement.addEventListener('mouseout', function () {
           timeElement.style.color = timeColors[type];
         });
 
-        // Click event: open the chat log link with the provided message date
-        timeElement.addEventListener('click', () => {
+        // Open the chat log URL on click
+        timeElement.addEventListener('click', function () {
           const url = `https://klavogonki.ru/chatlogs/${date}.html#${formattedTime}`;
-          window.open(url, '_blank', 'noopener,noreferrer'); // Open in a new tab securely
+          window.open(url, '_blank', 'noopener,noreferrer');
         });
       }
 
@@ -5597,32 +5631,8 @@
         (_, word) => `<img src="/img/smilies/${word}.gif" alt=":${word}:" title=":${word}:" class="smile">`
       );
 
-      // Change the messageTextElement color based on type
-      const messageColors = {
-        private: 'coral',
-        mention: 'lightsteelblue'
-      };
-
-      if (pingCheckCounter < maxPingChecks) {
-        // Find chat message and increment the counter
-        pingMessages = findChatMessage(time, username, false);
-        pingCheckCounter++; // Increment the counter
-
-        // Check if the counter has reached or exceeded the maximum
-        if (pingCheckCounter >= maxPingChecks) {
-          // Reset pingMessages to false if the limit is reached
-          pingMessages = false;
-          console.log("Reached maximum ping checks, resetting pingMessages.");
-        }
-      }
-      // Colorize the messageTextElement accordingly
-      messageTextElement.style.color =
-        pingMessages && type === 'mention' ? 'lightgreen' :
-          pingMessages && type === 'private' ? 'lemonchiffon' :
-            messageColors[type] || 'slategray';
-
-      // Add click event listener
-      messageTextElement.addEventListener('click', () => {
+      // Add click event listener for the messageTextElement
+      messageTextElement.addEventListener('click', function () {
         // Call the function to search for the chat message by time in range and username
         const foundMessage = findChatMessage(time, username, true);
         if (foundMessage) {
@@ -5630,9 +5640,21 @@
           fadeTargetElement(cachedMessagesPanel, 'hide');
           fadeDimmingElement('hide');
         } else {
-          addShakeEffect(messageTextElement.parentElement); // Add shake effect to the parent
+          // Add shake effect to the parent if no message is found
+          addShakeEffect(messageTextElement.parentElement);
         }
       });
+
+      // Store elements for (pingable messages) colorization after all processing
+      const messageData = {
+        messageTextElement,
+        time,
+        username,
+        type
+      };
+
+      // Add messageData to the array for later processing
+      messageElements.push(messageData);
 
       // Append time, username, and message to the message element
       messageElement.appendChild(timeElement);
@@ -5645,7 +5667,25 @@
       requestAnimationFrame(() => {
         messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll after next repaint
       });
+    });
 
+    // Process the colorization logic in reverse order
+    messageElements.reverse().forEach(({ messageTextElement, time, username, type }) => {
+      if (pingCheckCounter < maxPingChecks) {
+        pingMessages = findChatMessage(time, username, false);
+        pingCheckCounter++; // Increment the counter
+
+        if (pingCheckCounter >= maxPingChecks) {
+          pingMessages = false;
+          console.log("Reached maximum ping checks, resetting pingMessages.");
+        }
+      }
+
+      // Colorize the messageTextElement accordingly (Pingable messages)
+      messageTextElement.style.color =
+        pingMessages && type === 'mention' ? 'lightgreen' :
+          pingMessages && type === 'private' ? 'lemonchiffon' :
+            messageColors[type] || 'slategray';
     });
 
     // Append the messages container to the cached messages panel

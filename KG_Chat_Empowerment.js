@@ -6388,6 +6388,25 @@
         timeElement.textContent = time;
         timeElement.style.color = 'darkseagreen';
         timeElement.style.margin = '0 0.4em';
+        timeElement.style.cursor = 'pointer';
+        timeElement.style.transition = 'color 0.2s ease'; // Smooth color transition
+
+        // Add hover effect to change color to light green
+        timeElement.addEventListener('mouseover', () => {
+          timeElement.style.color = 'lightgreen';
+        });
+
+        // Revert back to original color on mouse out
+        timeElement.addEventListener('mouseout', () => {
+          timeElement.style.color = 'darkseagreen';
+        });
+
+        // Open the chat log URL on click
+        timeElement.addEventListener('click', function () {
+          const formattedTime = time.replace(/[\[\]]/g, '').trim(); // Clean the time string (if necessary)
+          const url = `https://klavogonki.ru/chatlogs/${date}.html#${calibrateToMoscowTime(time)}`;
+          window.open(url, '_blank', 'noopener,noreferrer');
+        });
 
         // Create username element
         const usernameElement = document.createElement('span');

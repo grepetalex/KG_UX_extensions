@@ -3048,7 +3048,7 @@
           setTimeout(userCountIncrement, speed);
         } // Animation END
 
-        // Check if chat is not closed and animation is finished 
+        // Check if chat is not closed and animation is finished
         if (!chatHidden && isAnimated) {
           // Check if the user count has changed and add pulse animation
           if (userCountValue !== prevUserCountValue) {
@@ -5703,7 +5703,7 @@
     messagesSearchInput.addEventListener('click', () => isCtrlKeyPressed && (messagesSearchInput.value = ''));
 
     // Event listener to handle input search for matching personal messages
-    // It searches through messages grouped by date and displays the corresponding date 
+    // It searches through messages grouped by date and displays the corresponding date
     // Only if there are matching messages in that group.
     messagesSearchInput.addEventListener('input', () => {
       const query = messagesSearchInput.value.toLowerCase().replace(/_/g, ' ');
@@ -6990,15 +6990,15 @@
 
   // Inline SVG source for the "clipboard" icon
   const clipboardSVG = `
-    <svg xmlns="http://www.w3.org/2000/svg" 
-        width="24" 
-        height="24" 
-        viewBox="0 0 24 24" 
-        fill="none" 
-        stroke="lightsteelblue" 
-        stroke-width="2" 
-        stroke-linecap="round" 
-        stroke-linejoin="round" 
+    <svg xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="lightsteelblue"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
         class="feather feather-clipboard">
         <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
         <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
@@ -7144,15 +7144,15 @@
 
   // Inline SVG source for the "snowflake" icon
   const snowflakeSVG = `
-  <svg xmlns="http://www.w3.org/2000/svg" 
-       width="20" 
-       height="20" 
-       viewBox="0 0 24 24" 
-       fill="none" 
-       stroke="lightsteelblue" 
-       stroke-width="2" 
-       stroke-linecap="round" 
-       stroke-linejoin="round" 
+  <svg xmlns="http://www.w3.org/2000/svg"
+       width="20"
+       height="20"
+       viewBox="0 0 24 24"
+       fill="none"
+       stroke="lightsteelblue"
+       stroke-width="2"
+       stroke-linecap="round"
+       stroke-linejoin="round"
        class="feather feather-snowflake">
     <g id="snowflake">
       <line x1="12.06" y1="2.74" x2="12.06" y2="12.06" />

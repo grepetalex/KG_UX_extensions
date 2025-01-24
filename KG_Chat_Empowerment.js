@@ -5611,7 +5611,7 @@
 
         // Open the chat log URL on click
         timeElement.addEventListener('click', function () {
-          const url = `https://klavogonki.ru/chatlogs/${date}.html#${formattedTime}`;
+          const url = `https://klavogonki.ru/chatlogs/${date}.html#${calibrateToMoscowTime(formattedTime)}`;
           window.open(url, '_blank', 'noopener,noreferrer');
         });
       }

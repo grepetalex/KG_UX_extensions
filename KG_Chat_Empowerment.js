@@ -1224,20 +1224,13 @@
     }, fadeIntervalTime);
 
     // Add a double click event listener to hide the element
-    element.addEventListener('dblclick', () => {
-      // Check if either of the panels exists in the DOM
-      const isCachedPanelExist = document.querySelector('.cached-messages-panel');
-      const isChatLogsPanelExist = document.querySelector('.chat-logs-panel');
-
-      // Only hide the dimming element if neither of the panels exist
-      if (!isCachedPanelExist && !isChatLogsPanelExist) {
-        fadeTargetElement(element, 'hide'); // Call fadeTargetElement to hide on double click
-        fadeDimmingElement('hide'); // Hide the dimming element on double click
-      } else {
-        fadeTargetElement(element, 'hide'); // Still hide the element even if panels exist
+    element.addEventListener('dblclick', (event) => {
+      // Only hide the dimming element if the double-click target is not the scaled image
+      if (!event.target.closest('.scaled-thumbnail')) {
+        fadeDimmingElement('hide'); // Hide the dimming element on double click, but not if the target is a scaled image
       }
+      fadeTargetElement(element, 'hide'); // Always hide the target element on double click
     });
-
   }
 
   // NEW CHAT CACHE CONTROL PANEL (START)

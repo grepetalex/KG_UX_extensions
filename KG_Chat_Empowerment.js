@@ -5649,7 +5649,7 @@
       const timeElement = document.createElement('span');
       timeElement.className = 'message-time';
       timeElement.textContent = formattedTime;
-      timeElement.style.margin = '0.4em';
+      timeElement.style.margin = '0px 0.4em';
 
       timeElement.style.color = timeColors[type] || 'slategray';
 
@@ -5680,7 +5680,7 @@
       usernameElement.style.color = usernameColor;
       usernameElement.style.display = 'inline-flex';
       usernameElement.style.cursor = 'pointer';
-      usernameElement.style.margin = '0.4em';
+      usernameElement.style.margin = '0px 0.4em';
 
       // Add click event only if userId is defined
       usernameElement.addEventListener('click', () => {
@@ -5695,7 +5695,7 @@
       const messageTextElement = document.createElement('span');
       messageTextElement.className = 'message-text';
       messageTextElement.style.cursor = 'pointer'; // Pointer cursor
-      messageTextElement.style.margin = '0.4em';
+      messageTextElement.style.margin = '0px 0.4em';
 
       // Replace smiley codes with <img> tags, and then wrap links with <a> tags
       messageTextElement.innerHTML = message

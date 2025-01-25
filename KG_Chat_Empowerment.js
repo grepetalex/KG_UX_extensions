@@ -1511,7 +1511,7 @@
 
         try {
           // Fetch user IDs by username
-          const userIds = await getUserIdsByName(username);
+          const userIds = await getUserIdByName(username);
 
           // Iterate over each user ID and retrieve profile data
           await Promise.all(userIds.map(async (userId) => {
@@ -2470,7 +2470,7 @@
   }
 
   // Helper function to get user IDs by username via the search API
-  async function getUserIdsByName(userName) {
+  async function getUserIdByName(userName) {
     const searchApiUrl = `https://klavogonki.ru/api/profile/search-users?query=${userName}`;
     const searchResults = await fetchJSON(searchApiUrl);
 
@@ -5991,6 +5991,28 @@
     return formattedDate;
   }
 
+  // Function to get user ID by username (with caching in localStorage)
+  async function getUserId(username) {
+    const userIdsCache = JSON.parse(localStorage.getItem('userIdsCache') || '{}');
+
+    // If the user ID is cached, return it
+    if (userIdsCache[username]) return userIdsCache[username];
+
+    try {
+      // Fetch the user ID
+      const [userId] = await getUserIdByName(username);
+      if (userId) {
+        userIdsCache[username] = userId;
+        localStorage.setItem('userIdsCache', JSON.stringify(userIdsCache));
+        return userId;
+      }
+    } catch (error) {
+      console.error(`Error fetching user ID for ${username}:`, error);
+    }
+
+    return null; // Return null if no user found
+  }
+
   // Function to display the chat logs panel
   async function showChatLogsPanel() {
     // Check if the chat logs panel already exists; if it does, exit the function to avoid duplication
@@ -6454,7 +6476,7 @@
       // Clear previous counts
       usernameMessageCountMap.clear();
 
-      chatlogs.forEach(({ time, username, message }) => {
+      chatlogs.forEach(async ({ time, username, message }) => {
         // Update message count for each unique username
         usernameMessageCountMap.set(username, (usernameMessageCountMap.get(username) || 0) + 1);
 
@@ -6494,7 +6516,21 @@
         const usernameElement = document.createElement('span');
         usernameElement.className = 'message-username';
         usernameElement.textContent = username; // Use the original username for display
+        usernameElement.style.cursor = 'pointer';
         usernameElement.style.margin = '0 0.4em';
+
+        // Add click event to navigate to the user's profile or shake the username if userId is not found
+        usernameElement.addEventListener('click', async () => {
+          const userId = await getUserId(username); // Fetch the user ID on click
+
+          if (userId) {
+            const url = `https://klavogonki.ru/u/#/${userId}/`;
+            window.open(url, '_blank', 'noopener,noreferrer');
+          } else {
+            // Add shake effect if userId doesn't exist
+            addShakeEffect(usernameElement); // Define this function for the shake effect
+          }
+        });
 
         // Check if the hue for this username is already stored
         let hueForUsername = usernameHueMap[username]; // Use the original username as the key

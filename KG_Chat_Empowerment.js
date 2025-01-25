@@ -835,8 +835,8 @@
                     img.style.opacity = 1;
                   });
 
-                  // Call the function to scroll to the bottom of the chat
-                  scrollMessages();
+                  // Call the function to scroll to the bottom of the specified container
+                  scrollMessages(containerType);
                 } else {
                   // Handle the case where the domain is not trusted
                   console.error("Not a trusted domain:", link.href);
@@ -1068,8 +1068,8 @@
       console.error('Invalid container type specified');
     }
 
-    // Call the function to scroll to the bottom of the chat (optional)
-    scrollMessages();
+    // Call the function to scroll to the bottom of the specified container
+    scrollMessages(containerType);
   } // end convertYoutubeLinksToIframe
 
   const empowermentButtonsMargin = 4;
@@ -3479,6 +3479,7 @@
     const handleMessage = (messageType, messageText) => {
       const time = messageElement.querySelector('.time')?.textContent || 'N/A';
       const usernameElement = messageElement.querySelector('.username span[data-user]');
+      const userId = usernameElement ? usernameElement.getAttribute('data-user') : null;
       const username = usernameElement ? usernameElement.textContent : systemUsername;
       const usernameColor = usernameElement ? usernameElement.parentElement.style.color : 'rgb(180, 180, 180)';
       const normalizedColor = normalizeUsernameColor(usernameColor);
@@ -3493,7 +3494,8 @@
         username,
         usernameColor: normalizedColor,
         message: messageText,
-        type: messageType
+        type: messageType,
+        userId
       };
 
       // Save to localStorage only if the user is not in the ignored
@@ -3584,21 +3586,35 @@
   // The distance from the bottom at which we should trigger auto-scrolling
   const scrollThreshold = 600;
 
-  // Scrolls the chat container to the bottom if the user has scrolled close enough
-  function scrollMessages() {
-    // Get the chat container
-    const chatContainer = document.querySelector(".messages-content");
+  // Scrolls the specified container to the bottom if the user has scrolled close enough
+  function scrollMessages(containerType = 'generalMessages') {
+    // Define a mapping for container types to their respective selectors
+    const containerSelectors = {
+      generalMessages: '.messages-content', // For general chat
+      chatlogsMessages: '.chat-logs-container', // For chat logs
+      personalMessages: '.messages-container' // For personal messages panel
+    };
+
+    // Get the container based on the passed containerType
+    const containerSelector = containerSelectors[containerType];
+
+    // If the container selector is not defined, return
+    if (!containerSelector) return;
+
+    // Get the container element
+    const container = document.querySelector(containerSelector);
+    if (!container) return; // Return if the container doesn't exist
 
     // If it's the user's first time loading messages, auto-scroll to the bottom
     if (firstTime) {
-      chatContainer.scrollTop = chatContainer.scrollHeight;
+      container.scrollTop = container.scrollHeight;
       firstTime = false;
     } else {
       // Calculate how far the user is from the bottom
-      const distanceFromBottom = chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight;
+      const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
       // If the user is close enough to the bottom, auto-scroll to the bottom
       if (distanceFromBottom <= scrollThreshold) {
-        chatContainer.scrollTop = chatContainer.scrollHeight;
+        container.scrollTop = container.scrollHeight;
       }
     }
   }
@@ -5594,7 +5610,7 @@
     };
 
     // Loop through the messages and create elements
-    Object.entries(messages).forEach(([, { time, date, username, message, usernameColor, type }]) => {
+    Object.entries(messages).forEach(([, { time, date, username, usernameColor, message, type, userId }]) => {
       // If the current date is different from the last processed one, create a new date-item
       if (lastDate !== date) {
         const dateItem = document.createElement('div');
@@ -5664,7 +5680,19 @@
       usernameElement.className = 'message-username';
       usernameElement.textContent = username;
       usernameElement.style.color = usernameColor;
+      usernameElement.style.display = 'inline-flex';
+      usernameElement.style.cursor = 'pointer';
       usernameElement.style.margin = '0.4em';
+
+      // Add click event only if userId is defined
+      usernameElement.addEventListener('click', () => {
+        if (userId) { // Check if userId is defined
+          const url = `https://klavogonki.ru/u/#/${userId}/`; // Construct the user profile URL
+          window.open(url, '_blank', 'noopener,noreferrer'); // Open in a new tab
+        } else {
+          addShakeEffect(usernameElement); // Call the shake effect if userId is not defined
+        }
+      });
 
       const messageTextElement = document.createElement('span');
       messageTextElement.className = 'message-text';

@@ -3282,65 +3282,144 @@
     return text.replace(pattern, replaceUsername);
   }
 
-  // Function what will highlight every mention word in the mention message only
-  function highlightMentionWords() {
-    // Get the container for all chat messages
-    const messagesContainer = document.querySelector('.messages-content div');
-    // Get all the message elements from messages container
-    const messages = messagesContainer.querySelectorAll('.messages-content div p');
+  // // Function what will highlight every mention word in the mention message only
+  // function highlightMentionWords() {
+  //   // Get the container for all chat messages
+  //   const messagesContainer = document.querySelector('.messages-content div');
+  //   // Get all the message elements from messages container
+  //   const messages = messagesContainer.querySelectorAll('.messages-content div p');
 
-    // Loop through each chat message element
-    messages.forEach((message) => {
-      // Loop through each text node inside the message element
-      Array.from(message.childNodes).forEach((node) => {
-        if (node.nodeType === Node.TEXT_NODE) {
-          // Split the text node content into words
-          const regex = /[\s]+|[^\s\wа-яА-ЯёЁ]+|[\wа-яА-ЯёЁ]+/g;
-          const words = node.textContent.match(regex); // Split using the regex
+  //   // Loop through each chat message element
+  //   messages.forEach((message) => {
+  //     // Loop through each text node inside the message element
+  //     Array.from(message.childNodes).forEach((node) => {
+  //       if (node.nodeType === Node.TEXT_NODE) {
+  //         // Split the text node content into words
+  //         const regex = /[\s]+|[^\s\wа-яА-ЯёЁ]+|[\wа-яА-ЯёЁ]+/g;
+  //         const words = node.textContent.match(regex); // Split using the regex
 
-          // Create a new fragment to hold the new nodes
-          const fragment = document.createDocumentFragment();
+  //         // Create a new fragment to hold the new nodes
+  //         const fragment = document.createDocumentFragment();
 
-          // Loop through each word in the text node
-          words.forEach((word) => {
-            // Check if the word is included in the "mentionKeywords" array (case insensitive)
-            if (mentionKeywords.map(alias => alias.toLowerCase()).includes(word.toLowerCase())) {
-              // Create a new <span> element with the mention class
-              const mentionHighlight = document.createElement('span');
-              mentionHighlight.classList.add('mention');
-              mentionHighlight.textContent = word;
+  //         // Loop through each word in the text node
+  //         words.forEach((word) => {
+  //           // Check if the word is included in the "mentionKeywords" array (case insensitive)
+  //           if (mentionKeywords.map(alias => alias.toLowerCase()).includes(word.toLowerCase())) {
+  //             // Create a new <span> element with the mention class
+  //             const mentionHighlight = document.createElement('span');
+  //             mentionHighlight.classList.add('mention');
+  //             mentionHighlight.textContent = word;
 
-              // Highlight styles
-              mentionHighlight.style.color = '#83cf40';
-              mentionHighlight.style.backgroundColor = '#2b4317';
-              mentionHighlight.style.border = '1px solid #4b7328';
-              mentionHighlight.style.padding = '2px';
-              mentionHighlight.style.display = 'inline-flex';
+  //             // Highlight styles
+  //             mentionHighlight.style.color = '#83cf40';
+  //             mentionHighlight.style.backgroundColor = '#2b4317';
+  //             mentionHighlight.style.border = '1px solid #4b7328';
+  //             mentionHighlight.style.padding = '2px';
+  //             mentionHighlight.style.display = 'inline-flex';
 
-              // Append the new <span> element to the fragment
-              fragment.appendChild(mentionHighlight);
-            } else {
-              // Check if the word is already inside a mention span
-              const span = document.createElement('span');
-              span.innerHTML = word;
-              if (span.querySelector('.mention')) {
-                // If it is, simply append the word to the fragment
-                fragment.appendChild(word);
-              } else {
-                // If it isn't, create a new text node with the word
-                const textNode = document.createTextNode(word);
+  //             // Append the new <span> element to the fragment
+  //             fragment.appendChild(mentionHighlight);
+  //           } else {
+  //             // Check if the word is already inside a mention span
+  //             const span = document.createElement('span');
+  //             span.innerHTML = word;
+  //             if (span.querySelector('.mention')) {
+  //               // If it is, simply append the word to the fragment
+  //               fragment.appendChild(word);
+  //             } else {
+  //               // If it isn't, create a new text node with the word
+  //               const textNode = document.createTextNode(word);
 
-                // Append the new text node to the fragment
-                fragment.appendChild(textNode);
-              }
+  //               // Append the new text node to the fragment
+  //               fragment.appendChild(textNode);
+  //             }
+  //           }
+  //         });
+
+  //         // Replace the original text node with the new fragment
+  //         node.parentNode.replaceChild(fragment, node);
+  //       }
+  //     });
+  //   });
+  // }
+
+  // Function to highlight mention words based on the specified container type
+  function highlightMentionWords(containerType = 'generalMessages') {
+    // Define a mapping for container types to their respective selectors and message elements
+    const containerSelectors = {
+      generalMessages: { container: '.messages-content div', messageElement: 'p' }, // For general chat
+      chatlogsMessages: { container: '.chat-logs-container', messageElement: '.message-text' }, // For chat logs
+      personalMessages: { container: '.messages-container', messageElement: '.message-text' } // For personal messages panel
+    };
+
+    // Get the container and message element details based on the passed containerType
+    const { container: containerSelector, messageElement: messageSelector } = containerSelectors[containerType];
+
+    // If a valid container selector exists, process the messages
+    if (containerSelector) {
+      const containers = document.querySelectorAll(containerSelector); // Get all containers of the specified type
+
+      // Loop through each container
+      containers.forEach((container) => {
+        // Get all the message elements from the current container
+        const messages = container.querySelectorAll(messageSelector);
+
+        // Loop through each chat message element
+        messages.forEach((message) => {
+          // Loop through each text node inside the message element
+          Array.from(message.childNodes).forEach((node) => {
+            if (node.nodeType === Node.TEXT_NODE) {
+              // Split the text node content into words
+              const regex = /[\s]+|[^\s\wа-яА-ЯёЁ]+|[\wа-яА-ЯёЁ]+/g;
+              const words = node.textContent.match(regex); // Split using the regex
+
+              // Create a new fragment to hold the new nodes
+              const fragment = document.createDocumentFragment();
+
+              // Loop through each word in the text node
+              words.forEach((word) => {
+                // Check if the word is included in the "mentionKeywords" array (case insensitive)
+                if (mentionKeywords.map(alias => alias.toLowerCase()).includes(word.toLowerCase())) {
+                  // Create a new <span> element with the mention class
+                  const mentionHighlight = document.createElement('span');
+                  mentionHighlight.classList.add('mention');
+                  mentionHighlight.textContent = word;
+
+                  // Highlight styles
+                  mentionHighlight.style.color = '#83cf40';
+                  mentionHighlight.style.backgroundColor = '#2b4317';
+                  mentionHighlight.style.border = '1px solid #4b7328';
+                  mentionHighlight.style.padding = '2px';
+                  mentionHighlight.style.display = 'inline-flex';
+
+                  // Append the new <span> element to the fragment
+                  fragment.appendChild(mentionHighlight);
+                } else {
+                  // Check if the word is already inside a mention span
+                  const span = document.createElement('span');
+                  span.innerHTML = word;
+                  if (span.querySelector('.mention')) {
+                    // If it is, simply append the word to the fragment
+                    fragment.appendChild(word);
+                  } else {
+                    // If it isn't, create a new text node with the word
+                    const textNode = document.createTextNode(word);
+
+                    // Append the new text node to the fragment
+                    fragment.appendChild(textNode);
+                  }
+                }
+              });
+
+              // Replace the original text node with the new fragment
+              node.parentNode.replaceChild(fragment, node);
             }
           });
-
-          // Replace the original text node with the new fragment
-          node.parentNode.replaceChild(fragment, node);
-        }
+        });
       });
-    });
+    } else {
+      console.error('Invalid container type specified');
+    }
   }
 
   const rgbToHsl = (r, g, b) => {
@@ -5756,6 +5835,7 @@
       // Convert image links to clickable thumbnail previews and embed YouTube videos as iframes for personal messages
       convertImageLinksToImage('personalMessages');
       convertYoutubeLinksToIframe('personalMessages');
+      highlightMentionWords('personalMessages');
     });
 
     // Process the colorization logic in reverse order
@@ -6609,6 +6689,7 @@
         chatLogsContainer.scrollTop = chatLogsContainer.scrollHeight; // Scroll to the very bottom
         convertImageLinksToImage('chatlogsMessages')
         convertYoutubeLinksToIframe('chatlogsMessages');
+        highlightMentionWords('chatlogsMessages');
       });
 
     };

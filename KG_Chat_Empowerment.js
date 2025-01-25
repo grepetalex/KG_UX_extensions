@@ -1225,12 +1225,17 @@
 
     // Add a double click event listener to hide the element
     element.addEventListener('dblclick', (event) => {
-      // Only hide the dimming element if the double-click target is not the scaled image
-      if (!event.target.closest('.scaled-thumbnail')) {
-        fadeDimmingElement('hide'); // Hide the dimming element on double click, but not if the target is a scaled image
+      // Check if any panel is open
+      const isPanelOpen = document.querySelector('.cached-messages-panel') || document.querySelector('.chat-logs-panel');
+
+      // If any panel is open and the double-clicked target is the scaled image, do not hide the dimming element
+      if (!isPanelOpen || !event.target.closest('.scaled-thumbnail')) {
+        fadeDimmingElement('hide'); // Hide the dimming element on double click, unless the target is a scaled image and a panel is open
       }
+
       fadeTargetElement(element, 'hide'); // Always hide the target element on double click
     });
+
   }
 
   // NEW CHAT CACHE CONTROL PANEL (START)

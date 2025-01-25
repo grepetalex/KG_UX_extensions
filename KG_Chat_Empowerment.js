@@ -5368,15 +5368,20 @@
     return false; // Return false if no match is found
   }
 
-  // Function to calibrate the given time to Moscow time
-  function calibrateToMoscowTime(inputTime, subtractHours = 0) {
+  /**
+   * Adjusts a given time to Moscow time.
+   * 
+   * @param {string} inputTime - The time string in "HH:MM:SS" format to adjust.
+   * @returns {string} - The adjusted time in "HH:MM:SS" format.
+   */
+  function calibrateToMoscowTime(inputTime) {
     // Get the system's current timezone offset in minutes (negative for UTC+)
     const systemOffset = new Date().getTimezoneOffset();
 
     // Moscow's timezone offset is UTC+3, so it's -180 minutes
     const moscowOffset = -180;
 
-    // Calculate the difference between system timezone and Moscow's timezone
+    // Calculate the difference between the system timezone and Moscow's timezone
     const difference = systemOffset - moscowOffset;
 
     // Split the input time string (HH:MM:SS) and convert to numbers
@@ -5388,9 +5393,6 @@
 
     // Adjust the input time by the calculated time difference in milliseconds
     const adjustedTime = new Date(inputDate.getTime() + difference * 60000);
-
-    // Subtract the specified number of hours (convert to milliseconds)
-    adjustedTime.setHours(adjustedTime.getHours() - subtractHours);
 
     // Format the adjusted time in HH:MM:SS format and return as a string
     return `${String(adjustedTime.getHours()).padStart(2, '0')}:` +
@@ -5654,6 +5656,7 @@
       timeElement.textContent = formattedTime;
       timeElement.title = `Moscow Time: ${calibrateToMoscowTime(formattedTime)}`;
       timeElement.style.margin = '0px 0.4em';
+      timeElement.style.height = 'fit-content';
 
       timeElement.style.color = timeColors[type] || 'slategray';
 
@@ -5685,6 +5688,7 @@
       usernameElement.style.display = 'inline-flex';
       usernameElement.style.cursor = 'pointer';
       usernameElement.style.margin = '0px 0.4em';
+      usernameElement.style.height = 'fit-content';
 
       // Add click event only if userId is defined
       usernameElement.addEventListener('click', () => {
@@ -5700,6 +5704,7 @@
       messageTextElement.className = 'message-text';
       messageTextElement.style.cursor = 'pointer'; // Pointer cursor
       messageTextElement.style.margin = '0px 0.4em';
+      messageTextElement.style.height = 'fit-content';
 
       // Replace smiley codes with <img> tags, and then wrap links with <a> tags
       messageTextElement.innerHTML = message
@@ -6504,11 +6509,14 @@
         // Create time element
         const timeElement = document.createElement('span');
         timeElement.className = 'message-time';
+
+        // Update the timeElement's text content with the adjusted time
         timeElement.textContent = time;
         timeElement.style.color = 'darkseagreen';
         timeElement.style.margin = '0 0.4em';
         timeElement.style.cursor = 'pointer';
         timeElement.style.transition = 'color 0.2s ease'; // Smooth color transition
+        timeElement.style.height = 'fit-content';
 
         // Add hover effect to change color to light green
         timeElement.addEventListener('mouseover', () => {
@@ -6532,6 +6540,7 @@
         usernameElement.textContent = username; // Use the original username for display
         usernameElement.style.cursor = 'pointer';
         usernameElement.style.margin = '0 0.4em';
+        usernameElement.style.height = 'fit-content';
 
         // Add click event to navigate to the user's profile or shake the username if userId is not found
         usernameElement.addEventListener('click', async () => {
@@ -6565,6 +6574,7 @@
         messageTextElement.style.color = 'lightsteelblue';
         messageTextElement.style.margin = '0 0.4em';
         messageTextElement.style.overflowWrap = 'anywhere';
+        messageTextElement.style.height = 'fit-content';
 
         // Replace smiley codes with <img> tags, and then wrap links with <a> tags
         messageTextElement.innerHTML = message

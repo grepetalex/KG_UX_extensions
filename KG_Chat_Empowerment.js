@@ -701,155 +701,169 @@
     }
   }
 
-  function convertImageLinkToImage() {
-    // get the container for all chat messages
-    const messagesContainer = document.querySelector('.messages-content div');
-    // get all links inside the messages container
-    const links = messagesContainer.querySelectorAll('p a:not(.skipped)');
+  function convertImageLinksToImage(containerType) {
+    // Define a mapping for container types to their respective selectors
+    const containerSelectors = {
+      generalMessages: '.messages-content div', // For general chat
+      chatlogsMessages: '.chat-logs-container', // For chat logs
+      personalMessages: '.messages-container' // For personal messages panel
+    };
 
-    // loop through all links
-    for (let i = 0; i < links.length; i++) {
-      const link = links[i];
+    // Get the container based on the passed containerType
+    const containerSelector = containerSelectors[containerType];
 
-      // Check if the link has a valid href
-      if (!link.href || !link.href.startsWith('http')) {
-        continue; // Skip invalid links
-      }
+    // If a valid container selector exists, process the links
+    if (containerSelector) {
+      const container = document.querySelector(containerSelector);
+      if (container) {
+        // Get all links inside the container
+        const links = container.querySelectorAll('a:not(.skipped)');
 
-      // Check if the link's href includes allowed image extension
-      const { allowed, extension } = isAllowedImageExtension(link.href);
+        // loop through all links
+        for (let i = 0; i < links.length; i++) {
+          const link = links[i];
 
-      // Check if the link's href includes trusted domain
-      const { isTrusted, domain } = isTrustedDomain(link.href);
+          // Check if the link has a valid href
+          if (!link.href || !link.href.startsWith('http')) {
+            continue; // Skip invalid links
+          }
 
-      // Check if the link's href includes the allowed image extension and the domain is trusted
-      if (allowed && isTrusted) {
+          // Check if the link's href includes allowed image extension
+          const { allowed, extension } = isAllowedImageExtension(link.href);
 
-        // Change the text content of the link to indicate it's an image with extension and trusted domain
-        link.textContent = `${imageExtensionEmoji} Image (${extension.toUpperCase()}) ${webDomainEmoji} Hostname (${domain})`;
+          // Check if the link's href includes trusted domain
+          const { isTrusted, domain } = isTrustedDomain(link.href);
 
-        // Assign the href value as the title
-        link.title = link.href;
+          // Check if the link's href includes the allowed image extension and the domain is trusted
+          if (allowed && isTrusted) {
 
-        // check if thumbnail already exists
-        const thumbnail = link.nextSibling;
-        if (!thumbnail || !thumbnail.classList || !thumbnail.classList.contains('thumbnail')) {
-          // create a new thumbnail
-          const thumbnail = document.createElement('div');
-          thumbnail.classList.add('thumbnail');
-          thumbnail.style.width = '6vw';
-          thumbnail.style.minWidth = '100px';
-          thumbnail.style.maxHeight = '200px';
-          thumbnail.style.height = 'auto';
-          thumbnail.style.cursor = 'pointer';
-          thumbnail.style.backgroundColor = 'transparent';
-          thumbnail.style.padding = '2px';
-          thumbnail.style.margin = '6px';
+            // Change the text content of the link to indicate it's an image with extension and trusted domain
+            link.textContent = `${imageExtensionEmoji} Image (${extension.toUpperCase()}) ${webDomainEmoji} Hostname (${domain})`;
 
-          // create an image inside the thumbnail
-          const img = document.createElement('img');
-          img.src = link.href; // Assign the src directly
+            // Assign the href value as the title
+            link.title = link.href;
 
-          // Add an onload event to check if the image is loaded successfully
-          img.onload = function () {
-            // Check if the domain is trusted
-            if (isTrustedDomain(link.href)) {
-              thumbnail.appendChild(img);
+            // check if thumbnail already exists
+            const thumbnail = link.nextSibling;
+            if (!thumbnail || !thumbnail.classList || !thumbnail.classList.contains('thumbnail')) {
+              // create a new thumbnail
+              const thumbnail = document.createElement('div');
+              thumbnail.classList.add('thumbnail');
+              thumbnail.style.width = '6vw';
+              thumbnail.style.minWidth = '100px';
+              thumbnail.style.maxHeight = '200px';
+              thumbnail.style.height = 'auto';
+              thumbnail.style.cursor = 'pointer';
+              thumbnail.style.backgroundColor = 'transparent';
+              thumbnail.style.padding = '2px';
+              thumbnail.style.margin = '6px';
 
-              // insert the thumbnail after the link
-              link.parentNode.insertBefore(thumbnail, link.nextSibling);
+              // create an image inside the thumbnail
+              const img = document.createElement('img');
+              img.src = link.href; // Assign the src directly
 
-              // Store the thumbnail link and its corresponding image URL
-              thumbnailLinks.push({ link, imgSrc: link.href });
+              // Add an onload event to check if the image is loaded successfully
+              img.onload = function () {
+                // Check if the domain is trusted
+                if (isTrustedDomain(link.href)) {
+                  thumbnail.appendChild(img);
 
-              // add click event to thumbnail to create a big image and dimming layer
-              thumbnail.addEventListener('click', function (e) {
-                e.preventDefault();
-                e.stopPropagation();
+                  // insert the thumbnail after the link
+                  link.parentNode.insertBefore(thumbnail, link.nextSibling);
 
-                // Reset bigImage to null before processing the new thumbnail click
-                bigImage = null;
+                  // Store the thumbnail link and its corresponding image URL
+                  thumbnailLinks.push({ link, imgSrc: link.href });
 
-                currentImageIndex = thumbnailLinks.findIndex((item) => item.imgSrc === link.href);
+                  // add click event to thumbnail to create a big image and dimming layer
+                  thumbnail.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
 
-                // Check if bigImage is already created
-                if (!bigImage) {
-                  // Create the big image
-                  bigImage = createBigImage(img.src);
+                    // Reset bigImage to null before processing the new thumbnail click
+                    bigImage = null;
 
-                  bigImage.style.top = '50%';
-                  bigImage.style.left = '50%';
-                  bigImage.style.transform = 'translate(-50%, -50%) scale(1)';
-                  bigImage.style.position = 'fixed';
-                  bigImage.style.opacity = '0';
-                  bigImage.style.zIndex = '999';
-                  bigImage.style.transformOrigin = 'center center';
+                    currentImageIndex = thumbnailLinks.findIndex((item) => item.imgSrc === link.href);
 
-                  // Fade in the big image
-                  fadeTargetElement(bigImage, 'show');
+                    // Check if bigImage is already created
+                    if (!bigImage) {
+                      // Create the big image
+                      bigImage = createBigImage(img.src);
 
-                  // To show the dimming background
-                  fadeDimmingElement('show');
+                      bigImage.style.top = '50%';
+                      bigImage.style.left = '50%';
+                      bigImage.style.transform = 'translate(-50%, -50%) scale(1)';
+                      bigImage.style.position = 'fixed';
+                      bigImage.style.opacity = '0';
+                      bigImage.style.zIndex = '999';
+                      bigImage.style.transformOrigin = 'center center';
 
-                  // Attach a keydown event listener to the document object
-                  document.addEventListener('keydown', function (event) {
-                    // Check if the key pressed was the "Escape" key
-                    if (event.key === 'Escape') {
-                      // Fade out the big image
-                      fadeTargetElement(bigImage, 'hide');
-                      fadeDimmingElement('hide');
+                      // Fade in the big image
+                      fadeTargetElement(bigImage, 'show');
+
+                      // To show the dimming background
+                      fadeDimmingElement('show');
+
+                      // Attach a keydown event listener to the document object
+                      document.addEventListener('keydown', function (event) {
+                        // Check if the key pressed was the "Escape" key
+                        if (event.key === 'Escape') {
+                          // Fade out the big image
+                          fadeTargetElement(bigImage, 'hide');
+                          fadeDimmingElement('hide');
+                        }
+                        // Check if the key pressed was the left arrow key (<)
+                        else if (event.key === 'ArrowLeft') {
+                          // Navigate to the previous image
+                          navigateImages(-1);
+                        }
+                        // Check if the key pressed was the right arrow key (>)
+                        else if (event.key === 'ArrowRight') {
+                          // Navigate to the next image
+                          navigateImages(1);
+                        }
+                      });
                     }
-                    // Check if the key pressed was the left arrow key (<)
-                    else if (event.key === 'ArrowLeft') {
-                      // Navigate to the previous image
-                      navigateImages(-1);
-                    }
-                    // Check if the key pressed was the right arrow key (>)
-                    else if (event.key === 'ArrowRight') {
-                      // Navigate to the next image
-                      navigateImages(1);
-                    }
+                  }); // thumbnail event end
+
+                  // add mouseover and mouseout event listeners to the thumbnail
+                  thumbnail.addEventListener('mouseover', function () {
+                    img.style.opacity = 0.7;
+                    img.style.transition = 'opacity 0.3s';
                   });
+
+                  thumbnail.addEventListener('mouseout', function () {
+                    img.style.opacity = 1;
+                  });
+
+                  // Call the function to scroll to the bottom of the chat
+                  scrollMessages();
+                } else {
+                  // Handle the case where the domain is not trusted
+                  console.error("Not a trusted domain:", link.href);
+
+                  // Add a class to the link to skip future conversion attempts
+                  link.classList.add('skipped');
                 }
-              }); // thumbnail event end
+              };
 
-              // add mouseover and mouseout event listeners to the thumbnail
-              thumbnail.addEventListener('mouseover', function () {
-                img.style.opacity = 0.7;
-                img.style.transition = 'opacity 0.3s';
-              });
+              // Add an onerror event to handle cases where the image fails to load
+              img.onerror = function () {
+                // Handle the case where the image failed to load (e.g., it's a fake image)
+                console.error("Failed to load image:", link.href);
 
-              thumbnail.addEventListener('mouseout', function () {
-                img.style.opacity = 1;
-              });
+                // Add a class to the link to skip future conversion attempts
+                link.classList.add('skipped');
+              };
 
-              // Call the function to scroll to the bottom of the chat
-              scrollMessages();
-            } else {
-              // Handle the case where the domain is not trusted
-              console.error("Not a trusted domain:", link.href);
-
-              // Add a class to the link to skip future conversion attempts
-              link.classList.add('skipped');
+              img.style.maxHeight = '100%';
+              img.style.maxWidth = '100%';
+              img.style.backgroundColor = 'transparent';
             }
-          };
-
-          // Add an onerror event to handle cases where the image fails to load
-          img.onerror = function () {
-            // Handle the case where the image failed to load (e.g., it's a fake image)
-            console.error("Failed to load image:", link.href);
-
-            // Add a class to the link to skip future conversion attempts
-            link.classList.add('skipped');
-          };
-
-          img.style.maxHeight = '100%';
-          img.style.maxWidth = '100%';
-          img.style.backgroundColor = 'transparent';
+          }
         }
       }
     }
-  } // end convertImageLinkToImage
+  } // end convertImageLinksToImage
 
   // Function to create a big image with a dimming layer
   function createBigImage(src) {
@@ -1176,6 +1190,15 @@
       }
       dimming.style.opacity = opacity.toString(); // Update the opacity
     }, fadeIntervalTime);
+
+    // If the action is 'hide', check for and remove the .scaled-thumbnail using fadeTargetElement
+    if (action === 'hide') {
+      const scaledThumbnail = document.querySelector('.scaled-thumbnail');
+      if (scaledThumbnail) {
+        fadeTargetElement(scaledThumbnail, 'hide'); // Use fadeTargetElement to fade out and remove the scaled-thumbnail
+      }
+    }
+
   }
 
   // Function to gradually fade a target element to show or hide it
@@ -1202,9 +1225,19 @@
 
     // Add a double click event listener to hide the element
     element.addEventListener('dblclick', () => {
-      fadeTargetElement(element, 'hide'); // Call fadeTargetElement to hide on double click
-      fadeDimmingElement('hide'); // Hide the dimming element on double click
+      // Check if either of the panels exists in the DOM
+      const isCachedPanelExist = document.querySelector('.cached-messages-panel');
+      const isChatLogsPanelExist = document.querySelector('.chat-logs-panel');
+
+      // Only hide the dimming element if neither of the panels exist
+      if (!isCachedPanelExist && !isChatLogsPanelExist) {
+        fadeTargetElement(element, 'hide'); // Call fadeTargetElement to hide on double click
+        fadeDimmingElement('hide'); // Hide the dimming element on double click
+      } else {
+        fadeTargetElement(element, 'hide'); // Still hide the element even if panels exist
+      }
     });
+
   }
 
   // NEW CHAT CACHE CONTROL PANEL (START)
@@ -4435,7 +4468,7 @@
               // Attach contextmenu event listener for messages deletion
               attachEventsToMessages();
               // Convert image links to visible image containers
-              convertImageLinkToImage();
+              convertImageLinksToImage('generalMessages');
               // Convert YouTube links to visible iframe containers
               convertYoutubeLinksToIframe('generalMessages'); // For general chat
               // Call the function to apply the chat message grouping
@@ -5681,11 +5714,13 @@
 
       // Append the message element to the messages container
       messagesContainer.appendChild(messageElement);
+    });
 
-      requestAnimationFrame(() => {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll after next repaint
-        convertYoutubeLinksToIframe('personalMessages');
-      });
+    requestAnimationFrame(() => {
+      messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll after next repaint
+      // Convert image links to clickable thumbnail previews and embed YouTube videos as iframes for personal messages
+      convertImageLinksToImage('personalMessages');
+      convertYoutubeLinksToIframe('personalMessages');
     });
 
     // Process the colorization logic in reverse order
@@ -6484,6 +6519,7 @@
 
       requestAnimationFrame(() => {
         chatLogsContainer.scrollTop = chatLogsContainer.scrollHeight; // Scroll to the very bottom
+        convertImageLinksToImage('chatlogsMessages')
         convertYoutubeLinksToIframe('chatlogsMessages');
       });
 
@@ -8954,7 +8990,7 @@
         // Remove ignored users' messages if the page is not initialized
         removeIgnoredUserMessages();
         // Convert image links to visible image containers
-        convertImageLinkToImage();
+        convertImageLinksToImage('generalMessages');
         // Convert YouTube links to visible iframe containers
         convertYoutubeLinksToIframe('generalMessages'); // For general chat
         // Restore chat tab from localStorage

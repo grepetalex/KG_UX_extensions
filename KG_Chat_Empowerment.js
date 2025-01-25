@@ -1003,49 +1003,60 @@
     }
   }
 
-  // Function to convert YouTube links to embedded iframes in a chat messages container
-  function convertYoutubeLinkToIframe() {
-    // Get the container for all chat messages
-    const messagesContainer = document.querySelector('.messages-content div');
+  // Function to convert YouTube links to embedded iframes based on the specified container
+  function convertYoutubeLinksToIframe(containerType) {
+    // Define a mapping for container types to their respective selectors
+    const containerSelectors = {
+      generalMessages: '.messages-content div', // For general chat
+      chatlogsMessages: '.chat-logs-container', // For chat logs
+      personalMessages: '.messages-container' // For personal messages panel
+    };
 
-    // Find all links inside the messages container
-    const links = messagesContainer.querySelectorAll('p a');
+    // Get the container based on the passed containerType
+    const containerSelector = containerSelectors[containerType];
 
-    // Loop through each link
-    for (const link of links) {
-      const url = link.href;
+    // If a valid container selector exists, process the links
+    if (containerSelector) {
+      const container = document.querySelector(containerSelector);
+      if (container) {
+        // Find all links within the container
+        const links = container.querySelectorAll('a');
 
-      // Use the regular expression to match different YouTube link formats and extract the video ID
-      const match = url.match(/(?:shorts\/|live\/|watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
+        // Process each link
+        links.forEach(link => {
+          const url = link.href;
 
-      // If the link is a valid YouTube link, replace it with an embedded iframe
-      if (match && match[1]) {
-        // Extract the video ID from the matched result
-        const videoId = match[1];
+          // Use the regular expression to match different YouTube link formats and extract the video ID
+          const match = url.match(/(?:shorts\/|live\/|watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
 
-        // Create a new iframe element
-        const iframe = document.createElement('iframe');
+          // If the link is a valid YouTube link, replace it with an embedded iframe
+          if (match && match[1]) {
+            const videoId = match[1];
 
-        // Set attributes and styles for the iframe
-        iframe.width = '280';
-        iframe.height = '157.5';
-        iframe.allowFullscreen = true;
-        iframe.style.display = 'flex';
-        iframe.style.margin = '6px';
-        iframe.style.border = 'none';
+            // Create a new iframe element
+            const iframe = document.createElement('iframe');
+            iframe.width = '280';
+            iframe.height = '157.5';
+            iframe.allowFullscreen = true;
+            iframe.style.display = 'flex';
+            iframe.style.margin = '6px';
+            iframe.style.border = 'none';
 
-        // Set the iframe source to embed the YouTube video
-        iframe.src = `https://www.youtube.com/embed/${videoId}`;
+            // Set the iframe source to embed the YouTube video
+            iframe.src = `https://www.youtube.com/embed/${videoId}`;
 
-        // Replace the original link with the newly created iframe in the DOM
-        link.parentNode.replaceChild(iframe, link);
+            // Replace the original link with the iframe
+            link.parentNode.replaceChild(iframe, link);
+          }
+        });
       }
+    } else {
+      console.error('Invalid container type specified');
     }
 
-    // Call the function to scroll to the bottom of the chat
+    // Call the function to scroll to the bottom of the chat (optional)
     scrollMessages();
-
-  } // end convertYoutubeLinkToIframe
+  } // end convertYoutubeLinksToIframe
 
   const empowermentButtonsMargin = 4;
 
@@ -4426,7 +4437,7 @@
               // Convert image links to visible image containers
               convertImageLinkToImage();
               // Convert YouTube links to visible iframe containers
-              convertYoutubeLinkToIframe();
+              convertYoutubeLinksToIframe('generalMessages'); // For general chat
               // Call the function to apply the chat message grouping
               applyChatMessageGrouping();
               // Call the function to scroll to the bottom of the chat
@@ -5627,9 +5638,16 @@
       messageTextElement.style.cursor = 'pointer'; // Pointer cursor
       messageTextElement.style.margin = '0.4em';
 
-      messageTextElement.innerHTML = message.replace(/:(?=\w*[a-zA-Z])(\w+):/g,
-        (_, word) => `<img src="/img/smilies/${word}.gif" alt=":${word}:" title=":${word}:" class="smile">`
-      );
+      // Replace smiley codes with <img> tags, and then wrap links with <a> tags
+      messageTextElement.innerHTML = message
+        // Replace smiley codes like :word: with <img> tags
+        .replace(/:(?=\w*[a-zA-Z])(\w+):/g,
+          (_, word) => `<img src="/img/smilies/${word}.gif" alt=":${word}:" title=":${word}:" class="smile">`
+        )
+        // Wrap http and https links with <a> tags
+        .replace(/(https?:\/\/[^\s]+)/gi,
+          (url) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`
+        );
 
       // Add click event listener for the messageTextElement
       messageTextElement.addEventListener('click', function () {
@@ -5666,6 +5684,7 @@
 
       requestAnimationFrame(() => {
         messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll after next repaint
+        convertYoutubeLinksToIframe('personalMessages');
       });
     });
 
@@ -6434,10 +6453,16 @@
         messageTextElement.style.margin = '0 0.4em';
         messageTextElement.style.overflowWrap = 'anywhere';
 
-        // Replace emoticons with images
-        messageTextElement.innerHTML = message.replace(/:(?=\w*[a-zA-Z])(\w+):/g,
-          (_, word) => `<img src="/img/smilies/${word}.gif" alt=":${word}:" title=":${word}:" class="smile">`
-        );
+        // Replace smiley codes with <img> tags, and then wrap links with <a> tags
+        messageTextElement.innerHTML = message
+          // Replace smiley codes like :word: with <img> tags
+          .replace(/:(?=\w*[a-zA-Z])(\w+):/g,
+            (_, word) => `<img src="/img/smilies/${word}.gif" alt=":${word}:" title=":${word}:" class="smile">`
+          )
+          // Wrap http and https links with <a> tags
+          .replace(/(https?:\/\/[^\s]+)/gi,
+            (url) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`
+          );
 
         // Apply margin for the first message of a new user
         messageContainer.style.marginTop = lastDisplayedUsername !== username ? '0.6em' : '';
@@ -6459,6 +6484,7 @@
 
       requestAnimationFrame(() => {
         chatLogsContainer.scrollTop = chatLogsContainer.scrollHeight; // Scroll to the very bottom
+        convertYoutubeLinksToIframe('chatlogsMessages');
       });
 
     };
@@ -8930,7 +8956,7 @@
         // Convert image links to visible image containers
         convertImageLinkToImage();
         // Convert YouTube links to visible iframe containers
-        convertYoutubeLinkToIframe();
+        convertYoutubeLinksToIframe('generalMessages'); // For general chat
         // Restore chat tab from localStorage
         restoreChatTabAndFocus();
         // Call the function with the selector for the input field

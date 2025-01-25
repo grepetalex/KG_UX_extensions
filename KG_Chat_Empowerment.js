@@ -5954,6 +5954,18 @@
           };
         }
 
+        // Handle case where username is not found, and instead, `mne` class is present (system message)
+        const systemMessageElement = timeElement.nextElementSibling;
+        if (systemMessageElement && systemMessageElement.classList.contains('mne')) {
+          // Extract the text directly from the <font> element
+          const messageText = systemMessageElement.textContent.trim();
+          return {
+            time: timeElement.textContent.trim().replace(/[\[\]]/g, ''),
+            username: 'Клавобот', // Assign 'Клавобот' for system messages
+            message: messageText || null,
+          };
+        }
+
         return null;
       }).filter(Boolean);
     };
@@ -5969,6 +5981,7 @@
       return { chatlogs: [] }; // Return an empty array in case of an error
     }
   };
+
 
   function getRandomDateInRange() {
     const startDate = new Date('2012-02-12'); // Start date

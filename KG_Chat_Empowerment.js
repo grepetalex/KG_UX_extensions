@@ -5369,7 +5369,7 @@
   }
 
   // Function to calibrate the given time to Moscow time
-  function calibrateToMoscowTime(inputTime) {
+  function calibrateToMoscowTime(inputTime, subtractHours = 0) {
     // Get the system's current timezone offset in minutes (negative for UTC+)
     const systemOffset = new Date().getTimezoneOffset();
 
@@ -5383,16 +5383,19 @@
     const [hours, minutes, seconds] = inputTime.split(':').map(Number);
 
     // Create a new Date object and set the hours, minutes, and seconds based on the input time
-    const inputDate = new Date().setHours(hours, minutes, seconds, 0);
+    const inputDate = new Date();
+    inputDate.setHours(hours, minutes, seconds, 0);
 
     // Adjust the input time by the calculated time difference in milliseconds
-    const adjustedTime = new Date(inputDate + difference * 60000); // 1 minute = 60000 milliseconds
+    const adjustedTime = new Date(inputDate.getTime() + difference * 60000);
+
+    // Subtract the specified number of hours (convert to milliseconds)
+    adjustedTime.setHours(adjustedTime.getHours() - subtractHours);
 
     // Format the adjusted time in HH:MM:SS format and return as a string
-    return `${String(adjustedTime.getHours())
-      .padStart(2, '0')}:${String(adjustedTime.getMinutes())
-        .padStart(2, '0')}:${String(adjustedTime.getSeconds())
-          .padStart(2, '0')}`;
+    return `${String(adjustedTime.getHours()).padStart(2, '0')}:` +
+      `${String(adjustedTime.getMinutes()).padStart(2, '0')}:` +
+      `${String(adjustedTime.getSeconds()).padStart(2, '0')}`;
   }
 
   // Function to display the personal messages panel
@@ -5649,6 +5652,7 @@
       const timeElement = document.createElement('span');
       timeElement.className = 'message-time';
       timeElement.textContent = formattedTime;
+      timeElement.title = `Moscow Time: ${calibrateToMoscowTime(formattedTime)}`;
       timeElement.style.margin = '0px 0.4em';
 
       timeElement.style.color = timeColors[type] || 'slategray';
@@ -5667,7 +5671,7 @@
           timeElement.style.color = timeColors[type];
         });
 
-        // Open the chat log URL on click
+        // Open the chat log URL on click from personal messages panel
         timeElement.addEventListener('click', function () {
           const url = `https://klavogonki.ru/chatlogs/${date}.html#${calibrateToMoscowTime(formattedTime)}`;
           window.open(url, '_blank', 'noopener,noreferrer');
@@ -6518,8 +6522,7 @@
 
         // Open the chat log URL on click
         timeElement.addEventListener('click', function () {
-          const formattedTime = time.replace(/[\[\]]/g, '').trim(); // Clean the time string (if necessary)
-          const url = `https://klavogonki.ru/chatlogs/${date}.html#${calibrateToMoscowTime(time)}`;
+          const url = `https://klavogonki.ru/chatlogs/${date}.html#${time}`;
           window.open(url, '_blank', 'noopener,noreferrer');
         });
 

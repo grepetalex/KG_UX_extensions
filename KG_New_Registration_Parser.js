@@ -11,7 +11,7 @@
 
 async function parseUserRegistrations(startId) {
   const maxRetries = 3;
-  const delay = 150; // Delay of 5 seconds
+  const delay = 150;
   let attempt = 0;
 
   // If startId is not provided, check the saved lastParsedId in localStorage

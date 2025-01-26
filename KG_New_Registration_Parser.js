@@ -130,12 +130,12 @@ parseUserRegistrations();
 
 function createUserProfileContainer(userData) {
   // Check if the container already exists
-  let container = document.getElementById('userProfileContainer');
+  let container = document.getElementById('user-profile-container');
 
   // If the container doesn't exist, create it
   if (!container) {
     container = document.createElement('div');
-    container.id = 'userProfileContainer'; // Give the container an ID for future reference
+    container.id = 'user-profile-container';
 
     // Apply styles
     container.style.display = 'flex';
@@ -242,6 +242,51 @@ function createUserProfileContainer(userData) {
 
   // Automatically scroll to the bottom of the container after appending new content
   container.scrollTop = container.scrollHeight;
+
+  // Call createUserCounter after everything is created, passing the container directly
+  createUserCounter(container);
+}
+
+/**
+ * Creates a new counter inside the container to display the number of child elements.
+ * Removes the previous counter and creates a new one at the end of the container every time.
+ * 
+ * @param {HTMLElement} container - The container element where the counter will be created.
+ * @throws {Error} - Throws an error if the provided container is not a valid HTMLElement.
+ */
+function createUserCounter(container) {
+  // Check if the provided container is a valid HTML element
+  if (!container || !(container instanceof HTMLElement)) {
+    throw new Error("Invalid container element.");
+  }
+
+  // Find the existing counter and remove it if it exists
+  let existingCounter = container.querySelector(".user-counter");
+  if (existingCounter) {
+    existingCounter.remove(); // Remove the previous counter
+  }
+
+  // Create a new counter element
+  const counter = document.createElement("div");
+  counter.className = "user-counter"; // Assign a class name for styling
+
+  // Apply custom styles to the counter element
+  Object.assign(counter.style, {
+    padding: "16px", // Add padding
+    fontWeight: "bold", // Make the text bold
+    fontFamily: "Consolas", // Set a monospace font for consistency
+    fontSize: "16px", // Set the font size
+    color: "lightsalmon", // Set the text color
+  });
+
+  // Count the children excluding the counter itself
+  const childCount = Array.from(container.children).filter(child => !child.classList.contains("user-counter")).length;
+
+  // Update the counter text
+  counter.textContent = childCount;
+
+  // Append the new counter as the last child of the container
+  container.appendChild(counter);
 }
 
 let isRightClickHeld = false;
@@ -268,7 +313,7 @@ document.body.addEventListener('mouseup', (event) => {
 // Prevent the context menu from showing if the button was held for 3 seconds
 document.body.addEventListener('contextmenu', (event) => {
   if (isRightClickHeld) {
-    event.preventDefault(); // Prevent the context menu if held for 1 second
+    event.preventDefault();
     isRightClickHeld = false; // Reset the flag
   }
 });

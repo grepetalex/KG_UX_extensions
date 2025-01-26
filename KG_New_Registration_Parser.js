@@ -268,7 +268,7 @@ document.body.addEventListener('mouseup', (event) => {
 // Prevent the context menu from showing if the button was held for 3 seconds
 document.body.addEventListener('contextmenu', (event) => {
   if (isRightClickHeld) {
-    event.preventDefault(); // Prevent the context menu if held for 3 seconds
+    event.preventDefault(); // Prevent the context menu if held for 1 second
     isRightClickHeld = false; // Reset the flag
   }
 });

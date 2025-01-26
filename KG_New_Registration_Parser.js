@@ -171,7 +171,7 @@ function createUserProfileContainer(userData) {
   const elementsContainer = document.createElement('div');
   elementsContainer.style.display = 'flex';
   elementsContainer.style.flexDirection = 'row'; // Stack elements horizontally
-  elementsContainer.style.alignItems = 'flex-start'; // Align elements to the start
+  elementsContainer.style.alignItems = 'center'; // Align elements to the start
   elementsContainer.style.padding = '2px';
   elementsContainer.style.marginTop = '2px';
 

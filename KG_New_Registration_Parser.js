@@ -9,6 +9,37 @@
 // @grant        none
 // ==/UserScript==
 
+function cleanUserRegistrationsData() {
+  // Get the data from localStorage
+  let userRegistrationsData = JSON.parse(localStorage.getItem('userRegistrationsData'));
+
+  // Check if data exists
+  if (!userRegistrationsData) {
+    console.log("No user registrations data found.");
+    return;
+  }
+
+  // Get the current date in YYYY-MM-DD format
+  const currentDate = new Date().toISOString().split('T')[0];
+
+  // Filter the data, keeping only the records that match the current date
+  const filteredData = userRegistrationsData.filter(user => {
+    const registeredDate = user.registeredDate.split(' ')[0]; // Get only the date part (before the space)
+    return registeredDate === currentDate; // Compare with the current date
+  });
+
+  // Check if any data was removed (if filtered data is less than original data length)
+  if (filteredData.length !== userRegistrationsData.length) {
+    // Log the filtered data to the console if something was removed
+    console.log("Filtered user registrations data (removed non-today's data):", filteredData);
+
+    // Save the filtered data back to localStorage
+    localStorage.setItem('userRegistrationsData', JSON.stringify(filteredData));
+
+    console.log("User registrations data updated. Only today's data remains.");
+  }
+} cleanUserRegistrationsData();
+
 async function parseUserRegistrations(startId) {
   const maxRetries = 3;
   const delay = 150;

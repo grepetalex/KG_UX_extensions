@@ -2,7 +2,7 @@
 // @name         KG_New_Registration_Parser
 // @namespace    http://tampermonkey.net/
 // @version      2025-01-25
-// @description  Let's have a look at this sun of beach
+// @description  Let's have a look at this sun of a beach
 // @author       Patcher
 // @match        *://klavogonki.ru/gamelist/
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=klavogonki.ru

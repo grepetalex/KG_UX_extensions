@@ -4196,7 +4196,7 @@
         else if (node.nodeType === Node.ELEMENT_NODE) {
           // Handle private <a> element (with lock emoji for <a>)
           if (node.tagName.toLowerCase() === 'a' && node.classList.contains('private')) {
-            return { type: 'text', value: '🔒\u00A0' }; // Non-breaking space after lock emoji
+            return { type: 'text', value: '📢\u00A0' }; // Non-breaking space after lock emoji
           }
 
           // Handle private <span> element (no lock emoji for <span>)

@@ -325,13 +325,17 @@ let timerId = null;
 
 document.body.addEventListener('mousedown', (event) => {
   if (event.button === 2) { // Right mouse button
+    // Check if #user-profile-container exists
+    if (document.getElementById('user-profile-container')) {
+      return; // Exit if the container already exists
+    }
     // Start the timer on right mouse button press
     timerId = setTimeout(() => {
       isRightClickHeld = true; // Mark that the button has been held for 3 seconds
       // Fetch saved user registration data from localStorage (or use an empty array if no data exists)
       const savedData = JSON.parse(localStorage.getItem('userRegistrationsData')) || [];
       savedData.forEach(createUserProfileContainer); // Create user profile containers from saved data
-    }, 1000);
+    }, 300);
   }
 });
 

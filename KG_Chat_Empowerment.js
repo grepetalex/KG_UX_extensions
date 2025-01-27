@@ -1107,6 +1107,7 @@
   empowermentButtonsPanel.style.top = '60px';
   empowermentButtonsPanel.style.right = '12px';
   empowermentButtonsPanel.style.padding = '6px';
+  empowermentButtonsPanel.style.zIndex = '1000';
   // Append panel element inside the body
   bodyElement.appendChild(empowermentButtonsPanel);
 
@@ -1166,10 +1167,12 @@
 
       // Add click event listener to remove the dimming element and the upper element
       dimming.addEventListener('click', function () {
-        // Get the previous sibling element (the one above the dimming background) and remove it if it exists
-        dimming.previousElementSibling && dimming.previousElementSibling.parentNode.removeChild(dimming.previousElementSibling);
+        // First, check for .popup-panel, then check for previousElementSibling
+        const elementToRemove = document.querySelector('.popup-panel') || dimming.previousElementSibling;
+        elementToRemove?.parentNode?.removeChild(elementToRemove);
         fadeDimmingElement('hide');
       });
+
     }
 
     let opacity = parseFloat(dimming.style.opacity) || 0; // Current opacity
@@ -1226,7 +1229,7 @@
     // Add a double click event listener to hide the element
     element.addEventListener('dblclick', (event) => {
       // Check if any panel is open
-      const isPanelOpen = document.querySelector('.cached-messages-panel') || document.querySelector('.chat-logs-panel');
+      const isPanelOpen = document.querySelector('.popup-panel');
 
       // If any panel is open and the double-clicked target is the scaled image, do not hide the dimming element
       if (!isPanelOpen || !event.target.closest('.scaled-thumbnail')) {
@@ -1236,6 +1239,12 @@
       fadeTargetElement(element, 'hide'); // Always hide the target element on double click
     });
 
+  }
+
+  // Function to remove the previous panel if it exists
+  function removePreviousPanel() {
+    const existingPanel = document.querySelector('.popup-panel');
+    if (existingPanel) existingPanel.remove();
   }
 
   // NEW CHAT CACHE CONTROL PANEL (START)
@@ -1268,6 +1277,8 @@
 
   // Function to display the cached user list panel
   function showCachePanel() {
+    // Remove any previous panel before creating a new one
+    removePreviousPanel();
     // Check if the panel already exists
     if (document.querySelector('.cached-users-panel')) return;
 
@@ -1279,7 +1290,7 @@
 
     // Create a container div with class 'cached-users-panel'
     const cachedUsersPanel = document.createElement('div');
-    cachedUsersPanel.className = 'cached-users-panel';
+    cachedUsersPanel.className = 'cached-users-panel popup-panel';
     // Set initial styles
     cachedUsersPanel.style.opacity = '0';
     cachedUsersPanel.style.backgroundColor = '#1b1b1b';
@@ -5515,6 +5526,8 @@
 
   // Function to display the personal messages panel
   function showPersonalMessagesPanel() {
+    // Remove any previous panel before creating a new one
+    removePreviousPanel();
     // Check if the cached messages panel already exists
     if (document.querySelector('.cached-messages-panel')) return;
 
@@ -5533,7 +5546,7 @@
 
     // Create a container div with class 'cached-messages-panel'
     const cachedMessagesPanel = document.createElement('div');
-    cachedMessagesPanel.className = 'cached-messages-panel';
+    cachedMessagesPanel.className = 'cached-messages-panel popup-panel';
     // Set initial styles
     cachedMessagesPanel.style.opacity = '0';
     cachedMessagesPanel.style.backgroundColor = '#1b1b1b';
@@ -6149,12 +6162,14 @@
 
   // Function to display the chat logs panel
   async function showChatLogsPanel() {
+    // Remove any previous panel before creating a new one
+    removePreviousPanel();
     // Check if the chat logs panel already exists; if it does, exit the function to avoid duplication
     if (document.querySelector('.chat-logs-panel')) return;
 
     // Create a container div with class 'chat-logs-panel'
     const chatLogsPanel = document.createElement('div');
-    chatLogsPanel.className = 'chat-logs-panel';
+    chatLogsPanel.className = 'chat-logs-panel popup-panel';
 
     // Set initial styles for the chat logs panel
     chatLogsPanel.style.opacity = '0';
@@ -7473,12 +7488,14 @@
 
   // Function to display the settings panel
   function showSettingsPanel() {
+    // Remove any previous panel before creating a new one
+    removePreviousPanel();
     // Check if the settings panel already exists
     if (document.querySelector('.settings-panel')) return;
 
     // Create the settings panel container
     const settingsPanel = document.createElement('div');
-    settingsPanel.className = 'settings-panel';
+    settingsPanel.className = 'settings-panel popup-panel';
 
     // Set initial styles
     settingsPanel.style.opacity = '0';

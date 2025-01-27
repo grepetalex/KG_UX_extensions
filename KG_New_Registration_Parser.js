@@ -325,30 +325,35 @@ let timerId = null;
 
 document.body.addEventListener('mousedown', (event) => {
   if (event.button === 2) { // Right mouse button
-    // Check if #user-profile-container exists
-    if (document.getElementById('user-profile-container')) {
-      return; // Exit if the container already exists
+    const userProfileContainer = document.getElementById('user-profile-container');
+
+    // Start the timer for right mouse click hold (300ms)
+    if (!timerId) {
+      timerId = setTimeout(() => {
+        isRightClickHeld = true; // Mark that the button has been held for (300ms)
+        if (userProfileContainer) {
+          userProfileContainer.remove(); // Remove the container after (300ms)
+        } else {
+          // Fetch saved user registration data from localStorage (or use an empty array if no data exists)
+          const savedData = JSON.parse(localStorage.getItem('userRegistrationsData')) || [];
+          savedData.forEach(createUserProfileContainer); // Create user profile containers from saved data
+        }
+      }, 300); // (300ms)
     }
-    // Start the timer on right mouse button press
-    timerId = setTimeout(() => {
-      isRightClickHeld = true; // Mark that the button has been held for 3 seconds
-      // Fetch saved user registration data from localStorage (or use an empty array if no data exists)
-      const savedData = JSON.parse(localStorage.getItem('userRegistrationsData')) || [];
-      savedData.forEach(createUserProfileContainer); // Create user profile containers from saved data
-    }, 300);
   }
 });
 
 document.body.addEventListener('mouseup', (event) => {
   if (event.button === 2) { // Right mouse button
     clearTimeout(timerId); // Clear the timer when the button is released
+    timerId = null; // Reset timerId
   }
 });
 
-// Prevent the context menu from showing if the button was held for 3 seconds
+// Prevent the context menu from showing if the button was held for (300ms)
 document.body.addEventListener('contextmenu', (event) => {
   if (isRightClickHeld) {
     event.preventDefault();
-    isRightClickHeld = false; // Reset the flag
+    isRightClickHeld = false; // Reset the flag after the (300ms) hold
   }
 });

@@ -4101,6 +4101,7 @@
 
     .popup-chat-message {
       display: flex;
+      align-items: center;
       background-color: hsl(100, 50%, 10%);
       position: relative;
       max-width: 70vw;
@@ -4176,7 +4177,7 @@
     }
 
     // Get the last message in the chat
-    const latestMessage = document.querySelector('.messages-content p:last-child');
+    const latestMessage = document.querySelector('.messages-content p:last-of-type');
 
     if (latestMessage) {
       // Extract elements for time and username from the latest message
@@ -4186,13 +4187,31 @@
       // Get all nodes and concatenate their values
       const nodes = Array.from(latestMessage.childNodes);
       const elements = nodes.map(node => {
+        // Handle plain text nodes
         if (node.nodeType === Node.TEXT_NODE) {
           return { type: 'text', value: node.nodeValue.trim() };
-        } else if (node.nodeType === Node.ELEMENT_NODE) {
+        }
+
+        // Handle element nodes
+        else if (node.nodeType === Node.ELEMENT_NODE) {
+          // Handle private <a> element (with lock emoji for <a>)
+          if (node.tagName.toLowerCase() === 'a' && node.classList.contains('private')) {
+            return { type: 'text', value: '🔒\u00A0' }; // Non-breaking space after lock emoji
+          }
+
+          // Handle private <span> element (no lock emoji for <span>)
+          if (node.tagName.toLowerCase() === 'span' && node.classList.contains('private')) {
+            return { type: 'text', value: node.textContent.trim() };
+          }
+
+          // Handle <img> element
           if (node.tagName.toLowerCase() === 'img') {
             const imgTitle = node.getAttribute('title');
             return { type: 'img', title: imgTitle };
-          } else if (node.tagName.toLowerCase() === 'a') {
+          }
+
+          // Handle regular <a> element (without 'private' class)
+          if (node.tagName.toLowerCase() === 'a') {
             const anchorHref = node.getAttribute('href');
             return { type: 'anchor', href: anchorHref };
           }
@@ -5464,7 +5483,7 @@
 
   /**
    * Adjusts a given time to Moscow time.
-   * 
+   *
    * @param {string} inputTime - The time string in "HH:MM:SS" format to adjust.
    * @returns {string} - The adjusted time in "HH:MM:SS" format.
    */

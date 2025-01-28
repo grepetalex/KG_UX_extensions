@@ -40,6 +40,24 @@ function cleanUserRegistrationsData() {
   }
 } cleanUserRegistrationsData();
 
+// Function to copy the text content from all child elements of a given container to the clipboard
+function copyContainerText(container) {
+  // Get the current date in the format YYYY-MM-DD
+  const currentDate = new Date().toISOString().split('T')[0];
+
+  // Collect text content from all child elements and join them with a newline
+  const textContent = Array.from(container.children)
+    .map(e => e.textContent) // Get text content of each child
+    .join('\n'); // Join with newline between each child
+
+  // Prepend the current date and add empty lines before and after content
+  const finalText = `${currentDate}\n\n${textContent}\n\n`;
+
+  // Copy the collected text to the clipboard
+  navigator.clipboard.writeText(finalText)
+    .catch(err => console.error('Failed to copy text:', err)); // Log any errors
+}
+
 async function parseUserRegistrations(startId) {
   const maxRetries = 3;
   const delay = 150;
@@ -194,6 +212,7 @@ function createUserProfileContainer(userData) {
 
     // Add the double-click event listener to remove the container
     container.addEventListener('dblclick', function () {
+      copyContainerText(container);
       container.remove(); // Remove the container when double-clicked
     });
   }
@@ -206,13 +225,11 @@ function createUserProfileContainer(userData) {
   elementsContainer.style.padding = '2px';
   elementsContainer.style.marginTop = '2px';
 
-  // Helper function to create a span element with small padding and color
-  function createSpanElement(content, color) {
+  // Helper function to create a span element with an optional trailing space
+  function createSpanElement(content, color, appendSymbol = true, symbol = ' ') {
     const span = document.createElement('span');
     span.style.padding = '2px'; // Small padding around the span
-    span.style.marginBottom = '4px'; // Optional: Space between elements vertically
-    span.style.marginRight = '4px'; // Optinal: Space between elements horizontally
-    span.textContent = content;
+    span.textContent = content + (appendSymbol ? symbol : ''); // Add the symbol only if needed
     span.style.color = color; // Apply the color to the span
     return span;
   }
@@ -232,8 +249,8 @@ function createUserProfileContainer(userData) {
   // Create and append the rank span element
   elementsContainer.appendChild(createSpanElement(userData.rank, 'lightyellow'));
 
-  // Create and append the registered date span element
-  elementsContainer.appendChild(createSpanElement(userData.registeredDate, 'orange'));
+  // Create and append the registered date span element without a trailing space
+  elementsContainer.appendChild(createSpanElement(userData.registeredDate, 'orange', false));
 
   // Check if avatarTimestamp is not '00' before creating the avatar element
   if (userData.avatarTimestamp !== '00') {

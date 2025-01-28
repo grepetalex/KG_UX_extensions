@@ -6162,6 +6162,14 @@
     return null; // Return null if no user found
   }
 
+  // Toggles the visibility of .message-item elements that do not contain a .mention child element
+  function toggleMentionVisibility() {
+    document.querySelectorAll('.message-item').forEach(item => {
+      if (item.querySelector('.mention')) return;
+      item.style.display = item.style.display === 'none' ? '' : 'none';
+    });
+  }
+
   // Function to display the chat logs panel
   async function showChatLogsPanel() {
     // Remove any previous panel before creating a new one
@@ -6321,6 +6329,23 @@
     // Append the date button and input field to the control buttons container
     panelControlButtons.appendChild(dateInputToggle);
     panelControlButtons.appendChild(dateInput);
+
+    // Create a toggle mention messages component
+    const toggleMentionMessages = document.createElement('div');
+    toggleMentionMessages.className = 'toggle-mention-messages';
+    // Set the inner HTML of the toggle component with a suitable SVG or text
+    toggleMentionMessages.innerHTML = iconPersonalMessages;
+    toggleMentionMessages.title = 'Toggle Mention Messages';
+    // Apply common styles to the component
+    applyHeaderButtonStyles(toggleMentionMessages, 'saddlebrown');
+
+    // Add a click event listener to toggle the visibility of messages without mentions
+    toggleMentionMessages.addEventListener('click', () => {
+      toggleMentionVisibility();
+    });
+
+    // Append the toggle mention messages component to the control panel
+    panelControlButtons.appendChild(toggleMentionMessages);
 
     // Create a copy chatlogs button element
     const copyChatLogsUrl = document.createElement('div');
@@ -6578,6 +6603,7 @@
       fullScrollDownButton,
       partialScrollUpButton,
       partialScrollDownButton,
+      toggleMentionMessages,
       copyChatLogsUrl,
       toggleActiveUsers,
       dateInputToggle,

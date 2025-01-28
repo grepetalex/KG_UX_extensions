@@ -298,7 +298,7 @@ function createUserProfileContainer(userData) {
 /**
  * Creates a new counter inside the container to display the number of child elements.
  * Removes the previous counter and creates a new one at the end of the container every time.
- * 
+ *
  * @param {HTMLElement} container - The container element where the counter will be created.
  * @throws {Error} - Throws an error if the provided container is not a valid HTMLElement.
  */

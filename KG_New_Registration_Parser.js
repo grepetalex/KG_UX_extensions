@@ -100,8 +100,18 @@ async function parseUserRegistrations(startId) {
     if (lastParsedId) {
       startId = Number(lastParsedId) + 1; // Start from the next ID after the last parsed one
     } else if (savedData.length === 0) {
-      console.log("Error: startId is required!");
-      return;
+      while (true) {
+        const input = prompt("Enter the starting user ID:");
+        if (input === null) {
+          console.log("Parsing process canceled by user.");
+          return;
+        }
+        startId = Number(input);
+        if (!isNaN(startId) && startId >= 1) {
+          break;
+        }
+        alert("Please enter a valid number greater than or equal to 1.");
+      }
     } else {
       startId = Number(savedData[savedData.length - 1].id) + 1; // Start from the last ID + 1
     }

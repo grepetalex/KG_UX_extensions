@@ -40,16 +40,25 @@ const rankColors = {
   'Новичок': '#AFAFAF' // Grey
 };
 
+// Function to get user registrations data from localStorage
 function getUserRegistrationsData() {
   return JSON.parse(localStorage.getItem('userRegistrationsData')) || [];
 }
-
+// Function to save user registrations data to localStorage
 function saveUserRegistrationsData(data) {
   localStorage.setItem('userRegistrationsData', JSON.stringify(data));
 }
-
+// Function to get the current date in 'YYYY-MM-DD' format
 function getCurrentDate() {
   return new Date().toLocaleDateString('en-CA'); // Format: YYYY-MM-DD
+}
+// Function to get the last parsed ID from localStorage
+function getLastParsedId() {
+  return localStorage.getItem('lastParsedId');
+}
+// Function to save the last parsed ID to localStorage
+function saveLastParsedId(id) {
+  localStorage.setItem('lastParsedId', id);
 }
 
 // Function to convert seconds to a human-readable date format
@@ -119,7 +128,7 @@ async function parseUserRegistrations(startId) {
   // If startId is not provided, check the saved lastParsedId in localStorage
   const savedData = getUserRegistrationsData();
   if (!startId) {
-    const lastParsedId = localStorage.getItem('lastParsedId');
+    const lastParsedId = getLastParsedId(); // Get the last parsed ID from localStorage
 
     // If lastParsedId exists, start from it; otherwise, start from the last ID + 1
     if (lastParsedId) {
@@ -221,12 +230,12 @@ async function parseUserRegistrations(startId) {
 
   // Update the lastParsedId key in localStorage with the ID of the last processed user if not manual parsing
   if (!manualParsing) {
-    localStorage.setItem('lastParsedId', currentId - 1);
+    saveLastParsedId(currentId - 1); // Save the ID of the last processed user
   }
   console.log(`Parsing process completed.`);
 }
 
-parseUserRegistrations();
+parseUserRegistrations(); // Start the parsing after page load
 
 // Function to create a user profile container with the provided user data
 function createUserProfileContainer(userData) {
@@ -551,6 +560,7 @@ document.body.addEventListener('mousedown', (event) => {
           // Fetch saved user registration data from localStorage (or use an empty array if no data exists)
           const savedData = getUserRegistrationsData();
           savedData.forEach(createUserProfileContainer); // Create user profile containers from saved data
+          parseUserRegistrations(); // Restart the parsing process after removing the container
         }
       }, 300); // (300ms)
     }

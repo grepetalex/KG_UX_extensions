@@ -20,7 +20,7 @@ function cleanUserRegistrationsData() {
   }
 
   // Get the current date in YYYY-MM-DD format
-  const currentDate = new Date().toISOString().split('T')[0];
+  const currentDate = new Date().toLocaleDateString('en-CA'); // Format: YYYY-MM-DD
 
   // Filter the data, keeping only the records that match the current date
   const filteredData = userRegistrationsData.filter(user => {
@@ -177,92 +177,108 @@ function convertToUpdatedTimestamp(sec, usec) {
 
 parseUserRegistrations();
 
+// Function to create a user profile container with the provided user data
 function createUserProfileContainer(userData) {
-  // Check if the container already exists
-  let container = document.getElementById('user-profile-container');
+  // Check if the wrapper already exists
+  let userProfileWrapper = document.getElementById('user-profile-wrapper');
 
-  // If the container doesn't exist, create it
-  if (!container) {
-    container = document.createElement('div');
-    container.id = 'user-profile-container';
+  // If the wrapper doesn't exist, create it
+  if (!userProfileWrapper) {
+    userProfileWrapper = document.createElement('div');
+    userProfileWrapper.id = 'user-profile-wrapper';
 
-    // Apply styles
-    container.style.display = 'flex';
-    container.style.flexDirection = 'column';
-    container.style.alignItems = 'start';
-    container.style.width = '700px';
-    container.style.maxHeight = '50vh';
-    container.style.padding = '20px';
-    container.style.backgroundColor = 'rgb(27, 27, 27)';
-    container.style.left = '50%';
-    container.style.position = 'absolute';
-    container.style.top = '50%';
-    container.style.transform = 'translate(-50%, -50%)';
-    container.style.zIndex = '910';
+    // Apply styles to the main wrapper
+    userProfileWrapper.style.display = 'flex';
+    userProfileWrapper.style.flexDirection = 'column';
+    userProfileWrapper.style.alignItems = 'start';
+    userProfileWrapper.style.width = '700px';
+    userProfileWrapper.style.maxHeight = '50vh';
+    userProfileWrapper.style.padding = '20px';
+    userProfileWrapper.style.backgroundColor = 'rgb(27, 27, 27)';
+    userProfileWrapper.style.left = '50%';
+    userProfileWrapper.style.position = 'absolute';
+    userProfileWrapper.style.top = '50%';
+    userProfileWrapper.style.transform = 'translate(-50%, -50%)';
+    userProfileWrapper.style.zIndex = '910';
 
     // Apply vertical scrolling and hide horizontal scrolling
-    container.style.overflowY = 'auto';
-    container.style.overflowX = 'hidden';
+    userProfileWrapper.style.overflowY = 'auto';
+    userProfileWrapper.style.overflowX = 'hidden';
 
     // Apply border-radius with !important using setProperty
-    container.style.setProperty('border-radius', '8px', 'important');
+    userProfileWrapper.style.setProperty('border-radius', '8px', 'important');
 
-    // Append the container to the document body
-    document.body.appendChild(container);
+    // Append the wrapper to the document body
+    document.body.appendChild(userProfileWrapper);
 
-    // Add the double-click event listener to remove the container
-    container.addEventListener('dblclick', function () {
-      copyContainerText(container);
-      container.remove(); // Remove the container when double-clicked
+    // Add the double-click event listener to remove the wrapper
+    userProfileWrapper.addEventListener('dblclick', function () {
+      copyContainerText(registeredDataContainer); // Copy the text content to the clipboard
+      userProfileWrapper.remove(); // Remove the wrapper when double-clicked
     });
   }
 
-  // Create a container for all the elements with inline-flex
-  const elementsContainer = document.createElement('div');
-  elementsContainer.style.display = 'flex';
-  elementsContainer.style.flexDirection = 'row'; // Stack elements horizontally
-  elementsContainer.style.alignItems = 'center'; // Align elements to the start
-  elementsContainer.style.padding = '2px';
-  elementsContainer.style.marginTop = '2px';
+  // Get or create the registeredDataContainer
+  let registeredDataContainer = document.getElementById('registered-data');
+  if (!registeredDataContainer) {
+    registeredDataContainer = document.createElement('div');
+    registeredDataContainer.id = 'registered-data';
+    registeredDataContainer.style.display = 'flex';
+    registeredDataContainer.style.flexDirection = 'column'; // Stack items vertically
+    registeredDataContainer.style.alignItems = 'start'; // Align items to the start
+    registeredDataContainer.style.padding = '2px';
+    registeredDataContainer.style.marginTop = '2px';
 
-  // Helper function to create a span element with an optional trailing space
-  function createSpanElement(content, color, appendSymbol = true, symbol = ' ') {
+    // Append the registeredDataContainer to the main wrapper once, not every time
+    userProfileWrapper.appendChild(registeredDataContainer);
+  }
+
+  // Helper function to create a registered element with an optional trailing space
+  function createRegisteredElement(content, color, appendSymbol = true, symbol = ' ') {
     const span = document.createElement('span');
-    span.style.padding = '2px'; // Small padding around the span
+    span.style.padding = '4px 4px'; // Add padding to the span
     span.textContent = content + (appendSymbol ? symbol : ''); // Add the symbol only if needed
     span.style.color = color; // Apply the color to the span
     return span;
   }
 
-  // Create and append the ID span element
-  elementsContainer.appendChild(createSpanElement(userData.id, 'lightblue'));
+  // Helper function to create a registered row container
+  function createRegisteredRow(contentElements) {
+    const registeredRow = document.createElement('div');
+    registeredRow.id = 'registered-item';
+    registeredRow.style.display = 'flex';
+    registeredRow.style.flexDirection = 'row'; // Stack items horizontally
+    registeredRow.style.alignItems = 'center'; // Align items to the center
+    registeredRow.style.padding = '2px';
+    registeredRow.style.marginTop = '2px';
 
-  // Create and append the login span element (non-clickable)
-  const loginSpan = createSpanElement(userData.login, 'lightgreen');
-  loginSpan.style.cursor = 'pointer'; // Make it look clickable
-  loginSpan.addEventListener('click', () => {
+    contentElements.forEach(element => registeredRow.appendChild(element));
+    return registeredRow;
+  }
+
+  // Create elements for id, login, rank, registeredDate and avatar, and group them into one row
+  const idElement = createRegisteredElement(userData.id, 'lightblue');
+  const loginElement = createRegisteredElement(userData.login, 'lightgreen');
+  loginElement.style.cursor = 'pointer';
+  loginElement.addEventListener('click', () => {
     const userProfileUrl = `https://klavogonki.ru/u/#/${userData.id}`;
     window.open(userProfileUrl, '_blank'); // Open profile in a new tab
   });
-  elementsContainer.appendChild(loginSpan); // Append login span after adding event listener
-
-  // Create and append the rank span element
-  elementsContainer.appendChild(createSpanElement(userData.rank, 'lightyellow'));
-
-  // Create and append the registered date span element without a trailing space
-  elementsContainer.appendChild(createSpanElement(userData.registeredDate, 'orange', false));
+  const rankElement = createRegisteredElement(userData.rank, 'lightyellow');
+  const registeredDateElement = createRegisteredElement(userData.registeredDate, 'orange', false);
 
   // Check if avatarTimestamp is not '00' before creating the avatar element
+  let avatarElement = null;
   if (userData.avatarTimestamp !== '00') {
-    // Create the avatar element directly inside the container
-    const avatarElement = document.createElement('img');
+    avatarElement = document.createElement('img');
     avatarElement.src = `https://klavogonki.ru/storage/avatars/${userData.id}_big.png?updated=${userData.avatarTimestamp}`;
     avatarElement.alt = `👤`;
     avatarElement.style.height = '25px';
+    avatarElement.style.marginLeft = '4px'; // Add margin to separate from the text
+    avatarElement.style.transformOrigin = 'left left'; // Set the transform origin to the top-left corner
     avatarElement.style.setProperty('border-radius', '0', 'important');
-    avatarElement.style.padding = '2px'; // Padding around the image
-    avatarElement.style.marginBottom = '4px'; // Optional: Space below the avatar
     avatarElement.style.cursor = 'pointer';
+
     // Add transition for smooth effects
     avatarElement.style.transition = 'transform 0.15s ease-in, border-radius 0.15s ease-in';
     avatarElement.style.zIndex = '0';
@@ -280,61 +296,61 @@ function createUserProfileContainer(userData) {
       avatarElement.style.setProperty('border-radius', '0', 'important'); // Reset border-radius to 0 with !important
       avatarElement.style.zIndex = '0';
     });
-
-    // Append the avatar element to the container
-    elementsContainer.appendChild(avatarElement);
   }
 
-  // Append the elementsContainer to the main container
-  container.appendChild(elementsContainer);
+  // Combine all elements into one row
+  const rowContent = [idElement, loginElement, rankElement, registeredDateElement];
+  avatarElement && rowContent.push(avatarElement);
 
-  // Automatically scroll to the bottom of the container after appending new content
-  container.scrollTop = container.scrollHeight;
+  registeredDataContainer.appendChild(createRegisteredRow(rowContent));
 
-  // Call createUserCounter after everything is created, passing the container directly
-  createUserCounter(container);
+  // Update the user counter after adding a new profile container
+  createUserCounter(userProfileWrapper, registeredDataContainer);
+
+  // Automatically scroll to the bottom of the wrapper after appending new content
+  userProfileWrapper.scrollTop = userProfileWrapper.scrollHeight;
 }
 
 /**
- * Creates a new counter inside the container to display the number of child elements.
- * Removes the previous counter and creates a new one at the end of the container every time.
+ * Creates or updates a counter inside the specified container to display the number of child elements
+ * from the target container, or from the counter container if no target container is provided. 
+ * The `.user-counter` element is excluded from the count.
  *
- * @param {HTMLElement} container - The container element where the counter will be created.
- * @throws {Error} - Throws an error if the provided container is not a valid HTMLElement.
+ * @param {HTMLElement} counterContainer - The container element where the counter will be created.
+ * @param {HTMLElement} [targetContainer] - The container element whose child elements will be counted.
+ * @throws {Error} - Throws an error if the provided counter container is not a valid HTMLElement.
  */
-function createUserCounter(container) {
-  // Check if the provided container is a valid HTML element
-  if (!container || !(container instanceof HTMLElement)) {
-    throw new Error("Invalid container element.");
+function createUserCounter(counterContainer, targetContainer = counterContainer) {
+  // Check if the provided counterContainer is a valid HTML element
+  if (!counterContainer || !(counterContainer instanceof HTMLElement)) {
+    throw new Error("Invalid counter container element.");
   }
 
-  // Find the existing counter and remove it if it exists
-  let existingCounter = container.querySelector(".user-counter");
-  if (existingCounter) {
-    existingCounter.remove(); // Remove the previous counter
+  // Find the existing counter or create a new one if it doesn't exist
+  let counter = counterContainer.querySelector(".user-counter");
+  if (!counter) {
+    counter = document.createElement("div");
+    counter.className = "user-counter"; // Assign a class name for styling
+
+    // Apply custom styles to the counter element
+    Object.assign(counter.style, {
+      padding: "16px", // Add padding
+      fontWeight: "bold", // Make the text bold
+      fontFamily: "Consolas", // Set a monospace font for consistency
+      fontSize: "16px", // Set the font size
+      color: "lightsalmon", // Set the text color
+    });
+
+    // Append the new counter as the last child of the counterContainer
+    counterContainer.appendChild(counter);
   }
 
-  // Create a new counter element
-  const counter = document.createElement("div");
-  counter.className = "user-counter"; // Assign a class name for styling
-
-  // Apply custom styles to the counter element
-  Object.assign(counter.style, {
-    padding: "16px", // Add padding
-    fontWeight: "bold", // Make the text bold
-    fontFamily: "Consolas", // Set a monospace font for consistency
-    fontSize: "16px", // Set the font size
-    color: "lightsalmon", // Set the text color
-  });
-
-  // Count the children excluding the counter itself
-  const childCount = Array.from(container.children).filter(child => !child.classList.contains("user-counter")).length;
+  // Count the children of the targetContainer, excluding the .user-counter element
+  const childCount = Array.from(targetContainer.children)
+    .filter(child => !child.classList.contains("user-counter")).length;
 
   // Update the counter text
   counter.textContent = childCount;
-
-  // Append the new counter as the last child of the container
-  container.appendChild(counter);
 }
 
 let isRightClickHeld = false;
@@ -342,7 +358,8 @@ let timerId = null;
 
 document.body.addEventListener('mousedown', (event) => {
   if (event.button === 2) { // Right mouse button
-    const userProfileContainer = document.getElementById('user-profile-container');
+    // Get the user profile container if it exists
+    const userProfileContainer = document.getElementById('user-profile-wrapper');
 
     // Start the timer for right mouse click hold (300ms)
     if (!timerId) {

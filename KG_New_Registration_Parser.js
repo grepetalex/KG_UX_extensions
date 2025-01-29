@@ -9,6 +9,8 @@
 // @grant        none
 // ==/UserScript==
 
+let stopParsingFlag = false;
+
 function getUserRegistrationsData() {
   return JSON.parse(localStorage.getItem('userRegistrationsData')) || [];
 }
@@ -83,9 +85,11 @@ function copyContainerText(container) {
 }
 
 async function parseUserRegistrations(startId) {
-  const maxRetries = 3;
-  const delay = 150;
-  let attempt = 0;
+  // Reset the stopParsingFlag before starting the parsing process
+  stopParsingFlag = false;
+  const maxRetries = 3; // Maximum number of retries for each ID
+  const delay = 150; // Delay in milliseconds between retries
+  let attempt = 0; // Counter for the number of attempts for each ID
 
   // If startId is not provided, check the saved lastParsedId in localStorage
   const savedData = getUserRegistrationsData();
@@ -121,6 +125,12 @@ async function parseUserRegistrations(startId) {
     if (processedIds.has(currentId)) {
       console.log(`User ID ${currentId} already exists in localStorage, stopping the parsing process.`);
       break; // Stop the process completely
+    }
+
+    // Check if stopParsingFlag is set to true
+    if (stopParsingFlag) {
+      console.log('Parsing process stopped by user.');
+      break;
     }
 
     try {
@@ -318,6 +328,9 @@ function createUserProfileContainer(userData) {
   // Update the user counter after adding a new profile container
   createUserCounter(userProfileWrapper, registeredDataContainer);
 
+  // Create and append the input container
+  createInputContainer(userProfileWrapper, registeredDataContainer);
+
   // Automatically scroll to the bottom of the wrapper after appending new content
   userProfileWrapper.scrollTop = userProfileWrapper.scrollHeight;
 }
@@ -362,6 +375,121 @@ function createUserCounter(counterContainer, targetContainer = counterContainer)
 
   // Update the counter text
   counter.textContent = childCount;
+}
+
+/**
+ * Creates an input container with a text input and buttons for setting the start ID and stopping the parsing.
+ * Appends the input container to the specified parent container if it doesn't already exist.
+ *
+ * @param {HTMLElement} parentContainer - The container element where the input container will be appended.
+ * @param {HTMLElement} targetContainer - The container element whose inner HTML will be cleared.
+ * @throws {Error} - Throws an error if the provided parent container is not a valid HTMLElement.
+ */
+function createInputContainer(parentContainer, targetContainer) {
+  // Check if the provided parentContainer is a valid HTML element
+  if (!parentContainer || !(parentContainer instanceof HTMLElement)) {
+    throw new Error("Invalid parent container element.");
+  }
+
+  // Check if the input container already exists
+  if (parentContainer.querySelector('.input-container')) {
+    return; // Exit the function if the input container already exists
+  }
+
+  // Create a container for both the input and button elements
+  const inputContainer = document.createElement('div');
+  inputContainer.className = 'input-container'; // Assign a class name for identification
+  inputContainer.style.display = 'flex';
+  inputContainer.style.flexDirection = 'row';
+  inputContainer.style.width = '100%';
+  inputContainer.style.marginBottom = '10px';
+
+  // Create a text input for setting the start ID
+  const startIdInput = document.createElement('input');
+  startIdInput.type = 'text';
+  startIdInput.placeholder = 'Enter start ID';
+  startIdInput.style.backgroundColor = '#111111';
+  startIdInput.style.setProperty('color', 'antiquewhite', 'important');
+  startIdInput.style.marginRight = '10px';
+  startIdInput.style.border = 'none';
+  startIdInput.style.padding = '8px';
+  startIdInput.style.flex = '1';
+  startIdInput.style.boxSizing = 'border-box';
+  inputContainer.appendChild(startIdInput);
+
+  // Create a button to start parsing from the entered ID
+  const parseButton = document.createElement('button');
+  parseButton.textContent = 'Start Parsing';
+  parseButton.style.padding = '10px 20px';
+  parseButton.style.marginRight = '10px';
+  parseButton.style.border = 'none';
+  parseButton.style.backgroundColor = '#4CAF50';
+  parseButton.style.color = '#1b1b1b';
+  parseButton.style.cursor = 'pointer';
+  parseButton.style.flex = '0 0 auto';
+  parseButton.style.boxSizing = 'border-box';
+  addHoverEffect(parseButton);
+  inputContainer.appendChild(parseButton);
+
+  // Create a button to stop parsing
+  const stopButton = document.createElement('button');
+  stopButton.textContent = 'Stop Parsing';
+  stopButton.style.padding = '10px 20px';
+  stopButton.style.border = 'none';
+  stopButton.style.backgroundColor = '#d55555';
+  stopButton.style.color = '#1b1b1b';
+  stopButton.style.cursor = 'pointer';
+  stopButton.style.flex = '0 0 auto';
+  stopButton.style.boxSizing = 'border-box';
+  addHoverEffect(stopButton);
+  inputContainer.appendChild(stopButton);
+
+  // Function to start parsing
+  const startParsing = () => {
+    const startId = parseInt(startIdInput.value, 10);
+    if (!isNaN(startId)) {
+      targetContainer.innerHTML = ''; // Clear the inner HTML of the target container
+      parseUserRegistrations(startId);
+    } else {
+      alert('Please enter a valid ID.');
+    }
+  };
+
+  // Function to stop parsing
+  const stopParsing = () => {
+    stopParsingFlag = true;
+  };
+
+  // Add click event listener to the button
+  parseButton.addEventListener('click', startParsing);
+
+  // Add click event listener to the stop button
+  stopButton.addEventListener('click', stopParsing);
+
+  // Add keypress event listener to the input to start parsing on Enter key
+  startIdInput.addEventListener('keypress', (event) => {
+    if (event.key === 'Enter') {
+      startParsing();
+    }
+  });
+
+  // Append the input container to the parent container
+  parentContainer.appendChild(inputContainer);
+}
+
+/**
+ * Adds hover effect to the specified button element to change its brightness on mouse over and out.
+ *
+ * @param {HTMLElement} button - The button element to which the hover effect will be added.
+ */
+function addHoverEffect(button) {
+  button.style.transition = 'filter 0.15s ease-in-out';
+  button.addEventListener('mouseover', () => {
+    button.style.filter = 'brightness(1.2)';
+  });
+  button.addEventListener('mouseout', () => {
+    button.style.filter = 'brightness(1)';
+  });
 }
 
 let isRightClickHeld = false;

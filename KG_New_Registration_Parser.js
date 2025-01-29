@@ -9,7 +9,8 @@
 // @grant        none
 // ==/UserScript==
 
-let stopParsingFlag = false;
+let stopParsingFlag = false; // Flag to stop the parsing process
+let manualParsing = false; // Flag to indicate manual parsing mode
 
 function getUserRegistrationsData() {
   return JSON.parse(localStorage.getItem('userRegistrationsData')) || [];
@@ -200,8 +201,10 @@ async function parseUserRegistrations(startId) {
   // Update localStorage with sorted data
   saveUserRegistrationsData(savedData);
 
-  // Update the lastParsedId key in localStorage with the ID of the last processed user
-  localStorage.setItem('lastParsedId', currentId - 1);
+  // Update the lastParsedId key in localStorage with the ID of the last processed user if not manual parsing
+  if (!manualParsing) {
+    localStorage.setItem('lastParsedId', currentId - 1);
+  }
 
   console.log(`Parsing process stopped.`);
 }
@@ -457,7 +460,9 @@ function createInputContainer(parentContainer, targetContainer) {
   // Function to start parsing
   const startParsing = () => {
     const startId = parseInt(startIdInput.value, 10);
-    if (!isNaN(startId)) {
+    // Check if the entered value is a valid number
+    if (!isNaN(startId)) { // If the entered value is a valid number
+      toggleManualParsing(); // Enable manual parsing mode
       targetContainer.innerHTML = ''; // Clear the inner HTML of the target container
       parseUserRegistrations(startId);
     } else {
@@ -468,6 +473,12 @@ function createInputContainer(parentContainer, targetContainer) {
   // Function to stop parsing
   const stopParsing = () => {
     stopParsingFlag = true;
+  };
+
+  // Function to toggle the manual parsing flag
+  const toggleManualParsing = () => {
+    manualParsing = true;
+    console.log(`Manual parsing mode: ${manualParsing ? 'ON' : 'OFF'}`);
   };
 
   // Add click event listener to the button

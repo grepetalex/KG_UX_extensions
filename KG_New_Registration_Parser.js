@@ -350,7 +350,7 @@ function createUserProfileContainer(userData) {
 
 /**
  * Creates or updates a counter inside the specified container to display the number of child elements
- * from the target container, or from the counter container if no target container is provided. 
+ * from the target container, or from the counter container if no target container is provided.
  * The `.user-counter` element is excluded from the count.
  *
  * @param {HTMLElement} counterContainer - The container element where the counter will be created.

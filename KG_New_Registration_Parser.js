@@ -88,10 +88,6 @@ function copyContainerText(container) {
 async function parseUserRegistrations(startId) {
   // Reset the stopParsingFlag before starting the parsing process
   stopParsingFlag = false;
-  const maxRetries = 3; // Maximum number of retries for each ID
-  const delay = 150; // Delay in milliseconds between retries
-  let attempt = 0; // Counter for the number of attempts for each ID
-
   // If startId is not provided, check the saved lastParsedId in localStorage
   const savedData = getUserRegistrationsData();
   if (!startId) {
@@ -176,22 +172,16 @@ async function parseUserRegistrations(startId) {
 
       // Increment the ID by 1 after a successful fetch (ensure it's an integer)
       currentId = Number(currentId) + 1; // Ensure currentId is treated as a number
-      attempt = 0; // Reset attempt counter
 
     } catch (error) {
-      attempt++;
-
-      console.log(`Error fetching data for ID ${currentId}:`, error.message);
-
-      // If max retries are reached for this ID, stop
-      if (attempt >= maxRetries) {
-        console.log(`Max retries reached for ID ${currentId}. Stopping the parsing process.`);
+      console.log(`Failed to fetch data for ID ${currentId}:`, error.message);
+      if (!manualParsing) {
+        console.log(`Stopping the automatic parsing process due to an error.`);
         break;
+      } else {
+        console.log(`Continuing to fetch data for ID ${currentId + 1}.`);
+        currentId = Number(currentId) + 1; // Increment the ID by 1 and continue
       }
-
-      // Retrying the same ID
-      console.log(`Retrying attempt ${attempt} for ID ${currentId}...`);
-      await new Promise(resolve => setTimeout(resolve, delay)); // Wait before retrying
     }
   }
 
@@ -205,8 +195,7 @@ async function parseUserRegistrations(startId) {
   if (!manualParsing) {
     localStorage.setItem('lastParsedId', currentId - 1);
   }
-
-  console.log(`Parsing process stopped.`);
+  console.log(`Parsing process completed.`);
 }
 
 parseUserRegistrations();
@@ -344,8 +333,12 @@ function createUserProfileContainer(userData) {
   // Create and append the input container
   createInputContainer(userProfileWrapper, registeredDataContainer);
 
-  // Automatically scroll to the bottom of the wrapper after appending new content
-  userProfileWrapper.scrollTop = userProfileWrapper.scrollHeight;
+  // Check if the user is scrolled up to prevent auto-scrolling
+  const isUserScrolledUp = userProfileWrapper.scrollHeight - userProfileWrapper.scrollTop - userProfileWrapper.clientHeight > 200;
+  // Scroll to the bottom only if the user is not scrolled up
+  if (!isUserScrolledUp) {
+    userProfileWrapper.scrollTop = userProfileWrapper.scrollHeight;
+  }
 }
 
 /**

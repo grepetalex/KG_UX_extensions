@@ -12,6 +12,34 @@
 let stopParsingFlag = false; // Flag to stop the parsing process
 let manualParsing = false; // Flag to indicate manual parsing mode
 
+// Add the Montserrat font to the document head for parsing container
+const injectParserStyles = document.createElement('style');
+injectParserStyles.classList.add('font-for-parsing-container');
+injectParserStyles.innerHTML = `
+  #user-profile-wrapper * {
+    font-family: 'Montserrat', sans-serif !important;
+  }
+  #user-profile-wrapper button,
+  .user-counter {
+    font-weight: bold !important;
+  }
+`;
+// Append the styles to the document head
+document.head.appendChild(injectParserStyles);
+
+// Rank color mapping
+const rankColors = {
+  'Экстракибер': '#06B4E9', // Light Blue
+  'Кибергонщик': '#5681ff', // Medium Blue
+  'Супермен': '#B543F5', // Purple
+  'Маньяк': '#DA0543', // Red
+  'Гонщик': '#FF8C00', // Orange
+  'Профи': '#C1AA00', // Yellow
+  'Таксист': '#2DAB4F', // Green
+  'Любитель': '#61B5B3', // Light Cyan
+  'Новичок': '#AFAFAF' // Grey
+};
+
 function getUserRegistrationsData() {
   return JSON.parse(localStorage.getItem('userRegistrationsData')) || [];
 }
@@ -287,7 +315,8 @@ function createUserProfileContainer(userData) {
     const userProfileUrl = `https://klavogonki.ru/u/#/${userData.id}`;
     window.open(userProfileUrl, '_blank'); // Open profile in a new tab
   });
-  const rankElement = createRegisteredElement(userData.rank, 'lightyellow');
+  const rankColor = rankColors[userData.rank] || 'dimgray'; // Default to dimgray if rank is not found
+  const rankElement = createRegisteredElement(userData.rank, rankColor);
   const registeredDateElement = createRegisteredElement(userData.registeredDate, 'orange', false);
 
   // Check if avatarTimestamp is not '00' before creating the avatar element
@@ -365,8 +394,6 @@ function createUserCounter(counterContainer, targetContainer = counterContainer)
     // Apply custom styles to the counter element
     Object.assign(counter.style, {
       padding: "16px", // Add padding
-      fontWeight: "bold", // Make the text bold
-      fontFamily: "Consolas", // Set a monospace font for consistency
       fontSize: "16px", // Set the font size
       color: "lightsalmon", // Set the text color
     });
@@ -425,7 +452,7 @@ function createInputContainer(parentContainer, targetContainer) {
 
   // Create a button to start parsing from the entered ID
   const parseButton = document.createElement('button');
-  parseButton.textContent = 'Start Parsing';
+  parseButton.textContent = 'Parse';
   parseButton.style.padding = '10px 20px';
   parseButton.style.marginRight = '10px';
   parseButton.style.border = 'none';
@@ -439,7 +466,7 @@ function createInputContainer(parentContainer, targetContainer) {
 
   // Create a button to stop parsing
   const stopButton = document.createElement('button');
-  stopButton.textContent = 'Stop Parsing';
+  stopButton.textContent = 'Abort';
   stopButton.style.padding = '10px 20px';
   stopButton.style.border = 'none';
   stopButton.style.backgroundColor = '#d55555';

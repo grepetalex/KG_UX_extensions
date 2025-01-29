@@ -9,18 +9,42 @@
 // @grant        none
 // ==/UserScript==
 
+function getUserRegistrationsData() {
+  return JSON.parse(localStorage.getItem('userRegistrationsData')) || [];
+}
+
+function saveUserRegistrationsData(data) {
+  localStorage.setItem('userRegistrationsData', JSON.stringify(data));
+}
+
+function getCurrentDate() {
+  return new Date().toLocaleDateString('en-CA'); // Format: YYYY-MM-DD
+}
+
+// Function to convert seconds to a human-readable date format
+function convertSecondsToDate(seconds) {
+  const date = new Date(seconds * 1000);
+  return date.toISOString().slice(0, 19).replace('T', ' '); // Converts to 'YYYY-MM-DD HH:mm:ss' format
+}
+
+// Function to convert sec and usec to the 'updated' timestamp
+function convertToUpdatedTimestamp(sec, usec) {
+  // Create the full timestamp by combining sec and usec (in microseconds)
+  return sec.toString() + Math.floor(usec / 1000).toString();
+}
+
 function cleanUserRegistrationsData() {
   // Get the data from localStorage
-  let userRegistrationsData = JSON.parse(localStorage.getItem('userRegistrationsData'));
+  let userRegistrationsData = getUserRegistrationsData();
 
   // Check if data exists
-  if (!userRegistrationsData) {
+  if (!userRegistrationsData.length) {
     console.log("No user registrations data found.");
     return;
   }
 
   // Get the current date in YYYY-MM-DD format
-  const currentDate = new Date().toLocaleDateString('en-CA'); // Format: YYYY-MM-DD
+  const currentDate = getCurrentDate();
 
   // Filter the data, keeping only the records that match the current date
   const filteredData = userRegistrationsData.filter(user => {
@@ -34,7 +58,7 @@ function cleanUserRegistrationsData() {
     console.log("Filtered user registrations data (removed non-today's data):", filteredData);
 
     // Save the filtered data back to localStorage
-    localStorage.setItem('userRegistrationsData', JSON.stringify(filteredData));
+    saveUserRegistrationsData(filteredData);
 
     console.log("User registrations data updated. Only today's data remains.");
   }
@@ -43,7 +67,7 @@ function cleanUserRegistrationsData() {
 // Function to copy the text content from all child elements of a given container to the clipboard
 function copyContainerText(container) {
   // Get the current date in the format YYYY-MM-DD
-  const currentDate = new Date().toISOString().split('T')[0];
+  const currentDate = getCurrentDate();
 
   // Collect text content from all child elements and join them with a newline
   const textContent = Array.from(container.children)
@@ -64,8 +88,8 @@ async function parseUserRegistrations(startId) {
   let attempt = 0;
 
   // If startId is not provided, check the saved lastParsedId in localStorage
+  const savedData = getUserRegistrationsData();
   if (!startId) {
-    const savedData = JSON.parse(localStorage.getItem('userRegistrationsData')) || [];
     const lastParsedId = localStorage.getItem('lastParsedId');
 
     // If lastParsedId exists, start from it; otherwise, start from the last ID + 1
@@ -82,7 +106,6 @@ async function parseUserRegistrations(startId) {
   console.log(`Starting to parse from user ID: ${startId}`);
 
   // Get saved data and IDs already processed
-  const savedData = JSON.parse(localStorage.getItem('userRegistrationsData')) || [];
   const processedIds = new Set(savedData.map(item => item.id)); // Using ID to ensure unique entries
 
   // Check if the starting ID already exists in localStorage, if so stop the process
@@ -155,24 +178,12 @@ async function parseUserRegistrations(startId) {
   savedData.sort((a, b) => a.id - b.id);
 
   // Update localStorage with sorted data
-  localStorage.setItem('userRegistrationsData', JSON.stringify(savedData));
+  saveUserRegistrationsData(savedData);
 
   // Update the lastParsedId key in localStorage with the ID of the last processed user
   localStorage.setItem('lastParsedId', currentId - 1);
 
   console.log(`Parsing process stopped.`);
-}
-
-// Function to convert seconds to a human-readable date format
-function convertSecondsToDate(seconds) {
-  const date = new Date(seconds * 1000);
-  return date.toISOString().slice(0, 19).replace('T', ' '); // Converts to 'YYYY-MM-DD HH:mm:ss' format
-}
-
-// Function to convert sec and usec to the 'updated' timestamp
-function convertToUpdatedTimestamp(sec, usec) {
-  // Create the full timestamp by combining sec and usec (in microseconds)
-  return sec.toString() + Math.floor(usec / 1000).toString();
 }
 
 parseUserRegistrations();
@@ -275,7 +286,7 @@ function createUserProfileContainer(userData) {
     avatarElement.alt = `👤`;
     avatarElement.style.height = '25px';
     avatarElement.style.marginLeft = '4px'; // Add margin to separate from the text
-    avatarElement.style.transformOrigin = 'left left'; // Set the transform origin to the top-left corner
+    avatarElement.style.transformOrigin = 'top left'; // Set the transform origin to the top left corner
     avatarElement.style.setProperty('border-radius', '0', 'important');
     avatarElement.style.cursor = 'pointer';
 
@@ -369,7 +380,7 @@ document.body.addEventListener('mousedown', (event) => {
           userProfileContainer.remove(); // Remove the container after (300ms)
         } else {
           // Fetch saved user registration data from localStorage (or use an empty array if no data exists)
-          const savedData = JSON.parse(localStorage.getItem('userRegistrationsData')) || [];
+          const savedData = getUserRegistrationsData();
           savedData.forEach(createUserProfileContainer); // Create user profile containers from saved data
         }
       }, 300); // (300ms)

@@ -5466,6 +5466,51 @@
       `${String(adjustedTime.getSeconds()).padStart(2, '0')}`;
   }
 
+  /**
+   * Removes a message or all messages from a specific user from the DOM and updates localStorage.
+   * @param {HTMLElement} messageElement - The message element to remove.
+   * @param {boolean} removeMultiple - If true, removes all messages from the same user.
+   */
+  function removeMessage(messageElement, removeMultiple = false) {
+    // Extract time and username from the message element
+    const time = messageElement.querySelector('.message-time').textContent;
+    const username = messageElement.querySelector('.message-username').textContent;
+
+    // Retrieve localStorage personalMessages data
+    const personalMessages = JSON.parse(localStorage.getItem('personalMessages')) || {};
+
+    if (removeMultiple) {
+      // Remove all DOM elements from the same user
+      document.querySelectorAll('.message-item').forEach((element) => {
+        const elementUsername = element.querySelector('.message-username').textContent;
+        if (elementUsername === username) {
+          element.remove(); // Remove the DOM element
+
+          // Remove the corresponding entry from localStorage
+          const elementTime = element.querySelector('.message-time').textContent;
+          const messageKey = `[${elementTime}]_${elementUsername}`;
+          delete personalMessages[messageKey];
+        }
+      });
+    } else {
+      // Remove only the specific message
+      const messageKey = `[${time}]_${username}`;
+      if (personalMessages[messageKey]) {
+        delete personalMessages[messageKey]; // Remove from localStorage
+        messageElement.remove(); // Remove the DOM element
+      }
+    }
+
+    // Update localStorage
+    localStorage.setItem('personalMessages', JSON.stringify(personalMessages));
+
+    // Update the total message count displayed in the personal messages button
+    const messagesCountElement = document.querySelector('.personal-messages-button .total-message-count');
+    if (messagesCountElement) {
+      messagesCountElement.textContent = Object.keys(personalMessages).length;
+    }
+  }
+
   // Function to display the personal messages panel
   function showPersonalMessagesPanel() {
     // Remove any previous panel before creating a new one
@@ -5760,6 +5805,11 @@
 
       // Add click event only if userId is defined
       usernameElement.addEventListener('click', () => {
+        // Remove multiple messages on Ctrl + LMB click
+        if (isCtrlKeyPressed) {
+          removeMessage(messageElement, true);
+          return; // Exit the function
+        }
         if (userId) { // Check if userId is defined
           const url = `https://klavogonki.ru/u/#/${userId}/`; // Construct the user profile URL
           window.open(url, '_blank', 'noopener,noreferrer'); // Open in a new tab
@@ -5787,32 +5837,9 @@
 
       // Add click event listener for the messageTextElement
       messageTextElement.addEventListener('click', async function () {
+        // Remove single message-item on Ctrl + LMB click
         if (isCtrlKeyPressed) {
-          // Remove the message-item from the DOM
-          messageElement.remove();
-          // Construct the localStorage data selector for personal messages data
-          const time = messageElement.querySelector('.message-time').textContent;
-          const username = messageElement.querySelector('.message-username').textContent;
-
-          // Construct the message key for personal messages data
-          const messageKey = `[${time}]_${username}`;
-
-          // Retrieve localStorage personalMessages data
-          const personalMessages = JSON.parse(localStorage.getItem('personalMessages')) || {};
-
-          // Check if the message exists in personalMessages
-          if (personalMessages[messageKey]) {
-            // Remove the message from the personalMessages object
-            delete personalMessages[messageKey];
-            // Update the localStorage personalMessages data
-            localStorage.setItem('personalMessages', JSON.stringify(personalMessages));
-            // Update the total message count displayed in the personal messages button
-            const messagesCountElement = document.querySelector('.personal-messages-button .total-message-count');
-            if (messagesCountElement) {
-              messagesCountElement.textContent = Number(messagesCountElement.textContent) - 1;
-            }
-          }
-
+          removeMessage(messageElement);
           return; // Exit the function
         }
 

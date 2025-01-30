@@ -6162,8 +6162,6 @@
   // Toggles the visibility of .message-item elements that do not contain a .mention child element
   async function toggleMentionVisibility() {
     visibleMentionMessages = !visibleMentionMessages; // Toggle the global state
-    console.log(visibleMentionMessages); // Debug log
-
     document.querySelectorAll('.message-item').forEach(item => {
       if (item.querySelector('.mention')) return;
       item.style.display = visibleMentionMessages ? 'none' : '';

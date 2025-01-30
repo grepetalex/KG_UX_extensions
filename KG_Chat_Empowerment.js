@@ -8982,7 +8982,10 @@
     if (chatField) {
       new MutationObserver(mutations => {
         mutations.forEach(mutation => {
-          if (mutation.attributeName === 'disabled') handleChatStateChange();
+          if (mutation.attributeName === 'disabled') {
+            // Handle the chat state change after a dynamic timeout
+            setTimeout(handleChatStateChange, timeoutDuration);
+          }
         });
       }).observe(chatField, { attributes: true });
     }
@@ -8990,7 +8993,6 @@
     // Handle the chat state change after a dynamic timeout
     setTimeout(handleChatStateChange, timeoutDuration);
   }
-
 
   // CHAT SWITCHER
 

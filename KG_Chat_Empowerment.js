@@ -536,7 +536,7 @@
       messagesContainer.lastElementChild.appendChild(staticChatNotification);
 
       // Call the function to scroll to the bottom of the chat
-      scrollMessages();
+      scrollMessagesToBottom();
     } // Static notifications END
 
     // Handle dynamic notifications only if dynamic notifications are enabled for all users
@@ -836,7 +836,7 @@
                   });
 
                   // Call the function to scroll to the bottom of the specified container
-                  scrollMessages(containerType);
+                  scrollMessagesToBottom(containerType);
                 } else {
                   // Handle the case where the domain is not trusted
                   console.error("Not a trusted domain:", link.href);
@@ -1069,7 +1069,7 @@
     }
 
     // Call the function to scroll to the bottom of the specified container
-    scrollMessages(containerType);
+    scrollMessagesToBottom(containerType);
   } // end convertYoutubeLinksToIframe
 
   const empowermentButtonsMargin = 4;
@@ -3677,7 +3677,7 @@
   const scrollThreshold = 600;
 
   // Scrolls the specified container to the bottom if the user has scrolled close enough
-  function scrollMessages(containerType = 'generalMessages') {
+  function scrollMessagesToBottom(containerType = 'generalMessages') {
     // Define a mapping for container types to their respective selectors
     const containerSelectors = {
       generalMessages: '.messages-content', // For general chat
@@ -3707,6 +3707,28 @@
         container.scrollTop = container.scrollHeight;
       }
     }
+  }
+
+  // Function to scroll messages to the middle of the parent container
+  async function scrollMessagesToMiddle(parent, element) {
+    const { top, height } = element.getBoundingClientRect(); // Get the position and height of the found element
+    const { top: parentTop, height: parentHeight } = parent.getBoundingClientRect(); // Get the position and height of the parent
+
+    // Calculate the middle position of the parent container
+    const parentMiddle = parentTop + parentHeight / 2;
+
+    // Determine how far to scroll to center the found element
+    const scrollOffset = top - parentMiddle + height / 2;
+
+    // Scroll to the found element to center it within the parent
+    parent.scrollBy({
+      top: scrollOffset,
+      behavior: 'smooth'
+    });
+
+    await new Promise(resolve => setTimeout(resolve, 500)); // Wait for the scroll to complete
+    parent.style.scrollBehavior = 'auto'; // Reset scroll behavior
+    addShakeEffect(element); // Add a shake effect to the found element
   }
 
   function applyChatMessageGrouping() {
@@ -4614,7 +4636,7 @@
               // Call the function to apply the chat message grouping
               applyChatMessageGrouping();
               // Call the function to scroll to the bottom of the chat
-              scrollMessages();
+              scrollMessagesToBottom();
               // Call the banSpammer function to track and handle potential spam messages
               banSpammer();
               // Call the function to show the latest popup message
@@ -5426,7 +5448,7 @@
   createPersonalMessagesButton();
 
   // Find chat message by time in range and matching username
-  function findChatMessage(targetTime, targetUsername, allowScroll) {
+  async function findChatMessage(targetTime, targetUsername, allowScroll) {
     const parent = document.querySelector('.messages-content'); // Chat container
     if (!parent) return null; // Return null if the container isn't found
 
@@ -5466,32 +5488,11 @@
       );
     }
 
-    if (foundElement) {
-      // Scroll to the found element if allowScroll is true
-      if (allowScroll) {
-        const { top, height } = foundElement.getBoundingClientRect(); // Get the position and height of the found element
-        const { top: parentTop, height: parentHeight } = parent.getBoundingClientRect(); // Get the position and height of the parent
-
-        // Calculate the middle position of the parent container
-        const parentMiddle = parentTop + parentHeight / 2;
-
-        // Determine how far to scroll to center the found element
-        const scrollOffset = top - parentMiddle + height / 2;
-
-        // Scroll to the found element to center it within the parent
-        parent.scrollBy({
-          top: scrollOffset,
-          behavior: 'smooth'
-        });
-
-        setTimeout(() => (parent.style.scrollBehavior = 'auto'), 500); // Reset scroll behavior
-        setTimeout(() => addShakeEffect(foundElement), 300); // Add shake effect
-      }
-      return foundElement; // Return the found element
+    if (foundElement && allowScroll) {
+      await scrollMessagesToMiddle(parent, foundElement); // Call the extracted scrolling function
     }
 
-    // console.log('No matching element found.');
-    return false; // Return false if no match is found
+    return foundElement || false; // Return found element or false if not found
   }
 
   /**
@@ -6162,11 +6163,15 @@
     return null; // Return null if no user found
   }
 
+  let visibleMentionMessages = false; // Initialize the visibility state of mention messages
   // Toggles the visibility of .message-item elements that do not contain a .mention child element
-  function toggleMentionVisibility() {
+  async function toggleMentionVisibility() {
+    visibleMentionMessages = !visibleMentionMessages; // Toggle the global state
+    console.log(visibleMentionMessages); // Debug log
+
     document.querySelectorAll('.message-item').forEach(item => {
       if (item.querySelector('.mention')) return;
-      item.style.display = item.style.display === 'none' ? '' : 'none';
+      item.style.display = visibleMentionMessages ? 'none' : '';
     });
   }
 
@@ -6340,8 +6345,8 @@
     applyHeaderButtonStyles(toggleMentionMessages, 'saddlebrown');
 
     // Add a click event listener to toggle the visibility of messages without mentions
-    toggleMentionMessages.addEventListener('click', () => {
-      toggleMentionVisibility();
+    toggleMentionMessages.addEventListener('click', async () => {
+      await toggleMentionVisibility();
     });
 
     // Append the toggle mention messages component to the control panel
@@ -6662,6 +6667,14 @@
         messageContainer.classList.add('message-item');
         messageContainer.style.padding = '0.2em'; // Set padding for the message container
         messageContainer.style.display = 'inline-flex';
+        messageContainer.style.cursor = 'pointer'; // Set cursor to pointer on hover for click effect
+        // Attach click event to scroll the chat logs container to the middle of the parent container on LMB click
+        messageContainer.addEventListener('click', async () => {
+          // Call toggleMentionVisibility to show all messages and scroll when a message is clicked on visibleMentionMessages is true
+          if (visibleMentionMessages) await toggleMentionVisibility();
+          // Use helper function to scroll the chat logs container to the middle of the parent container
+          await scrollMessagesToMiddle(chatLogsContainer, messageContainer);
+        });
 
         // Create time element
         const timeElement = document.createElement('span');
@@ -9250,7 +9263,7 @@
         // Call the function to apply the chat message grouping
         applyChatMessageGrouping();
         // Call the function to scroll to the bottom of the chat
-        scrollMessages();
+        scrollMessagesToBottom();
         // Call the function to refresh the user list and clear the cache if needed
         refreshFetchedUsers(false, cacheRefreshThresholdHours);
         // Refresh experimental custom chat user list on old list changes

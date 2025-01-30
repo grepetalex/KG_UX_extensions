@@ -9,8 +9,9 @@
 // @grant        none
 // ==/UserScript==
 
-let stopParsingFlag = false; // Flag to stop the parsing process
+let stopParsing = false; // Flag to stop the parsing process
 let manualParsing = false; // Flag to indicate manual parsing mode
+let firstPageLoad = true; // Flag to indicate the first page load
 
 // Add the Montserrat font to the document head for parsing container
 const injectParserStyles = document.createElement('style');
@@ -22,6 +23,13 @@ injectParserStyles.innerHTML = `
   #user-profile-wrapper button,
   .user-counter {
     font-weight: bold !important;
+  }
+  .fresh-data {
+    animation: highlight 0.5s ease-out;
+  }
+  @keyframes highlight {
+    0% { background-color: darkgreen; }
+    100% { background-color: transparent; }
   }
 `;
 // Append the styles to the document head
@@ -39,6 +47,12 @@ const rankColors = {
   'Любитель': '#61B5B3', // Light Cyan
   'Новичок': '#AFAFAF' // Grey
 };
+
+// Function to add highlight animation to the registered item
+function addHighlightAnimation(registeredItem) {
+  // Add the fresh-data class to the registered item to indicate new data with a highlight animation
+  registeredItem.classList.add('fresh-data');
+}
 
 // Function to get user registrations data from localStorage
 function getUserRegistrationsData() {
@@ -123,8 +137,8 @@ function copyContainerText(container) {
 }
 
 async function parseUserRegistrations(startId) {
-  // Reset the stopParsingFlag before starting the parsing process
-  stopParsingFlag = false;
+  // Reset the stopParsing before starting the parsing process
+  stopParsing = false;
   // If startId is not provided, check the saved lastParsedId in localStorage
   const savedData = getUserRegistrationsData();
   if (!startId) {
@@ -171,8 +185,8 @@ async function parseUserRegistrations(startId) {
       break; // Stop the process completely
     }
 
-    // Check if stopParsingFlag is set to true
-    if (stopParsingFlag) {
+    // Check if stopParsing is set to true
+    if (stopParsing) {
       console.log('Parsing process stopped by user.');
       break;
     }
@@ -204,12 +218,18 @@ async function parseUserRegistrations(startId) {
       // Call the function to create the profile container when valid user data is available
       createUserProfileContainer(userData);
 
+      // Add highlight animation to the registered item if not manual parsing and not the first page load
+      if (!manualParsing && !firstPageLoad) {
+        // Get the last registered-item inside registered-data container
+        const registeredItem = document.getElementById('registered-data').lastChild;
+        addHighlightAnimation(registeredItem);
+      }
+
       // Update processedIds after adding new data to avoid duplicate entries in the future
       processedIds.add(currentId);
 
       // Increment the ID by 1 after a successful fetch (ensure it's an integer)
       currentId = Number(currentId) + 1; // Ensure currentId is treated as a number
-
     } catch (error) {
       console.log(`Failed to fetch data for ID ${currentId}:`, error.message);
       if (!manualParsing) {
@@ -233,6 +253,9 @@ async function parseUserRegistrations(startId) {
     saveLastParsedId(currentId - 1); // Save the ID of the last processed user
   }
   console.log(`Parsing process completed.`);
+
+  // Set firstPageLoad to false after the initial parsing process is completed
+  firstPageLoad = false;
 }
 
 parseUserRegistrations(); // Start the parsing after page load
@@ -287,7 +310,6 @@ function createUserProfileContainer(userData) {
     registeredDataContainer.style.flexDirection = 'column'; // Stack items vertically
     registeredDataContainer.style.alignItems = 'start'; // Align items to the start
     registeredDataContainer.style.padding = '2px';
-    registeredDataContainer.style.marginTop = '2px';
 
     // Append the registeredDataContainer to the main wrapper once, not every time
     userProfileWrapper.appendChild(registeredDataContainer);
@@ -444,7 +466,6 @@ function createInputContainer(parentContainer, targetContainer) {
   inputContainer.style.display = 'flex';
   inputContainer.style.flexDirection = 'row';
   inputContainer.style.width = '100%';
-  inputContainer.style.marginBottom = '10px';
 
   // Create a text input for setting the start ID
   const startIdInput = document.createElement('input');
@@ -501,7 +522,7 @@ function createInputContainer(parentContainer, targetContainer) {
 
   // Function to stop parsing
   const stopParsing = () => {
-    stopParsingFlag = true;
+    stopParsing = true;
   };
 
   // Function to toggle the manual parsing flag

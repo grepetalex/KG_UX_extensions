@@ -5787,6 +5787,35 @@
 
       // Add click event listener for the messageTextElement
       messageTextElement.addEventListener('click', async function () {
+        if (isCtrlKeyPressed) {
+          // Remove the message-item from the DOM
+          messageElement.remove();
+          // Construct the localStorage data selector for personal messages data
+          const time = messageElement.querySelector('.message-time').textContent;
+          const username = messageElement.querySelector('.message-username').textContent;
+
+          // Construct the message key for personal messages data
+          const messageKey = `[${time}]_${username}`;
+
+          // Retrieve localStorage personalMessages data
+          const personalMessages = JSON.parse(localStorage.getItem('personalMessages')) || {};
+
+          // Check if the message exists in personalMessages
+          if (personalMessages[messageKey]) {
+            // Remove the message from the personalMessages object
+            delete personalMessages[messageKey];
+            // Update the localStorage personalMessages data
+            localStorage.setItem('personalMessages', JSON.stringify(personalMessages));
+            // Update the total message count displayed in the personal messages button
+            const messagesCountElement = document.querySelector('.personal-messages-button .total-message-count');
+            if (messagesCountElement) {
+              messagesCountElement.textContent = Number(messagesCountElement.textContent) - 1;
+            }
+          }
+
+          return; // Exit the function
+        }
+
         // Call the function to search for the chat message by time in range and username
         const foundMessage = await findChatMessage(time, username, true);
         if (foundMessage) {

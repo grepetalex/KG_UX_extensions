@@ -5847,9 +5847,9 @@
         );
 
       // Add click event listener for the messageTextElement
-      messageTextElement.addEventListener('click', function () {
+      messageTextElement.addEventListener('click', async function () {
         // Call the function to search for the chat message by time in range and username
-        const foundMessage = findChatMessage(time, username, true);
+        const foundMessage = await findChatMessage(time, username, true);
         if (foundMessage) {
           // Fade out the cached messages panel if the message is found
           fadeTargetElement(cachedMessagesPanel, 'hide');
@@ -5889,9 +5889,9 @@
     });
 
     // Process the colorization logic in reverse order
-    messageElements.reverse().forEach(({ messageTextElement, time, username, type }) => {
+    messageElements.reverse().forEach(async ({ messageTextElement, time, username, type }) => {
       if (pingCheckCounter < maxPingChecks) {
-        pingMessages = findChatMessage(time, username, false);
+        pingMessages = await findChatMessage(time, username, false);
         pingCheckCounter++; // Increment the counter
 
         if (pingCheckCounter >= maxPingChecks) {

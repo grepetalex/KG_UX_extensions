@@ -8941,7 +8941,7 @@
     let timeoutDuration = parseInt(localStorage.getItem('chatTimeoutDuration')) || initialTimeoutDuration;
 
     // Function to handle changes when the chatField gets disabled
-    const handleChatStateChange = () => {
+    const handleChatStateChange = async () => {
       // Reset timeout to 3 seconds only once at the beginning, if it's not the default
       if (!chatField.disabled && timeoutDuration !== initialTimeoutDuration) {
         timeoutDuration = initialTimeoutDuration;
@@ -8972,26 +8972,27 @@
           timeoutDuration += 1000;
           localStorage.setItem('chatTimeoutDuration', timeoutDuration.toString());
 
-          // Reload the page immediately
+          // Reload the page after the timeout duration
+          await new Promise(resolve => setTimeout(resolve, timeoutDuration));
           window.location.reload();
         }
       }
     };
 
+    // Run the function once on page load
+    handleChatStateChange();
+
     // Observe the chatField for 'disabled' attribute changes
     if (chatField) {
-      new MutationObserver(mutations => {
+      const observer = new MutationObserver(mutations => {
         mutations.forEach(mutation => {
-          if (mutation.attributeName === 'disabled') {
-            // Handle the chat state change after a dynamic timeout
-            setTimeout(handleChatStateChange, timeoutDuration);
-          }
+          // Run the function when the 'disabled' attribute changes
+          if (mutation.attributeName === 'disabled') handleChatStateChange();
+          console.log('Mutation observer triggered:', mutation);
         });
-      }).observe(chatField, { attributes: true });
+      });
+      observer.observe(chatField, { attributes: true });
     }
-
-    // Handle the chat state change after a dynamic timeout
-    setTimeout(handleChatStateChange, timeoutDuration);
   }
 
   // CHAT SWITCHER
@@ -9242,14 +9243,13 @@
     // check if the chat element has been added to the DOM
     if (document.contains(messagesContainer)) {
 
-      // Check for chat state
-      checkForChatState();
 
       // check if there are at least 20 messages in the container
       if (messages.length >= 20) {
         // stop observing the DOM
         waitForChatObserver.disconnect();
-
+        // Call the function to check for chat state and handle changes when the chatField gets disabled
+        checkForChatState();
         // Remove ignored users' messages if the page is not initialized
         removeIgnoredUserMessages();
         // Convert image links to visible image containers

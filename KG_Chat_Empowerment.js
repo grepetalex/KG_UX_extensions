@@ -5423,7 +5423,7 @@
     // 2. If no exact match, search within ±10 seconds
     if (!foundElement) {
       foundElement = findMatchingElement(
-        (currentTimeValue) => Math.abs(currentTimeValue - initialTimeValue) <= 10
+        (currentTimeValue) => Math.abs(currentTimeValue - initialTimeValue) <= 2
       );
     }
 

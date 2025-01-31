@@ -798,18 +798,18 @@
                       bigImage.style.transformOrigin = 'center center';
 
                       // Fade in the big image
-                      fadeTargetElement(bigImage, 'show');
+                      triggerTargetElement(bigImage, 'show');
 
                       // To show the dimming background
-                      fadeDimmingElement('show');
+                      triggerDimmingElement('show');
 
                       // Attach a keydown event listener to the document object
                       document.addEventListener('keydown', function (event) {
                         // Check if the key pressed was the "Escape" key
                         if (event.key === 'Escape') {
                           // Fade out the big image
-                          fadeTargetElement(bigImage, 'hide');
-                          fadeDimmingElement('hide');
+                          triggerTargetElement(bigImage, 'hide');
+                          triggerDimmingElement('hide');
                         }
                         // Check if the key pressed was the left arrow key (<)
                         else if (event.key === 'ArrowLeft') {
@@ -1142,7 +1142,7 @@
   const fadeDuration = 100; // Total fade duration in ms
 
   // Function to create and fade the dimming element
-  function fadeDimmingElement(action) {
+  function triggerDimmingElement(action) {
     // Check if the dimming element already exists
     let dimming = document.querySelector('.dimming-background');
 
@@ -1170,7 +1170,7 @@
         // First, check for .popup-panel, then check for previousElementSibling
         const elementToRemove = document.querySelector('.popup-panel') || dimming.previousElementSibling;
         elementToRemove?.parentNode?.removeChild(elementToRemove);
-        fadeDimmingElement('hide');
+        triggerDimmingElement('hide');
       });
 
     }
@@ -1194,18 +1194,18 @@
       dimming.style.opacity = opacity.toString(); // Update the opacity
     }, fadeIntervalTime);
 
-    // If the action is 'hide', check for and remove the .scaled-thumbnail using fadeTargetElement
+    // If the action is 'hide', check for and remove the .scaled-thumbnail using triggerTargetElement
     if (action === 'hide') {
       const scaledThumbnail = document.querySelector('.scaled-thumbnail');
       if (scaledThumbnail) {
-        fadeTargetElement(scaledThumbnail, 'hide'); // Use fadeTargetElement to fade out and remove the scaled-thumbnail
+        triggerTargetElement(scaledThumbnail, 'hide'); // Use triggerTargetElement to fade out and remove the scaled-thumbnail
       }
     }
 
   }
 
   // Function to gradually fade a target element to show or hide it
-  function fadeTargetElement(element, action) {
+  function triggerTargetElement(element, action) {
     if (!element) return; // Return if the element does not exist
 
     const targetOpacity = action === 'show' ? 1 : 0; // Set target opacity based on action
@@ -1233,10 +1233,10 @@
 
       // If any panel is open and the double-clicked target is the scaled image, do not hide the dimming element
       if (!isPanelOpen || !event.target.closest('.scaled-thumbnail')) {
-        fadeDimmingElement('hide'); // Hide the dimming element on double click, unless the target is a scaled image and a panel is open
+        triggerDimmingElement('hide'); // Hide the dimming element on double click, unless the target is a scaled image and a panel is open
       }
 
-      fadeTargetElement(element, 'hide'); // Always hide the target element on double click
+      triggerTargetElement(element, 'hide'); // Always hide the target element on double click
     });
 
   }
@@ -1275,6 +1275,69 @@
     'Новичок': '#AFAFAF' // Grey
   };
 
+  // Load a given URL into the iframe.
+  const loadProfileIntoIframe = (url) => {
+    // Create an iframe to display user profile pages.
+    const profileIframe = document.createElement('iframe');
+    profileIframe.classList.add('profile-iframe-container');
+    profileIframe.style.border = 'none';
+    profileIframe.src = url;
+    profileIframe.style.display = 'flex';
+    profileIframe.style.position = 'fixed';
+    profileIframe.style.zIndex = '999';
+    profileIframe.style.width = '75vw';
+    profileIframe.style.minWidth = '1000px';
+    profileIframe.style.height = '80vh';
+    profileIframe.style.top = '48.5vh';
+    profileIframe.style.left = '50vw';
+    profileIframe.style.transform = 'translate(-50%, -50%)';
+    profileIframe.style.setProperty('box-shadow', '0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)', 'important');
+    profileIframe.style.setProperty('border-radius', '0.6em', 'important');
+
+    document.body.appendChild(profileIframe); // Append iframe to the document body.
+
+    // Function to handle the space key press.
+    const removeIframe = () => {
+      profileIframe.remove(); // Remove the iframe from the document.
+      document.removeEventListener('keydown', handleSpaceKey); // Clean up the event listener from the document.
+    };
+
+    const handleSpaceKey = (event) => {
+      if (event.code === 'Space') {
+        event.preventDefault(); // Prevent scroll caused by the space key.
+        removeIframe(); // Call the remove function.
+      }
+    };
+
+    // Add event listener for the 'keydown' event to listen for space key presses.
+    document.addEventListener('keydown', handleSpaceKey);
+
+    // Prevent space key scrolling inside the iframe.
+    profileIframe.onload = () => {
+      // Add event listener for the iframe's contentWindow to listen for space key presses.
+      profileIframe.contentWindow.addEventListener('keydown', handleSpaceKey);
+
+      // Add event listener for double click to remove the iframe.
+      profileIframe.contentWindow.addEventListener('dblclick', removeIframe);
+
+      // Create the MutationObserver to watch for specific elements being removed.
+      const observer = new MutationObserver((mutations) => {
+        if (mutations.some(mutation =>
+          Array.from(mutation.removedNodes).some(node =>
+            node.nodeType === Node.ELEMENT_NODE &&
+            (node.classList.contains('dimming-background') || node.classList.contains('cached-users-panel'))
+          )
+        )) {
+          removeIframe(); // Call the remove function.
+          observer.disconnect(); // Stop observing.
+        }
+      });
+
+      // Start observing the document body for changes.
+      observer.observe(document.body, { childList: true, subtree: true });
+    };
+  };
+
   // Function to display the cached user list panel
   function showCachePanel() {
     // Remove any previous panel before creating a new one
@@ -1308,8 +1371,8 @@
       // Check if the key pressed was the "Escape" key
       if (event.key === 'Escape') {
         // Fade out the cached users panel
-        fadeTargetElement(cachedUsersPanel, 'hide');
-        fadeDimmingElement('hide');
+        triggerTargetElement(cachedUsersPanel, 'hide');
+        triggerDimmingElement('hide');
       }
     });
 
@@ -1917,71 +1980,10 @@
         loginElement.style.setProperty('color', 'skyblue', 'important');
       });
 
-      // Load a given URL into the iframe.
-      const loadProfileInIframe = (url) => {
-        // Create an iframe to display user profile pages.
-        const profileIframe = document.createElement('iframe');
-        profileIframe.classList.add('profile-iframe-container');
-        profileIframe.style.border = 'none';
-        profileIframe.src = url;
-        profileIframe.style.display = 'flex';
-        profileIframe.style.position = 'fixed';
-        profileIframe.style.zIndex = '999';
-        profileIframe.style.width = '75vw';
-        profileIframe.style.minWidth = '1000px';
-        profileIframe.style.height = '80vh';
-        profileIframe.style.top = '48.5vh';
-        profileIframe.style.left = '50vw';
-        profileIframe.style.transform = 'translate(-50%, -50%)';
-
-        document.body.appendChild(profileIframe); // Append iframe to the document body.
-
-        // Function to handle the space key press.
-        const removeIframe = () => {
-          profileIframe.remove(); // Remove the iframe from the document.
-          document.removeEventListener('keydown', handleSpaceKey); // Clean up the event listener from the document.
-        };
-
-        const handleSpaceKey = (event) => {
-          if (event.code === 'Space') {
-            event.preventDefault(); // Prevent scroll caused by the space key.
-            removeIframe(); // Call the remove function.
-          }
-        };
-
-        // Add event listener for the 'keydown' event to listen for space key presses.
-        document.addEventListener('keydown', handleSpaceKey);
-
-        // Prevent space key scrolling inside the iframe.
-        profileIframe.onload = () => {
-          // Add event listener for the iframe's contentWindow to listen for space key presses.
-          profileIframe.contentWindow.addEventListener('keydown', handleSpaceKey);
-
-          // Add event listener for double click to remove the iframe.
-          profileIframe.contentWindow.addEventListener('dblclick', removeIframe);
-
-          // Create the MutationObserver to watch for specific elements being removed.
-          const observer = new MutationObserver((mutations) => {
-            if (mutations.some(mutation =>
-              Array.from(mutation.removedNodes).some(node =>
-                node.nodeType === Node.ELEMENT_NODE &&
-                (node.classList.contains('dimming-background') || node.classList.contains('cached-users-panel'))
-              )
-            )) {
-              removeIframe(); // Call the remove function.
-              observer.disconnect(); // Stop observing.
-            }
-          });
-
-          // Start observing the document body for changes.
-          observer.observe(document.body, { childList: true, subtree: true });
-        };
-      };
-
       // Load the user's profile in the iframe on click.
       loginElement.addEventListener('click', (event) => {
         event.preventDefault(); // Prevent page navigation.
-        loadProfileInIframe(loginElement.href);
+        loadProfileIntoIframe(loginElement.href);
       });
 
       // Helper function to create metric elements (speed, rating, etc.).
@@ -1992,7 +1994,7 @@
         element.innerHTML = `${icon}${value || 0}&nbsp;&nbsp;`;
         element.title = title;
         element.style.cursor = 'pointer';
-        element.addEventListener('click', () => loadProfileInIframe(url));
+        element.addEventListener('click', () => loadProfileIntoIframe(url));
         return element;
       };
 
@@ -2120,10 +2122,10 @@
     document.body.appendChild(cachedUsersPanel);
 
     // Fade in the cached users panel
-    fadeTargetElement(cachedUsersPanel, 'show');
+    triggerTargetElement(cachedUsersPanel, 'show');
 
     // Show the dimming background
-    fadeDimmingElement('show');
+    triggerDimmingElement('show');
 
     // Function to update the remaining time
     function updateRemainingTime() {
@@ -2194,9 +2196,9 @@
 
     if (cachedUsersPanel) {
       // Call the fade function for the cachedUsersPanel
-      fadeTargetElement(cachedUsersPanel, 'hide');
+      triggerTargetElement(cachedUsersPanel, 'hide');
       // Call the fade function for the dimming element
-      fadeDimmingElement('hide');
+      triggerDimmingElement('hide');
     }
   }
 
@@ -2798,6 +2800,14 @@
     newProfileElement.target = '_blank';
     newProfileElement.href = `/profile/${userId}/`;
     newProfileElement.innerHTML = infoSVG(userId, isRevoked); // Update this line
+    // Add event listener click with Hold Ctrl Key to open profile into iframe
+    newProfileElement.addEventListener('click', function (event) {
+      if (isCtrlKeyPressed) {
+        event.preventDefault();
+        const profileBaseUrl = 'https://klavogonki.ru/u/#/';
+        loadProfileIntoIframe(profileBaseUrl + userId);
+      }
+    });
 
     newNameElement.addEventListener('click', function () {
       insertPrivate(userId);
@@ -5662,8 +5672,8 @@
       localStorage.setItem('personalMessages', JSON.stringify({}));
 
       // Fade out the cached messages panel when the clear cache button is clicked
-      fadeTargetElement(cachedMessagesPanel, 'hide');
-      fadeDimmingElement('hide');
+      triggerTargetElement(cachedMessagesPanel, 'hide');
+      triggerDimmingElement('hide');
 
       // Update the message count displayed in the personal messages button
       const messagesCountElement = document.querySelector('.personal-messages-button .total-message-count');
@@ -5680,8 +5690,8 @@
     // Add a click event listener to the close panel button
     closePanelButton.addEventListener('click', () => {
       // Fade out the cached messages panel when the close button is clicked
-      fadeTargetElement(cachedMessagesPanel, 'hide');
-      fadeDimmingElement('hide');
+      triggerTargetElement(cachedMessagesPanel, 'hide');
+      triggerDimmingElement('hide');
     });
 
     // Create an array containing the buttons we want to apply the events to
@@ -5866,8 +5876,8 @@
         const foundMessage = await findChatMessage(time, username, true);
         if (foundMessage) {
           // Fade out the cached messages panel if the message is found
-          fadeTargetElement(cachedMessagesPanel, 'hide');
-          fadeDimmingElement('hide');
+          triggerTargetElement(cachedMessagesPanel, 'hide');
+          triggerDimmingElement('hide');
         } else {
           // Add shake effect to the parent if no message is found
           addShakeEffect(messageTextElement.parentElement);
@@ -5928,9 +5938,9 @@
     document.body.appendChild(cachedMessagesPanel);
 
     // Fade in the cached messages panel
-    fadeTargetElement(cachedMessagesPanel, 'show');
+    triggerTargetElement(cachedMessagesPanel, 'show');
     // Show the dimming background
-    fadeDimmingElement('show');
+    triggerDimmingElement('show');
 
     // Add click event listener to clear the search input by LMB click with Ctrl key pressed
     messagesSearchInput.addEventListener('click', () => isCtrlKeyPressed && (messagesSearchInput.value = ''));
@@ -5969,8 +5979,8 @@
       // Check if the key pressed was the "Escape" key
       if (event.key === 'Escape') {
         // Fade out the cached messages panel
-        fadeTargetElement(cachedMessagesPanel, 'hide');
-        fadeDimmingElement('hide');
+        triggerTargetElement(cachedMessagesPanel, 'hide');
+        triggerDimmingElement('hide');
       }
     });
   }
@@ -6507,8 +6517,8 @@
     // Add a click event listener to the close panel button
     closePanelButton.addEventListener('click', () => {
       // Fade out the chat logs panel when the close button is clicked
-      fadeTargetElement(chatLogsPanel, 'hide');
-      fadeDimmingElement('hide');
+      triggerTargetElement(chatLogsPanel, 'hide');
+      triggerDimmingElement('hide');
     });
 
     // Append close button to control buttons, and control buttons to header
@@ -6647,8 +6657,8 @@
     document.body.appendChild(chatLogsPanel);
 
     // Fade in the chat logs panel and dimming background
-    fadeTargetElement(chatLogsPanel, 'show');
-    fadeDimmingElement('show');
+    triggerTargetElement(chatLogsPanel, 'show');
+    triggerDimmingElement('show');
 
     // Define an object to store the hue for each username
     const usernameHueMap = {};
@@ -6981,8 +6991,8 @@
       // Check if the key pressed was the "Escape" key
       if (event.key === 'Escape') {
         // Fade out the chat logs panel
-        fadeTargetElement(chatLogsPanel, 'hide');
-        fadeDimmingElement('hide');
+        triggerTargetElement(chatLogsPanel, 'hide');
+        triggerDimmingElement('hide');
       }
     });
   }
@@ -7567,8 +7577,8 @@
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape') {
         // Fade out the settings panel and dimming element when the Esc key is pressed
-        fadeTargetElement(settingsPanel, 'hide');
-        fadeDimmingElement('hide');
+        triggerTargetElement(settingsPanel, 'hide');
+        triggerDimmingElement('hide');
       }
     });
 
@@ -7606,8 +7616,8 @@
     // Add a click event listener to the close panel button
     closePanelButton.addEventListener('click', () => {
       // Fade out the settings panel when the close button is clicked
-      fadeTargetElement(settingsPanel, 'hide');
-      fadeDimmingElement('hide');
+      triggerTargetElement(settingsPanel, 'hide');
+      triggerDimmingElement('hide');
     });
 
     // Create a clear cache button with the provided SVG icon
@@ -8338,8 +8348,8 @@
     initializeSaveButtonLogic(saveSettingsButton);
 
     // Fade in the settings panel and dimming background element
-    fadeTargetElement(settingsPanel, 'show');
-    fadeDimmingElement('show');
+    triggerTargetElement(settingsPanel, 'show');
+    triggerDimmingElement('show');
   }
 
   // CREATE PANEL GRAPHICAL SETTINGS BUTTON (END)

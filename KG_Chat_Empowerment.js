@@ -5420,10 +5420,10 @@
       (currentTimeValue) => currentTimeValue === initialTimeValue
     );
 
-    // 2. If no exact match, search within ±2 seconds
+    // 2. If no exact match, search within ±10 seconds
     if (!foundElement) {
       foundElement = findMatchingElement(
-        (currentTimeValue) => Math.abs(currentTimeValue - initialTimeValue) <= 2
+        (currentTimeValue) => Math.abs(currentTimeValue - initialTimeValue) <= 10
       );
     }
 

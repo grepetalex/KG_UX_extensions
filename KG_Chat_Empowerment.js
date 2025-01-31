@@ -5961,7 +5961,11 @@
             nextEl.querySelector('.message-username')?.textContent.toLowerCase().replace(/_/g, ' ') + ' ' +
             nextEl.querySelector('.message-text')?.textContent.toLowerCase().replace(/_/g, ' ')).includes(query);
 
-          nextEl.style.display = match ? '' : 'none';
+          // Toggle visibility based on match using content visibility and font size
+          nextEl.style.contentVisibility = match ? 'visible' : 'hidden';
+          // Set font size to 0 for hidden messages to maintain layout or remove the font size property
+          nextEl.style.fontSize = match ? '' : '0';
+
           showDateForGroup = showDateForGroup || match; // Show date if any match found in the group
 
           nextEl = nextEl.nextElementSibling;
@@ -6188,12 +6192,14 @@
   }
 
   let visibleMentionMessages = false; // Initialize the visibility state of mention messages
+
   // Toggles the visibility of .message-item elements that do not contain a .mention child element
   async function toggleMentionVisibility() {
     visibleMentionMessages = !visibleMentionMessages; // Toggle the global state
     document.querySelectorAll('.message-item').forEach(item => {
       if (item.querySelector('.mention')) return;
-      item.style.display = visibleMentionMessages ? 'none' : '';
+      item.style.contentVisibility = visibleMentionMessages ? 'hidden' : 'visible';
+      item.style.fontSize = visibleMentionMessages ? '0' : ''; // Set font size to 0 for hidden messages
     });
   }
 
@@ -6202,9 +6208,9 @@
     // Reset input value to an empty string
     searchInput.value = '';
     document.querySelectorAll('.message-item').forEach(item => {
-      if (item.style.display === 'none') {
-        item.style.display = '';
-      }
+      item.style.contentVisibility = 'visible';
+      // Remove fontSize style property to restore the original font size
+      item.style.removeProperty('font-size');
     });
   }
 
@@ -6994,8 +7000,10 @@
             normalizedMessageText.includes(queryWithoutSymbols);
         }
 
-        // Apply visibility based on shouldDisplay
-        messageContainer.style.display = shouldDisplay ? 'inline-flex' : 'none';
+        // Toggle visibility based on shouldDisplay using content visibility and font size
+        messageContainer.style.contentVisibility = shouldDisplay ? 'visible' : 'hidden';
+        // Set font size to 0 for hidden messages to maintain layout or remove the font size property
+        messageContainer.style.fontSize = shouldDisplay ? '' : '0';
       });
     }
 

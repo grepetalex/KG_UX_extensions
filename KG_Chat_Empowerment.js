@@ -2802,9 +2802,13 @@
     newProfileElement.innerHTML = infoSVG(userId, isRevoked); // Update this line
     // Add event listener click with Hold Ctrl Key to open profile into iframe
     newProfileElement.addEventListener('click', function (event) {
+      const profileBaseUrl = 'https://klavogonki.ru/u/#/';
+      event.preventDefault();
       if (isCtrlKeyPressed) {
-        event.preventDefault();
-        const profileBaseUrl = 'https://klavogonki.ru/u/#/';
+        // Open the profile in a new tab
+        window.open(profileBaseUrl + userId, '_blank');
+      } else {
+        // Load the profile into the iframe
         loadProfileIntoIframe(profileBaseUrl + userId);
       }
     });

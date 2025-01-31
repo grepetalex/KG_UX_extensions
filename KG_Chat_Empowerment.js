@@ -5792,32 +5792,24 @@
       timeElement.title = `Moscow Time: ${calibrateToMoscowTime(formattedTime)}`;
       timeElement.style.margin = '0px 0.4em';
       timeElement.style.height = 'fit-content';
-
+      timeElement.style.cursor = 'pointer';
+      timeElement.style.transition = 'color 0.2s ease';
       timeElement.style.color = timeColors[type] || 'slategray';
 
-      // Add click event listener for "mention" type
-      if (type === 'mention') {
-        timeElement.style.cursor = 'pointer';
-        timeElement.style.transition = 'color 0.2s ease';
-
-        // Hover effect to change color
-        timeElement.addEventListener('mouseover', function () {
-          timeElement.style.color = 'lightgreen';
-        });
-
-        timeElement.addEventListener('mouseout', function () {
-          timeElement.style.color = timeColors[type];
-        });
-
-        // Open the chat log URL on click from personal messages panel
-        timeElement.addEventListener('click', function () {
-          // Remove messages from the selected Index to the end
+      // Add click event listener for "mention" and "private" types
+      if (type === 'mention' || type === 'private') {
+        const hoverColor = type === 'mention' ? 'lightgreen' : 'peachpuff';
+        timeElement.addEventListener('mouseover', () => { timeElement.style.color = hoverColor; });
+        timeElement.addEventListener('mouseout', () => { timeElement.style.color = timeColors[type]; });
+        timeElement.addEventListener('click', () => {
           if (isCtrlKeyPressed) {
             removeMessage(messageElement, 'from');
-            return;
+            return; // Exit the function to prevent opening the chatlog
           }
-          const url = `https://klavogonki.ru/chatlogs/${date}.html#${calibrateToMoscowTime(formattedTime)}`;
-          window.open(url, '_blank', 'noopener,noreferrer');
+          if (type === 'mention') {
+            const url = `https://klavogonki.ru/chatlogs/${date}.html#${calibrateToMoscowTime(formattedTime)}`;
+            window.open(url, '_blank', 'noopener,noreferrer');
+          }
         });
       }
 

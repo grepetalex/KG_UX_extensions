@@ -5467,11 +5467,11 @@
   }
 
   /**
-   * Removes a message or all messages from a specific user from the DOM and updates localStorage.
+   * Removes messages from the DOM and updates localStorage based on the removal type.
    * @param {HTMLElement} messageElement - The message element to remove.
-   * @param {boolean} removeMultiple - If true, removes all messages from the same user.
+   * @param {string} removalType - The type of removal: 'single', 'all', or 'from'.
    */
-  function removeMessage(messageElement, removeMultiple = false) {
+  function removeMessage(messageElement, removalType = 'single') {
     // Extract time and username from the message element
     const time = messageElement.querySelector('.message-time').textContent;
     const username = messageElement.querySelector('.message-username').textContent;
@@ -5479,8 +5479,8 @@
     // Retrieve localStorage personalMessages data
     const personalMessages = JSON.parse(localStorage.getItem('personalMessages')) || {};
 
-    if (removeMultiple) {
-      // Remove all DOM elements from the same user
+    if (removalType === 'all') {
+      // Remove all messages from the same user
       document.querySelectorAll('.message-item').forEach((element) => {
         const elementUsername = element.querySelector('.message-username').textContent;
         if (elementUsername === username) {
@@ -5492,8 +5492,30 @@
           delete personalMessages[messageKey];
         }
       });
+    } else if (removalType === 'from') {
+      // Get all message elements
+      const messageElements = Array.from(document.querySelectorAll('.message-item'));
+
+      // Find the index of the current message element
+      const currentIndex = messageElements.indexOf(messageElement);
+
+      // Iterate through messages starting from the current message till the end
+      for (let i = currentIndex; i < messageElements.length; i++) {
+        const element = messageElements[i];
+        const elementUsername = element.querySelector('.message-username').textContent;
+
+        if (elementUsername === username) {
+          // Remove the DOM element
+          element.remove();
+
+          // Remove the corresponding entry from localStorage
+          const elementTime = element.querySelector('.message-time').textContent;
+          const messageKey = `[${elementTime}]_${elementUsername}`;
+          delete personalMessages[messageKey];
+        }
+      }
     } else {
-      // Remove only the specific message
+      // Default: Remove only the specific message (single)
       const messageKey = `[${time}]_${username}`;
       if (personalMessages[messageKey]) {
         delete personalMessages[messageKey]; // Remove from localStorage
@@ -5789,6 +5811,11 @@
 
         // Open the chat log URL on click from personal messages panel
         timeElement.addEventListener('click', function () {
+          // Remove messages from the selected Index to the end
+          if (isCtrlKeyPressed) {
+            removeMessage(messageElement, 'from');
+            return;
+          }
           const url = `https://klavogonki.ru/chatlogs/${date}.html#${calibrateToMoscowTime(formattedTime)}`;
           window.open(url, '_blank', 'noopener,noreferrer');
         });
@@ -5805,10 +5832,10 @@
 
       // Add click event only if userId is defined
       usernameElement.addEventListener('click', () => {
-        // Remove multiple messages on Ctrl + LMB click
+        // Remove all messages on Ctrl + LMB click for the same username
         if (isCtrlKeyPressed) {
-          removeMessage(messageElement, true);
-          return; // Exit the function
+          removeMessage(messageElement, 'all');
+          return;
         }
         if (userId) { // Check if userId is defined
           const url = `https://klavogonki.ru/u/#/${userId}/`; // Construct the user profile URL
@@ -5837,10 +5864,10 @@
 
       // Add click event listener for the messageTextElement
       messageTextElement.addEventListener('click', async function () {
-        // Remove single message-item on Ctrl + LMB click
+        // Remove single message on Ctrl + LMB click for the same username
         if (isCtrlKeyPressed) {
-          removeMessage(messageElement);
-          return; // Exit the function
+          removeMessage(messageElement, 'single');
+          return;
         }
 
         // Call the function to search for the chat message by time in range and username

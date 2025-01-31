@@ -6197,6 +6197,17 @@
     });
   }
 
+  // Function to restore the visibility of all .message-item elements if any are hidden
+  function restoreMessagesVisibility(searchInput) {
+    // Reset input value to an empty string
+    searchInput.value = '';
+    document.querySelectorAll('.message-item').forEach(item => {
+      if (item.style.display === 'none') {
+        item.style.display = '';
+      }
+    });
+  }
+
   // Function to display the chat logs panel
   async function showChatLogsPanel() {
     // Remove any previous panel before creating a new one
@@ -6694,6 +6705,8 @@
         messageContainer.addEventListener('click', async () => {
           // Call toggleMentionVisibility to show all messages and scroll when a message is clicked on visibleMentionMessages is true
           if (visibleMentionMessages) await toggleMentionVisibility();
+          // Call restoreMessagesVisibility to show all messages when a message is clicked on visibleMentionMessages is false
+          else restoreMessagesVisibility(chatlogsSearchInput);
           // Use helper function to scroll the chat logs container to the middle of the parent container
           await scrollMessagesToMiddle(chatLogsContainer, messageContainer);
         });

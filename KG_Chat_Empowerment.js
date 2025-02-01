@@ -4738,7 +4738,7 @@
   // Helper function to add a blink effect using color opacity.
   function addBlinkEffect(element) {
     // Set the initial color to bisque with full opacity.
-    element.style.backgroundColor = 'rgba(255, 228, 196, 1)'; // bisque color.
+    element.style.backgroundColor = 'darkgreen'; // Initial color.
 
     const opacities = [1, 0, 1, 0]; // Full -> Hidden -> Full -> End at Hidden.
     const delay = 100; // Static delay of 200ms between frames.
@@ -4747,8 +4747,8 @@
     for (let i = 0; i < 3; i++) {
       opacities.forEach((opacity, index) => {
         setTimeout(() => {
-          // Apply the opacity to the background color.
-          element.style.backgroundColor = `rgba(255, 228, 196, ${opacity})`;
+          // Apply the opacity to the background color darkgreen represented in RGBA.
+          element.style.backgroundColor = `rgba(0, 100, 0, ${opacity})`; // Change the opacity.
           element.style.transition = 'background-color 0.3s ease'; // Smooth transition.
         }, delay * (i * opacities.length + index)); // Schedule the color change.
       });
@@ -5401,7 +5401,7 @@
   createPersonalMessagesButton();
 
   // Find chat message by time in range and matching username
-  async function findChatMessage(targetTime, targetUsername, allowScroll) {
+  async function findGeneralChatMessage(targetTime, targetUsername, allowScroll) {
     const parent = document.querySelector('.messages-content'); // Chat container
     if (!parent) return null; // Return null if the container isn't found
 
@@ -5418,6 +5418,54 @@
       Array.from(parent.querySelectorAll('p')).find((p) => {
         const timeElement = p.querySelector('.time'); // Get the child element with class 'time'
         const usernameElement = p.querySelector('.username span[data-user]'); // Get the username element
+
+        if (timeElement && usernameElement) {
+          const currentTimeValue = timeStringToSeconds(timeElement.textContent.trim());
+          const usernameText = usernameElement.textContent.trim(); // Extract the text content of the username
+
+          // Check if the time and username match the conditions
+          return condition(currentTimeValue) && usernameText === targetUsername;
+        }
+        return false;
+      });
+
+    // 1. Try to find an exact match first
+    let foundElement = findMatchingElement(
+      (currentTimeValue) => currentTimeValue === initialTimeValue
+    );
+
+    // 2. If no exact match, search within ±10 seconds
+    if (!foundElement) {
+      foundElement = findMatchingElement(
+        (currentTimeValue) => Math.abs(currentTimeValue - initialTimeValue) <= 2
+      );
+    }
+
+    if (foundElement && allowScroll) {
+      await scrollMessagesToMiddle(parent, foundElement); // Call the extracted scrolling function
+    }
+
+    return foundElement || false; // Return found element or false if not found
+  }
+
+  // Find chat logs message by time in range and matching username
+  async function findChatLogsMessage(targetTime, targetUsername, allowScroll) {
+    const parent = document.querySelector('.chat-logs-container'); // Logs container
+    if (!parent) return null; // Return null if the container isn't found
+
+    // Convert time string "[HH:MM:SS]" to total seconds
+    const timeStringToSeconds = (str) =>
+      str.replace(/[\[\]]/g, '').split(':').reduce((acc, time, i) =>
+        acc + Number(time) * (60 ** (2 - i)), 0
+      );
+
+    const initialTimeValue = timeStringToSeconds(targetTime); // Target time in seconds
+
+    // Helper to find .message-item elements by matching time and username
+    const findMatchingElement = (condition) =>
+      Array.from(parent.querySelectorAll('.message-item')).find((messageItem) => {
+        const timeElement = messageItem.querySelector('.message-time'); // Get the child element with class 'message-time'
+        const usernameElement = messageItem.querySelector('.message-username'); // Get the username element
 
         if (timeElement && usernameElement) {
           const currentTimeValue = timeStringToSeconds(timeElement.textContent.trim());
@@ -5769,6 +5817,7 @@
         dateItem.className = 'date-item';
         // show "Today" if date matches
         dateItem.textContent = date === today ? 'Today ⏳' : `${date} 📅`;
+        dateItem.dataset.date = date; // Store the date in a data attribute
         dateItem.style.position = 'relative';
         dateItem.style.font = '1em Montserrat';
         dateItem.style.color = 'burlywood';
@@ -5876,15 +5925,26 @@
           return;
         }
 
-        // Call the function to search for the chat message by time in range and username
-        const foundMessage = await findChatMessage(time, username, true);
-        if (foundMessage) {
-          // Fade out the cached messages panel if the message is found
+        // Call the findGeneralChatMessage function to search for the general chat message by time in range and username
+        const foundGeneralChatMessage = await findGeneralChatMessage(time, username, true);
+        if (foundGeneralChatMessage) {
           triggerTargetElement(cachedMessagesPanel, 'hide');
           triggerDimmingElement('hide');
         } else {
-          // Add shake effect to the parent if no message is found
-          addShakeEffect(messageTextElement.parentElement);
+          let previousElement = messageTextElement.parentElement.previousElementSibling;
+          while (previousElement && !previousElement.classList.contains('date-item')) {
+            previousElement = previousElement.previousElementSibling;
+          }
+          if (previousElement) {
+            await showChatLogsPanel(previousElement.dataset.date);
+            const calibratedMoscowTime = calibrateToMoscowTime(formattedTime);
+            // Call the findChatLogsMessage function to search for the chat logs message by time in range and username
+            requestAnimationFrame(async () => {
+              setTimeout(async () => {
+                await findChatLogsMessage(calibratedMoscowTime, username, true);
+              }, 500); // Adjust the delay as needed
+            });
+          }
         }
       });
 
@@ -5919,7 +5979,7 @@
     // Process the colorization logic in reverse order
     messageElements.reverse().forEach(async ({ messageTextElement, time, username, type }) => {
       if (pingCheckCounter < maxPingChecks) {
-        pingMessages = await findChatMessage(time, username, false);
+        pingMessages = await findGeneralChatMessage(time, username, false);
         pingCheckCounter++; // Increment the counter
 
         if (pingCheckCounter >= maxPingChecks) {
@@ -6050,9 +6110,9 @@
 
     showChatLogsButton.title = 'Show Chat Logs';
 
-    showChatLogsButton.addEventListener('click', function () {
+    showChatLogsButton.addEventListener('click', async function () {
       addPulseEffect(showChatLogsButton); // Add pulse effect
-      showChatLogsPanel();
+      await showChatLogsPanel();
     });
 
     empowermentButtonsPanel.appendChild(showChatLogsButton);
@@ -6219,7 +6279,8 @@
   }
 
   // Function to display the chat logs panel
-  async function showChatLogsPanel() {
+  // Load initially with default date or date given by personal messages panel with parameter date
+  async function showChatLogsPanel(personalMessagesDate) {
     // Remove any previous panel before creating a new one
     removePreviousPanel();
     // Check if the chat logs panel already exists; if it does, exit the function to avoid duplication
@@ -6926,14 +6987,16 @@
       }
     }
 
-    // Load today's chat logs initially
-    const today = new Intl.DateTimeFormat('en-CA').format(new Date()); // 'en-CA' gives 'YYYY-MM-DD' format
-    await loadChatLogs(today); // Load today's logs
+    // Load chat logs based on the provided date or default to today's date
+    // create today's date in the format 'YYYY-MM-DD'
+    const today = new Intl.DateTimeFormat('en-CA').format(new Date());
+    const dateToLoad = personalMessagesDate || today; // Use personalMessagesDate if available
+    await loadChatLogs(dateToLoad); // Load chat logs for the determined date
 
     // Set the max attribute to today's date
-    dateInput.max = today; // Disable future dates
-    dateInput.value = today; // Set the initial value to today's date
-    dateInputToggle.title = `Current date: ${today}`; // Set the title with the current date
+    dateInput.max = today; // Set the maximum value to today's date
+    dateInput.value = dateToLoad; // Set the value to the date to load 
+    dateInputToggle.title = `Current date: ${dateToLoad}`; // Update the title with the selected date
 
     // Add an event listener for the date input change
     dateInput.addEventListener('change', async (event) => {

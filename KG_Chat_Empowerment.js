@@ -3352,11 +3352,16 @@
                   mentionHighlight.textContent = word;
 
                   // Highlight styles
-                  mentionHighlight.style.color = '#83cf40';
-                  mentionHighlight.style.backgroundColor = '#2b4317';
-                  mentionHighlight.style.border = '1px solid #4b7328';
-                  mentionHighlight.style.padding = '2px';
+                  // mentionHighlight.style.color = '#83cf40';
+                  // mentionHighlight.style.backgroundColor = '#2b4317';
+                  // mentionHighlight.style.border = '1px solid #4b7328';
+                  // mentionHighlight.style.padding = '2px';
+                  // mentionHighlight.style.display = 'inline-flex';
+
                   mentionHighlight.style.display = 'inline-flex';
+                  mentionHighlight.style.color = '#83cf40'; // Green color
+                  mentionHighlight.style.fontFamily = 'Roboto Mono, monospace';
+                  mentionHighlight.style.fontWeight = 'bold';
 
                   // Append the new <span> element to the fragment
                   fragment.appendChild(mentionHighlight);
@@ -6778,6 +6783,7 @@
         messageContainer.style.padding = '0.2em'; // Set padding for the message container
         messageContainer.style.display = 'inline-flex';
         messageContainer.style.cursor = 'pointer'; // Set cursor to pointer on hover for click effect
+        messageContainer.style.alignItems = 'center'; // Align items to center
         // Attach click event to scroll the chat logs container to the middle of the parent container on LMB click
         messageContainer.addEventListener('click', async () => {
           // Call toggleMentionVisibility to show all messages and scroll when a message is clicked on visibleMentionMessages is true

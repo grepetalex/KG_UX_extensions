@@ -7002,8 +7002,11 @@
     // Load chat logs based on the provided date or default to today's date
     // create today's date in the format 'YYYY-MM-DD'
     const today = new Intl.DateTimeFormat('en-CA').format(new Date());
+    // showDateInput(dateInput); // Show the date input field
     const dateToLoad = personalMessagesDate || today; // Use personalMessagesDate if available
     await loadChatLogs(dateToLoad); // Load chat logs for the determined date
+    // Check if personalMessagesDate is given as parameter or null to show the date input field
+    if (personalMessagesDate) showDateInput(dateInput); // Show the date input field
 
     // Set the max attribute to today's date
     dateInput.max = today; // Set the maximum value to today's date

@@ -5941,7 +5941,13 @@
             // Call the findChatLogsMessage function to search for the chat logs message by time in range and username
             requestAnimationFrame(async () => {
               setTimeout(async () => {
-                await findChatLogsMessage(calibratedMoscowTime, username, true);
+                // find chat messge if not found close the panel
+                const foundChatLogsMessage = await findChatLogsMessage(calibratedMoscowTime, username, true);
+                if (!foundChatLogsMessage) {
+                  const chatLogsPanel = document.querySelector('.chat-logs-panel'); // Get the chat logs panel
+                  triggerTargetElement(chatLogsPanel, 'hide'); // Hide the chat logs panel
+                  showPersonalMessagesPanel(); // Show the personal messages panel again
+                }
               }, 500); // Adjust the delay as needed
             });
           }

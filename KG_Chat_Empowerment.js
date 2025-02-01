@@ -3486,7 +3486,7 @@
     let commonMessageText = '';
     let privateMessageText = '';
     let systemMessageText = '';
-    const systemUsername = 'Клавобот';
+    const systemUsername = 'SYSTEM'; // Default system username
 
     // Process common message
     const commonMessageParts = collectMessageParts(messageElement);
@@ -6198,7 +6198,7 @@
           const messageText = systemMessageElement.textContent.trim();
           return {
             time: timeElement.textContent.trim().replace(/[\[\]]/g, ''),
-            username: 'Клавобот', // Assign 'Клавобот' for system messages
+            username: 'SYSTEM', // Set username as 'SYSTEM' for system messages
             message: messageText || null,
           };
         }

@@ -759,6 +759,7 @@
               thumbnail.style.backgroundColor = 'transparent';
               thumbnail.style.padding = '2px';
               thumbnail.style.margin = '6px';
+              thumbnail.style.overflowY = 'auto';
 
               // create an image inside the thumbnail
               const img = document.createElement('img');

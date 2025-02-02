@@ -637,6 +637,7 @@
 
   // List of trusted domains
   const trustedDomains = [
+    'klavogonki.ru',
     'imgur.com',
     'pikabu.ru',
     'userapi.com', // vk.com
@@ -7010,7 +7011,7 @@
 
     // Set the max attribute to today's date
     dateInput.max = today; // Set the maximum value to today's date
-    dateInput.value = dateToLoad; // Set the value to the date to load 
+    dateInput.value = dateToLoad; // Set the value to the date to load
     dateInputToggle.title = `Current date: ${dateToLoad}`; // Update the title with the selected date
 
     // Add an event listener for the date input change

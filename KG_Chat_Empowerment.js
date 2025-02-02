@@ -8,6 +8,7 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=klavogonki.ru
 // @updateURL    https://raw.githubusercontent.com/VimiummuimiV/KG_Goddies/refs/heads/master/KG_Chat_Empowerment.js
 // @downloadURL  https://raw.githubusercontent.com/VimiummuimiV/KG_Goddies/refs/heads/master/KG_Chat_Empowerment.js
+// @require      file:///F:/Dev/KG_Goddies/KG_Chat_Empowerment.js
 // @grant        none
 // ==/UserScript==
 
@@ -2314,39 +2315,6 @@
             transform: rotate(360deg) scale(1);
         }
     }
-
-    /* Animation for online status */
-    .chat-user-list svg.online {
-        stroke: lightgreen;
-        animation: rotateProfileIconAnimation 1s forwards;
-    }
-
-    /* Animation for offline status */
-    .chat-user-list svg.offline {
-        stroke: chocolate;
-        animation: rotateProfileIconAnimation 1s forwards;
-    }
-
-    /* Shake Profile Icon Animation for Small Icons */
-    @keyframes shakeProfileIconAnimation {
-        0% { transform: translate(0.5px, 0.5px) rotate(0deg); }
-        10% { transform: translate(-0.5px, -1px) rotate(-1deg); }
-        20% { transform: translate(-1.5px, 0px) rotate(1deg); }
-        30% { transform: translate(1.5px, 1px) rotate(0deg); }
-        40% { transform: translate(0.5px, -0.5px) rotate(1deg); }
-        50% { transform: translate(-0.5px, 1px) rotate(-1deg); }
-        60% { transform: translate(-1.5px, 0.5px) rotate(0deg); }
-        70% { transform: translate(1.5px, 0.5px) rotate(-1deg); }
-        80% { transform: translate(-0.5px, -0.5px) rotate(1deg); }
-        90% { transform: translate(0.5px, 1px) rotate(0deg); }
-        100% { transform: translate(0.5px, -1px) rotate(-1deg); }
-    }
-
-    /* Apply shake animation to sto profile svg iconkwith the class eProfileIconAnimation */
-    .chat-user-list svg.online:hover,
-    .chat-user-list svg.offline:hover {
-      animation: shakeProfileIconAnimation 0.5s linear infinite;
-    }
 `;
 
   document.head.appendChild(newChatUserListStyles);
@@ -2583,76 +2551,6 @@
     console.log(`Setting private message to: ${message}`);
   }
 
-  const infoSVG = (userId, isRevoked) => {
-    const statusClass = isRevoked ? 'offline' : 'online';
-
-    return `
-        <svg xmlns="http://www.w3.org/2000/svg"
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="feather feather-info ${statusClass}">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="16" x2="12" y2="12"></line>
-            <line x1="12" y1="8" x2="12.01" y2="8"></line>
-        </svg>`;
-  };
-
-  // Inline SVG source for the "meh" icon
-  const mehSVG = `
-  <svg xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke-width="1.4"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      class="feather feather-meh">
-      <circle cx="12" cy="12" r="10"></circle>
-      <line x1="8" y1="15" x2="16" y2="15"></line>
-      <line x1="9" y1="9" x2="9.01" y2="9"></line>
-      <line x1="15" y1="9" x2="15.01" y2="9"></line>
-  </svg>`;
-
-  // Inline SVG source for the "smile" icon
-  const smileSVG = `
-  <svg xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke-width="1.4"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      class="feather feather-smile">
-      <circle cx="12" cy="12" r="10"></circle>
-      <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
-      <line x1="9" y1="9" x2="9.01" y2="9"></line>
-      <line x1="15" y1="9" x2="15.01" y2="9"></line>
-  </svg>`;
-
-  // Inline SVG source for the "frown" icon
-  const frownSVG = `
-  <svg xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke-width="1.4"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      class="feather feather-frown">
-      <circle cx="12" cy="12" r="10"></circle>
-      <path d="M16 16s-1.5-2-4-2-4 2-4 2"></path>
-      <line x1="9" y1="9" x2="9.01" y2="9"></line>
-      <line x1="15" y1="9" x2="15.01" y2="9"></line>
-  </svg>`;
-
   // SVG icon for the moderator with gradient
   const moderatorSVG = `
     <svg xmlns="http://www.w3.org/2000/svg"
@@ -2715,12 +2613,87 @@
     <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
   </svg>`;
 
-  // Helper function to get a random SVG
-  // function getRandomIconSVG() {
-  //   const svgs = [mehSVG, smileSVG, frownSVG];
-  //   const randomIndex = Math.floor(Math.random() * svgs.length);
-  //   return svgs[randomIndex];
-  // }
+  /**
+   * Creates an SVG circular progress indicator or a close icon based on the provided parameters.
+   *
+   * @param {number} percentage - The percentage value for the progress (0-100). Determines the fill of the circular progress.
+   * @param {string} color - The color to be used for the progress circle or the close icon (if `isRevoked` is true).
+   * @param {boolean} isRevoked - Determines if the close icon should be shown instead of the circular progress. If true, the close icon will be shown; otherwise, the circular progress is displayed.
+   *
+   * @returns {string} - The SVG markup as a string, representing either the circular progress or the close icon.
+   *
+   * The function uses SVG elements to create a circular progress bar with a gradient fill that represents the provided percentage.
+   * If `isRevoked` is true, it returns a close (X) icon instead, using the provided color.
+   */
+  function createCircularProgress(percentage, color, isRevoked) {
+    // Define constants for the size of the SVG container, stroke width, and radius calculations
+    const size = 20; // Size of the SVG container (both width and height)
+    const strokeWidth = 2; // Width of the stroke (border) for the circles
+    const radius = size / 2 - strokeWidth; // Radius of the inner circle (subtracting stroke width for proper fit)
+    const outerRadius = size / 2 - strokeWidth; // Radius of the outer circle (adjusted for stroke)
+
+    // Generate a random string to create a unique ID for the gradient
+    const randomString = Math.random().toString(36).substring(2, 22);
+
+    // Create the SVG element with the defined width, height, and viewBox
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("width", size); // Set the width of the SVG
+    svg.setAttribute("height", size); // Set the height of the SVG
+    svg.setAttribute("viewBox", `0 0 ${size} ${size}`); // Ensure proper scaling inside the SVG container
+
+    // If `isRevoked` is true, we return the close icon (X shape) instead of the circular progress
+    if (isRevoked) {
+      // Create a close icon (X shape) using an SVG path, filled with the provided color
+      const closeIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24">
+            <path d="M18.364 5.636a1 1 0 0 1 0 1.414L13.414 12l4.95 4.95a1 1 0 0 1-1.414 1.414L12 13.414l-4.95 4.95a1 1 0 0 1-1.414-1.414L10.586 12l-4.95-4.95a1 1 0 0 1 1.414-1.414L12 10.586l4.95-4.95a1 1 0 0 1 1.414 0z" fill="${color}"/>
+        </svg>`;
+
+      // Set the inner HTML of the SVG to the close icon
+      svg.innerHTML = closeIcon;
+    } else {
+      // Create a gradient to fill the inner circle based on the provided percentage
+      const gradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
+      gradient.setAttribute("id", `gradient-${randomString}`); // Unique ID for the gradient
+      gradient.setAttribute("gradientTransform", "rotate(90)"); // Rotate the gradient
+      gradient.innerHTML = `
+            <stop offset="0%" stop-color="transparent" />
+            <stop offset="${100 - percentage}%" stop-color="transparent" />
+            <stop offset="${100 - percentage}%" stop-color="${color}" />
+            <stop offset="100%" stop-color="${color}" />
+        `;
+
+      // Create the inner circle (progress circle) using the gradient as the fill
+      const innerCircle = `<circle cx="${size / 2}" cy="${size / 2}" r="${radius}" fill="url(#gradient-${randomString})" stroke="none" stroke-width="${strokeWidth * 2}" fill-opacity="0.8" />`;
+
+      // Create the outer circle (border circle) around the progress
+      const outerCircle = `<circle cx="${size / 2}" cy="${size / 2}" r="${outerRadius}" fill="none" stroke="${color}" stroke-width="${strokeWidth}" />`;
+
+      // Add the gradient to the SVG and append the circles
+      svg.innerHTML = innerCircle + outerCircle; // Ensure the inner circle is drawn first
+      svg.prepend(gradient); // Add the gradient to the SVG element
+    }
+
+    // Return the complete SVG markup as a string
+    return svg.outerHTML;
+  }
+
+  /**
+   * Calculates the percentage of a given number within its nearest range.
+   * The function dynamically determines the range based on the input value.
+   * 
+   * @param {number} value - The input value to calculate the percentage for.
+   * @returns {number} - The percentage of the input value within its identified range.
+   */
+  function calculatePercentage(value) {
+    // Determine the lower bound of the range (this is smart, not hardcoded)
+    const lowerBound = Math.floor(value / 100) * 100; // Nearest lower multiple of 100
+    const upperBound = lowerBound + 100; // Nearest upper multiple of 100
+
+    // Calculate the percentage within the identified range
+    const percentage = ((value - lowerBound) / (upperBound - lowerBound)) * 100;
+
+    return percentage;
+  }
 
   // Variable to store the last selected emoji
   let lastEmojiAvatar = null;
@@ -2761,7 +2734,7 @@
   let fetchedUsers = JSON.parse(localStorage.getItem('fetchedUsers')) || {};
 
   // Function to create a user element with avatar, name, and profile link based on user details
-  function createUserChatElement(userId, mainTitle, userName, isRevoked) {
+  function createUserChatElement(userId, mainTitle, userName, bestSpeed, isRevoked) {
     const avatarTimestamp = fetchedUsers[userId]?.avatarTimestamp;
 
     // Ensure the bigAvatarUrl is only constructed if avatarTimestamp is not '00'
@@ -2780,9 +2753,8 @@
       avatarImage.src = bigAvatarUrl;
       newAvatarElement.appendChild(avatarImage);
     } else {
-      // Insert a random SVG icon instead of an image when avatarTimestamp is '00'
-      // newAvatarElement.innerHTML = getRandomIconSVG();
       newAvatarElement.style.fontSize = '1.8rem';
+      // Insert a random SVG icon instead of an image when avatarTimestamp is '00'
       newAvatarElement.innerHTML = getRandomEmojiAvatar();
     }
 
@@ -2797,10 +2769,12 @@
 
     const newProfileElement = document.createElement('a');
     newProfileElement.classList.add('profile');
-    newProfileElement.title = 'Профиль';
+    newProfileElement.title = `${mainTitle} - ${bestSpeed}`;
     newProfileElement.target = '_blank';
     newProfileElement.href = `/profile/${userId}/`;
-    newProfileElement.innerHTML = infoSVG(userId, isRevoked); // Update this line
+    let circularProgress = createCircularProgress(calculatePercentage(bestSpeed), rankColor, isRevoked);
+    // Use circular progress element for profile navigation from new chat user list
+    newProfileElement.innerHTML = circularProgress;
     // Add event listener click with Hold Ctrl Key to open profile into iframe
     newProfileElement.addEventListener('click', function (event) {
       const profileBaseUrl = 'https://klavogonki.ru/u/#/';
@@ -2953,7 +2927,7 @@
             // Check if the user with the same ID already exists in the corresponding rank group
             const existingUserElement = rankSubparents[getRankClass(mainTitle)].querySelector(`.user${userId}`);
             if (!existingUserElement) {
-              const newUserElement = createUserChatElement(userId, mainTitle, userName, userElement.classList.contains('revoked'));
+              const newUserElement = createUserChatElement(userId, mainTitle, userName, bestSpeed, userElement.classList.contains('revoked'));
               // Add the user to the corresponding rank group
               rankSubparents[getRankClass(mainTitle)].appendChild(newUserElement);
             }
@@ -3031,8 +3005,6 @@
       // const message = isManual
       //   ? `Cache manually cleared. Next clearing time: ${new Date(nextClearTime)}`
       //   : `Cache automatically cleared. Next clearing time: ${new Date(nextClearTime)}`;
-
-      // alert(message);
     }
   }
 
@@ -3351,14 +3323,6 @@
                   const mentionHighlight = document.createElement('span');
                   mentionHighlight.classList.add('mention');
                   mentionHighlight.textContent = word;
-
-                  // Highlight styles
-                  // mentionHighlight.style.color = '#83cf40';
-                  // mentionHighlight.style.backgroundColor = '#2b4317';
-                  // mentionHighlight.style.border = '1px solid #4b7328';
-                  // mentionHighlight.style.padding = '2px';
-                  // mentionHighlight.style.display = 'inline-flex';
-
                   mentionHighlight.style.display = 'inline-flex';
                   mentionHighlight.style.color = '#83cf40'; // Green color
                   mentionHighlight.style.fontFamily = 'Roboto Mono, monospace';

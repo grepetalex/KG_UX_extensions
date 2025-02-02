@@ -866,7 +866,13 @@
           triggerDimmingElement('hide');
         }
 
-        document.removeEventListener('keydown', bigImageCloseSpaceHandler); // Remove listener after hiding
+        // Remove all event listeners
+        document.removeEventListener('keydown', bigImageCloseSpaceHandler);
+        document.removeEventListener('mousedown', mouseDownHandler);
+        document.removeEventListener('mouseup', mouseUpHandler);
+        document.removeEventListener('mousemove', mouseMoveHandler);
+        document.removeEventListener('wheel', wheelHandler);
+
       } else if (event.code === 'ArrowLeft') {
         navigateImages(-1);
       } else if (event.code === 'ArrowRight') {
@@ -957,34 +963,6 @@
     document.addEventListener('mouseup', mouseUpHandler);
     document.addEventListener('mousemove', mouseMoveHandler);
     document.addEventListener('wheel', wheelHandler);
-
-    // Create a MutationObserver to watch for the removal of scaled-thumbnail elements
-    const observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        // Check if nodes have been removed
-        if (mutation.removedNodes.length) {
-          mutation.removedNodes.forEach((node) => {
-            // Check if the removed node is the scaled-thumbnail
-            if (node.classList && node.classList.contains('scaled-thumbnail')) {
-              // Remove all event listeners directly
-              document.removeEventListener('mousedown', mouseDownHandler);
-              document.removeEventListener('mouseup', mouseUpHandler);
-              document.removeEventListener('mousemove', mouseMoveHandler);
-              document.removeEventListener('wheel', wheelHandler);
-
-              // Disconnect the observer after handling the removal
-              observer.disconnect();
-            }
-          });
-        }
-      }
-    });
-
-    // Start observing the body or the relevant parent container
-    observer.observe(document.body, {
-      childList: true, // Watch for the addition/removal of child nodes
-      subtree: true, // Observe all descendants
-    });
 
     return bigImage;
   }

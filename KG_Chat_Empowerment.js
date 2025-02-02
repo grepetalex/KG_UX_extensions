@@ -800,31 +800,8 @@
                       bigImage.style.zIndex = '999';
                       bigImage.style.transformOrigin = 'center center';
 
-                      // Fade in the big image
                       triggerTargetElement(bigImage, 'show');
-
-                      // To show the dimming background
                       triggerDimmingElement('show');
-
-                      // Attach a keydown event listener to the document object
-                      document.addEventListener('keydown', function (event) {
-                        // Check if the key pressed was the "Escape" key
-                        if (event.key === 'Escape') {
-                          // Fade out the big image
-                          triggerTargetElement(bigImage, 'hide');
-                          triggerDimmingElement('hide');
-                        }
-                        // Check if the key pressed was the left arrow key (<)
-                        else if (event.key === 'ArrowLeft') {
-                          // Navigate to the previous image
-                          navigateImages(-1);
-                        }
-                        // Check if the key pressed was the right arrow key (>)
-                        else if (event.key === 'ArrowRight') {
-                          // Navigate to the next image
-                          navigateImages(1);
-                        }
-                      });
                     }
                   }); // thumbnail event end
 
@@ -877,6 +854,21 @@
     bigImage.style.maxWidth = '90vw';
 
     document.body.appendChild(bigImage);
+
+    // Attach a keydown event listener for big image to close by ESC and navigate to Right and Left
+    const bigImageKeydownHandler = function (event) {
+      if (event.key === 'Escape') {
+        triggerTargetElement(bigImage, 'hide');
+        triggerDimmingElement('hide');
+        document.removeEventListener('keydown', bigImageKeydownHandler); // Remove listener after hiding
+      } else if (event.key === 'ArrowLeft') {
+        navigateImages(-1);
+      } else if (event.key === 'ArrowRight') {
+        navigateImages(1);
+      }
+    };
+
+    document.addEventListener('keydown', bigImageKeydownHandler);
 
     // ZOOM AND MOVE -- START
 

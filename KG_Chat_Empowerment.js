@@ -855,20 +855,26 @@
 
     document.body.appendChild(bigImage);
 
-    // Attach a keydown event listener for big image to close by ESC and navigate to Right and Left
-    const bigImageKeydownHandler = function (event) {
-      if (event.key === 'Escape') {
+    // Attach a keydown event listener for big image to close by ESC or Space and navigate with Arrow keys
+    const bigImageCloseSpaceHandler = function (event) {
+      if (event.code === 'Escape' || event.code === 'Space') { // Hide on ESC or Space
+        event.preventDefault(); // Prevent default scrolling behavior for Space
         triggerTargetElement(bigImage, 'hide');
-        triggerDimmingElement('hide');
-        document.removeEventListener('keydown', bigImageKeydownHandler); // Remove listener after hiding
-      } else if (event.key === 'ArrowLeft') {
+
+        // Check if any panel is open before hiding the dimming element
+        if (!document.querySelector('.popup-panel')) {
+          triggerDimmingElement('hide');
+        }
+
+        document.removeEventListener('keydown', bigImageCloseSpaceHandler); // Remove listener after hiding
+      } else if (event.code === 'ArrowLeft') {
         navigateImages(-1);
-      } else if (event.key === 'ArrowRight') {
+      } else if (event.code === 'ArrowRight') {
         navigateImages(1);
       }
     };
 
-    document.addEventListener('keydown', bigImageKeydownHandler);
+    document.addEventListener('keydown', bigImageCloseSpaceHandler);
 
     // ZOOM AND MOVE -- START
 

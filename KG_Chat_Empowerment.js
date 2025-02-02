@@ -1345,15 +1345,21 @@
     cachedUsersPanel.style.height = '80vh';
     cachedUsersPanel.style.zIndex = '999';
 
-    // Attach a keydown event listener to the document object
-    document.addEventListener('keydown', function (event) {
+    // Define the event handler function as a const
+    const handleKeydown = (event) => {
       // Check if the key pressed was the "Escape" key
       if (event.key === 'Escape') {
         // Fade out the cached users panel
         triggerTargetElement(cachedUsersPanel, 'hide');
         triggerDimmingElement('hide');
+
+        // Remove the event listener after it has been triggered
+        document.removeEventListener('keydown', handleKeydown);
       }
-    });
+    };
+
+    // Attach the keydown event listener to the document object
+    document.addEventListener('keydown', handleKeydown);
 
     // Create a container div with class 'panel-header'
     const panelHeaderContainer = document.createElement('div');
@@ -5995,15 +6001,21 @@
     // Focus on the search input using requestAnimationFrame
     function focusOnSearchField() { requestAnimationFrame(function () { messagesSearchInput.focus(); }); } focusOnSearchField();
 
-    // Attach a keydown event listener to the document object
-    document.addEventListener('keydown', function (event) {
+    // Define the event handler function as a const
+    const handleKeydown = (event) => {
       // Check if the key pressed was the "Escape" key
       if (event.key === 'Escape') {
         // Fade out the cached messages panel
         triggerTargetElement(cachedMessagesPanel, 'hide');
         triggerDimmingElement('hide');
+
+        // Remove the event listener after it has been triggered
+        document.removeEventListener('keydown', handleKeydown);
       }
-    });
+    };
+
+    // Attach the keydown event listener to the document object
+    document.addEventListener('keydown', handleKeydown);
   }
 
   // Initialize previousTotalCount with the current personal messages count from localStorage
@@ -7031,15 +7043,21 @@
       });
     }
 
-    // Attach a keydown event listener to the document object
-    document.addEventListener('keydown', function (event) {
+    // Define the event handler function as a const
+    const handleKeydown = (event) => {
       // Check if the key pressed was the "Escape" key
       if (event.key === 'Escape') {
         // Fade out the chat logs panel
         triggerTargetElement(chatLogsPanel, 'hide');
         triggerDimmingElement('hide');
+
+        // Remove the event listener after it has been triggered
+        document.removeEventListener('keydown', handleKeydown);
       }
-    });
+    };
+
+    // Attach the keydown event listener to the document object
+    document.addEventListener('keydown', handleKeydown);
   }
 
   // CREATE CHAT LOGS BUTTON (END)
@@ -7289,7 +7307,7 @@
       height="24"
       viewBox="0 0 24 24"
       fill="none"
-      stroke="currentColor"
+      stroke="lightgray"
       stroke-width="2"
       stroke-linecap="round"
       stroke-linejoin="round"
@@ -7305,7 +7323,7 @@
       height="24"
       viewBox="0 0 24 24"
       fill="none"
-      stroke="currentColor"
+      stroke="lightgray"
       stroke-width="2"
       stroke-linecap="round"
       stroke-linejoin="round"
@@ -7320,7 +7338,7 @@
       height="24"
       viewBox="0 0 24 24"
       fill="none"
-      stroke="currentColor"
+      stroke="lightgray"
       stroke-width="2"
       stroke-linecap="round"
       stroke-linejoin="round"
@@ -7335,7 +7353,7 @@
       height="24"
       viewBox="0 0 24 24"
       fill="none"
-      stroke="currentColor"
+      stroke="lightgray"
       stroke-width="2"
       stroke-linecap="round"
       stroke-linejoin="round"
@@ -7618,14 +7636,21 @@
     settingsPanel.style.zIndex = '999';
     settingsPanel.style.minWidth = '1000px';
 
-    // Add a keydown event listener for the Esc key
-    document.addEventListener('keydown', (event) => {
+    // Define the event handler function as a const
+    const handleKeydown = (event) => {
+      // Check if the key pressed was the "Escape" key
       if (event.key === 'Escape') {
-        // Fade out the settings panel and dimming element when the Esc key is pressed
+        // Fade out the settings panel and dimming element
         triggerTargetElement(settingsPanel, 'hide');
         triggerDimmingElement('hide');
+
+        // Remove the event listener after it has been triggered
+        document.removeEventListener('keydown', handleKeydown);
       }
-    });
+    };
+
+    // Attach the keydown event listener to the document object
+    document.addEventListener('keydown', handleKeydown);
 
     // Create a container div for the panel header
     const panelHeaderContainer = document.createElement('div');

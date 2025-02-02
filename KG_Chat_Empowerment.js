@@ -5981,11 +5981,11 @@
     });
 
     requestAnimationFrame(() => {
-      messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll after next repaint
       // Convert image links to clickable thumbnail previews and embed YouTube videos as iframes for personal messages
       convertImageLinksToImage('personalMessages');
       convertYoutubeLinksToIframe('personalMessages');
       highlightMentionWords('personalMessages');
+      messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll after next repaint
     });
 
     // Process the colorization logic in reverse order
@@ -6895,10 +6895,10 @@
       renderActiveUsers(usernameMessageCountMap, chatLogsPanel, chatlogsSearchInput);
 
       requestAnimationFrame(() => {
-        chatLogsContainer.scrollTop = chatLogsContainer.scrollHeight; // Scroll to the very bottom
         convertImageLinksToImage('chatlogsMessages')
         convertYoutubeLinksToIframe('chatlogsMessages');
         highlightMentionWords('chatlogsMessages');
+        chatLogsContainer.scrollTop = chatLogsContainer.scrollHeight; // Scroll to the very bottom
       });
 
     };

@@ -1209,7 +1209,6 @@
     element.addEventListener('dblclick', (event) => {
       // Check if any panel is open
       const isPanelOpen = document.querySelector('.popup-panel');
-
       // If any panel is open and the double-clicked target is the scaled image, do not hide the dimming element
       if (!isPanelOpen || !event.target.closest('.scaled-thumbnail')) {
         triggerDimmingElement('hide'); // Hide the dimming element on double click, unless the target is a scaled image and a panel is open
@@ -2822,6 +2821,127 @@
   }
 
   // Function to update users in the custom chat
+  // async function refreshUserList(retrievedLogin, actionType) {
+  //   try {
+  //     // Get the original user list container
+  //     const originalUserListContainer = document.querySelector('.userlist-content');
+
+  //     // Get or create the user list container
+  //     let userListContainer = document.querySelector('.chat-user-list');
+  //     if (!userListContainer) {
+  //       userListContainer = document.createElement('div');
+  //       userListContainer.classList.add('chat-user-list');
+
+  //       // Find the element with the class "userlist"
+  //       const userlistElement = document.querySelector('.userlist');
+
+  //       // Append the userListContainer to the userlistElement if found
+  //       if (userlistElement) {
+  //         userlistElement.appendChild(userListContainer);
+  //       }
+  //     }
+
+  //     // Define the rank order
+  //     const rankOrder = ['extra', 'cyber', 'superman', 'maniac', 'racer', 'profi', 'driver', 'amateur', 'newbie'];
+
+  //     // Create an object to store subparent elements for each rank class
+  //     const rankSubparents = {};
+
+  //     // Check if subparent elements already exist, if not, create them
+  //     rankOrder.forEach(rankClass => {
+  //       const existingSubparent = userListContainer.querySelector(`.rank-group-${rankClass}`);
+  //       if (!existingSubparent) {
+  //         rankSubparents[rankClass] = document.createElement('div');
+  //         rankSubparents[rankClass].classList.add(`rank-group-${rankClass}`);
+  //         userListContainer.appendChild(rankSubparents[rankClass]);
+  //       } else {
+  //         rankSubparents[rankClass] = existingSubparent;
+  //       }
+  //     });
+
+  //     // Create a set to store existing user IDs in the updated user list
+  //     const existingUserIds = new Set();
+
+  //     // Iterate over each user element in the original user list
+  //     for (const userElement of originalUserListContainer.querySelectorAll('ins')) {
+  //       const nameElement = userElement.querySelector('.name');
+  //       const userId = nameElement.getAttribute('data-user');
+  //       const userName = nameElement.textContent;
+
+  //       // Check if the user already exists in the updated user list
+  //       if (!existingUserIds.has(userId)) {
+  //         try {
+  //           // Retrieve the user's profile data
+  //           const { rank: mainTitle, login, registeredDate, bestSpeed, ratingLevel, friends, cars, avatarTimestamp } = await getUserProfileData(userId);
+
+  //           // If the user data is not already stored in the fetchedUsers object
+  //           if (!fetchedUsers[userId]) {
+  //             // Set rank, login, registeredDate, bestSpeed, ratingLevel, friends, cars, and avatarTimestamp
+  //             fetchedUsers[userId] = {
+  //               rank: mainTitle,
+  //               login,
+  //               registered: registeredDate,
+  //               bestSpeed,
+  //               ratingLevel,
+  //               friends,
+  //               cars,
+  //               avatarTimestamp
+  //             };
+  //           } else {
+  //             // Update the user's data
+  //             fetchedUsers[userId].rank = mainTitle;
+  //             fetchedUsers[userId].login = login;
+  //             fetchedUsers[userId].registered = registeredDate;
+  //             fetchedUsers[userId].bestSpeed = bestSpeed;
+  //             fetchedUsers[userId].ratingLevel = ratingLevel;
+  //             fetchedUsers[userId].friends = friends;
+  //             fetchedUsers[userId].cars = cars;
+  //             fetchedUsers[userId].avatarTimestamp = avatarTimestamp;
+  //           }
+
+  //           // If actionType is 'enter' and retrievedLogin === userName, multiply the visits for the entered user
+  //           if (actionType === 'enter' && retrievedLogin === userName) {
+  //             fetchedUsers[userId].visits = (fetchedUsers[userId].visits || 0) + 1;
+  //             // Check if the user is in the usersToTrack array
+  //             fetchedUsers[userId].tracked = usersToTrack.some(userToTrack => userToTrack.name === retrievedLogin);
+  //           }
+
+  //           // Check if the user with the same ID already exists in the corresponding rank group
+  //           const existingUserElement = rankSubparents[getRankClass(mainTitle)].querySelector(`.user${userId}`);
+  //           if (!existingUserElement) {
+  //             const newUserElement = createUserChatElement(userId, mainTitle, userName, bestSpeed, userElement.classList.contains('revoked'));
+  //             // Add the user to the corresponding rank group
+  //             rankSubparents[getRankClass(mainTitle)].appendChild(newUserElement);
+  //           }
+
+  //           // Update existing user IDs
+  //           existingUserIds.add(userId);
+  //         } catch (error) {
+  //           console.error(`Error fetching profile summary for user ${userId}:`, error);
+  //         }
+  //       }
+  //     }
+
+  //     // Additional removal logic based on your provided code
+  //     userListContainer.querySelectorAll('.chat-user-list [class^="user"]').forEach(userElement => {
+  //       const userId = userElement.querySelector('.name').getAttribute('data-user');
+  //       if (!existingUserIds.has(userId)) {
+  //         userElement.remove();
+  //       }
+  //     });
+
+  //     // Update localStorage outside the if conditions
+  //     localStorage.setItem('fetchedUsers', JSON.stringify(fetchedUsers));
+
+  //     // Call updateUserCountText to refresh user count display
+  //     updateUserCountText();
+
+  //   } catch (error) {
+  //     console.error('Error refreshing user list:', error);
+  //   }
+  // }
+
+  // Function to update users in the custom chat
   async function refreshUserList(retrievedLogin, actionType) {
     try {
       // Get the original user list container
@@ -2930,6 +3050,16 @@
           userElement.remove();
         }
       });
+
+      // Sorting logic (applied after all users are created)
+      Object.values(rankSubparents).forEach(rankGroup =>
+        [...rankGroup.children]
+          .sort((a, b) =>
+            (fetchedUsers[b.querySelector('.name')?.getAttribute('data-user')]?.bestSpeed || 0) -
+            (fetchedUsers[a.querySelector('.name')?.getAttribute('data-user')]?.bestSpeed || 0)
+          )
+          .forEach(el => rankGroup.appendChild(el))
+      );
 
       // Update localStorage outside the if conditions
       localStorage.setItem('fetchedUsers', JSON.stringify(fetchedUsers));

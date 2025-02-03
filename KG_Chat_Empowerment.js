@@ -873,7 +873,7 @@
         removeBigImage(bigImage);
 
         // Remove all event listeners
-        document.removeEventListener('mousedown', definedMouseDownHandler);
+        document.removeEventListener('mousedown', mouseDownHandler);
         document.removeEventListener('mouseup', mouseUpHandler);
         document.removeEventListener('mousemove', mouseMoveHandler);
         document.removeEventListener('wheel', wheelHandler);
@@ -945,15 +945,16 @@
       }
     }
 
-    const mouseDownHandler = (event, src, bigImage) => {
-      const { button, clientX, clientY } = event;
+    const mouseDownHandler = (event) => {
+      const { button, clientX, clientY, target, ctrlKey } = event;
+      let src = target.src; // Get the src from the clicked element
 
       if (button === 0) { // Left Mouse Button (LMB)
-        isCtrlKeyPressed ? window.open(src, "_blank") : navigateImages(-1);
+        ctrlKey ? window.open(src, "_blank") : navigateImages(-1);
       } else if (button === 2) { // Right Mouse Button (RMB)
         event.preventDefault();
         event.stopPropagation();
-        if (isCtrlKeyPressed) {
+        if (ctrlKey) {
           // Copy to clipboard and hide the big image
           navigator.clipboard.writeText(src).catch(console.error);
           removeBigImage(bigImage); // Close the big image after copying
@@ -977,11 +978,7 @@
     const wheelHandler = handleZoom; // Assuming handleZoom is defined elsewhere
 
     // Attach event listeners
-    // Define the mousedown listener with a reference
-    const definedMouseDownHandler = (event) => mouseDownHandler(event, src, bigImage);
-    document.addEventListener('mousedown', definedMouseDownHandler);
-
-    // Attach other listeners normally (they already use function references)
+    document.addEventListener('mousedown', mouseDownHandler);
     document.addEventListener('mouseup', mouseUpHandler);
     document.addEventListener('mousemove', mouseMoveHandler);
     document.addEventListener('wheel', wheelHandler);

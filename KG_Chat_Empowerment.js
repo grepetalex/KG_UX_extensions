@@ -952,6 +952,7 @@
         isCtrlKeyPressed ? window.open(src, "_blank") : navigateImages(-1);
       } else if (button === 2) { // Right Mouse Button (RMB)
         event.preventDefault();
+        event.stopPropagation();
         if (isCtrlKeyPressed) {
           // Copy to clipboard and hide the big image
           navigator.clipboard.writeText(src).catch(console.error);

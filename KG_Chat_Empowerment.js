@@ -873,12 +873,12 @@
         removeBigImage(bigImage);
 
         // Remove all event listeners
-        document.removeEventListener('keydown', bigImageCloseSpaceHandler);
-        document.removeEventListener('mousedown', (event) => mouseDownHandler(event, src, bigImage));
+        document.removeEventListener('mousedown', definedMouseDownHandler);
         document.removeEventListener('mouseup', mouseUpHandler);
         document.removeEventListener('mousemove', mouseMoveHandler);
         document.removeEventListener('wheel', wheelHandler);
         document.removeEventListener('contextmenu', contextMenuHandler);
+        document.removeEventListener('keydown', bigImageCloseSpaceHandler);
 
       } else if (event.code === 'ArrowLeft') {
         navigateImages(-1);
@@ -976,7 +976,11 @@
     const wheelHandler = handleZoom; // Assuming handleZoom is defined elsewhere
 
     // Attach event listeners
-    document.addEventListener('mousedown', (event) => mouseDownHandler(event, src, bigImage));
+    // Define the mousedown listener with a reference
+    const definedMouseDownHandler = (event) => mouseDownHandler(event, src, bigImage);
+    document.addEventListener('mousedown', definedMouseDownHandler);
+
+    // Attach other listeners normally (they already use function references)
     document.addEventListener('mouseup', mouseUpHandler);
     document.addEventListener('mousemove', mouseMoveHandler);
     document.addEventListener('wheel', wheelHandler);

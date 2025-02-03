@@ -846,15 +846,6 @@
     }
   } // end convertImageLinksToImage
 
-  const removeBigImage = (bigImage) => {
-    // Hide the big image and check if there are any popup panels open before hiding the dimming element
-    triggerTargetElement(bigImage, 'hide');
-
-    if (!document.querySelector('.popup-panel')) {
-      triggerDimmingElement('hide');
-    }
-  };
-
   // Function to create a big image with a dimming layer
   function createBigImage(src) {
     const bigImage = document.createElement('img');
@@ -866,20 +857,28 @@
 
     document.body.appendChild(bigImage);
 
+    const removeBigImage = (bigImage) => {
+      // Hide the big image and check if there are any popup panels open before hiding the dimming element
+      triggerTargetElement(bigImage, 'hide');
+
+      if (!document.querySelector('.popup-panel')) {
+        triggerDimmingElement('hide');
+      }
+
+      // Remove all event listeners
+      document.removeEventListener('mousedown', mouseDownHandler);
+      document.removeEventListener('mouseup', mouseUpHandler);
+      document.removeEventListener('mousemove', mouseMoveHandler);
+      document.removeEventListener('wheel', wheelHandler);
+      document.removeEventListener('contextmenu', contextMenuHandler);
+      document.removeEventListener('keydown', bigImageCloseSpaceHandler);
+    };
+
     // Attach a keydown event listener for big image to close by ESC or Space and navigate with Arrow keys
     const bigImageCloseSpaceHandler = function (event) {
       if (event.code === 'Escape' || event.code === 'Space') { // Hide on ESC or Space
         event.preventDefault(); // Prevent default scrolling behavior for Space
         removeBigImage(bigImage);
-
-        // Remove all event listeners
-        document.removeEventListener('mousedown', mouseDownHandler);
-        document.removeEventListener('mouseup', mouseUpHandler);
-        document.removeEventListener('mousemove', mouseMoveHandler);
-        document.removeEventListener('wheel', wheelHandler);
-        document.removeEventListener('contextmenu', contextMenuHandler);
-        document.removeEventListener('keydown', bigImageCloseSpaceHandler);
-
       } else if (event.code === 'ArrowLeft') {
         navigateImages(-1);
       } else if (event.code === 'ArrowRight') {
@@ -949,12 +948,10 @@
       const { button, clientX, clientY, target, ctrlKey } = event;
       let src = target.src; // Get the src from the clicked element
 
-      event.preventDefault();
-      event.stopPropagation();
-
       if (button === 0) { // Left Mouse Button (LMB)
         ctrlKey ? window.open(src, "_blank") : navigateImages(-1);
       } else if (button === 2) { // Right Mouse Button (RMB)
+        event.preventDefault();
         if (ctrlKey) {
           // Copy to clipboard and hide the big image
           navigator.clipboard.writeText(src).catch(console.error);

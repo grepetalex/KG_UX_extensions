@@ -846,6 +846,15 @@
     }
   } // end convertImageLinksToImage
 
+  const removeBigImage = (bigImage) => {
+    // Hide the big image and check if there are any popup panels open before hiding the dimming element
+    triggerTargetElement(bigImage, 'hide');
+
+    if (!document.querySelector('.popup-panel')) {
+      triggerDimmingElement('hide');
+    }
+  };
+
   // Function to create a big image with a dimming layer
   function createBigImage(src) {
     const bigImage = document.createElement('img');
@@ -853,6 +862,7 @@
     bigImage.classList.add('scaled-thumbnail');
     bigImage.style.maxHeight = '90vh';
     bigImage.style.maxWidth = '90vw';
+    bigImage.style.cursor = "pointer";
 
     document.body.appendChild(bigImage);
 
@@ -860,19 +870,15 @@
     const bigImageCloseSpaceHandler = function (event) {
       if (event.code === 'Escape' || event.code === 'Space') { // Hide on ESC or Space
         event.preventDefault(); // Prevent default scrolling behavior for Space
-        triggerTargetElement(bigImage, 'hide');
-
-        // Check if any panel is open before hiding the dimming element
-        if (!document.querySelector('.popup-panel')) {
-          triggerDimmingElement('hide');
-        }
+        removeBigImage(bigImage);
 
         // Remove all event listeners
         document.removeEventListener('keydown', bigImageCloseSpaceHandler);
-        document.removeEventListener('mousedown', mouseDownHandler);
+        document.removeEventListener('mousedown', (event) => mouseDownHandler(event, src, bigImage));
         document.removeEventListener('mouseup', mouseUpHandler);
         document.removeEventListener('mousemove', mouseMoveHandler);
         document.removeEventListener('wheel', wheelHandler);
+        document.removeEventListener('contextmenu', contextMenuHandler);
 
       } else if (event.code === 'ArrowLeft') {
         navigateImages(-1);
@@ -939,16 +945,26 @@
       }
     }
 
-    // Add event listener for mousedown
-    const mouseDownHandler = (event) => {
-      // Check if the middle mouse button is pressed
-      if (event.button === 1) {
-        isDragging = true; // Set the dragging flag
-        [startX, startY] = [event.clientX, event.clientY]; // Calculate initial position
+    const mouseDownHandler = (event, src, bigImage) => {
+      const { button, clientX, clientY } = event;
+
+      if (button === 0) { // Left Mouse Button (LMB)
+        isCtrlKeyPressed ? window.open(src, "_blank") : navigateImages(-1);
+      } else if (button === 2) { // Right Mouse Button (RMB)
+        event.preventDefault();
+        if (isCtrlKeyPressed) {
+          // Copy to clipboard and hide the big image
+          navigator.clipboard.writeText(src).catch(console.error);
+          removeBigImage(bigImage); // Close the big image after copying
+        } else {
+          navigateImages(1);
+        }
+      } else if (button === 1) { // Middle Mouse Button (MMB)
+        isDragging = true;
+        [startX, startY] = [clientX, clientY];
       }
     };
 
-    // Add event listener for mouseup
     const mouseUpHandler = () => {
       isDragging = false; // Reset the dragging flag
     };
@@ -960,10 +976,17 @@
     const wheelHandler = handleZoom; // Assuming handleZoom is defined elsewhere
 
     // Attach event listeners
-    document.addEventListener('mousedown', mouseDownHandler);
+    document.addEventListener('mousedown', (event) => mouseDownHandler(event, src, bigImage));
     document.addEventListener('mouseup', mouseUpHandler);
     document.addEventListener('mousemove', mouseMoveHandler);
     document.addEventListener('wheel', wheelHandler);
+
+    // Add contextmenu listener to prevent right-click context menu
+    const contextMenuHandler = (event) => {
+      event.preventDefault(); // Prevent context menu from appearing
+    };
+
+    document.addEventListener('contextmenu', contextMenuHandler);
 
     return bigImage;
   }

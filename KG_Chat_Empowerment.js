@@ -1279,9 +1279,9 @@
 
   // Load a given URL into the iframe.
   const loadProfileIntoIframe = (url) => {
-    // Create an iframe to display user profile pages.
     const profileIframe = document.createElement('iframe');
     profileIframe.classList.add('profile-iframe-container');
+    profileIframe.src = url;
     profileIframe.style.border = 'none';
     profileIframe.src = url;
     profileIframe.style.display = 'flex';
@@ -1296,33 +1296,31 @@
     profileIframe.style.setProperty('box-shadow', '0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)', 'important');
     profileIframe.style.setProperty('border-radius', '0.6em', 'important');
 
-    document.body.appendChild(profileIframe); // Append iframe to the document body.
+    document.body.appendChild(profileIframe);
 
-    // Function to handle the space key press.
     const removeIframe = () => {
-      profileIframe.remove(); // Remove the iframe from the document.
-      document.removeEventListener('keydown', handleSpaceKey); // Clean up the event listener from the document.
+      profileIframe.remove();
+      document.removeEventListener('keydown', handleEvents);
+      document.removeEventListener('mousedown', handleEvents);
     };
 
-    const handleSpaceKey = (event) => {
-      if (event.code === 'Space') {
-        event.preventDefault(); // Prevent scroll caused by the space key.
-        removeIframe(); // Call the remove function.
+    const handleEvents = (event) => {
+      const isSpaceKey = event.type === 'keydown' && event.code === 'Space';
+      const isClickOutside = event.type === 'mousedown' && !profileIframe.contains(event.target);
+
+      if (isSpaceKey || isClickOutside) {
+        if (isSpaceKey) event.preventDefault(); // Prevent scroll only for space key.
+        removeIframe(); // Call the remove function once.
       }
     };
 
-    // Add event listener for the 'keydown' event to listen for space key presses.
-    document.addEventListener('keydown', handleSpaceKey);
+    document.addEventListener('keydown', handleEvents);
+    document.addEventListener('mousedown', handleEvents);
 
-    // Prevent space key scrolling inside the iframe.
     profileIframe.onload = () => {
-      // Add event listener for the iframe's contentWindow to listen for space key presses.
-      profileIframe.contentWindow.addEventListener('keydown', handleSpaceKey);
-
-      // Add event listener for double click to remove the iframe.
+      profileIframe.contentWindow.addEventListener('keydown', handleEvents);
       profileIframe.contentWindow.addEventListener('dblclick', removeIframe);
 
-      // Create the MutationObserver to watch for specific elements being removed.
       const observer = new MutationObserver((mutations) => {
         if (mutations.some(mutation =>
           Array.from(mutation.removedNodes).some(node =>
@@ -1330,12 +1328,11 @@
             (node.classList.contains('dimming-background') || node.classList.contains('cached-users-panel'))
           )
         )) {
-          removeIframe(); // Call the remove function.
-          observer.disconnect(); // Stop observing.
+          removeIframe();
+          observer.disconnect();
         }
       });
 
-      // Start observing the document body for changes.
       observer.observe(document.body, { childList: true, subtree: true });
     };
   };

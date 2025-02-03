@@ -15,8 +15,10 @@
 
   // USERS DEFINITION
 
-  // Your actual nickname to use it as an exclusion for the message beep and voice notifications
+  // Actual nickname to use it as an exclusion for the message beep and voice notifications
   const myNickname = document.querySelector('.userpanel .user-block .user-dropdown .name span').textContent;
+  // Extract the user ID from the href attribute of the mail link for chat, direct profile, or messaging navigation
+  const myUserId = document.querySelector('a.drop-btn.mail')?.href?.match(/\/u\/#\/(\d+)\/messages\//)?.[1];
 
   // Function to dynamically append font link to the head
   function appendFontLink(fontFamily, fontWeights) {
@@ -2769,8 +2771,29 @@
       }
     });
 
+    // Attach a click event listener to the newNameElement element
     newNameElement.addEventListener('click', function () {
-      insertPrivate(userId);
+      // Check if the Control key is pressed during the click event.
+      // If true, the user intends to open the profile messaging page in a new tab.
+      if (isCtrlKeyPressed) {
+        // Define the base URL for user profiles.
+        const profileBaseUrl = 'https://klavogonki.ru/u/#/';
+
+        // Construct the URL to the messaging interface.
+        // The URL structure indicates:
+        //   - The first user ID (myUserId) represents the current user's profile.
+        //   - The second user ID (userId) represents the recipient's profile.
+        const messageInProfile = `${profileBaseUrl}${myUserId}/messages/${userId}/`;
+
+        // Open the constructed messaging URL in a new browser tab.
+        // This immediately opens the profile messaging interface.
+        window.open(messageInProfile, '_blank');
+      }
+      // If the Control key is not pressed, initiate a private chat message.
+      else {
+        // The insertPrivate function handles sending a private message to the specified user.
+        insertPrivate(userId);
+      }
     });
 
     newUserElement.appendChild(newAvatarElement);

@@ -6330,8 +6330,8 @@
   // Initialize the visibility state for media and mention messages
   let visibleMessages = { media: false, mention: false };
 
-  // Function to reset and return the new object
-  const resetVisibleMessages = () => visibleMessages = { media: false, mention: false };
+  // Function to reset the visibleMessages object
+  const resetVisibleMessages = () => { visibleMessages = { media: false, mention: false }; };
 
   // Function to toggle the visibility of message items based on the given selector
   async function toggleMessagesVisibility(selector) {

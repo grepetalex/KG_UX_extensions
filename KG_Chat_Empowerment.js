@@ -740,8 +740,8 @@
 
           // Check if the link's href includes the allowed image extension and the domain is trusted
           if (allowed && isTrusted) {
-            // Add the class to mark this link as processed
-            link.classList.add('processed-image');
+            // Add the classes 'processed-image' and 'media' to mark this link as processed and associated with media content
+            link.classList.add('processed-image', 'media');
 
             // Change the text content of the link to indicate it's an image with extension and trusted domain
             link.textContent = `${imageExtensionEmoji} Image (${extension.toUpperCase()}) ${webDomainEmoji} Hostname (${domain})`;
@@ -1060,8 +1060,8 @@
       const mp4Match = url.match(/\.mp4(\?.*)?(#.*)?/i);
       if (isTrusted) {
         if (youtubeMatch || mp4Match) {
-          // Mark link as processed
-          link.classList.add('processed-video');
+          // Add the 'processed-video' and 'media' classes to mark this link as a processed video and associated with media content
+          link.classList.add('processed-video', 'media');
 
           // Create a wrapper div for better structure
           const wrapper = document.createElement('div');
@@ -4840,6 +4840,17 @@
       <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
       <polyline points="22,6 12,13 2,6"></polyline>
       </svg>`;
+  // Icon for media messages
+  const iconMediaMessages = `<svg xmlns="${svgUrl}" width="${iconSize - 4}" height="${iconSize - 4}" viewBox="0 0 24 24" fill="none" stroke="#71c4c4" stroke-width="${iconStrokeWidth}" stroke-linecap="round" stroke-linejoin="round" class="feather feather-film">
+      <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
+      <line x1="7" y1="2" x2="7" y2="22"></line>
+      <line x1="17" y1="2" x2="17" y2="22"></line>
+      <line x1="2" y1="12" x2="22" y2="12"></line>
+      <line x1="2" y1="7" x2="7" y2="7"></line>
+      <line x1="2" y1="17" x2="7" y2="17"></line>
+      <line x1="17" y1="17" x2="22" y2="17"></line>
+      <line x1="17" y1="7" x2="22" y2="7"></line>
+  </svg>`;
   // Icon for chat logs
   const iconChatLogs = `<svg xmlns="${svgUrl}" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none"
     stroke="cornflowerblue" stroke-width="${iconStrokeWidth}" stroke-linecap="round" stroke-linejoin="round"
@@ -6437,15 +6448,21 @@
     return null; // Return null if no user found
   }
 
-  let visibleMentionMessages = false; // Initialize the visibility state of mention messages
+  let visibleMessages = false; // Initialize the visibility state of messages
 
-  // Toggles the visibility of .message-item elements that do not contain a .mention child element
-  async function toggleMentionVisibility() {
-    visibleMentionMessages = !visibleMentionMessages; // Toggle the global state
+  // Toggles the visibility of .message-item elements based on a given selector
+  async function toggleMessagesVisibility(selector) {
+    visibleMessages = !visibleMessages; // Toggle the global state
+
+    // Set the selector based on the provided parameter
+    const actualSelector = selector === 'media' ? '.media' : '.mention'; // Default to '.mention' unless 'media' is specified
+    const selectors = [actualSelector, '.media']; // Include both the actual selector and .media
+
     document.querySelectorAll('.message-item').forEach(item => {
-      if (item.querySelector('.mention')) return;
-      item.style.contentVisibility = visibleMentionMessages ? 'hidden' : 'visible';
-      item.style.fontSize = visibleMentionMessages ? '0' : ''; // Set font size to 0 for hidden messages
+      // Check if the item matches any of the selectors
+      if (selectors.some(sel => item.querySelector(sel))) return; // Skip if any match the selectors
+      item.style.contentVisibility = visibleMessages ? 'hidden' : 'visible';
+      item.style.fontSize = visibleMessages ? '0' : ''; // Set font size to 0 for hidden messages
     });
   }
 
@@ -6632,11 +6649,28 @@
 
     // Add a click event listener to toggle the visibility of messages without mentions
     toggleMentionMessages.addEventListener('click', async () => {
-      await toggleMentionVisibility();
+      await toggleMessagesVisibility();
     });
 
     // Append the toggle mention messages component to the control panel
     panelControlButtons.appendChild(toggleMentionMessages);
+
+    // Create a toggle media messages component
+    const toggleMediaMessages = document.createElement('div');
+    toggleMediaMessages.className = 'toggle-media-messages';
+    // Set the inner HTML of the toggle component with a suitable SVG or text
+    toggleMediaMessages.innerHTML = iconMediaMessages;
+    toggleMediaMessages.title = 'Toggle Media Messages';
+    // Apply common styles to the component
+    applyHeaderButtonStyles(toggleMediaMessages, 'darkslategray');
+
+    // Add a click event listener to toggle the visibility of media messages
+    toggleMediaMessages.addEventListener('click', async () => {
+      await toggleMessagesVisibility('media');
+    });
+
+    // Append the toggle media messages component to the control panel
+    panelControlButtons.appendChild(toggleMediaMessages);
 
     // Create a copy chatlogs button element
     const copyChatLogsUrl = document.createElement('div');
@@ -6895,6 +6929,7 @@
       partialScrollUpButton,
       partialScrollDownButton,
       toggleMentionMessages,
+      toggleMediaMessages,
       copyChatLogsUrl,
       toggleActiveUsers,
       dateInputToggle,
@@ -6957,8 +6992,8 @@
         messageContainer.style.alignItems = 'center'; // Align items to center
         // Attach click event to scroll the chat logs container to the middle of the parent container on LMB click
         messageContainer.addEventListener('click', async () => {
-          // Call toggleMentionVisibility to show all messages and scroll when a message is clicked on visibleMentionMessages is true
-          if (visibleMentionMessages) await toggleMentionVisibility();
+          // Call toggleMessagesVisibility to show all messages and scroll when a message is clicked on visibleMentionMessages is true
+          if (visibleMentionMessages) await toggleMessagesVisibility();
           // Call restoreMessagesVisibility to show all messages when a message is clicked on visibleMentionMessages is false
           else restoreMessagesVisibility(chatlogsSearchInput);
           // Use helper function to scroll the chat logs container to the middle of the parent container

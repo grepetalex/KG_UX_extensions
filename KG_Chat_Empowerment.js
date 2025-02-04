@@ -6330,6 +6330,9 @@
   // Initialize the visibility state for media and mention messages
   let visibleMessages = { media: false, mention: false };
 
+  // Function to reset and return the new object
+  const resetVisibleMessages = () => visibleMessages = { media: false, mention: false };
+
   // Function to toggle the visibility of message items based on the given selector
   async function toggleMessagesVisibility(selector) {
     // Determine if the selector is 'media' or 'mention' and update visibility states
@@ -6541,6 +6544,35 @@
       await toggleMessagesVisibility('mention');
     });
 
+    // Function to apply styles to the toggle counter element
+    function applyToggleCounterStyles(element, backgroundColor) {
+      // Set the display type to flex for layout control
+      element.style.display = 'flex';
+      element.style.position = 'absolute';
+      element.style.justifyContent = 'center';
+      element.style.alignItems = 'center';
+      element.style.padding = '2px 4px';
+      element.style.setProperty('border-radius', '2px', 'important');
+      element.style.fontSize = '12px';
+      element.style.fontFamily = 'Roboto';
+      element.style.fontWeight = 'bold';
+      element.style.bottom = '0px';
+      element.style.left = '0px';
+      element.style.transform = 'translate(-50%, 50%)';
+      element.style.backgroundColor = backgroundColor;
+      element.style.color = '#020202';
+    }
+
+    // Create a new div element for the toggle mention messages counter
+    const toggleMentionMessagesCounter = document.createElement('div');
+    // Assign a class name to the element
+    toggleMentionMessagesCounter.className = 'toggle-mention-messages-counter';
+    toggleMentionMessagesCounter.textContent = '0'; // Set as default value before assign
+    // Apply the defined styles using the applyToggleCounterStyles function
+    applyToggleCounterStyles(toggleMentionMessagesCounter, '#ffa07a');
+
+    // Append the counter inside the toggleMentionMessages component
+    toggleMentionMessages.appendChild(toggleMentionMessagesCounter);
     // Append the toggle mention messages component to the control panel
     panelControlButtons.appendChild(toggleMentionMessages);
 
@@ -6558,8 +6590,27 @@
       await toggleMessagesVisibility('media');
     });
 
+    // Create a new div element for the toggle media messages counter
+    const toggleMediaMessagesCounter = document.createElement('div');
+    // Assign a class name to the element
+    toggleMediaMessagesCounter.className = 'toggle-media-messages-counter';
+    toggleMediaMessagesCounter.textContent = '0'; // Set as default value before assign
+    // Apply the defined styles using the applyToggleCounterStyles function
+    applyToggleCounterStyles(toggleMediaMessagesCounter, '#71c4c4');
+
+    // Append the counter inside the toggleMediaMessages component
+    toggleMediaMessages.appendChild(toggleMediaMessagesCounter);
+
     // Append the toggle media messages component to the control panel
     panelControlButtons.appendChild(toggleMediaMessages);
+
+    // Function to update the media and mention counters
+    function updateMediaAndMentionCounters() {
+      // Update the media counter
+      toggleMediaMessagesCounter.textContent = document.querySelectorAll('.media').length;
+      // Update the mention counter
+      toggleMentionMessagesCounter.textContent = document.querySelectorAll('.mention').length;
+    }
 
     // Create a copy chatlogs button element
     const copyChatLogsUrl = document.createElement('div');
@@ -6663,6 +6714,7 @@
       await loadChatLogs(currentDate); // Load chat logs for the updated date
       showDateInput(dateInput);
       focusOnSearchField();
+      resetVisibleMessages();
     });
 
     // Event listener for the chevron right button
@@ -6675,6 +6727,7 @@
       await loadChatLogs(currentDate); // Load chat logs for the updated date
       showDateInput(dateInput);
       focusOnSearchField();
+      resetVisibleMessages();
     });
 
     // Event listener for the shuffle button
@@ -6686,6 +6739,7 @@
       await loadChatLogs(randomDate); // Load chat logs for the random date
       showDateInput(dateInput);
       focusOnSearchField();
+      resetVisibleMessages();
     });
 
     // Append buttons to the control buttons container
@@ -6988,10 +7042,13 @@
       renderActiveUsers(usernameMessageCountMap, chatLogsPanel, chatlogsSearchInput);
 
       requestAnimationFrame(() => {
-        convertImageLinksToImage('chatlogsMessages')
+        convertImageLinksToImage('chatlogsMessages');
         convertVideoLinksToPlayer('chatlogsMessages');
         highlightMentionWords('chatlogsMessages');
         chatLogsContainer.scrollTop = chatLogsContainer.scrollHeight; // Scroll to the very bottom
+
+        // Update the media and mention counters
+        updateMediaAndMentionCounters();
       });
 
     };

@@ -846,6 +846,21 @@
     }
   } // end convertImageLinksToImage
 
+  // Object to store event handlers for big image
+  const bigImageEvents = {};
+
+  function addBigImageEventListeners() {
+    Object.entries(bigImageEvents).forEach(([event, handler]) => {
+      document.addEventListener(event, handler);
+    });
+  }
+
+  function removeBigImageEventListeners() {
+    Object.entries(bigImageEvents).forEach(([event, handler]) => {
+      document.removeEventListener(event, handler);
+    });
+  }
+
   // Function to create a big image with a dimming layer
   function createBigImage(src) {
     const bigImage = document.createElement('img');
@@ -864,18 +879,22 @@
       if (!document.querySelector('.popup-panel')) {
         triggerDimmingElement('hide');
       }
-
       // Remove all event listeners
-      document.removeEventListener('mousedown', mouseDownHandler);
-      document.removeEventListener('mouseup', mouseUpHandler);
-      document.removeEventListener('mousemove', mouseMoveHandler);
-      document.removeEventListener('wheel', wheelHandler);
-      document.removeEventListener('contextmenu', contextMenuHandler);
-      document.removeEventListener('keydown', bigImageCloseSpaceHandler);
+      removeBigImageEventListeners();
     };
 
+    // Close when clicking outside the big image
+    bigImageEvents.unfocusedClick = function (event) {
+      if (!bigImage.contains(event.target)) { // If clicked outside the image
+        bigImage.remove(); // Directly remove the image from the DOM
+        removeBigImageEventListeners(); // Clean up event listeners
+      }
+    };
+
+    document.addEventListener('click', bigImageEvents.unfocusedClick);
+
     // Attach a keydown event listener for big image to close by ESC or Space and navigate with Arrow keys
-    const bigImageCloseSpaceHandler = function (event) {
+    bigImageEvents.keydown = function (event) {
       if (event.code === 'Escape' || event.code === 'Space') { // Hide on ESC or Space
         event.preventDefault(); // Prevent default scrolling behavior for Space
         removeBigImage(bigImage);
@@ -886,7 +905,7 @@
       }
     };
 
-    document.addEventListener('keydown', bigImageCloseSpaceHandler);
+    document.addEventListener('keydown', bigImageEvents.keydown);
 
     // ZOOM AND MOVE -- START
 
@@ -905,7 +924,7 @@
     const movementSpeed = 5;
 
     // Function to handle zooming
-    function handleZoom(event) {
+    bigImageEvents.wheel = function (event) {
       // Determine the direction of the mouse wheel movement
       const deltaY = event.deltaY;
       const direction = deltaY < 0 ? 1 : -1;
@@ -922,10 +941,10 @@
 
       // Prevent the default scrolling behavior
       event.preventDefault();
-    }
+    };
 
     // Function to update the image position smoothly
-    function updateImagePosition(event) {
+    bigImageEvents.mousemove = function (event) {
       if (isDragging) {
         // Calculate the distance moved since the last mousemove event
         const deltaX = (event.clientX - startX) / zoomScale * movementSpeed;
@@ -942,9 +961,9 @@
         startX = event.clientX;
         startY = event.clientY;
       }
-    }
+    };
 
-    const mouseDownHandler = (event) => {
+    bigImageEvents.mousedown = function (event) {
       const { button, clientX, clientY, target, ctrlKey } = event;
       let src = target.src; // Get the src from the clicked element
 
@@ -965,28 +984,17 @@
       }
     };
 
-    const mouseUpHandler = () => {
+    bigImageEvents.mouseup = function () {
       isDragging = false; // Reset the dragging flag
     };
 
-    // Add event listener for mousemove
-    const mouseMoveHandler = updateImagePosition; // Assuming updateImagePosition is defined elsewhere
-
-    // Add event listener for wheel
-    const wheelHandler = handleZoom; // Assuming handleZoom is defined elsewhere
-
-    // Attach event listeners
-    document.addEventListener('mousedown', mouseDownHandler);
-    document.addEventListener('mouseup', mouseUpHandler);
-    document.addEventListener('mousemove', mouseMoveHandler);
-    document.addEventListener('wheel', wheelHandler);
-
     // Add contextmenu listener to prevent right-click context menu
-    const contextMenuHandler = (event) => {
+    bigImageEvents.contextmenu = function (event) {
       event.preventDefault(); // Prevent context menu from appearing
     };
 
-    document.addEventListener('contextmenu', contextMenuHandler);
+    // Attach all event listeners
+    addBigImageEventListeners();
 
     return bigImage;
   }
@@ -1177,6 +1185,8 @@
   function triggerDimmingElement(action) {
     // Check if the dimming element already exists
     let dimming = document.querySelector('.dimming-background');
+    // Check if the scaled scaled thumbnail already exists
+    let scaledThumbnail = document.querySelector('.scaled-thumbnail');
 
     // If the action is 'hide' and the dimming element doesn't exist, return
     if (action === 'hide' && !dimming) return;
@@ -1203,6 +1213,7 @@
         const elementToRemove = document.querySelector('.popup-panel') || dimming.previousElementSibling;
         elementToRemove?.parentNode?.removeChild(elementToRemove);
         triggerDimmingElement('hide');
+        if (scaledThumbnail) removeBigImageEventListeners(); // Remove all bigImage event listeners
       });
 
     }
@@ -1228,8 +1239,8 @@
 
     // If the action is 'hide', check for and remove the .scaled-thumbnail using triggerTargetElement
     if (action === 'hide') {
-      const scaledThumbnail = document.querySelector('.scaled-thumbnail');
       if (scaledThumbnail) {
+        removeBigImageEventListeners(); // Remove all bigImage event listeners
         triggerTargetElement(scaledThumbnail, 'hide'); // Use triggerTargetElement to fade out and remove the scaled-thumbnail
       }
     }
@@ -1272,11 +1283,24 @@
 
   }
 
+  // Define an empty object to store event handlers
+  let panelsEvents = {};
+
+  function removeAllPanelEventListeners() {
+    Object.values(panelsEvents).forEach((handler) => {
+      document.removeEventListener('keydown', handler); // Use the correct event handler to remove the listener
+    });
+    // Clear the panelsEvents object by reassigning it to an empty object
+    panelsEvents = {};
+  }
+
   // Function to remove the previous panel if it exists
   function removePreviousPanel() {
+    removeAllPanelEventListeners();
     const existingPanel = document.querySelector('.popup-panel');
     if (existingPanel) existingPanel.remove();
   }
+
 
   // NEW CHAT CACHE CONTROL PANEL (START)
 
@@ -1394,21 +1418,17 @@
     cachedUsersPanel.style.height = '80vh';
     cachedUsersPanel.style.zIndex = '999';
 
-    // Define the event handler function as a const
-    const handleKeydown = (event) => {
-      // Check if the key pressed was the "Escape" key
+    // Define the event handler function for the cache panel
+    panelsEvents.handleCacheKeydown = (event) => { // Assign the function to the object
       if (event.key === 'Escape') {
-        // Fade out the cached users panel
         triggerTargetElement(cachedUsersPanel, 'hide');
         triggerDimmingElement('hide');
-
-        // Remove the event listener after it has been triggered
-        document.removeEventListener('keydown', handleKeydown);
+        document.removeEventListener('keydown', panelsEvents.handleCacheKeydown); // Remove the event listener
       }
     };
 
-    // Attach the keydown event listener to the document object
-    document.addEventListener('keydown', handleKeydown);
+    // Attach the event listener
+    document.addEventListener('keydown', panelsEvents.handleCacheKeydown);
 
     // Create a container div with class 'panel-header'
     const panelHeaderContainer = document.createElement('div');
@@ -6202,21 +6222,17 @@
     // Focus on the search input using requestAnimationFrame
     function focusOnSearchField() { requestAnimationFrame(function () { messagesSearchInput.focus(); }); } focusOnSearchField();
 
-    // Define the event handler function as a const
-    const handleKeydown = (event) => {
-      // Check if the key pressed was the "Escape" key
+    // Define the event handler function for personal messages panel
+    panelsEvents.handlePersonalMessagesKeydown = (event) => { // Assign the function to the object
       if (event.key === 'Escape') {
-        // Fade out the cached messages panel
         triggerTargetElement(cachedMessagesPanel, 'hide');
         triggerDimmingElement('hide');
-
-        // Remove the event listener after it has been triggered
-        document.removeEventListener('keydown', handleKeydown);
+        document.removeEventListener('keydown', panelsEvents.handlePersonalMessagesKeydown); // Remove the event listener
       }
     };
 
-    // Attach the keydown event listener to the document object
-    document.addEventListener('keydown', handleKeydown);
+    // Attach the event listener
+    document.addEventListener('keydown', panelsEvents.handlePersonalMessagesKeydown);
   }
 
   // Initialize previousTotalCount with the current personal messages count from localStorage
@@ -7244,21 +7260,17 @@
       });
     }
 
-    // Define the event handler function as a const
-    const handleKeydown = (event) => {
-      // Check if the key pressed was the "Escape" key
+    // Define the event handler function for chat logs panel
+    panelsEvents.handleChatLogsKeydown = (event) => { // Assign the function to the object
       if (event.key === 'Escape') {
-        // Fade out the chat logs panel
         triggerTargetElement(chatLogsPanel, 'hide');
         triggerDimmingElement('hide');
-
-        // Remove the event listener after it has been triggered
-        document.removeEventListener('keydown', handleKeydown);
+        document.removeEventListener('keydown', panelsEvents.handleChatLogsKeydown); // Remove the event listener
       }
     };
 
-    // Attach the keydown event listener to the document object
-    document.addEventListener('keydown', handleKeydown);
+    // Attach the event listener
+    document.addEventListener('keydown', panelsEvents.handleChatLogsKeydown);
   }
 
   // CREATE CHAT LOGS BUTTON (END)
@@ -7837,21 +7849,17 @@
     settingsPanel.style.zIndex = '999';
     settingsPanel.style.minWidth = '1000px';
 
-    // Define the event handler function as a const
-    const handleKeydown = (event) => {
-      // Check if the key pressed was the "Escape" key
+    // Define the event handler function for settings panel
+    panelsEvents.handleSettingsKeydown = (event) => { // Assign the function to the object
       if (event.key === 'Escape') {
-        // Fade out the settings panel and dimming element
         triggerTargetElement(settingsPanel, 'hide');
         triggerDimmingElement('hide');
-
-        // Remove the event listener after it has been triggered
-        document.removeEventListener('keydown', handleKeydown);
+        document.removeEventListener('keydown', panelsEvents.handleSettingsKeydown); // Remove the event listener
       }
     };
 
-    // Attach the keydown event listener to the document object
-    document.addEventListener('keydown', handleKeydown);
+    // Attach the event listener
+    document.addEventListener('keydown', panelsEvents.handleSettingsKeydown);
 
     // Create a container div for the panel header
     const panelHeaderContainer = document.createElement('div');

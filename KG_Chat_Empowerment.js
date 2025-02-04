@@ -639,6 +639,8 @@
   // List of trusted domains
   const trustedDomains = [
     'klavogonki.ru',
+    'youtube.com', // youtube main
+    'youtu.be', // youtube share
     'imgur.com',
     'pikabu.ru',
     'userapi.com', // vk.com
@@ -1041,59 +1043,61 @@
     // Find all unprocessed links inside the container
     container.querySelectorAll('a:not(.processed-video)').forEach(link => {
       const url = link.href;
-      const domain = new URL(url).hostname;
+      // Check if the link's href includes trusted domain
+      const { isTrusted, domain } = isTrustedDomain(url);
 
       // Check if the link is a YouTube video
       const youtubeMatch = url.match(/(?:shorts\/|live\/|watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
 
       // Check if the link is an MP4 video
       const mp4Match = url.match(/\.mp4(\?.*)?(#.*)?/i);
+      if (isTrusted) {
+        if (youtubeMatch || mp4Match) {
+          // Mark link as processed
+          link.classList.add('processed-video');
 
-      if (youtubeMatch || mp4Match) {
-        // Mark link as processed
-        link.classList.add('processed-video');
+          // Create a wrapper div for better structure
+          const wrapper = document.createElement('div');
+          wrapper.style.display = 'flex';
+          wrapper.style.width = 'fit-content';
+          wrapper.style.flexDirection = 'column';
+          wrapper.style.gap = '6px';
+          wrapper.style.marginBottom = '10px';
 
-        // Create a wrapper div for better structure
-        const wrapper = document.createElement('div');
-        wrapper.style.display = 'flex';
-        wrapper.style.width = 'fit-content';
-        wrapper.style.flexDirection = 'column';
-        wrapper.style.gap = '6px';
-        wrapper.style.marginBottom = '10px';
+          // Create an appropriate embed element (iframe for YouTube, video for MP4)
+          let embedElement = document.createElement(youtubeMatch ? 'iframe' : 'video');
+          embedElement.height = '150';
+          embedElement.style.display = 'flex';
+          embedElement.style.border = 'none';
 
-        // Create an appropriate embed element (iframe for YouTube, video for MP4)
-        let embedElement = document.createElement(youtubeMatch ? 'iframe' : 'video');
-        embedElement.height = '150';
-        embedElement.style.display = 'flex';
-        embedElement.style.border = 'none';
+          if (youtubeMatch) {
+            // Extract video ID and determine YouTube video type
+            const videoId = youtubeMatch[1];
+            const youtubeType = url.includes('shorts/') ? 'Shorts' :
+              url.includes('live/') ? 'Live' :
+                url.includes('watch?v=') ? 'Watch' :
+                  url.includes('youtu.be/') ? 'Share' : 'YouTube';
 
-        if (youtubeMatch) {
-          // Extract video ID and determine YouTube video type
-          const videoId = youtubeMatch[1];
-          const youtubeType = url.includes('shorts/') ? 'Shorts' :
-            url.includes('live/') ? 'Live' :
-              url.includes('watch?v=') ? 'Watch' :
-                url.includes('youtu.be/') ? 'Share' : 'YouTube';
+            // Update link text for YouTube videos
+            link.textContent = `${videoExtensionEmoji} ${youtubeType} ${webDomainEmoji} Hostname (${domain})`;
+            embedElement.src = `https://www.youtube.com/embed/${videoId}`;
+            embedElement.allowFullscreen = true;
+          } else {
+            // Update link text for MP4 videos
+            link.textContent = `${videoExtensionEmoji} Video (MP4) ${webDomainEmoji} Hostname (${domain})`;
+            embedElement.src = url;
+            embedElement.controls = true;
+          }
 
-          // Update link text for YouTube videos
-          link.textContent = `${videoExtensionEmoji} ${youtubeType} ${webDomainEmoji} Hostname (${domain})`;
-          embedElement.src = `https://www.youtube.com/embed/${videoId}`;
-          embedElement.allowFullscreen = true;
-        } else {
-          // Update link text for MP4 videos
-          link.textContent = `${videoExtensionEmoji} Video (MP4) ${webDomainEmoji} Hostname (${domain})`;
-          embedElement.src = url;
-          embedElement.controls = true;
+          // Set link attributes
+          link.title = url;
+          link.style.display = 'inline-flex';
+
+          // Insert wrapper before the link and append elements
+          link.parentNode.insertBefore(wrapper, link);
+          wrapper.appendChild(link);
+          wrapper.appendChild(embedElement);
         }
-
-        // Set link attributes
-        link.title = url;
-        link.style.display = 'inline-flex';
-
-        // Insert wrapper before the link and append elements
-        link.parentNode.insertBefore(wrapper, link);
-        wrapper.appendChild(link);
-        wrapper.appendChild(embedElement);
       }
     });
 

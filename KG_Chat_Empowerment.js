@@ -6453,16 +6453,12 @@
   // Toggles the visibility of .message-item elements based on a given selector
   async function toggleMessagesVisibility(selector) {
     visibleMessages = !visibleMessages; // Toggle the global state
-
-    // Set the selector based on the provided parameter
-    const actualSelector = selector === 'media' ? '.media' : '.mention'; // Default to '.mention' unless 'media' is specified
-    const selectors = [actualSelector, '.media']; // Include both the actual selector and .media
+    const actualSelector = selector === 'media' ? '.media' : '.mention';
 
     document.querySelectorAll('.message-item').forEach(item => {
-      // Check if the item matches any of the selectors
-      if (selectors.some(sel => item.querySelector(sel))) return; // Skip if any match the selectors
-      item.style.contentVisibility = visibleMessages ? 'hidden' : 'visible';
-      item.style.fontSize = visibleMessages ? '0' : ''; // Set font size to 0 for hidden messages
+      const hasRelevantClass = item.querySelector(actualSelector);
+      item.style.contentVisibility = (visibleMessages && hasRelevantClass) || !visibleMessages ? 'visible' : 'hidden';
+      item.style.fontSize = (visibleMessages && hasRelevantClass) || !visibleMessages ? '' : '0';
     });
   }
 
@@ -6993,7 +6989,7 @@
         // Attach click event to scroll the chat logs container to the middle of the parent container on LMB click
         messageContainer.addEventListener('click', async () => {
           // Call toggleMessagesVisibility to show all messages and scroll when a message is clicked on visibleMentionMessages is true
-          if (visibleMentionMessages) await toggleMessagesVisibility();
+          if (visibleMessages) await toggleMessagesVisibility();
           // Call restoreMessagesVisibility to show all messages when a message is clicked on visibleMentionMessages is false
           else restoreMessagesVisibility(chatlogsSearchInput);
           // Use helper function to scroll the chat logs container to the middle of the parent container

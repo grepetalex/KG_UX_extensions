@@ -838,9 +838,6 @@
               img.style.backgroundColor = 'transparent';
             }
           } else {
-            // Handle the case where the domain is not trusted or the image extension is not allowed
-            console.error("Not a trusted domain or invalid image extension:", link.href);
-
             // Add a class to the link to skip future conversion attempts
             link.classList.add('skipped');
           }

@@ -720,10 +720,10 @@
     if (containerSelector) {
       const container = document.querySelector(containerSelector);
       if (container) {
-        // Get all links inside the container
-        const links = container.querySelectorAll('a:not(.processed-image)');
+        // Get all links inside the container that haven't been processed yet
+        const links = container.querySelectorAll('a:not(.skipped):not(.processed-image)');
 
-        // loop through all links
+        // Loop through all links
         for (let i = 0; i < links.length; i++) {
           const link = links[i];
 
@@ -740,6 +740,8 @@
 
           // Check if the link's href includes the allowed image extension and the domain is trusted
           if (allowed && isTrusted) {
+            // Add the class to mark this link as processed
+            link.classList.add('processed-image');
 
             // Change the text content of the link to indicate it's an image with extension and trusted domain
             link.textContent = `${imageExtensionEmoji} Image (${extension.toUpperCase()}) ${webDomainEmoji} Hostname (${domain})`;
@@ -747,10 +749,10 @@
             // Assign the href value as the title
             link.title = link.href;
 
-            // check if thumbnail already exists
+            // Check if thumbnail already exists
             const thumbnail = link.nextSibling;
             if (!thumbnail || !thumbnail.classList || !thumbnail.classList.contains('thumbnail')) {
-              // create a new thumbnail
+              // Create a new thumbnail
               const thumbnail = document.createElement('div');
               thumbnail.classList.add('thumbnail');
               thumbnail.style.width = '6vw';
@@ -763,7 +765,7 @@
               thumbnail.style.margin = '6px';
               thumbnail.style.overflowY = 'auto';
 
-              // create an image inside the thumbnail
+              // Create an image inside the thumbnail
               const img = document.createElement('img');
               img.src = link.href; // Assign the src directly
 
@@ -773,13 +775,13 @@
                 if (isTrustedDomain(link.href)) {
                   thumbnail.appendChild(img);
 
-                  // insert the thumbnail after the link
+                  // Insert the thumbnail after the link
                   link.parentNode.insertBefore(thumbnail, link.nextSibling);
 
                   // Store the thumbnail link and its corresponding image URL
                   thumbnailLinks.push({ link, imgSrc: link.href });
 
-                  // add click event to thumbnail to create a big image and dimming layer
+                  // Add click event to thumbnail to create a big image and dimming layer
                   thumbnail.addEventListener('click', function (e) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -807,7 +809,7 @@
                     }
                   }); // thumbnail event end
 
-                  // add mouseover and mouseout event listeners to the thumbnail
+                  // Add mouseover and mouseout event listeners to the thumbnail
                   thumbnail.addEventListener('mouseover', function () {
                     img.style.opacity = 0.7;
                     img.style.transition = 'opacity 0.3s';
@@ -819,12 +821,6 @@
 
                   // Call the function to scroll to the bottom of the specified container
                   scrollMessagesToBottom(containerType);
-                } else {
-                  // Handle the case where the domain is not trusted
-                  console.error("Not a trusted domain:", link.href);
-
-                  // Add a class to the link to skip future conversion attempts
-                  link.classList.add('processed-image');
                 }
               };
 
@@ -834,13 +830,19 @@
                 console.error("Failed to load image:", link.href);
 
                 // Add a class to the link to skip future conversion attempts
-                link.classList.add('processed-image');
+                link.classList.add('skipped');
               };
 
               img.style.maxHeight = '100%';
               img.style.maxWidth = '100%';
               img.style.backgroundColor = 'transparent';
             }
+          } else {
+            // Handle the case where the domain is not trusted or the image extension is not allowed
+            console.error("Not a trusted domain or invalid image extension:", link.href);
+
+            // Add a class to the link to skip future conversion attempts
+            link.classList.add('skipped');
           }
         }
       }

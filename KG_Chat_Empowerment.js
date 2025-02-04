@@ -721,7 +721,7 @@
       const container = document.querySelector(containerSelector);
       if (container) {
         // Get all links inside the container
-        const links = container.querySelectorAll('a:not(.skipped)');
+        const links = container.querySelectorAll('a:not(.processed-image)');
 
         // loop through all links
         for (let i = 0; i < links.length; i++) {
@@ -824,7 +824,7 @@
                   console.error("Not a trusted domain:", link.href);
 
                   // Add a class to the link to skip future conversion attempts
-                  link.classList.add('skipped');
+                  link.classList.add('processed-image');
                 }
               };
 
@@ -834,7 +834,7 @@
                 console.error("Failed to load image:", link.href);
 
                 // Add a class to the link to skip future conversion attempts
-                link.classList.add('skipped');
+                link.classList.add('processed-image');
               };
 
               img.style.maxHeight = '100%';

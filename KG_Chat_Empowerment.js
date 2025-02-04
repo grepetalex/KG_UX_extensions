@@ -6607,9 +6607,9 @@
     // Function to update the media and mention counters
     function updateMediaAndMentionCounters() {
       // Update the media counter
-      toggleMediaMessagesCounter.textContent = document.querySelectorAll('.media').length;
+      toggleMediaMessagesCounter.textContent = document.querySelectorAll('.chat-logs-container .media').length;
       // Update the mention counter
-      toggleMentionMessagesCounter.textContent = document.querySelectorAll('.mention').length;
+      toggleMentionMessagesCounter.textContent = document.querySelectorAll('.chat-logs-container .mention').length;
     }
 
     // Create a copy chatlogs button element

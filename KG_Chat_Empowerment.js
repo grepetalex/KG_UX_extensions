@@ -623,7 +623,7 @@
      * Allows navigation through images using the left (<) and right (>) arrow keys.
      */
 
-  // Define global variables for the current big image and dimming background
+  // Define global variables for the current big image
   let bigImage = null;
 
   // Define an array to store all the thumbnail links and their corresponding image URLs
@@ -632,10 +632,9 @@
   const imageChangeDelay = 50; // Prevent double slide by single press adding slight delay
   let isChangingImage = false; // Flag to track if an image change is in progress
 
-  // Emoji for the image extension
-  const imageExtensionEmoji = '📸';
-  // Emoji for the web domain
-  const webDomainEmoji = '🖥️';
+  const imageExtensionEmoji = '📸'; // Emoji for the image extension
+  const videoExtensionEmoji = '🎥'; // Emoji for video extension
+  const webDomainEmoji = '🖥️'; // Emoji for the web domain
 
   // List of trusted domains
   const trustedDomains = [
@@ -1020,60 +1019,86 @@
     }
   }
 
-  // Function to convert YouTube links to embedded iframes based on the specified container
-  function convertYoutubeLinksToIframe(containerType) {
-    // Define a mapping for container types to their respective selectors
+  function convertVideoLinksToPlayer(containerType) {
+    // Define container selectors for different message types
     const containerSelectors = {
-      generalMessages: '.messages-content div', // For general chat
-      chatlogsMessages: '.chat-logs-container', // For chat logs
-      personalMessages: '.messages-container' // For personal messages panel
+      generalMessages: '.messages-content div',
+      chatlogsMessages: '.chat-logs-container',
+      personalMessages: '.messages-container'
     };
 
-    // Get the container based on the passed containerType
+    // Get the container selector based on the provided type
     const containerSelector = containerSelectors[containerType];
-
-    // If a valid container selector exists, process the links
-    if (containerSelector) {
-      const container = document.querySelector(containerSelector);
-      if (container) {
-        // Find all links within the container
-        const links = container.querySelectorAll('a');
-
-        // Process each link
-        links.forEach(link => {
-          const url = link.href;
-
-          // Use the regular expression to match different YouTube link formats and extract the video ID
-          const match = url.match(/(?:shorts\/|live\/|watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
-
-          // If the link is a valid YouTube link, replace it with an embedded iframe
-          if (match && match[1]) {
-            const videoId = match[1];
-
-            // Create a new iframe element
-            const iframe = document.createElement('iframe');
-            iframe.width = '280';
-            iframe.height = '157.5';
-            iframe.allowFullscreen = true;
-            iframe.style.display = 'flex';
-            iframe.style.margin = '6px';
-            iframe.style.border = 'none';
-
-            // Set the iframe source to embed the YouTube video
-            iframe.src = `https://www.youtube.com/embed/${videoId}`;
-
-            // Replace the original link with the iframe
-            link.parentNode.replaceChild(iframe, link);
-          }
-        });
-      }
-    } else {
+    if (!containerSelector) {
       console.error('Invalid container type specified');
+      return;
     }
 
-    // Call the function to scroll to the bottom of the specified container
+    // Select the container element
+    const container = document.querySelector(containerSelector);
+    if (!container) return;
+
+    // Find all unprocessed links inside the container
+    container.querySelectorAll('a:not(.processed-video)').forEach(link => {
+      const url = link.href;
+      const domain = new URL(url).hostname;
+
+      // Check if the link is a YouTube video
+      const youtubeMatch = url.match(/(?:shorts\/|live\/|watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
+
+      // Check if the link is an MP4 video
+      const mp4Match = url.match(/\.mp4(\?.*)?(#.*)?/i);
+
+      if (youtubeMatch || mp4Match) {
+        // Mark link as processed
+        link.classList.add('processed-video');
+
+        // Create a wrapper div for better structure
+        const wrapper = document.createElement('div');
+        wrapper.style.display = 'flex';
+        wrapper.style.width = 'fit-content';
+        wrapper.style.flexDirection = 'column';
+        wrapper.style.gap = '6px';
+        wrapper.style.marginBottom = '10px';
+
+        // Create an appropriate embed element (iframe for YouTube, video for MP4)
+        let embedElement = document.createElement(youtubeMatch ? 'iframe' : 'video');
+        embedElement.height = '150';
+        embedElement.style.display = 'flex';
+        embedElement.style.border = 'none';
+
+        if (youtubeMatch) {
+          // Extract video ID and determine YouTube video type
+          const videoId = youtubeMatch[1];
+          const youtubeType = url.includes('shorts/') ? 'Shorts' :
+            url.includes('live/') ? 'Live' :
+              url.includes('watch?v=') ? 'Video' : 'YouTube';
+
+          // Update link text for YouTube videos
+          link.textContent = `${videoExtensionEmoji} ${youtubeType} ${webDomainEmoji} Hostname (${domain})`;
+          embedElement.src = `https://www.youtube.com/embed/${videoId}`;
+          embedElement.allowFullscreen = true;
+        } else {
+          // Update link text for MP4 videos
+          link.textContent = `${videoExtensionEmoji} Video (MP4) ${webDomainEmoji} Hostname (${domain})`;
+          embedElement.src = url;
+          embedElement.controls = true;
+        }
+
+        // Set link attributes
+        link.title = url;
+        link.style.display = 'inline-flex';
+
+        // Insert wrapper before the link and append elements
+        link.parentNode.insertBefore(wrapper, link);
+        wrapper.appendChild(link);
+        wrapper.appendChild(embedElement);
+      }
+    });
+
+    // Scroll to the bottom of the container after processing links
     scrollMessagesToBottom(containerType);
-  } // end convertYoutubeLinksToIframe
+  }
 
   const empowermentButtonsMargin = 4; // Margin for the empowerment buttons
 
@@ -4710,7 +4735,7 @@
               // Convert image links to visible image containers
               convertImageLinksToImage('generalMessages');
               // Convert YouTube links to visible iframe containers
-              convertYoutubeLinksToIframe('generalMessages'); // For general chat
+              convertVideoLinksToPlayer('generalMessages'); // For general chat
               // Call the function to apply the chat message grouping
               applyChatMessageGrouping();
               // Call the function to scroll to the bottom of the chat
@@ -6102,7 +6127,7 @@
     requestAnimationFrame(() => {
       // Convert image links to clickable thumbnail previews and embed YouTube videos as iframes for personal messages
       convertImageLinksToImage('personalMessages');
-      convertYoutubeLinksToIframe('personalMessages');
+      convertVideoLinksToPlayer('personalMessages');
       highlightMentionWords('personalMessages');
       messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll after next repaint
     });
@@ -7021,7 +7046,7 @@
 
       requestAnimationFrame(() => {
         convertImageLinksToImage('chatlogsMessages')
-        convertYoutubeLinksToIframe('chatlogsMessages');
+        convertVideoLinksToPlayer('chatlogsMessages');
         highlightMentionWords('chatlogsMessages');
         chatLogsContainer.scrollTop = chatLogsContainer.scrollHeight; // Scroll to the very bottom
       });
@@ -9518,7 +9543,7 @@
         // Convert image links to visible image containers
         convertImageLinksToImage('generalMessages');
         // Convert YouTube links to visible iframe containers
-        convertYoutubeLinksToIframe('generalMessages'); // For general chat
+        convertVideoLinksToPlayer('generalMessages'); // For general chat
         // Restore chat tab from localStorage
         restoreChatTabAndFocus();
         // Call the function with the selector for the input field

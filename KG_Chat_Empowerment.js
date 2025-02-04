@@ -1072,7 +1072,7 @@
           const videoId = youtubeMatch[1];
           const youtubeType = url.includes('shorts/') ? 'Shorts' :
             url.includes('live/') ? 'Live' :
-              url.includes('watch?v=') ? 'Video' :
+              url.includes('watch?v=') ? 'Watch' :
                 url.includes('youtu.be/') ? 'Share' : 'YouTube';
 
           // Update link text for YouTube videos

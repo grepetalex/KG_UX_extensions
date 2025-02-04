@@ -6448,28 +6448,56 @@
     return null; // Return null if no user found
   }
 
-  let visibleMessages = false; // Initialize the visibility state of messages
+  // let visibleMessages = false; // Initialize the visibility state of messages
 
-  // Toggles the visibility of .message-item elements based on a given selector
+  // // Toggles the visibility of .message-item elements based on a given selector
+  // async function toggleMessagesVisibility(selector) {
+  //   visibleMessages = !visibleMessages; // Toggle the global state
+  //   const actualSelector = selector === 'media' ? '.media' : '.mention';
+
+  //   document.querySelectorAll('.message-item').forEach(item => {
+  //     const hasRelevantClass = item.querySelector(actualSelector);
+  //     item.style.contentVisibility = (visibleMessages && hasRelevantClass) || !visibleMessages ? 'visible' : 'hidden';
+  //     item.style.fontSize = (visibleMessages && hasRelevantClass) || !visibleMessages ? '' : '0';
+  //   });
+  // }
+
+  // Initialize the visibility state for media and mention messages
+  let visibleMessages = { media: false, mention: false };
+
+  // Function to toggle the visibility of message items based on the given selector
   async function toggleMessagesVisibility(selector) {
-    visibleMessages = !visibleMessages; // Toggle the global state
-    const actualSelector = selector === 'media' ? '.media' : '.mention';
+    // Determine if the selector is 'media' or 'mention' and update visibility states
+    const isMedia = selector === 'media';
+    const isMention = selector === 'mention';
 
-    document.querySelectorAll('.message-item').forEach(item => {
-      const hasRelevantClass = item.querySelector(actualSelector);
-      item.style.contentVisibility = (visibleMessages && hasRelevantClass) || !visibleMessages ? 'visible' : 'hidden';
-      item.style.fontSize = (visibleMessages && hasRelevantClass) || !visibleMessages ? '' : '0';
-    });
-  }
+    // Update the visibility state: toggle the selected type and reset the other
+    visibleMessages = {
+      media: isMedia ? !visibleMessages.media : false, // Toggle media visibility
+      mention: isMention ? !visibleMessages.mention : false // Toggle mention visibility
+    };
 
-  // Function to restore the visibility of all .message-item elements if any are hidden
-  function restoreMessagesVisibility(searchInput) {
-    // Reset input value to an empty string
-    searchInput.value = '';
+    // Iterate over all message items and apply the corresponding visibility rules
     document.querySelectorAll('.message-item').forEach(item => {
-      item.style.contentVisibility = 'visible';
-      // Remove fontSize style property to restore the original font size
-      item.style.removeProperty('font-size');
+      // Check if the message item contains media or mention content
+      const hasMediaClass = item.querySelector('.media');
+      const hasMentionClass = item.querySelector('.mention');
+
+      // Case: Showing only media elements (when 'media' is toggled)
+      if (visibleMessages.media) {
+        item.style.contentVisibility = hasMediaClass ? 'visible' : 'hidden'; // Show/hide based on media class
+        item.style.fontSize = hasMediaClass ? '' : '0'; // Adjust font size based on visibility
+      }
+      // Case: Showing only mention elements (when 'mention' is toggled)
+      else if (visibleMessages.mention) {
+        item.style.contentVisibility = hasMentionClass ? 'visible' : 'hidden'; // Show/hide based on mention class
+        item.style.fontSize = hasMentionClass ? '' : '0'; // Adjust font size based on visibility
+      }
+      // Case: Show all messages when neither 'media' nor 'mention' is toggled
+      else {
+        item.style.contentVisibility = 'visible'; // Ensure the message is visible
+        item.style.fontSize = ''; // Reset font size to default
+      }
     });
   }
 
@@ -6645,7 +6673,7 @@
 
     // Add a click event listener to toggle the visibility of messages without mentions
     toggleMentionMessages.addEventListener('click', async () => {
-      await toggleMessagesVisibility();
+      await toggleMessagesVisibility('mention');
     });
 
     // Append the toggle mention messages component to the control panel

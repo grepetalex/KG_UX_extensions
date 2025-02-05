@@ -741,7 +741,7 @@
       // Mark the link as processed
       link.classList.add("processed-image", "media");
       link.textContent = `${imageExtensionEmoji} Image (${extension.toUpperCase()}) ${webDomainEmoji} Hostname (${domain})`;
-      link.title = link.href;
+      link.title = isValidEncodedURL(link.href) ? decodeURL(link.href) : link.href;
 
       // Prevent duplicate thumbnails
       if (link.nextSibling?.classList?.contains("thumbnail")) return;
@@ -1084,7 +1084,7 @@
       }
 
       // Set link attributes
-      link.title = url;
+      link.title = isValidEncodedURL(url) ? decodeURL(url) : url;
       link.style.display = 'inline-flex';
 
       // Insert wrapper before the link and append elements
@@ -1115,7 +1115,7 @@
       generalMessages: ".messages-content div", // General messages container
       chatlogsMessages: ".chat-logs-container", // Chat logs container
       personalMessages: ".messages-container" // Personal messages container
-    })[type])?.querySelectorAll('a:not(.decoded)').forEach(link => { // Select all <a> links that haven't been decoded yet
+    })[type])?.querySelectorAll('a:not(.media):not(.decoded)').forEach(link => { // Select all <a> links that haven't been decoded yet
       try {
         // Ensure the link is a valid encoded URL before decoding
         if (isValidEncodedURL(link.href)) {

@@ -17,6 +17,15 @@ let firstPageLoad = true; // Flag to indicate the first page load
 const injectParserStyles = document.createElement('style');
 injectParserStyles.classList.add('font-for-parsing-container');
 injectParserStyles.innerHTML = `
+  /* Initially hidden */
+  #user-profile-wrapper {
+    opacity: 0;
+    transition: opacity 0.15s ease-in;
+  }
+  /* For visible state */
+  #user-profile-wrapper.visible {
+    opacity: 1;
+  }
   #user-profile-wrapper * {
     font-family: 'Montserrat', sans-serif !important;
   }
@@ -260,6 +269,21 @@ async function parseUserRegistrations(startId) {
 
 parseUserRegistrations(); // Start the parsing after page load
 
+// Global reference for the event listener
+let clickOutsideListener;
+
+// Function to handle fade and removal of the wrapper
+function fadeAndRemoveWrapper(wrapper) {
+  wrapper.classList.remove('visible'); // Start the fade-out effect
+
+  // Wait for the fade-out to complete before removing the element
+  wrapper.addEventListener('transitionend', function removeAfterFade() {
+    wrapper.remove(); // Remove the wrapper after fade-out
+    document.removeEventListener('click', clickOutsideListener); // Clean up the event listener
+    wrapper.removeEventListener('transitionend', removeAfterFade); // Remove this listener after it's used
+  });
+}
+
 // Function to create a user profile container with the provided user data
 function createUserProfileContainer(userData) {
   // Check if the wrapper already exists
@@ -279,7 +303,7 @@ function createUserProfileContainer(userData) {
     userProfileWrapper.style.padding = '20px';
     userProfileWrapper.style.backgroundColor = 'rgb(27, 27, 27)';
     userProfileWrapper.style.left = '50%';
-    userProfileWrapper.style.position = 'absolute';
+    userProfileWrapper.style.position = 'fixed';
     userProfileWrapper.style.top = '50%';
     userProfileWrapper.style.transform = 'translate(-50%, -50%)';
     userProfileWrapper.style.zIndex = '910';
@@ -294,11 +318,28 @@ function createUserProfileContainer(userData) {
     // Append the wrapper to the document body
     document.body.appendChild(userProfileWrapper);
 
+    // Trigger the fade-in by adding the 'visible' class
+    requestAnimationFrame(() => {
+      userProfileWrapper.classList.add('visible');
+    });
+
     // Add the double-click event listener to remove the wrapper
     userProfileWrapper.addEventListener('dblclick', function () {
       copyContainerText(registeredDataContainer); // Copy the text content to the clipboard
-      userProfileWrapper.remove(); // Remove the wrapper when double-clicked
+      fadeAndRemoveWrapper(userProfileWrapper);
     });
+
+    // Function to remove the wrapper when clicking outside
+    function handleClickOutside(event) {
+      if (!userProfileWrapper.contains(event.target)) {
+        fadeAndRemoveWrapper(userProfileWrapper);
+      }
+    }
+
+    // Assign the click handler to the global variable
+    clickOutsideListener = handleClickOutside;
+    // Add the click event listener to remove the wrapper when clicked outside
+    document.addEventListener('click', clickOutsideListener);
   }
 
   // Get or create the registeredDataContainer
@@ -568,22 +609,22 @@ let timerId = null;
 
 document.body.addEventListener('mousedown', (event) => {
   if (event.button === 2) { // Right mouse button
-    // Get the user profile container if it exists
-    const userProfileContainer = document.getElementById('user-profile-wrapper');
+    // Get the user profile wrapper if it exists
+    const userProfileWrapper = document.getElementById('user-profile-wrapper');
 
-    // Start the timer for right mouse click hold (300ms)
+    // Start the timer for right mouse click hold (150ms)
     if (!timerId) {
       timerId = setTimeout(() => {
-        isRightClickHeld = true; // Mark that the button has been held for (300ms)
-        if (userProfileContainer) {
-          userProfileContainer.remove(); // Remove the container after (300ms)
+        isRightClickHeld = true; // Mark that the button has been held for (150ms)
+        if (userProfileWrapper) {
+          fadeAndRemoveWrapper(userProfileWrapper);
         } else {
           // Fetch saved user registration data from localStorage (or use an empty array if no data exists)
           const savedData = getUserRegistrationsData();
           savedData.forEach(createUserProfileContainer); // Create user profile containers from saved data
           parseUserRegistrations(); // Restart the parsing process after removing the container
         }
-      }, 300); // (300ms)
+      }, 150); // (150ms)
     }
   }
 });
@@ -595,10 +636,10 @@ document.body.addEventListener('mouseup', (event) => {
   }
 });
 
-// Prevent the context menu from showing if the button was held for (300ms)
+// Prevent the context menu from showing if the button was held for (150ms)
 document.body.addEventListener('contextmenu', (event) => {
   if (isRightClickHeld) {
     event.preventDefault();
-    isRightClickHeld = false; // Reset the flag after the (300ms) hold
+    isRightClickHeld = false; // Reset the flag after the (150ms) hold
   }
 });

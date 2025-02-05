@@ -718,7 +718,7 @@
     if (!container) return; // Exit if the container doesn't exist
 
     // Select all unprocessed links within the container
-    const links = container.querySelectorAll("a:not(.skipped):not(.processed-media)");
+    const links = container.querySelectorAll("a:not(.skipped):not(.processed-image)");
     if (!links.length) return; // Exit if no links are found
 
     links.forEach(link => {
@@ -730,13 +730,16 @@
       const { isTrusted, domain } = isTrustedDomain(link.href);
 
       // Skip processing if the link doesn't meet the criteria
-      if (!allowed || !isTrusted) {
+      if (!isTrusted) {
         link.classList.add("skipped");
         return;
       }
 
+      // Skip processing if the link has not allowed image extension
+      if (!allowed) return;
+
       // Mark the link as processed
-      link.classList.add("processed-media", "media");
+      link.classList.add("processed-image", "media");
       link.textContent = `${imageExtensionEmoji} Image (${extension.toUpperCase()}) ${webDomainEmoji} Hostname (${domain})`;
       link.title = link.href;
 
@@ -1017,7 +1020,7 @@
     if (!container) return;
 
     // Find all unprocessed links inside the container
-    const links = container.querySelectorAll("a:not(.skipped):not(.processed-media)");
+    const links = container.querySelectorAll("a:not(.skipped):not(.processed-video)");
     if (!links.length) return;
 
     links.forEach(link => {
@@ -1035,13 +1038,13 @@
 
       // Check if the link is a YouTube video
       const youtubeMatch = url.match(/(?:shorts\/|live\/|watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
-
       // Check if the link is an MP4 video
       const mp4Match = url.match(/\.mp4(\?.*)?(#.*)?/i);
+
       if (!youtubeMatch && !mp4Match) return;
 
       // Mark the link as processed
-      link.classList.add("processed-media");
+      link.classList.add("processed-video", "media");
 
       // Create a wrapper div for better structure
       const wrapper = document.createElement('div');
@@ -1093,7 +1096,20 @@
     scrollMessagesToBottom(containerType);
   }
 
-  function decodeEncodedLinks(type) {
+  // Function to check if a URL is valid and contains encoded characters
+  function isValidEncodedURL(url) {
+    const urlPattern = /^https?:\/\//; // Regex pattern to check if the value is a URL
+    const encodedPattern = /%[0-9A-Fa-f]{2}/; // Regex pattern to check if the URL is encoded
+    return urlPattern.test(url) && encodedPattern.test(url);
+  }
+
+  // Function to decode a URL and replace spaces with underscores
+  function decodeURL(url) {
+    const [base] = url.split('#'); // Split at the '#' symbol and take the base part
+    return decodeURIComponent(base).replace(/ /g, '_'); // Decode and replace spaces with underscores
+  }
+
+  function processEncodedLinks(type) {
     // Select the appropriate container based on the 'type' parameter
     document.querySelector(({
       generalMessages: ".messages-content div", // General messages container
@@ -1101,11 +1117,12 @@
       personalMessages: ".messages-container" // Personal messages container
     })[type])?.querySelectorAll('a:not(.decoded)').forEach(link => { // Select all <a> links that haven't been decoded yet
       try {
-        // Split the href at the '#' symbol and decode the base part of the URL
-        const [base] = link.href.split('#');
-        let decoded = decodeURIComponent(base).replace(/ /g, '_'); // Decode and replace spaces with underscores in one step
-        link.href = link.textContent = decoded; // Set the decoded URL as both the link href and text content
-        link.classList.add('decoded'); // Mark the link as decoded by adding the 'decoded' class
+        // Ensure the link is a valid encoded URL before decoding
+        if (isValidEncodedURL(link.href)) {
+          let decoded = decodeURL(link.href); // Decode the URL
+          link.href = link.textContent = decoded; // Set the decoded URL as both the link href and text content
+          link.classList.add('decoded'); // Mark the link as decoded by adding the 'decoded' class
+        }
       } catch (error) {
         // If an error occurs during the decoding process, log the error and the link's href
         console.error('Error decoding link:', error, link.href); // Log error and link.href for debugging
@@ -4636,12 +4653,12 @@
             if (isInitialized) {
               // Attach contextmenu event listener for messages deletion
               attachEventsToMessages();
-              // Convert image links to visible image containers
-              convertImageLinksToImage('generalMessages');
               // Convert YouTube links to visible iframe containers
               convertVideoLinksToPlayer('generalMessages'); // For general chat
+              // Convert image links to visible image containers
+              convertImageLinksToImage('generalMessages');
               // Decodes links within the general messages section.
-              decodeEncodedLinks('generalMessages');
+              processEncodedLinks('generalMessages');
               // Call the function to apply the chat message grouping
               applyChatMessageGrouping();
               // Call the function to scroll to the bottom of the chat
@@ -6042,10 +6059,10 @@
     });
 
     requestAnimationFrame(() => {
+      convertVideoLinksToPlayer('personalMessages');
       // Convert image links to clickable thumbnail previews and embed YouTube videos as iframes for personal messages
       convertImageLinksToImage('personalMessages');
-      convertVideoLinksToPlayer('personalMessages');
-      decodeEncodedLinks('personalMessages'); // Decodes links within the personal messages section.
+      processEncodedLinks('personalMessages'); // Decodes links within the personal messages section.
       highlightMentionWords('personalMessages');
       messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll after next repaint
     });
@@ -7046,9 +7063,9 @@
       renderActiveUsers(usernameMessageCountMap, chatLogsPanel, chatlogsSearchInput);
 
       requestAnimationFrame(() => {
-        convertImageLinksToImage('chatlogsMessages');
         convertVideoLinksToPlayer('chatlogsMessages');
-        decodeEncodedLinks('chatlogsMessages'); // Decodes links within the chat logs section.
+        convertImageLinksToImage('chatlogsMessages');
+        processEncodedLinks('chatlogsMessages'); // Decodes links within the chat logs section.
         highlightMentionWords('chatlogsMessages');
         chatLogsContainer.scrollTop = chatLogsContainer.scrollHeight; // Scroll to the very bottom
 
@@ -9488,25 +9505,14 @@
     inputField.addEventListener('paste', (event) => {
       // Prevent the default paste behavior
       event.preventDefault();
-
       // Get the pasted value from the clipboard
       const pastedValue = event.clipboardData.getData('text');
-
       // Initialize the processed value to the pasted value
       let processedValue = pastedValue;
 
-      // Define constants for link and encoding validation
-      const urlPattern = /^https?:\/\//; // Regex pattern to check if the value is a URL
-      const encodedPattern = /%[0-9A-Fa-f]{2}/; // Regex pattern to check if the URL is encoded
-
-      // If the pasted value is a URL
-      if (urlPattern.test(pastedValue)) {
-        // If the URL contains encoded characters
-        if (encodedPattern.test(pastedValue)) {
-          const [base] = pastedValue.split('#'); // Split the URL at the '#' character
-          // Decode the URL and replace spaces with underscores
-          processedValue = decodeURIComponent(base).replace(/ /g, '_');
-        }
+      // If the pasted value is a valid and encoded URL, decode it
+      if (isValidEncodedURL(pastedValue)) {
+        processedValue = decodeURL(pastedValue);
       }
 
       // Get the current selection's start and end positions in the input field
@@ -9518,6 +9524,7 @@
       // Set the cursor position after the pasted value
       inputField.setSelectionRange(start + processedValue.length, start + processedValue.length);
     });
+
 
     inputField.addEventListener('keydown', (event) => {
       const message = inputField.value;
@@ -9566,12 +9573,12 @@
         checkForChatState();
         // Remove ignored users' messages if the page is not initialized
         removeIgnoredUserMessages();
-        // Convert image links to visible image containers
-        convertImageLinksToImage('generalMessages');
         // Convert YouTube links to visible iframe containers
         convertVideoLinksToPlayer('generalMessages'); // For general chat
+        // Convert image links to visible image containers
+        convertImageLinksToImage('generalMessages');
         // Decodes links within the general messages section.
-        decodeEncodedLinks('generalMessages');
+        processEncodedLinks('generalMessages');
         // Restore chat tab from localStorage
         restoreChatTabAndFocus();
         // Call the function with the selector for the input field

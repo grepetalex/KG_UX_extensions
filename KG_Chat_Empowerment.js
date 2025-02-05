@@ -15,6 +15,26 @@
 
   // USERS DEFINITION
 
+  // Global styles
+  const empowermentStyles = `
+    .chat-logs-panel .message-text a,
+    .cached-messages-panel .message-text a {
+      color: burlywood !important;
+      transition: color 0.15s ease-in-out;
+    }
+    .chat-logs-panel .message-text a:hover,
+    .cached-messages-panel .message-text a:hover {
+      color: lightgoldenrodyellow !important;
+    }
+  `;
+
+  // Create a <style> element for the empowerment-styles class
+  const empowermentStylesElement = document.createElement('style');
+  // Set the inner HTML of the <style> element with the class-based CSS
+  empowermentStylesElement.innerHTML = empowermentStyles;
+  // Append the <style> element to the <head> of the document
+  document.head.appendChild(empowermentStylesElement);
+
   // Actual nickname to use it as an exclusion for the message beep and voice notifications
   const myNickname = document.querySelector('.userpanel .user-block .user-dropdown .name span').textContent;
   // Extract the user ID from the href attribute of the mail link for chat, direct profile, or messaging navigation
@@ -2283,7 +2303,7 @@
   const newChatUserListStyles = document.createElement('style');
 
   // Apply class to the style element
-  newChatUserListStyles.classList.add('new_chat_user_list');
+  newChatUserListStyles.classList.add('new-chat-user-list');
 
   newChatUserListStyles.innerHTML = `
     #chat-general .userlist-content {

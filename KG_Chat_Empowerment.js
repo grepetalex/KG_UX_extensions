@@ -708,143 +708,112 @@
   function convertImageLinksToImage(containerType) {
     // Define a mapping for container types to their respective selectors
     const containerSelectors = {
-      generalMessages: '.messages-content div', // For general chat
-      chatlogsMessages: '.chat-logs-container', // For chat logs
-      personalMessages: '.messages-container' // For personal messages panel
+      generalMessages: ".messages-content div",
+      chatlogsMessages: ".chat-logs-container",
+      personalMessages: ".messages-container"
     };
 
-    // Get the container based on the passed containerType
-    const containerSelector = containerSelectors[containerType];
+    // Get the container element based on the provided containerType
+    const container = document.querySelector(containerSelectors[containerType]);
+    if (!container) return; // Exit if the container doesn't exist
 
-    // If a valid container selector exists, process the links
-    if (containerSelector) {
-      const container = document.querySelector(containerSelector);
-      if (container) {
-        // Get all links inside the container that haven't been processed yet
-        const links = container.querySelectorAll('a:not(.skipped):not(.processed-image)');
+    // Select all unprocessed links within the container
+    const links = container.querySelectorAll("a:not(.skipped):not(.processed-media)");
+    if (!links.length) return; // Exit if no links are found
 
-        // Loop through all links
-        for (let i = 0; i < links.length; i++) {
-          const link = links[i];
+    links.forEach(link => {
+      if (!link.href || !link.href.startsWith("http")) return; // Skip invalid links
 
-          // Check if the link has a valid href
-          if (!link.href || !link.href.startsWith('http')) {
-            continue; // Skip invalid links
-          }
+      // Check if the link has an allowed image extension
+      const { allowed, extension } = isAllowedImageExtension(link.href);
+      // Check if the link is from a trusted domain
+      const { isTrusted, domain } = isTrustedDomain(link.href);
 
-          // Check if the link's href includes allowed image extension
-          const { allowed, extension } = isAllowedImageExtension(link.href);
-
-          // Check if the link's href includes trusted domain
-          const { isTrusted, domain } = isTrustedDomain(link.href);
-
-          // Check if the link's href includes the allowed image extension and the domain is trusted
-          if (allowed && isTrusted) {
-            // Add the classes 'processed-image' and 'media' to mark this link as processed and associated with media content
-            link.classList.add('processed-image', 'media');
-
-            // Change the text content of the link to indicate it's an image with extension and trusted domain
-            link.textContent = `${imageExtensionEmoji} Image (${extension.toUpperCase()}) ${webDomainEmoji} Hostname (${domain})`;
-
-            // Assign the href value as the title
-            link.title = link.href;
-
-            // Check if thumbnail already exists
-            const thumbnail = link.nextSibling;
-            if (!thumbnail || !thumbnail.classList || !thumbnail.classList.contains('thumbnail')) {
-              // Create a new thumbnail
-              const thumbnail = document.createElement('div');
-              thumbnail.classList.add('thumbnail');
-              thumbnail.style.width = '6vw';
-              thumbnail.style.minWidth = '100px';
-              thumbnail.style.maxHeight = '200px';
-              thumbnail.style.height = 'auto';
-              thumbnail.style.cursor = 'pointer';
-              thumbnail.style.backgroundColor = 'transparent';
-              thumbnail.style.padding = '2px';
-              thumbnail.style.margin = '6px';
-              thumbnail.style.overflowY = 'auto';
-
-              // Create an image inside the thumbnail
-              const img = document.createElement('img');
-              img.src = link.href; // Assign the src directly
-
-              // Add an onload event to check if the image is loaded successfully
-              img.onload = function () {
-                // Check if the domain is trusted
-                if (isTrustedDomain(link.href)) {
-                  thumbnail.appendChild(img);
-
-                  // Insert the thumbnail after the link
-                  link.parentNode.insertBefore(thumbnail, link.nextSibling);
-
-                  // Store the thumbnail link and its corresponding image URL
-                  thumbnailLinks.push({ link, imgSrc: link.href });
-
-                  // Add click event to thumbnail to create a big image and dimming layer
-                  thumbnail.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-
-                    // Reset bigImage to null before processing the new thumbnail click
-                    bigImage = null;
-
-                    currentImageIndex = thumbnailLinks.findIndex((item) => item.imgSrc === link.href);
-
-                    // Check if bigImage is already created
-                    if (!bigImage) {
-                      // Create the big image
-                      bigImage = createBigImage(img.src);
-
-                      bigImage.style.top = '50%';
-                      bigImage.style.left = '50%';
-                      bigImage.style.transform = 'translate(-50%, -50%) scale(1)';
-                      bigImage.style.position = 'fixed';
-                      bigImage.style.opacity = '0';
-                      bigImage.style.zIndex = '999';
-                      bigImage.style.transformOrigin = 'center center';
-
-                      triggerTargetElement(bigImage, 'show');
-                      triggerDimmingElement('show');
-                    }
-                  }); // thumbnail event end
-
-                  // Add mouseover and mouseout event listeners to the thumbnail
-                  thumbnail.addEventListener('mouseover', function () {
-                    img.style.opacity = 0.7;
-                    img.style.transition = 'opacity 0.3s';
-                  });
-
-                  thumbnail.addEventListener('mouseout', function () {
-                    img.style.opacity = 1;
-                  });
-
-                  // Call the function to scroll to the bottom of the specified container
-                  scrollMessagesToBottom(containerType);
-                }
-              };
-
-              // Add an onerror event to handle cases where the image fails to load
-              img.onerror = function () {
-                // Handle the case where the image failed to load (e.g., it's a fake image)
-                console.error("Failed to load image:", link.href);
-
-                // Add a class to the link to skip future conversion attempts
-                link.classList.add('skipped');
-              };
-
-              img.style.maxHeight = '100%';
-              img.style.maxWidth = '100%';
-              img.style.backgroundColor = 'transparent';
-            }
-          } else {
-            // Add a class to the link to skip future conversion attempts
-            link.classList.add('skipped');
-          }
-        }
+      // Skip processing if the link doesn't meet the criteria
+      if (!allowed || !isTrusted) {
+        link.classList.add("skipped");
+        return;
       }
-    }
-  } // end convertImageLinksToImage
+
+      // Mark the link as processed
+      link.classList.add("processed-media", "media");
+      link.textContent = `${imageExtensionEmoji} Image (${extension.toUpperCase()}) ${webDomainEmoji} Hostname (${domain})`;
+      link.title = link.href;
+
+      // Prevent duplicate thumbnails
+      if (link.nextSibling?.classList?.contains("thumbnail")) return;
+
+      // Create a thumbnail container
+      const thumbnail = document.createElement("div");
+      Object.assign(thumbnail.style, {
+        width: "6vw",
+        minWidth: "100px",
+        maxHeight: "200px",
+        height: "auto",
+        cursor: "pointer",
+        backgroundColor: "transparent",
+        padding: "2px",
+        margin: "6px",
+        overflowY: "auto"
+      });
+      thumbnail.classList.add("thumbnail");
+
+      // Create an image element for the thumbnail
+      const img = document.createElement("img");
+      img.src = link.href;
+      img.style.maxHeight = "100%";
+      img.style.maxWidth = "100%";
+      img.style.backgroundColor = "transparent";
+
+      // Handle successful image load
+      img.onload = () => {
+        if (!isTrustedDomain(link.href)) return;
+
+        // Append the image to the thumbnail container
+        thumbnail.appendChild(img);
+        link.parentNode.insertBefore(thumbnail, link.nextSibling);
+        thumbnailLinks.push({ link, imgSrc: link.href });
+
+        // Add hover effect to the thumbnail
+        thumbnail.addEventListener("mouseover", () => { img.style.opacity = 0.7; return img.style.opacity; });
+        thumbnail.addEventListener("mouseout", () => { img.style.opacity = 1; return img.style.opacity; });
+
+        // Scroll to the bottom of the messages container
+        scrollMessagesToBottom(containerType);
+      };
+
+      // Handle image loading failure
+      img.onerror = () => {
+        console.error("Failed to load image:", link.href);
+        link.classList.add("skipped");
+      };
+
+      // Add a click event to enlarge the image
+      thumbnail.addEventListener("click", e => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Reset bigImage and currentImageIndex when a thumbnail is clicked
+        bigImage = null;
+        currentImageIndex = thumbnailLinks.findIndex(item => item.imgSrc === link.href);
+
+        // Create and display the big image
+        bigImage = createBigImage(img.src);
+        Object.assign(bigImage.style, {
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%) scale(1)",
+          position: "fixed",
+          opacity: "0",
+          zIndex: "999",
+          transformOrigin: "center center"
+        });
+
+        triggerTargetElement(bigImage, "show");
+        triggerDimmingElement("show");
+      });
+    });
+  }
 
   // Object to store event handlers for big image
   const bigImageEvents = {};
@@ -1048,68 +1017,100 @@
     if (!container) return;
 
     // Find all unprocessed links inside the container
-    container.querySelectorAll('a:not(.processed-video)').forEach(link => {
+    const links = container.querySelectorAll("a:not(.skipped):not(.processed-media)");
+    if (!links.length) return;
+
+    links.forEach(link => {
       const url = link.href;
+      if (!url) return;
+
       // Check if the link's href includes trusted domain
       const { isTrusted, domain } = isTrustedDomain(url);
+
+      // Skip processing if the link doesn't meet the criteria
+      if (!isTrusted) {
+        link.classList.add("skipped");
+        return;
+      }
 
       // Check if the link is a YouTube video
       const youtubeMatch = url.match(/(?:shorts\/|live\/|watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
 
       // Check if the link is an MP4 video
       const mp4Match = url.match(/\.mp4(\?.*)?(#.*)?/i);
-      if (isTrusted) {
-        if (youtubeMatch || mp4Match) {
-          // Add the 'processed-video' and 'media' classes to mark this link as a processed video and associated with media content
-          link.classList.add('processed-video', 'media');
+      if (!youtubeMatch && !mp4Match) return;
 
-          // Create a wrapper div for better structure
-          const wrapper = document.createElement('div');
-          wrapper.style.display = 'flex';
-          wrapper.style.width = 'fit-content';
-          wrapper.style.flexDirection = 'column';
-          wrapper.style.gap = '6px';
-          wrapper.style.marginBottom = '10px';
+      // Mark the link as processed
+      link.classList.add("processed-media");
 
-          // Create an appropriate embed element (iframe for YouTube, video for MP4)
-          let embedElement = document.createElement(youtubeMatch ? 'iframe' : 'video');
-          embedElement.height = '150';
-          embedElement.style.display = 'flex';
-          embedElement.style.border = 'none';
+      // Create a wrapper div for better structure
+      const wrapper = document.createElement('div');
+      Object.assign(wrapper.style, {
+        display: 'flex',
+        width: 'fit-content',
+        flexDirection: 'column',
+        gap: '6px',
+        marginBottom: '10px'
+      });
 
-          if (youtubeMatch) {
-            // Extract video ID and determine YouTube video type
-            const videoId = youtubeMatch[1];
-            const youtubeType = url.includes('shorts/') ? 'Shorts' :
-              url.includes('live/') ? 'Live' :
-                url.includes('watch?v=') ? 'Watch' :
-                  url.includes('youtu.be/') ? 'Share' : 'YouTube';
+      // Create an appropriate embed element (iframe for YouTube, video for MP4)
+      let embedElement = document.createElement(youtubeMatch ? 'iframe' : 'video');
+      Object.assign(embedElement.style, {
+        display: 'flex',
+        border: 'none',
+        height: '165px'
+      });
 
-            // Update link text for YouTube videos
-            link.textContent = `${videoExtensionEmoji} ${youtubeType} ${webDomainEmoji} Hostname (${domain})`;
-            embedElement.src = `https://www.youtube.com/embed/${videoId}`;
-            embedElement.allowFullscreen = true;
-          } else {
-            // Update link text for MP4 videos
-            link.textContent = `${videoExtensionEmoji} Video (MP4) ${webDomainEmoji} Hostname (${domain})`;
-            embedElement.src = url;
-            embedElement.controls = true;
-          }
+      if (youtubeMatch) {
+        // Extract video ID and determine YouTube video type
+        const videoId = youtubeMatch[1];
+        const youtubeType = url.includes('shorts/') ? 'Shorts' :
+          url.includes('live/') ? 'Live' :
+            url.includes('watch?v=') ? 'Watch' :
+              url.includes('youtu.be/') ? 'Share' : 'YouTube';
 
-          // Set link attributes
-          link.title = url;
-          link.style.display = 'inline-flex';
-
-          // Insert wrapper before the link and append elements
-          link.parentNode.insertBefore(wrapper, link);
-          wrapper.appendChild(link);
-          wrapper.appendChild(embedElement);
-        }
+        // Update link text for YouTube videos
+        link.textContent = `${videoExtensionEmoji} ${youtubeType} ${webDomainEmoji} Hostname (${domain})`;
+        embedElement.src = `https://www.youtube.com/embed/${videoId}`;
+        embedElement.allowFullscreen = true;
+      } else {
+        // Update link text for MP4 videos
+        link.textContent = `${videoExtensionEmoji} Video (MP4) ${webDomainEmoji} Hostname (${domain})`;
+        embedElement.src = url;
+        embedElement.controls = true;
       }
+
+      // Set link attributes
+      link.title = url;
+      link.style.display = 'inline-flex';
+
+      // Insert wrapper before the link and append elements
+      link.parentNode.insertBefore(wrapper, link);
+      wrapper.append(link, embedElement);
     });
 
     // Scroll to the bottom of the container after processing links
     scrollMessagesToBottom(containerType);
+  }
+
+  function decodeEncodedLinks(type) {
+    // Select the appropriate container based on the 'type' parameter
+    document.querySelector(({
+      generalMessages: ".messages-content div", // General messages container
+      chatlogsMessages: ".chat-logs-container", // Chat logs container
+      personalMessages: ".messages-container" // Personal messages container
+    })[type])?.querySelectorAll('a:not(.decoded)').forEach(link => { // Select all <a> links that haven't been decoded yet
+      try {
+        // Split the href at the '#' symbol and decode the base part of the URL
+        const [base] = link.href.split('#');
+        let decoded = decodeURIComponent(base).replace(/ /g, '_'); // Decode and replace spaces with underscores in one step
+        link.href = link.textContent = decoded; // Set the decoded URL as both the link href and text content
+        link.classList.add('decoded'); // Mark the link as decoded by adding the 'decoded' class
+      } catch (error) {
+        // If an error occurs during the decoding process, log the error and the link's href
+        console.error('Error decoding link:', error, link.href); // Log error and link.href for debugging
+      }
+    });
   }
 
   const empowermentButtonsMargin = 4; // Margin for the empowerment buttons
@@ -4639,6 +4640,8 @@
               convertImageLinksToImage('generalMessages');
               // Convert YouTube links to visible iframe containers
               convertVideoLinksToPlayer('generalMessages'); // For general chat
+              // Decodes links within the general messages section.
+              decodeEncodedLinks('generalMessages');
               // Call the function to apply the chat message grouping
               applyChatMessageGrouping();
               // Call the function to scroll to the bottom of the chat
@@ -6042,6 +6045,7 @@
       // Convert image links to clickable thumbnail previews and embed YouTube videos as iframes for personal messages
       convertImageLinksToImage('personalMessages');
       convertVideoLinksToPlayer('personalMessages');
+      decodeEncodedLinks('personalMessages'); // Decodes links within the personal messages section.
       highlightMentionWords('personalMessages');
       messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll after next repaint
     });
@@ -6222,7 +6226,7 @@
               acc += child.textContent;
             } else if (child.nodeType === Node.ELEMENT_NODE) {
               if (child.tagName === 'A') {
-                acc += child.textContent;
+                acc += child.getAttribute('href');
               } else if (child.tagName === 'BR') {
                 return acc;
               }
@@ -6239,7 +6243,8 @@
           } else if (messageNode.nodeType === Node.TEXT_NODE) {
             const nextSibling = usernameElement.nextElementSibling;
             if (nextSibling && nextSibling.tagName === 'A') {
-              messageText = `${messageNode.textContent.trim()} ${nextSibling.textContent.trim()}`;
+              // messageText = `${messageNode.textContent.trim()} ${nextSibling.textContent.trim()}`;
+              messageText = `${messageNode.textContent.trim()} ${nextSibling.getAttribute('href')}`;
             } else {
               messageText = messageNode.textContent.trim();
             }
@@ -6284,7 +6289,6 @@
       return { chatlogs: [] }; // Return an empty array in case of an error
     }
   };
-
 
   function getRandomDateInRange() {
     const startDate = new Date('2012-02-12'); // Start date
@@ -7044,6 +7048,7 @@
       requestAnimationFrame(() => {
         convertImageLinksToImage('chatlogsMessages');
         convertVideoLinksToPlayer('chatlogsMessages');
+        decodeEncodedLinks('chatlogsMessages'); // Decodes links within the chat logs section.
         highlightMentionWords('chatlogsMessages');
         chatLogsContainer.scrollTop = chatLogsContainer.scrollHeight; // Scroll to the very bottom
 
@@ -9475,25 +9480,54 @@
     }
   }
 
-  // Function to set up the input field listener
   function setupInputFieldListener() {
-    const inputField = document.querySelector('.text'); // Get the input field element
-    inputField.setAttribute('maxlength', '1000'); // Set the initial maxlength attribute to 1000
+    const inputField = document.querySelector('.text');
+    inputField.setAttribute('maxlength', '1000');
+
+    // Listen for the paste event on the input field
+    inputField.addEventListener('paste', (event) => {
+      // Prevent the default paste behavior
+      event.preventDefault();
+
+      // Get the pasted value from the clipboard
+      const pastedValue = event.clipboardData.getData('text');
+
+      // Initialize the processed value to the pasted value
+      let processedValue = pastedValue;
+
+      // Define constants for link and encoding validation
+      const urlPattern = /^https?:\/\//; // Regex pattern to check if the value is a URL
+      const encodedPattern = /%[0-9A-Fa-f]{2}/; // Regex pattern to check if the URL is encoded
+
+      // If the pasted value is a URL
+      if (urlPattern.test(pastedValue)) {
+        // If the URL contains encoded characters
+        if (encodedPattern.test(pastedValue)) {
+          const [base] = pastedValue.split('#'); // Split the URL at the '#' character
+          // Decode the URL and replace spaces with underscores
+          processedValue = decodeURIComponent(base).replace(/ /g, '_');
+        }
+      }
+
+      // Get the current selection's start and end positions in the input field
+      const start = inputField.selectionStart;
+      const end = inputField.selectionEnd;
+
+      // Insert the processed value into the input field at the current cursor position
+      inputField.value = inputField.value.slice(0, start) + processedValue + inputField.value.slice(end);
+      // Set the cursor position after the pasted value
+      inputField.setSelectionRange(start + processedValue.length, start + processedValue.length);
+    });
+
     inputField.addEventListener('keydown', (event) => {
-      const message = inputField.value; // Get the current message
-      // Check if the pressed key is Enter
+      const message = inputField.value;
       if (event.key === 'Enter') {
-        // If the message is longer than 300, prevent the default behavior and send it in parts
         if (message.length > 300) {
-          event.preventDefault(); // Prevent the default behavior (like a newline)
-          // Call the function to send the message in parts
+          event.preventDefault();
           sendMessageInParts(message);
           console.log(`Long message processed: "${message}"`);
-
-          // Clear the input field after sending
           inputField.value = '';
         } else {
-          // If the message is no longer than 300, just allow the default behavior (like a newline)
           console.log(`Short message processed: "${message}"`);
         }
       }
@@ -9536,6 +9570,8 @@
         convertImageLinksToImage('generalMessages');
         // Convert YouTube links to visible iframe containers
         convertVideoLinksToPlayer('generalMessages'); // For general chat
+        // Decodes links within the general messages section.
+        decodeEncodedLinks('generalMessages');
         // Restore chat tab from localStorage
         restoreChatTabAndFocus();
         // Call the function with the selector for the input field

@@ -17,6 +17,7 @@
 
   // Global styles
   const empowermentStyles = `
+    /* catalogs panel && personal messages panel messages anchors color */
     .chat-logs-panel .message-text a,
     .cached-messages-panel .message-text a {
       color: burlywood !important;
@@ -26,10 +27,20 @@
     .cached-messages-panel .message-text a:hover {
       color: lightgoldenrodyellow !important;
     }
+
+    /* clickable thumbnail hover effect */
+    .thumbnail {
+      opacity: 1;    
+      transition: opacity 0.15s ease-in-out;
+    }
+    .thumbnail:hover {
+      opacity: 0.8; 
+    }
   `;
 
   // Create a <style> element for the empowerment-styles class
   const empowermentStylesElement = document.createElement('style');
+  empowermentStylesElement.classList.add('empowerment-additional-corrections');
   // Set the inner HTML of the <style> element with the class-based CSS
   empowermentStylesElement.innerHTML = empowermentStyles;
   // Append the <style> element to the <head> of the document
@@ -769,6 +780,7 @@
       // Create a thumbnail container
       const thumbnail = document.createElement("div");
       Object.assign(thumbnail.style, {
+        border: "none",
         width: "6vw",
         minWidth: "100px",
         maxHeight: "200px",
@@ -796,10 +808,6 @@
         thumbnail.appendChild(img);
         link.parentNode.insertBefore(thumbnail, link.nextSibling);
         thumbnailLinks.push({ link, imgSrc: link.href });
-
-        // Add hover effect to the thumbnail
-        thumbnail.addEventListener("mouseover", () => { img.style.opacity = 0.7; return img.style.opacity; });
-        thumbnail.addEventListener("mouseout", () => { img.style.opacity = 1; return img.style.opacity; });
 
         // Scroll to the bottom of the messages container
         scrollMessagesToBottom(containerType);
@@ -8685,6 +8693,7 @@
 
   // Create a style element for animations
   const lengthPopupAnimations = document.createElement('style');
+  lengthPopupAnimations.classList.add('length-popup-animations');
   lengthPopupAnimations.textContent = `
     @keyframes bounceIn {
       0% { transform: translateY(0); opacity: 0; }

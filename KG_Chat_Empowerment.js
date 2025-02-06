@@ -957,6 +957,8 @@
 
     bigImageEvents.mousedown = function (event) {
       const { button, clientX, clientY, target, ctrlKey } = event;
+      // Restrict LMB and RMB to image clicks only
+      if ((button === 0 || button === 2) && target !== bigImage) return;
       let src = target.src; // Get the src from the clicked element
 
       if (button === 0) { // Left Mouse Button (LMB)

@@ -5978,8 +5978,8 @@
         const hoverColor = type === 'mention' ? 'lightgreen' : 'peachpuff';
         timeElement.addEventListener('mouseover', () => { timeElement.style.color = hoverColor; });
         timeElement.addEventListener('mouseout', () => { timeElement.style.color = timeColors[type]; });
-        timeElement.addEventListener('click', () => {
-          if (isCtrlKeyPressed) {
+        timeElement.addEventListener('click', (event) => {
+          if (event.ctrlKey) {
             removeMessage(messageElement, 'from');
             return; // Exit the function to prevent opening the chatlog
           }
@@ -6000,9 +6000,9 @@
       usernameElement.style.height = 'fit-content';
 
       // Add click event only if userId is defined
-      usernameElement.addEventListener('click', () => {
+      usernameElement.addEventListener('click', (event) => {
         // Remove all messages on Ctrl + LMB click for the same username
-        if (isCtrlKeyPressed) {
+        if (event.ctrlKey) {
           removeMessage(messageElement, 'all');
           return;
         }
@@ -6032,9 +6032,9 @@
         );
 
       // Add click event listener for the messageTextElement
-      messageTextElement.addEventListener('click', async function () {
+      messageTextElement.addEventListener('click', async function (event) {
         // Remove single message on Ctrl + LMB click for the same username
-        if (isCtrlKeyPressed) {
+        if (event.ctrlKey) {
           removeMessage(messageElement, 'single');
           return;
         }

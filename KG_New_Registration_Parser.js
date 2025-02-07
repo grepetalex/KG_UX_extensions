@@ -331,6 +331,7 @@ parseUserRegistrations(); // Start the parsing after page load
 
 // Global reference for the event listener
 let clickOutsideListener;
+let spaceKeyListener;
 
 // Function to handle fade and removal of the wrapper
 function fadeAndRemoveWrapper(wrapper) {
@@ -339,8 +340,9 @@ function fadeAndRemoveWrapper(wrapper) {
   // Wait for the fade-out to complete before removing the element
   wrapper.addEventListener('transitionend', function removeAfterFade() {
     wrapper.remove(); // Remove the wrapper after fade-out
-    document.removeEventListener('click', clickOutsideListener); // Clean up the event listener
-    wrapper.removeEventListener('transitionend', removeAfterFade); // Remove this listener after it's used
+    // Clean up the event listeners
+    document.removeEventListener('click', clickOutsideListener);
+    document.removeEventListener('keydown', spaceKeyListener);
   });
 }
 
@@ -396,10 +398,19 @@ function createUserProfileContainer(userData) {
       }
     }
 
-    // Assign the click handler to the global variable
+    // Function to handle Space key removal
+    function handleSpaceKey(event) {
+      if (event.code === 'Space' && !document.querySelector('.profile-iframe-container')) {
+        fadeAndRemoveWrapper(userProfileWrapper);
+      }
+    }
+
+    // Assign the click and space handler to the global variables
     clickOutsideListener = handleClickOutside;
-    // Add the click event listener to remove the wrapper when clicked outside
+    spaceKeyListener = handleSpaceKey;
+    // Add the click and keydown event listener to remove the wrapper
     document.addEventListener('click', clickOutsideListener);
+    document.addEventListener('keydown', spaceKeyListener);
   }
 
   // Get or create the registeredDataContainer

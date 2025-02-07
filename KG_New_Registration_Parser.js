@@ -401,6 +401,7 @@ function createUserProfileContainer(userData) {
     // Function to handle Space key removal
     function handleSpaceKey(event) {
       if (event.code === 'Space' && !document.querySelector('.profile-iframe-container')) {
+        event.preventDefault(); // Prevent scroll behavior before close
         fadeAndRemoveWrapper(userProfileWrapper);
       }
     }

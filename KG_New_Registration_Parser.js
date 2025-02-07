@@ -57,6 +57,66 @@ const rankColors = {
   'Новичок': '#AFAFAF' // Grey
 };
 
+// Load a given URL into the iframe.
+const loadProfileIntoIframe = (url) => {
+  const profileIframe = document.createElement('iframe');
+  profileIframe.classList.add('profile-iframe-container');
+  profileIframe.src = url;
+  profileIframe.style.border = 'none';
+  profileIframe.src = url;
+  profileIframe.style.display = 'flex';
+  profileIframe.style.position = 'fixed';
+  profileIframe.style.zIndex = '999';
+  profileIframe.style.width = '75vw';
+  profileIframe.style.minWidth = '1000px';
+  profileIframe.style.height = '80vh';
+  profileIframe.style.top = '48.5vh';
+  profileIframe.style.left = '50vw';
+  profileIframe.style.transform = 'translate(-50%, -50%)';
+  profileIframe.style.setProperty('box-shadow', '0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)', 'important');
+  profileIframe.style.setProperty('border-radius', '0.6em', 'important');
+
+  document.body.appendChild(profileIframe);
+
+  const removeIframe = () => {
+    profileIframe.remove();
+    document.removeEventListener('keydown', handleEvents);
+    document.removeEventListener('mousedown', handleEvents);
+  };
+
+  const handleEvents = (event) => {
+    const isSpaceKey = event.type === 'keydown' && event.code === 'Space';
+    const isClickOutside = event.type === 'mousedown' && !profileIframe.contains(event.target);
+
+    if (isSpaceKey || isClickOutside) {
+      if (isSpaceKey) event.preventDefault(); // Prevent scroll only for space key.
+      removeIframe(); // Call the remove function once.
+    }
+  };
+
+  document.addEventListener('keydown', handleEvents);
+  document.addEventListener('mousedown', handleEvents);
+
+  profileIframe.onload = () => {
+    profileIframe.contentWindow.addEventListener('keydown', handleEvents);
+    profileIframe.contentWindow.addEventListener('dblclick', removeIframe);
+
+    const observer = new MutationObserver((mutations) => {
+      if (mutations.some(mutation =>
+        Array.from(mutation.removedNodes).some(node =>
+          node.nodeType === Node.ELEMENT_NODE &&
+          (node.classList.contains('dimming-background') || node.classList.contains('cached-users-panel'))
+        )
+      )) {
+        removeIframe();
+        observer.disconnect();
+      }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+  };
+};
+
 // Function to add highlight animation to the registered item
 function addHighlightAnimation(registeredItem) {
   // Add the fresh-data class to the registered item to indicate new data with a highlight animation
@@ -385,7 +445,7 @@ function createUserProfileContainer(userData) {
   loginElement.style.cursor = 'pointer';
   loginElement.addEventListener('click', () => {
     const userProfileUrl = `https://klavogonki.ru/u/#/${userData.id}`;
-    window.open(userProfileUrl, '_blank'); // Open profile in a new tab
+    loadProfileIntoIframe(userProfileUrl);
   });
   const rankColor = rankColors[userData.rank] || 'dimgray'; // Default to dimgray if rank is not found
   const rankElement = createRegisteredElement(userData.rank, rankColor);

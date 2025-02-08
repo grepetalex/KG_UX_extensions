@@ -1607,7 +1607,7 @@
     const cacheSearchContainer = document.createElement('div');
     cacheSearchContainer.className = 'search-for-cached-users';
     cacheSearchContainer.style.width = '100%';
-    cacheSearchContainer.style.margin = '0 20px';
+    cacheSearchContainer.style.margin = '0 0.5em';
     cacheSearchContainer.style.display = 'flex';
 
     // Create the input field for searching users
@@ -1617,7 +1617,6 @@
     cacheSearchInput.style.outline = 'none';
     cacheSearchInput.style.width = '100%';
     cacheSearchInput.style.padding = '10px';
-    cacheSearchInput.style.margin = '0 1em';
     cacheSearchInput.style.fontSize = '1em';
     cacheSearchInput.style.fontFamily = 'Montserrat';
     cacheSearchInput.style.setProperty('color', 'bisque', 'important');
@@ -5785,7 +5784,7 @@
     const messagesSearchContainer = document.createElement('div');
     messagesSearchContainer.className = 'search-for-personal-messages';
     messagesSearchContainer.style.width = '100%';
-    messagesSearchContainer.style.margin = '0 20px';
+    messagesSearchContainer.style.margin = '0 0.5em 0 0';
     messagesSearchContainer.style.display = 'flex';
 
     // Create the input field for searching personal messages
@@ -5795,7 +5794,6 @@
     messagesSearchInput.style.outline = 'none';
     messagesSearchInput.style.width = '100%';
     messagesSearchInput.style.padding = '10px';
-    messagesSearchInput.style.margin = '0 1em';
     messagesSearchInput.style.fontSize = '1em';
     messagesSearchInput.style.fontFamily = 'Montserrat';
     messagesSearchInput.style.color = 'bisque';
@@ -6680,7 +6678,7 @@
     const chatlogsSearchContainer = document.createElement('div');
     chatlogsSearchContainer.className = 'search-for-chatlogs-messages';
     chatlogsSearchContainer.style.width = '100%';
-    chatlogsSearchContainer.style.margin = '0 20px';
+    chatlogsSearchContainer.style.margin = '0 1em 0 0';
     chatlogsSearchContainer.style.display = 'flex';
 
     // Create the input field for searching users
@@ -6691,7 +6689,6 @@
     chatlogsSearchInput.style.height = '48px';
     chatlogsSearchInput.style.width = '100%';
     chatlogsSearchInput.style.padding = '10px';
-    chatlogsSearchInput.style.margin = '0 1em';
     chatlogsSearchInput.style.fontSize = '1em';
     chatlogsSearchInput.style.fontFamily = 'Montserrat';
     chatlogsSearchInput.style.setProperty('color', 'bisque', 'important');

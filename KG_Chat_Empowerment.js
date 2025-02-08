@@ -5983,8 +5983,14 @@
             .map(el => el?.textContent.trim()).filter(Boolean).join(' '))
         .filter(Boolean).join(' \n');
 
-      // Check if there's content to copy and copy to clipboard if available
-      textContent.trim() ? navigator.clipboard.writeText(textContent).catch(console.error) : alert('No messages to copy.');
+      // Check if there's content to copy
+      if (textContent.trim()) {
+        navigator.clipboard.writeText(textContent)
+          .then(() => addJumpEffect(copyPersonalMessagesButton, 0, 0)) // Apply jump effect on success
+          .catch(console.error);
+      } else {
+        alert('No messages to copy.');
+      }
     });
 
     // Create a clear cache button with the provided SVG icon

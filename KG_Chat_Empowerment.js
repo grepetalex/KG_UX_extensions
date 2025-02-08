@@ -124,6 +124,9 @@
     { name: 'Даниэль', gender: 'Male', pronunciation: 'Даниэль' }
   ];
 
+  // Define the base URL for user profiles
+  const profileBaseUrl = 'https://klavogonki.ru/u/#/';
+
   // Notify if someone addresses me using these aliases (case-insensitive)
   let mentionKeywords = [];
 
@@ -2081,10 +2084,27 @@
         loginElement.style.setProperty('color', 'skyblue', 'important');
       });
 
-      // Load the user's profile in the iframe on click.
-      loginElement.addEventListener('click', (event) => {
-        event.preventDefault(); // Prevent page navigation.
-        loadProfileIntoIframe(loginElement.href);
+      // Define the URL for user profile messaging
+      const profileUrl = profileBaseUrl + userId;
+      const messageInProfile = `${profileBaseUrl}${myUserId}/messages/${userId}/`;
+
+      // Attach a click event listener to the loginElement element
+      loginElement.addEventListener('click', function (event) {
+        event.preventDefault(); // Prevent the default link action
+
+        // Check if both Ctrl and Shift keys are pressed during the click event
+        if (event.ctrlKey && event.shiftKey) {
+          const newTab = window.open(messageInProfile, '_blank'); // Open the messaging page in a new window
+          if (newTab) newTab.focus(); // Attempt to make the new tab active
+        }
+        // Check if only the Ctrl key is pressed
+        else if (event.ctrlKey) {
+          loadProfileIntoIframe(messageInProfile); // Load the messaging profile into the iframe
+        }
+        // If Ctrl is not pressed, load the regular profile into the iframe
+        else {
+          loadProfileIntoIframe(profileUrl); // Load the regular profile into the iframe
+        }
       });
 
       // Helper function to create metric elements (speed, rating, etc.).
@@ -2876,7 +2896,6 @@
     newProfileElement.innerHTML = circularProgress;
     // Add event listener click with Hold Ctrl Key to open profile into iframe
     newProfileElement.addEventListener('click', function (event) {
-      const profileBaseUrl = 'https://klavogonki.ru/u/#/';
       event.preventDefault();
       if (isCtrlKeyPressed) {
         // Open the profile in a new tab
@@ -2887,27 +2906,25 @@
       }
     });
 
+    // Construct the URL for the messaging interface between two users
+    const messageInProfile = `${profileBaseUrl}${myUserId}/messages/${userId}/`;
+
     // Attach a click event listener to the newNameElement element
-    newNameElement.addEventListener('click', function () {
-      // Check if the Control key is pressed during the click event.
-      // If true, the user intends to open the profile messaging page in a new tab.
-      if (isCtrlKeyPressed) {
-        // Define the base URL for user profiles.
-        const profileBaseUrl = 'https://klavogonki.ru/u/#/';
-
-        // Construct the URL to the messaging interface.
-        // The URL structure indicates:
-        //   - The first user ID (myUserId) represents the current user's profile.
-        //   - The second user ID (userId) represents the recipient's profile.
-        const messageInProfile = `${profileBaseUrl}${myUserId}/messages/${userId}/`;
-
-        // Open the constructed messaging URL in a new browser tab.
-        // This immediately opens the profile messaging interface.
-        window.open(messageInProfile, '_blank');
+    newNameElement.addEventListener('click', function (event) {
+      // Check if both Ctrl and Shift keys are pressed during the click event
+      if (event.ctrlKey && event.shiftKey) {
+        // If both keys are pressed, open the messaging URL in a new tab
+        const newTab = window.open(messageInProfile, '_blank');
+        if (newTab) newTab.focus(); // Attempt to make the new tab active
       }
-      // If the Control key is not pressed, initiate a private chat message.
+      // Check if only the Ctrl key is pressed
+      else if (event.ctrlKey) {
+        // If Ctrl is pressed, load the messaging interface URL into the iframe
+        loadProfileIntoIframe(messageInProfile);
+      }
+      // If neither Ctrl nor Shift is pressed, initiate a private chat message
       else {
-        // The insertPrivate function handles sending a private message to the specified user.
+        // The insertPrivate function handles sending a private message to the specified user
         insertPrivate(userId);
       }
     });

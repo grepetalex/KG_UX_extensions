@@ -5833,7 +5833,7 @@
     saveMessagesButton.style.opacity = '0';
 
     // Apply common styles using the helper function
-    applyHeaderButtonStyles(saveMessagesButton, '#2f6b63', '0 0.5em 0 0', 'none');
+    applyHeaderButtonStyles(saveMessagesButton, '#2f6b63', '0 0.5em', 'none');
 
     // Handle the save button click to restore the backup
     saveMessagesButton.addEventListener('click', () => {
@@ -6678,7 +6678,7 @@
     const chatlogsSearchContainer = document.createElement('div');
     chatlogsSearchContainer.className = 'search-for-chatlogs-messages';
     chatlogsSearchContainer.style.width = '100%';
-    chatlogsSearchContainer.style.margin = '0 1em 0 0';
+    chatlogsSearchContainer.style.margin = '0 0.5em 0 0';
     chatlogsSearchContainer.style.display = 'flex';
 
     // Create the input field for searching users
@@ -6747,7 +6747,7 @@
     dateInputToggle.innerHTML = calendarSVG;
     // Apply common styles using the helper function with a different background color
     applyHeaderButtonStyles(dateInputToggle, 'steelblue');
-    dateInputToggle.style.margin = '0px 0.5em 0 0';
+    dateInputToggle.style.margin = '0 0.5em';
 
     // Function to toggle visibility of an element
     function toggleDateInputVisibility(element) {

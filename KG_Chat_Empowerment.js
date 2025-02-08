@@ -6462,8 +6462,10 @@
     // Clear the messagesContainer if it exists
     messagesContainer && (messagesContainer.innerHTML = '');
 
-    // Format date to 'YYYY-MM-DD'
-    const formattedDate = new Intl.DateTimeFormat('en-CA').format(new Date(date));
+    // Normalize date input to 'yyyy-mm-dd' format, supporting 'yyyy:mm:dd' format as well
+    const normalizeDate = date => /^\d{4}:\d{2}:\d{2}$/.test(date) ? date.replace(/:/g, '-') : date;
+    // Normalize and format the date
+    const formattedDate = new Intl.DateTimeFormat('en-CA').format(new Date(normalizeDate(date)));
 
     // Generate a random 20-digit number
     const randomParam = Math.floor(Math.random() * 10 ** 20);
@@ -6550,8 +6552,10 @@
     }
   };
 
+  const minDate = '2012-02-12'; // Define the minimum date
+
   function getRandomDateInRange() {
-    const startDate = new Date('2012-02-12'); // Start date
+    const startDate = new Date(minDate); // Start date
     const endDate = new Date(); // Current date
 
     // Calculate the difference in milliseconds
@@ -6633,7 +6637,7 @@
     });
   }
 
-  // Function to display the chat logs panel
+  //   Function to display the chat logs panel
   // Load initially with default date or date given by personal messages panel with parameter date
   async function showChatLogsPanel(personalMessagesDate) {
     // Remove any previous panel before creating a new one
@@ -6710,9 +6714,44 @@
 
     // Add input event listener to filter items as the user types
     chatlogsSearchInput.addEventListener('input', () => filterItems(chatlogsSearchInput.value));
-
     // Add click event listener to clear the search input by LMB click with Ctrl key pressed
     chatlogsSearchInput.addEventListener('click', () => isCtrlKeyPressed && (chatlogsSearchInput.value = ''));
+
+    // Add keydown event listener to handle date format and validity check
+    chatlogsSearchInput.addEventListener('keydown', async (event) => {
+      const inputValue = chatlogsSearchInput.value;
+
+      if (event.key === 'Enter') {
+        // Check if the input is in 'yyyy:mm:dd' or 'yyyy-mm-dd' format or 8 digits like 'yyyyMMdd'
+        let normalizedDate = inputValue;
+
+        if (/^\d{8}$/.test(inputValue)) {
+          // If it's 8 digits, format as 'yyyy-mm-dd'
+          normalizedDate = inputValue.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3');
+        }
+
+        // Check if the normalized input matches either 'yyyy:mm:dd' or 'yyyy-mm-dd' format
+        const isValidFormat = /^\d{4}[:\-]\d{2}[:\-]\d{2}$/.test(normalizedDate);
+
+        if (isValidFormat) {
+          // Normalize the date format (replace colons with dashes if needed)
+          normalizedDate = normalizedDate.replace(/:/g, '-');
+
+          // Check if the normalized date is a valid date
+          const isValidDate = !isNaN(new Date(normalizedDate).getTime());
+
+          if (isValidDate) {
+            updateDateInputAndTitle(normalizedDate); // Update the date input and title
+            await loadChatLogs(normalizedDate); // Load chat logs for the determined date
+            showDateInput(dateInput);
+          } else {
+            alert('Please enter a valid date.');
+          }
+        } else {
+          alert('Please enter a date in yyyy:mm:dd, yyyy-mm-dd format, or an 8-digit date (yyyyMMdd).');
+        }
+      }
+    });
 
     // Focus on the search input using requestAnimationFrame
     function focusOnSearchField() { requestAnimationFrame(function () { chatlogsSearchInput.focus(); }); } focusOnSearchField();
@@ -6967,13 +7006,18 @@
       return dateInput.value ? new Date(dateInput.value) : new Date(); // Use dateInput value or today's date
     }
 
+    // Function to update the date input and title
+    const updateDateInputAndTitle = (newDate) => {
+      const formattedDate = new Intl.DateTimeFormat('en-CA').format(new Date(newDate));
+      dateInput.value = formattedDate; // Update the date input
+      dateInputToggle.title = `Current date: ${formattedDate}`; // Update title
+    };
+
     // Event listener for the chevron left button
     oneDayBackward.addEventListener('click', async () => {
       const currentDate = getEffectiveDate(); // Get the effective date
       currentDate.setDate(currentDate.getDate() - 1); // Go one day back
-      const formattedDate = new Intl.DateTimeFormat('en-CA').format(currentDate);
-      dateInput.value = formattedDate; // Update the date input
-      dateInputToggle.title = `Current date: ${formattedDate}`; // Update title
+      updateDateInputAndTitle(currentDate); // Use the new function
       await loadChatLogs(currentDate); // Load chat logs for the updated date
       showDateInput(dateInput);
       focusOnSearchField();
@@ -6984,9 +7028,7 @@
     oneDayForward.addEventListener('click', async () => {
       const currentDate = getEffectiveDate(); // Get the effective date
       currentDate.setDate(currentDate.getDate() + 1); // Go one day forward
-      const formattedDate = new Intl.DateTimeFormat('en-CA').format(currentDate);
-      dateInput.value = formattedDate; // Update the date input
-      dateInputToggle.title = `Current date: ${formattedDate}`; // Update title
+      updateDateInputAndTitle(currentDate); // Use the new function
       await loadChatLogs(currentDate); // Load chat logs for the updated date
       showDateInput(dateInput);
       focusOnSearchField();
@@ -6996,9 +7038,7 @@
     // Event listener for the shuffle button
     randomDay.addEventListener('click', async () => {
       const randomDate = getRandomDateInRange(); // Get a random date
-      const formattedDate = new Intl.DateTimeFormat('en-CA').format(new Date(randomDate));
-      dateInput.value = formattedDate; // Update the date input
-      dateInputToggle.title = `Current date: ${formattedDate}`; // Update title
+      updateDateInputAndTitle(randomDate); // Use the new function
       await loadChatLogs(randomDate); // Load chat logs for the random date
       showDateInput(dateInput);
       focusOnSearchField();
@@ -7176,6 +7216,12 @@
 
     // Function to load and display chat logs into the container
     const loadChatLogs = async (date) => {
+      // Check if the provided date is less than the minDate
+      if (date < minDate) {
+        alert(`The selected date cannot be earlier than ${minDate}.`);
+        return; // Exit the function if the date is invalid
+      }
+
       // Fetch chat logs and pass the chatLogsContainer as the parent container
       const { chatlogs, url } = await fetchChatLogs(date, chatLogsContainer);
 
@@ -7417,7 +7463,6 @@
     // Load chat logs based on the provided date or default to today's date
     // create today's date in the format 'YYYY-MM-DD'
     const today = new Intl.DateTimeFormat('en-CA').format(new Date());
-    // showDateInput(dateInput); // Show the date input field
     const dateToLoad = personalMessagesDate || today; // Use personalMessagesDate if available
     await loadChatLogs(dateToLoad); // Load chat logs for the determined date
     // Check if personalMessagesDate is given as parameter or null to show the date input field
@@ -7425,6 +7470,8 @@
 
     // Set the max attribute to today's date
     dateInput.max = today; // Set the maximum value to today's date
+    // Set the min attribute to '2012-02-12'
+    dateInput.min = minDate; // Assign the minimum date
     dateInput.value = dateToLoad; // Set the value to the date to load
     dateInputToggle.title = `Current date: ${dateToLoad}`; // Update the title with the selected date
 
@@ -7449,6 +7496,9 @@
 
     // Filters message items based on the provided query and displays matching messages.
     function filterItems(query) {
+      // If the query contains only digits, hyphens, or colons, do nothing
+      if (/^[\d-:]+$/.test(query.trim())) return;
+
       // Helper function to replace underscores and hyphens with spaces and convert to lowercase
       function normalizeText(text) {
         return text.replace(/[_-]/g, ' ').toLowerCase(); // Replaces _ and - with spaces

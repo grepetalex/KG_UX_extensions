@@ -6522,7 +6522,6 @@
           } else if (messageNode.nodeType === Node.TEXT_NODE) {
             const nextSibling = usernameElement.nextElementSibling;
             if (nextSibling && nextSibling.tagName === 'A') {
-              // messageText = `${messageNode.textContent.trim()} ${nextSibling.textContent.trim()}`;
               messageText = `${messageNode.textContent.trim()} ${nextSibling.getAttribute('href')}`;
             } else {
               messageText = messageNode.textContent.trim();
@@ -6558,20 +6557,44 @@
     };
 
     try {
+      // Fetch chat logs from the URL
       const response = await fetch(url);
-      if (!response.ok) throw new Error('Network response was not ok');
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
 
+      // Parse the HTML and extract chat logs
       const html = await response.text();
       const chatlogs = parseChatLog(html);
 
-      // Filter out messages from ignored users
-      const filteredChatlogs = chatlogs.filter(log => !ignored.includes(log.username));
+      // Step 1: Remove consecutive duplicate messages
+      const noSpamMessages = [];
+      let lastMessage = null;
 
-      return { chatlogs: filteredChatlogs, url }; // Return filtered chat logs and the URL
+      for (const log of chatlogs) {
+        const isDifferentMessage = log.message !== lastMessage?.message;
+        const isDifferentUser = log.username !== lastMessage?.username;
+
+        // Include the message if:
+        // - It's the first message, or
+        // - It's a different message or from a different user
+        if (isDifferentMessage || isDifferentUser) {
+          noSpamMessages.push(log);
+          lastMessage = log;
+        }
+      }
+
+      // Step 2: Filter out messages from ignored users
+      const finalChatlogs = noSpamMessages.filter((log) => !ignored.includes(log.username));
+
+      // Return the filtered chat logs and the URL
+      return { chatlogs: finalChatlogs, url };
     } catch (error) {
+      // Handle errors and return an empty array
       console.error('Fetch error:', error);
-      return { chatlogs: [] }; // Return an empty array in case of an error
+      return { chatlogs: [] };
     }
+
   };
 
   const minDate = '2012-02-12'; // Define the minimum date

@@ -6545,7 +6545,12 @@
       if (!response.ok) throw new Error('Network response was not ok');
 
       const html = await response.text();
-      return { chatlogs: parseChatLog(html), url }; // Return chat logs and the URL
+      const chatlogs = parseChatLog(html);
+
+      // Filter out messages from ignored users
+      const filteredChatlogs = chatlogs.filter(log => !ignored.includes(log.username));
+
+      return { chatlogs: filteredChatlogs, url }; // Return filtered chat logs and the URL
     } catch (error) {
       console.error('Fetch error:', error);
       return { chatlogs: [] }; // Return an empty array in case of an error

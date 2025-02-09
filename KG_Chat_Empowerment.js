@@ -7032,6 +7032,12 @@
         logLink.textContent = date; // Display the date
         logLink.href = url; // Store the URL in the href attribute
 
+        // Style the log link
+        logLink.style.color = 'darkseagreen';
+        logLink.style.textDecoration = 'none'; // Optional: Remove underline
+        logLink.style.display = 'inline-flex';
+        logLink.style.padding = '0.5em';
+
         logLink.addEventListener('click', async (event) => {
           event.preventDefault(); // Prevent the default link behavior
 
@@ -7057,14 +7063,27 @@
         const logTitle = document.createElement('span');
         logTitle.classList.add('saved-chatlog-url-title');
         logTitle.textContent = title || ''; // Display the title (or an empty string if none provided)
-        logTitle.style.color = 'lightsteelblue';
 
-        // Style the log link and title
-        logLink.style.color = 'darkseagreen';
-        logLink.style.textDecoration = 'none'; // Optional: Remove underline
-        logLink.style.display = 'inline-flex';
-        logLink.style.padding = '0.5em';
+        // Style the log title
+        logTitle.style.color = 'lightsteelblue';
         logTitle.style.marginLeft = '0.5em'; // Add some space between the link and the title
+
+        // Add click event listener to the title
+        logTitle.addEventListener('click', () => {
+          const newTitle = prompt('Enter a new title for this chat log:', logTitle.textContent);
+
+          if (newTitle !== null && newTitle !== logTitle.textContent) {
+            // Update the title displayed on the page
+            logTitle.textContent = newTitle;
+
+            // Find the log by URL in the savedChatlogs array and update its title
+            const logIndex = savedChatlogs.findIndex(log => log.url === url);
+            if (logIndex !== -1) {
+              savedChatlogs[logIndex].title = newTitle; // Update the title in the saved object
+              localStorage.setItem('savedChatlogs', JSON.stringify(savedChatlogs)); // Save the updated list to localStorage
+            }
+          }
+        });
 
         // Append the elements to the wrapper
         logWrapper.appendChild(logLink);

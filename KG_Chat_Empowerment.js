@@ -6988,17 +6988,145 @@
     // Apply common styles to the button element
     applyHeaderButtonStyles(copyChatLogsUrl, 'steelblue');
 
-    // Add a click event listener to copy chatLogsUrlForCopy to the clipboard
-    copyChatLogsUrl.addEventListener('click', () => {
-      addJumpEffect(copyChatLogsUrl, 0, 0);
-      navigator.clipboard.writeText(chatLogsUrlForCopy)
-        .then(() => {
-          console.log('Chat logs URL copied to clipboard:', chatLogsUrlForCopy);
-          // Optionally, you can provide user feedback here (e.g., show a message)
-        })
-        .catch(err => {
-          console.error('Failed to copy: ', err);
+    // Define the regular expression to extract the date from the URL
+    const chatlogsDateRegex = /(\d{4}-\d{2}-\d{2})/;
+
+    // Helper function to extract date from the URL
+    const extractDateFromUrl = (url) => {
+      const match = url.match(chatlogsDateRegex);
+      return match ? match[1] : null; // Return the date if match is found, else return null
+    };
+
+    // Function to create and populate chat log links
+    function createChatLogLinks(savedChatlogs, chatLogsLinksContainer) {
+      // Check if the container exists and return if not
+      if (!chatLogsLinksContainer) return;
+      // Clear the container before repopulating it
+      chatLogsLinksContainer.replaceChildren();
+
+      savedChatlogs.forEach(url => {
+        const date = extractDateFromUrl(url); // Extract date from URL
+
+        // Create a log link element
+        const logLink = document.createElement('a');
+        logLink.classList.add('saved-chatlog-url');
+        logLink.textContent = date; // Display the date
+        logLink.href = url; // Store the URL in the href attribute
+
+        logLink.addEventListener('click', async (event) => {
+          event.preventDefault(); // Prevent the default link behavior
+
+          if (event.ctrlKey) {
+            const urlToRemove = event.target.href;
+            // Find the exact match in the savedChatlogs array and remove it
+            const updatedChatlogs = savedChatlogs.filter(url => url !== urlToRemove);
+
+            // If there was a change, update localStorage and remove the link
+            if (updatedChatlogs.length !== savedChatlogs.length) {
+              savedChatlogs = updatedChatlogs;
+              localStorage.setItem('savedChatlogs', JSON.stringify(savedChatlogs));
+              const targetLink = event.target;
+              targetLink.remove(); // Remove the link itself
+
+              const parentContainer = document.querySelector('.saved-chatlog-container');
+              if (parentContainer) {
+                const childCount = parentContainer.childElementCount;
+                if (childCount === 0) {
+                  parentContainer.remove();
+                }
+              }
+            }
+          } else {
+            // Handle when Ctrl is not pressed
+            await loadChatLogs(date);
+          }
         });
+
+        // Style the log link
+        logLink.style.color = 'lightsteelblue';
+        logLink.style.textDecoration = 'none'; // Optional: Remove underline
+        logLink.style.display = 'inline-flex';
+        logLink.style.padding = '0.4em';
+
+        // Append the log link to the container
+        chatLogsLinksContainer.appendChild(logLink);
+      });
+    }
+
+    // Add a click event listener to copy chatLogsUrlForCopy to the clipboard
+    copyChatLogsUrl.addEventListener('click', (event) => {
+      // Find the saved-chatlog-container at the top
+      let chatLogsLinksContainer = document.querySelector('.saved-chatlog-container');
+
+      // Apply jump effect only if saved-chatlog-container doesn't exist and Shift key is not pressed
+      !chatLogsLinksContainer && !event.shiftKey && addJumpEffect(copyChatLogsUrl, 0, 0);
+
+      // Remove the chat logs links container if it exists, the Ctrl key is not pressed, 
+      // and the target is not a child of the container
+      if (chatLogsLinksContainer && !event.ctrlKey && !chatLogsLinksContainer.contains(event.target)) {
+        chatLogsLinksContainer.remove();
+      }
+
+      // Retrieve existing saved chat logs from localStorage once
+      let savedChatlogs = JSON.parse(localStorage.getItem('savedChatlogs')) || [];
+
+      // Check if the Ctrl key is pressed
+      if (event.ctrlKey && !event.target.closest('.saved-chatlog-url')) {
+        // Extract the date from the new URL using the defined regex
+        const currentUrlDate = extractDateFromUrl(chatLogsUrlForCopy);
+        // If the URL doesn't contain a valid date, do nothing
+        if (!currentUrlDate) return;
+
+        // Check if the URL with the same date already exists
+        const urlExists = savedChatlogs.some(url => extractDateFromUrl(url) === currentUrlDate);
+
+        if (!urlExists) {
+          // Add the new URL if no match was found for the date
+          savedChatlogs.push(chatLogsUrlForCopy);
+
+          // Sort the saved URLs based on the date extracted from the URL
+          savedChatlogs.sort((a, b) => {
+            const dateA = extractDateFromUrl(a);
+            const dateB = extractDateFromUrl(b);
+            return new Date(dateA) - new Date(dateB);
+          });
+
+          // Store the updated list back in localStorage
+          localStorage.setItem('savedChatlogs', JSON.stringify(savedChatlogs));
+        }
+        // Call the function to create and populate the chat log links
+        createChatLogLinks(savedChatlogs, chatLogsLinksContainer);
+      }
+      // Check if the Shift key is pressed
+      else if (event.shiftKey) {
+        // Check if there are saved chat logs and if the container doesn't exist
+        if (savedChatlogs.length > 0 && !chatLogsLinksContainer) {
+          chatLogsLinksContainer = document.createElement('div');
+          chatLogsLinksContainer.classList.add('saved-chatlog-container');
+          chatLogsLinksContainer.style.display = 'flex';
+          chatLogsLinksContainer.style.flexDirection = 'column';
+          chatLogsLinksContainer.style.overflowY = 'auto';
+          chatLogsLinksContainer.style.backgroundColor = 'rgb(30, 40, 45)';
+          chatLogsLinksContainer.style.setProperty('border', '1px solid rgb(60, 70, 80)', 'important');
+          chatLogsLinksContainer.style.setProperty('border-radius', '0.2em', 'important');
+          chatLogsLinksContainer.style.position = 'absolute';
+          chatLogsLinksContainer.style.padding = '0.4em';
+          chatLogsLinksContainer.style.height = 'fit-content';
+          chatLogsLinksContainer.style.width = 'max-content';
+          chatLogsLinksContainer.style.maxHeight = `calc(${chatLogsContainer.offsetHeight}px - 0.5em)`;
+          chatLogsLinksContainer.style.top = 'calc(50px + 1em)';
+          chatLogsLinksContainer.style.right = '0';
+          // Call the function to create and populate the chat log links
+          createChatLogLinks(savedChatlogs, chatLogsLinksContainer);
+
+          // Append the container only if it's not already appended
+          copyChatLogsUrl.appendChild(chatLogsLinksContainer);
+        }
+        // Default action (copy to clipboard)
+      } else {
+        navigator.clipboard.writeText(chatLogsUrlForCopy)
+          .catch(err => console.error('Failed to copy: ', err));
+      }
     });
 
     panelControlButtons.appendChild(copyChatLogsUrl);
@@ -7232,33 +7360,41 @@
     chatLogsPanel.appendChild(chatLogsContainer);
     chatLogsPanel.appendChild(scrollButtonsContainer);
 
-    // Create an array containing the buttons we want to apply the events to
+    // Compact array of buttons with optional exclusions
     const buttons = [
-      fullScrollUpButton,
-      fullScrollDownButton,
-      partialScrollUpButton,
-      partialScrollDownButton,
-      toggleMentionMessages,
-      toggleMediaMessages,
-      copyChatLogsUrl,
-      toggleActiveUsers,
-      dateInputToggle,
-      oneDayBackward,
-      oneDayForward,
-      randomDay,
-      closePanelButton
+      { element: fullScrollUpButton },
+      { element: fullScrollDownButton },
+      { element: partialScrollUpButton },
+      { element: partialScrollDownButton },
+      { element: toggleMentionMessages },
+      { element: toggleMediaMessages },
+      { element: copyChatLogsUrl, exclusion: 'saved-chatlog-container' },
+      { element: toggleActiveUsers },
+      { element: dateInputToggle },
+      { element: oneDayBackward },
+      { element: oneDayForward },
+      { element: randomDay },
+      { element: closePanelButton }
     ];
 
-    // Iterate through each button in the array
+    // Helper function to check if the event target is inside an excluded child element
+    function isExcludedChild(event, exclusionClass) {
+      return exclusionClass && event.target.closest(`.${exclusionClass}`);
+    }
+
     buttons.forEach(button => {
-      // Add a mouseover event listener to change the button's brightness on hover
-      button.addEventListener('mouseover', () => {
-        button.style.filter = 'brightness(0.8)'; // Dim the button
+      const { element, exclusion } = button;
+
+      // Add mouseover event
+      element.addEventListener('mouseover', event => {
+        if (isExcludedChild(event, exclusion)) return; // Skip if mouse is inside an excluded child
+        element.style.filter = 'brightness(0.8)'; // Apply dim effect
       });
 
-      // Add a mouseout event listener to reset the button's brightness when not hovered
-      button.addEventListener('mouseout', () => {
-        button.style.filter = 'brightness(1)'; // Reset to original brightness
+      // Add mouseout event
+      element.addEventListener('mouseout', event => {
+        if (isExcludedChild(event, exclusion) && event.relatedTarget?.closest(`.${exclusion}`)) return; // Skip if mouse is leaving to an excluded child
+        element.style.filter = 'brightness(1)'; // Reset brightness
       });
     });
 

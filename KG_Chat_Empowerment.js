@@ -6563,9 +6563,18 @@
         throw new Error('Network response was not ok');
       }
 
-      // Parse the HTML and extract chat logs
+      // Get the HTML content
       const html = await response.text();
-      const chatlogs = parseChatLog(html);
+
+      // Limit the size of the HTML to 5KB
+      const sizeLimitKB = 1000; // Set the size limit in KB
+      const sizeLimitBytes = sizeLimitKB * 1024; // Convert KB to bytes
+      const htmlContent = html.length > sizeLimitBytes ? html.slice(0, sizeLimitBytes) : html;
+
+      // Parse the HTML and extract chat logs
+      const chatlogs = parseChatLog(htmlContent);
+
+      const limitReached = html.length > sizeLimitBytes;
 
       // Step 1: Remove consecutive duplicate messages
       const noSpamMessages = [];
@@ -6587,15 +6596,24 @@
       // Step 2: Filter out messages from ignored users
       const finalChatlogs = noSpamMessages.filter((log) => !ignored.includes(log.username));
 
-      // Return the filtered chat logs and the URL
-      return { chatlogs: finalChatlogs, url };
+      // Return the filtered chat logs, size of HTML, URL, and info
+      return {
+        chatlogs: finalChatlogs,
+        url: url,
+        size: htmlContent.length,
+        info: limitReached,
+        error: null,
+      }
     } catch (error) {
-      // Handle errors and return an empty array
-      console.error('Fetch error:', error);
-      return { chatlogs: [] };
+      // Handle other errors (e.g., parsing errors)
+      return {
+        chatlogs: [],
+        url: url,
+        size: 0,
+        error: error.message,
+      }
     }
-
-  };
+  }
 
   const minDate = '2012-02-12'; // Define the minimum date
 
@@ -6795,6 +6813,8 @@
         } else {
           alert('Please enter a date in yyyy:mm:dd, yyyy-mm-dd format, or an 8-digit date (yyyyMMdd).');
         }
+        // Clear the input value after processing the "Enter" key
+        chatlogsSearchInput.value = '';
       }
     });
 
@@ -7114,7 +7134,6 @@
     panelControlButtons.appendChild(closePanelButton);
     panelHeaderContainer.appendChild(panelControlButtons);
 
-
     // Create a container for the chat logs
     const chatLogsContainer = document.createElement('div');
     chatLogsContainer.className = 'chat-logs-container';
@@ -7259,6 +7278,13 @@
     // Store the current chat logs URL for clipboard copy.
     let chatLogsUrlForCopy = ''; // Store the current chat logs URL for copying
 
+    // Function to load the total message count into the placeholder without replacing the existing text
+    function loadTotalMessageCount() {
+      if (chatLogsContainer.childElementCount > 0) {
+        chatlogsSearchInput.placeholder += ` | Total messages: ${chatLogsContainer.childElementCount}`;
+      }
+    }
+
     // Function to load and display chat logs into the container
     const loadChatLogs = async (date) => {
       // Check if the provided date is less than the minDate
@@ -7268,7 +7294,13 @@
       }
 
       // Fetch chat logs and pass the chatLogsContainer as the parent container
-      const { chatlogs, url } = await fetchChatLogs(date, chatLogsContainer);
+      const { chatlogs, url, size, info, error } = await fetchChatLogs(date, chatLogsContainer);
+
+      // Convert size to KB
+      const sizeInKB = (size / 1024).toFixed(2);
+
+      // Set placeholder for size in KB, info, or error
+      chatlogsSearchInput.placeholder = error ? `Error: ${error}` : (info ? `Limit reached: ${sizeInKB} KB` : info || `Size: ${sizeInKB} KB`);
 
       // Assign the fetched URL to the chatLogsUrlForCopy variable
       chatLogsUrlForCopy = url;
@@ -7404,6 +7436,8 @@
 
         // Update the media and mention counters
         updateMediaAndMentionCounters();
+        // Call the function to load the total message count once
+        loadTotalMessageCount();
       });
 
     };

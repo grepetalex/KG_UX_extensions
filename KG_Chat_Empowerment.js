@@ -7035,7 +7035,7 @@
         logLink.href = url; // Store the URL in the href attribute
 
         // Style the log link
-        logLink.style.color = 'darkseagreen';
+        logLink.style.setProperty('color', 'darkseagreen', 'important');
         logLink.style.textDecoration = 'none'; // Optional: Remove underline
         logLink.style.display = 'inline-flex';
         logLink.style.padding = '0.5em';

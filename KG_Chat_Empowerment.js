@@ -5627,35 +5627,52 @@
   }
 
   /**
-   * Adjusts a given time to Moscow time.
+   * Converts a given local time to Moscow time (UTC+3) based on the system's timezone.
    *
-   * @param {string} inputTime - The time string in "HH:MM:SS" format to adjust.
-   * @returns {string} - The adjusted time in "HH:MM:SS" format.
+   * How it works:
+   * 1. Gets the system's local timezone offset in minutes (positive if behind UTC).
+   * 2. Converts the local offset to total minutes from UTC.
+   * 3. Defines Moscow's fixed offset as UTC+3 (180 minutes).
+   * 4. Calculates the difference between Moscow's offset and the local offset.
+   * 5. Parses the input time and converts it into total minutes since midnight.
+   * 6. Adjusts the time by the calculated difference.
+   * 7. Ensures the result stays within the 24-hour format (wrap-around handling).
+   * 8. Converts the result back to HH:MM:SS format and returns it.
+   *
+   * @param {string} time - The local time in "HH:MM:SS" format.
+   * @returns {string} - The converted time in Moscow time (HH:MM:SS).
    */
-  function calibrateToMoscowTime(inputTime) {
-    // Get the system's current timezone offset in minutes (negative for UTC+)
-    const systemOffset = new Date().getTimezoneOffset();
+  function calibrateToMoscowTime(time) {
+    // Get local timezone offset in minutes (positive if local is behind UTC)
+    const localOffsetMinutes = new Date().getTimezoneOffset();
 
-    // Moscow's timezone offset is UTC+3, so it's -180 minutes
-    const moscowOffset = -180;
+    // Convert local offset to total minutes from UTC (local time = UTC + localTotalOffset)
+    const localTotalOffset = -localOffsetMinutes;
 
-    // Calculate the difference between the system timezone and Moscow's timezone
-    const difference = systemOffset - moscowOffset;
+    // Moscow is UTC+3 (180 minutes)
+    const moscowOffset = 3 * 60; // 180 minutes
 
-    // Split the input time string (HH:MM:SS) and convert to numbers
-    const [hours, minutes, seconds] = inputTime.split(':').map(Number);
+    // Calculate the adjustment needed: Moscow offset - local offset
+    const diffMinutes = moscowOffset - localTotalOffset;
 
-    // Create a new Date object and set the hours, minutes, and seconds based on the input time
-    const inputDate = new Date();
-    inputDate.setHours(hours, minutes, seconds, 0);
+    // Parse input time
+    const [hours, minutes, seconds] = time.split(':').map(Number);
 
-    // Adjust the input time by the calculated time difference in milliseconds
-    const adjustedTime = new Date(inputDate.getTime() + difference * 60000);
+    // Convert input time to total minutes since 00:00
+    const totalInputMinutes = hours * 60 + minutes;
 
-    // Format the adjusted time in HH:MM:SS format and return as a string
-    return `${String(adjustedTime.getHours()).padStart(2, '0')}:` +
-      `${String(adjustedTime.getMinutes()).padStart(2, '0')}:` +
-      `${String(adjustedTime.getSeconds()).padStart(2, '0')}`;
+    // Adjust by diff and wrap within a single day (1440 minutes)
+    let adjustedMinutes = totalInputMinutes + diffMinutes;
+    adjustedMinutes = ((adjustedMinutes % 1440) + 1440) % 1440; // Ensure positive
+
+    // Convert back to hours and minutes
+    const adjustedHours = Math.floor(adjustedMinutes / 60);
+    const adjustedMins = adjustedMinutes % 60;
+
+    // Format the result with original seconds
+    return `${adjustedHours.toString().padStart(2, '0')}:` +
+      `${adjustedMins.toString().padStart(2, '0')}:` +
+      `${seconds.toString().padStart(2, '0')}`;
   }
 
   /**

@@ -7064,7 +7064,7 @@
         // Create the title element
         const logTitle = document.createElement('span');
         logTitle.classList.add('saved-chatlog-url-title');
-        logTitle.textContent = title || ''; // Display the title (or an empty string if none provided)
+        logTitle.textContent = title || '➕'; // Display the title (or an empty string if none provided)
 
         // Style the log title
         logTitle.style.color = 'lightsteelblue';
@@ -7113,14 +7113,14 @@
         if (!currentUrlDate) return;
 
         // Ask for title input
-        const title = prompt('Enter a title for this chat log:', '');
+        const title = prompt('Enter a title for this chat log:', '➕');
 
         // Check if the URL with the same date already exists
         const urlExists = savedChatlogs.some(log => extractDateFromUrl(log.url) === currentUrlDate);
 
         if (!urlExists) {
           // Add the new URL and title if no match was found for the date
-          savedChatlogs.push({ url: chatLogsUrlForCopy, title: title || '' });
+          savedChatlogs.push({ url: chatLogsUrlForCopy, title: title || '➕' });
 
           // Sort the saved URLs based on the date extracted from the URL
           savedChatlogs.sort((a, b) => {

@@ -6945,6 +6945,8 @@
       element.style.transform = 'translate(-50%, 50%)';
       element.style.backgroundColor = backgroundColor;
       element.style.color = '#020202';
+      element.style.pointerEvents = 'none';
+      element.style.userSelect = 'none';
     }
 
     // Create a new div element for the toggle mention messages counter
@@ -7066,7 +7068,7 @@
 
         // Style the log title
         logTitle.style.color = 'lightsteelblue';
-        logTitle.style.marginLeft = '0.5em'; // Add some space between the link and the title
+        logTitle.style.padding = '0.5em';
 
         // Add click event listener to the title
         logTitle.addEventListener('click', () => {

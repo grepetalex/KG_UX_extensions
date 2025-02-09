@@ -1443,10 +1443,16 @@
 
   // Function to display the cached user list panel
   function showCachePanel() {
+    // Check if the panel already exists
+    const existingPanel = document.querySelector('.cached-users-panel');
+    if (existingPanel) {
+      existingPanel.remove(); // Remove the settings panel
+      triggerDimmingElement('hide');
+      return; // Return immediately to prevent further execution
+    }
+
     // Remove any previous panel before creating a new one
     removePreviousPanel();
-    // Check if the panel already exists
-    if (document.querySelector('.cached-users-panel')) return;
 
     // Get data from localStorage
     const fetchedUsersData = localStorage.getItem('fetchedUsers');
@@ -5761,6 +5767,14 @@
 
   // Function to display the personal messages panel
   async function showPersonalMessagesPanel() {
+    // Check if the panel already exists
+    const existingPanel = document.querySelector('.cached-messages-panel');
+    if (existingPanel) {
+      existingPanel.remove(); // Remove the settings panel
+      triggerDimmingElement('hide');
+      return; // Return immediately to prevent further execution
+    }
+
     // Flag to track if this is the first time the panel is being run
     let isFirstPanelRun = true;
     // Flag to track if messages are being imported
@@ -5771,8 +5785,6 @@
     if (localStorage.getItem('personalMessagesBackup')) localStorage.removeItem('personalMessagesBackup');
     // Remove any previous panel before creating a new one
     removePreviousPanel();
-    // Check if the cached messages panel already exists
-    if (document.querySelector('.cached-messages-panel')) return;
 
     // Reset the new messages indicator to 0
     const newMessagesCountElement = document.querySelector('.personal-messages-button .new-message-count');
@@ -6720,10 +6732,16 @@
   //   Function to display the chat logs panel
   // Load initially with default date or date given by personal messages panel with parameter date
   async function showChatLogsPanel(personalMessagesDate) {
+    // Check if the panel already exists
+    const existingPanel = document.querySelector('.chat-logs-panel');
+    if (existingPanel) {
+      existingPanel.remove(); // Remove the settings panel
+      triggerDimmingElement('hide');
+      return; // Return immediately to prevent further execution
+    }
+
     // Remove any previous panel before creating a new one
     removePreviousPanel();
-    // Check if the chat logs panel already exists; if it does, exit the function to avoid duplication
-    if (document.querySelector('.chat-logs-panel')) return;
 
     // Create a container div with class 'chat-logs-panel'
     const chatLogsPanel = document.createElement('div');
@@ -8367,10 +8385,16 @@
 
   // Function to display the settings panel
   function showSettingsPanel() {
+    // Check if the panel already exists
+    const existingPanel = document.querySelector('.settings-panel');
+    if (existingPanel) {
+      existingPanel.remove(); // Remove the settings panel
+      triggerDimmingElement('hide');
+      return; // Return immediately to prevent further execution
+    }
+
     // Remove any previous panel before creating a new one
     removePreviousPanel();
-    // Check if the settings panel already exists
-    if (document.querySelector('.settings-panel')) return;
 
     // Create the settings panel container
     const settingsPanel = document.createElement('div');

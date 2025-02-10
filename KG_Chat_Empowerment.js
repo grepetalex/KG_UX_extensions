@@ -2065,6 +2065,10 @@
         avatarElement.innerHTML = getRandomEmojiAvatar();
       }
 
+      // Create the user data container and append login and rank elements.
+      const userDataElement = document.createElement('div');
+      userDataElement.className = 'user-data';
+
       // Create the login element with a link to the user's profile.
       const loginElement = document.createElement('a');
       loginElement.className = 'login';
@@ -2112,6 +2116,43 @@
           loadProfileIntoIframe(profileUrl); // Load the regular profile into the iframe
         }
       });
+
+      // Append login element to user data element
+      userDataElement.appendChild(loginElement);
+
+      const rankElement = document.createElement('div');
+      rankElement.className = 'rank';
+      rankElement.textContent = userData.rank || 'N/A';
+      rankElement.style.color = rankColors[userData.rank] || 'white';
+      rankElement.style.padding = '2px 0';
+
+      // Append rank element to the user data element
+      userDataElement.appendChild(rankElement);
+
+      // Add a registered date element with hover behavior.
+      const registeredElement = document.createElement('div');
+      registeredElement.className = 'registered';
+      registeredElement.textContent = userData.registered || 'N/A';
+      registeredElement.style.color = 'cadetblue';
+      registeredElement.style.fontSize = '12px';
+
+      let hoverTimer;
+      const originalContent = registeredElement.textContent;
+
+      registeredElement.addEventListener('mouseover', () => {
+        clearTimeout(hoverTimer);
+        hoverTimer = setTimeout(() => {
+          registeredElement.textContent = calculateTimeOnSite(userData.registered);
+        }, 300);
+      });
+
+      registeredElement.addEventListener('mouseout', () => {
+        clearTimeout(hoverTimer);
+        registeredElement.textContent = originalContent;
+      });
+
+      // Append registered element to user data element
+      userDataElement.appendChild(registeredElement);
 
       // Helper function to create metric elements (speed, rating, etc.).
       const createMetricElement = (className, color, icon, value, title, url) => {
@@ -2167,44 +2208,11 @@
       userMetrics.className = 'user-metrics';
       userMetrics.style.marginTop = '4px';
       userMetrics.style.gridColumn = 'span 2';
+
+      // Append metrics elements into metrics wrapper
       userMetrics.append(bestSpeedElement, ratingLevelElement, carsElement, friendsElement);
 
-      // Create the user data container and append login and rank elements.
-      const userDataElement = document.createElement('div');
-      userDataElement.className = 'user-data';
-      userDataElement.appendChild(loginElement);
-
-      const rankElement = document.createElement('div');
-      rankElement.className = 'rank';
-      rankElement.textContent = userData.rank || 'N/A';
-      rankElement.style.color = rankColors[userData.rank] || 'white';
-      rankElement.style.padding = '2px 0';
-      userDataElement.appendChild(rankElement);
-
-      // Add a registered date element with hover behavior.
-      const registeredElement = document.createElement('div');
-      registeredElement.className = 'registered';
-      registeredElement.textContent = userData.registered || 'N/A';
-      registeredElement.style.color = 'cadetblue';
-      registeredElement.style.fontSize = '12px';
-
-      let hoverTimer;
-      const originalContent = registeredElement.textContent;
-
-      registeredElement.addEventListener('mouseover', () => {
-        clearTimeout(hoverTimer);
-        hoverTimer = setTimeout(() => {
-          registeredElement.textContent = calculateTimeOnSite(userData.registered);
-        }, 300);
-      });
-
-      registeredElement.addEventListener('mouseout', () => {
-        clearTimeout(hoverTimer);
-        registeredElement.textContent = originalContent;
-      });
-
-      // Append registered element to user data and user data to user element.
-      userDataElement.appendChild(registeredElement);
+      // Append all the groups of elements
       userElement.append(avatarElement, userDataElement, userMetrics);
 
       // Return the created user element and its relevant data.
@@ -2738,67 +2746,58 @@
     <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
   </svg>`;
 
-  /**
-   * Creates an SVG circular progress indicator or a close icon based on the provided parameters.
-   *
-   * @param {number} percentage - The percentage value for the progress (0-100). Determines the fill of the circular progress.
-   * @param {string} color - The color to be used for the progress circle or the close icon (if `isRevoked` is true).
-   * @param {boolean} isRevoked - Determines if the close icon should be shown instead of the circular progress. If true, the close icon will be shown; otherwise, the circular progress is displayed.
-   *
-   * @returns {string} - The SVG markup as a string, representing either the circular progress or the close icon.
-   *
-   * The function uses SVG elements to create a circular progress bar with a gradient fill that represents the provided percentage.
-   * If `isRevoked` is true, it returns a close (X) icon instead, using the provided color.
-   */
   function createCircularProgress(percentage, color, isRevoked) {
-    // Define constants for the size of the SVG container, stroke width, and radius calculations
-    const size = 20; // Size of the SVG container (both width and height)
-    const strokeWidth = 2; // Width of the stroke (border) for the circles
-    const radius = size / 2 - strokeWidth; // Radius of the inner circle (subtracting stroke width for proper fit)
-    const outerRadius = size / 2 - strokeWidth; // Radius of the outer circle (adjusted for stroke)
+    // Define constants for the SVG container and circles.
+    const size = 20; // Width and height of the SVG container
+    const strokeWidth = 2; // Stroke width for the outer circle
+    const radius = size / 2 - strokeWidth; // Radius for the inner (progress) circle
+    const outerRadius = size / 2 - strokeWidth; // Radius for the outer circle
 
-    // Generate a random string to create a unique ID for the gradient
+    // Generate a random string to use for unique gradient IDs.
     const randomString = Math.random().toString(36).substring(2, 22);
 
-    // Create the SVG element with the defined width, height, and viewBox
+    // Define the outer circle (the border circle).
+    const outerCircle = `<circle cx="${size / 2}" cy="${size / 2}" r="${outerRadius}" fill="none" stroke="${color}" stroke-width="${strokeWidth}" />`;
+
+    // Define the close icon once as a path (using the 24x24 coordinate system).
+    const closeIconPath = `<path d="M18.364 5.636a1 1 0 0 1 0 1.414L13.414 12l4.95 4.95a1 1 0 0 1-1.414 1.414L12 13.414l-4.95 4.95a1 1 0 0 1-1.414-1.414L10.586 12l-4.95-4.95a1 1 0 0 1 1.414-1.414L12 10.586l4.95-4.95a1 1 0 0 1 1.414 0z" fill="${color}"/>`;
+
+    // Create the main SVG element.
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("width", size); // Set the width of the SVG
-    svg.setAttribute("height", size); // Set the height of the SVG
-    svg.setAttribute("viewBox", `0 0 ${size} ${size}`); // Ensure proper scaling inside the SVG container
+    svg.setAttribute("width", size);
+    svg.setAttribute("height", size);
+    svg.setAttribute("viewBox", `0 0 ${size} ${size}`);
 
-    // If `isRevoked` is true, we return the close icon (X shape) instead of the circular progress
-    if (isRevoked) {
-      // Create a close icon (X shape) using an SVG path, filled with the provided color
-      const closeIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24">
-            <path d="M18.364 5.636a1 1 0 0 1 0 1.414L13.414 12l4.95 4.95a1 1 0 0 1-1.414 1.414L12 13.414l-4.95 4.95a1 1 0 0 1-1.414-1.414L10.586 12l-4.95-4.95a1 1 0 0 1 1.414-1.414L12 10.586l4.95-4.95a1 1 0 0 1 1.414 0z" fill="${color}"/>
-        </svg>`;
-
-      // Set the inner HTML of the SVG to the close icon
-      svg.innerHTML = closeIcon;
+    // If revoked or percentage is 0, display the close icon (scaled down when percentage is 0)
+    if (isRevoked || percentage === 0) {
+      // Use a scale multiplier: 0.7 for 0% progress, otherwise full size (1)
+      const scaleMultiplier = !isRevoked && percentage === 0 ? 0.7 : 1;
+      const baseScale = size / 24; // Maps the 24x24 icon into our 20x20 SVG
+      const finalScale = baseScale * scaleMultiplier;
+      // Center the icon: its center is at (12,12) in its native coordinate system.
+      const translateOffset = (size / 2) - (12 * finalScale);
+      const iconTransform = `translate(${translateOffset}, ${translateOffset}) scale(${finalScale})`;
+      const iconGroup = `<g transform="${iconTransform}">${closeIconPath}</g>`;
+      svg.innerHTML = !isRevoked ? outerCircle + iconGroup : iconGroup;
     } else {
-      // Create a gradient to fill the inner circle based on the provided percentage
+      // Otherwise, render the progress indicator with a gradient-filled inner circle.
       const gradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
-      gradient.setAttribute("id", `gradient-${randomString}`); // Unique ID for the gradient
-      gradient.setAttribute("gradientTransform", "rotate(90)"); // Rotate the gradient
+      gradient.setAttribute("id", `gradient-${randomString}`);
+      gradient.setAttribute("gradientTransform", "rotate(90)");
       gradient.innerHTML = `
-            <stop offset="0%" stop-color="transparent" />
-            <stop offset="${100 - percentage}%" stop-color="transparent" />
-            <stop offset="${100 - percentage}%" stop-color="${color}" />
-            <stop offset="100%" stop-color="${color}" />
-        `;
+      <stop offset="0%" stop-color="transparent" />
+      <stop offset="${100 - percentage}%" stop-color="transparent" />
+      <stop offset="${100 - percentage}%" stop-color="${color}" />
+      <stop offset="100%" stop-color="${color}" />
+    `;
 
-      // Create the inner circle (progress circle) using the gradient as the fill
       const innerCircle = `<circle cx="${size / 2}" cy="${size / 2}" r="${radius}" fill="url(#gradient-${randomString})" stroke="none" stroke-width="${strokeWidth * 2}" fill-opacity="0.8" />`;
 
-      // Create the outer circle (border circle) around the progress
-      const outerCircle = `<circle cx="${size / 2}" cy="${size / 2}" r="${outerRadius}" fill="none" stroke="${color}" stroke-width="${strokeWidth}" />`;
-
-      // Add the gradient to the SVG and append the circles
-      svg.innerHTML = innerCircle + outerCircle; // Ensure the inner circle is drawn first
-      svg.prepend(gradient); // Add the gradient to the SVG element
+      svg.innerHTML = outerCircle + innerCircle;
+      svg.prepend(gradient); // Ensure the gradient is defined within the SVG.
     }
 
-    // Return the complete SVG markup as a string
+    // Return the complete SVG markup as a string.
     return svg.outerHTML;
   }
 

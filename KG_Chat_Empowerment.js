@@ -7631,7 +7631,7 @@
         // Call the function to load the total message count once
         loadTotalMessageCount();
         // Call the filter function with the updated input value
-        filterItems(chatlogsSearchInput.value);
+        chatlogsSearchInput.value.length > 0 && filterItems(chatlogsSearchInput.value);
       });
 
     };

@@ -345,6 +345,9 @@
 
   // Handles user entering and leaving actions
   function userAction(user, actionType, userGender) {
+    // Return early if beep.presence setting is disabled
+    if (!shouldEnableSetting('beep', 'presence')) return;
+
     const userToTrack = usersToTrack.find(userToTrack => userToTrack.name === user);
     const action = actionType === "enter" ? verbs[userGender].enter : verbs[userGender].leave;
     const frequencies = actionType === "enter" ? userEnteredFrequencies : userLeftFrequencies;
@@ -472,19 +475,28 @@
   </svg>
 `;
 
-  // Function to check if notifications should be shown based on localStorage settings
-  function shouldShowNotifications(type) {
+  // Function to check if a specific setting should be enabled based on localStorage settings
+  function shouldEnableSetting(settingType, specificType) {
     const toggleData = JSON.parse(localStorage.getItem('toggle')) || []; // Retrieve toggle settings or default to empty array
 
-    // Define toggle names based on notification type
+    // Define toggle names for different setting types
     const toggleNames = {
-      static: 'showChatStaticNotifications',
-      dynamic: 'showGlobalDynamicNotifications'
+      notifications: {
+        static: 'showChatStaticNotifications',
+        dynamic: 'showGlobalDynamicNotifications'
+      },
+      beep: {
+        presence: 'enableBeepOnChatJoinLeave'
+      }
     };
 
-    // Check if the specified notification toggle is set to 'yes'
+    const settingName = toggleNames[settingType];
+
+    if (!settingName || !settingName[specificType]) return false;
+
+    // Check if the specified setting toggle is set to 'yes'
     return toggleData.some(toggle =>
-      toggle.name === toggleNames[type] && toggle.option === 'yes'
+      toggle.name === settingName[specificType] && toggle.option === 'yes'
     );
   }
 
@@ -493,26 +505,39 @@
   // Set the initial top distance for the first dynamicChatNotification
   const dynamicChatNotificationTopOffset = 160;
 
+  // Helper function to create an action icon element for user notifications
+  function createActionIcon(iconType) {
+    const actionIcon = document.createElement('div');
+    actionIcon.classList.add('action-icon');
+    actionIcon.style.margin = '0 4px';
+    actionIcon.style.setProperty('border', 'none', 'important');
+    actionIcon.innerHTML = iconType;
+    return actionIcon;
+  }
+
   function showUserAction(user, iconType, presence) {
     // Make sure if the user is tracked and has the state 'thawed' (watched) to notify about presence in the chat to leave static stamps
     const isTrackedUser = usersToTrack.some((trackedUser) =>
       trackedUser.name === user && trackedUser.state === 'thawed'
     );
 
+    // Define a condition that checks if the user is tracked and the 'notifications.static' setting is enabled
+    const shouldShowStatic = isTrackedUser && shouldEnableSetting('notifications', 'static');
+    // Define a condition that checks if the 'notifications.dynamic' setting is enabled, regardless of user tracking
+    const shouldShowDynamic = shouldEnableSetting('notifications', 'dynamic');
+
+    // If neither static nor dynamic notifications should be shown, return early
+    if (!shouldShowStatic && !shouldShowDynamic) return;
+
     // Get current time in format "[hour:minutes:seconds]"
     const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-    // Determine the icon based on the action type (enter/leave)
-    const actionIcon = document.createElement('div');
-    actionIcon.classList.add('action-icon');
-    actionIcon.style.margin = '0 4px';
-    // Fix issue with white border on default white site theme
-    actionIcon.style.setProperty('border', 'none', 'important');
-    actionIcon.innerHTML = iconType;
+    // Create the action icon only when the respective notification condition is met
+    const actionIcon = createActionIcon(iconType);
 
     // Append containers with notifications inside the chat only for the tracked users
     // Ensure static notifications are enabled for tracked users
-    if (isTrackedUser && shouldShowNotifications('static')) {
+    if (isTrackedUser && shouldShowStatic) {
       // Get the container for all chat messages
       const messagesContainer = document.querySelector('.messages-content div');
 
@@ -576,8 +601,7 @@
     } // Static notifications END
 
     // Handle dynamic notifications only if dynamic notifications are enabled for all users
-    if (shouldShowNotifications('dynamic')) {
-
+    if (shouldShowDynamic) {
       // Check dynamicChatNotificationsContainer for accessibility
       let dynamicChatNotificationsContainer = document.querySelector('.dynamic-chat-notifications-container');
       // Create container for dynamic chat notifications if not exist in DOM
@@ -9121,9 +9145,13 @@
           name: 'showGlobalDynamicNotifications',
           description: 'Show global dynamic notifications',
           image: 'https://i.imgur.com/8ffCdUG.jpeg'
+        },
+        {
+          name: 'enabledBeepOnChatJoinLeave',
+          description: 'Play a beep sound and speak feedback when the user enters or leaves the chat',
+          image: 'https://i.imgur.com/6PXFIES.jpeg'
         }
       ];
-
 
       // Create and append toggle items directly
       toggleSettings.forEach(toggle => {

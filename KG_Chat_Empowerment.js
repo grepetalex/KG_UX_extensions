@@ -1252,9 +1252,23 @@
   userCountStylesElement.textContent = userCountStyles;
   document.head.appendChild(userCountStylesElement);
 
-  // Constants for fade speed control
-  const fadeIntervalTime = 10; // Time between each opacity change step in ms
-  const fadeDuration = 100; // Total fade duration in ms
+  // Adjust element visibility with smooth opacity transition
+  function adjustVisibility(element, action, opacity) {
+    if (!element) return; // Exit if element doesn't exist
+
+    // Force reflow to ensure initial state is recognized
+    void element.offsetHeight;
+
+    element.style.transition = 'opacity 0.3s'; // Apply smooth transition for both show and hide
+    element.style.opacity = action === 'show' ? opacity : '0'; // Set target opacity
+
+    // If hiding, wait for transition to finish before removing the element
+    if (action === 'hide') {
+      element.addEventListener('transitionend', () => {
+        if (element.style.opacity === '0') element.remove(); // Remove only when opacity reaches 0
+      }, { once: true }); // Ensure the event runs only once
+    }
+  }
 
   // Function to create and fade the dimming element
   function triggerDimmingElement(action) {
@@ -1276,7 +1290,7 @@
       dimming.style.right = '0';
       dimming.style.bottom = '0';
       dimming.style.position = 'fixed';
-      dimming.style.opacity = '0';
+      dimming.style.opacity = '0'; // Initial transparent state
       dimming.style.zIndex = '998';
 
       // Append the dimming element to the body
@@ -1286,31 +1300,14 @@
       dimming.addEventListener('click', function () {
         // First, check for .popup-panel, then check for previousElementSibling
         const elementToRemove = document.querySelector('.popup-panel') || dimming.previousElementSibling;
-        elementToRemove?.parentNode?.removeChild(elementToRemove);
+        if (elementToRemove) adjustVisibility(elementToRemove, 'hide', 0); // Fade out and remove element
         triggerDimmingElement('hide');
         if (scaledThumbnail) removeBigImageEventListeners(); // Remove all bigImage event listeners
       });
-
     }
 
-    let opacity = parseFloat(dimming.style.opacity) || 0; // Current opacity
-    const targetOpacity = action === 'show' ? 0.5 : 0; // Target opacity based on action
-    const step = (targetOpacity - opacity) / (fadeDuration / fadeIntervalTime); // Calculate the change in opacity per step
-
-    const interval = setInterval(() => {
-      opacity += step; // Update the opacity
-      if ((step > 0 && opacity >= targetOpacity) || (step < 0 && opacity <= targetOpacity)) {
-        opacity = targetOpacity; // Cap opacity
-        clearInterval(interval); // Stop the interval
-        if (targetOpacity === 0) {
-          // Check if the element is still a child of document.body before removing it
-          if (document.body.contains(dimming)) {
-            document.body.removeChild(dimming); // Remove the element from the DOM
-          }
-        }
-      }
-      dimming.style.opacity = opacity.toString(); // Update the opacity
-    }, fadeIntervalTime);
+    // Adjust the visibility of an element with a dimming effect, setting opacity to 0.5
+    adjustVisibility(dimming, action, 0.5);
 
     // If the action is 'hide', check for and remove the .scaled-thumbnail using triggerTargetElement
     if (action === 'hide') {
@@ -1319,30 +1316,14 @@
         triggerTargetElement(scaledThumbnail, 'hide'); // Use triggerTargetElement to fade out and remove the scaled-thumbnail
       }
     }
-
   }
 
   // Function to gradually fade a target element to show or hide it
   function triggerTargetElement(element, action) {
     if (!element) return; // Return if the element does not exist
 
-    const targetOpacity = action === 'show' ? 1 : 0; // Set target opacity based on action
-    let opacity = parseFloat(element.style.opacity) || 0; // Get the current opacity
-    const step = (targetOpacity - opacity) / (fadeDuration / fadeIntervalTime); // Calculate the change in opacity per step
-
-    const interval = setInterval(() => {
-      opacity += step; // Update the opacity
-      if ((step > 0 && opacity >= targetOpacity) || (step < 0 && opacity <= targetOpacity)) {
-        opacity = targetOpacity; // Set opacity to the target value
-        clearInterval(interval); // Clear the interval
-
-        // Check if element still has a parent before removing it
-        if (targetOpacity === 0 && element.parentNode) {
-          element.parentNode.removeChild(element); // Remove the target element from the DOM
-        }
-      }
-      element.style.opacity = opacity.toString(); // Update the element's opacity
-    }, fadeIntervalTime);
+    // Adjust the visibility of a specific element, setting opacity to 1 (fully visible)
+    adjustVisibility(element, action, 1);
 
     // Add a double click event listener to hide the element
     element.addEventListener('dblclick', (event) => {
@@ -1355,7 +1336,6 @@
 
       triggerTargetElement(element, 'hide'); // Always hide the target element on double click
     });
-
   }
 
   // Define an empty object to store event handlers
@@ -1411,7 +1391,6 @@
     profileIframe.classList.add('profile-iframe-container');
     profileIframe.src = url;
     profileIframe.style.border = 'none';
-    profileIframe.src = url;
     profileIframe.style.display = 'flex';
     profileIframe.style.position = 'fixed';
     profileIframe.style.zIndex = '999';

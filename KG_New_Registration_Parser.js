@@ -63,7 +63,6 @@ const loadProfileIntoIframe = (url) => {
   profileIframe.classList.add('profile-iframe-container');
   profileIframe.src = url;
   profileIframe.style.border = 'none';
-  profileIframe.src = url;
   profileIframe.style.display = 'flex';
   profileIframe.style.position = 'fixed';
   profileIframe.style.zIndex = '999';

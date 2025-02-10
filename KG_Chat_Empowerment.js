@@ -7622,6 +7622,8 @@
         updateMediaAndMentionCounters();
         // Call the function to load the total message count once
         loadTotalMessageCount();
+        // Call the filter function with the updated input value
+        filterItems(chatlogsSearchInput.value);
       });
 
     };
@@ -7755,6 +7757,9 @@
 
     // Filters message items based on the provided query and displays matching messages.
     function filterItems(query) {
+      query = query.trim();
+      if (!query) return; // Return if the query is empty or only spaces
+
       // If the query contains only digits, hyphens, or colons, do nothing
       if (/^[\d-:]+$/.test(query.trim())) return;
 

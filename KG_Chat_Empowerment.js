@@ -7679,20 +7679,16 @@
             const currentValue = chatlogsSearchInput.value.trim();
             const usernameEntry = isCtrlKeyPressed ? `, ${username}` : username;
 
-            if (isCtrlKeyPressed) {
-              // Only add the username if it's not already present
-              if (!currentValue.includes(username)) {
-                chatlogsSearchInput.value += currentValue ? usernameEntry : username;
-              }
-            } else {
-              // If Ctrl key isn't pressed, replace the input value with the clicked username
-              chatlogsSearchInput.value = username;
-            }
+            // Toggle input value: clear if same username clicked, otherwise add or replace
+            chatlogsSearchInput.value = (currentValue === username)
+              ? ''
+              : (isCtrlKeyPressed && !currentValue.includes(username))
+                ? currentValue + usernameEntry
+                : username;
 
             // Call the filter function with the updated input value
             filterItems(chatlogsSearchInput.value);
           });
-
 
           // Create nickname element
           const nicknameElement = document.createElement('span');

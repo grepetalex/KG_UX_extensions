@@ -2770,8 +2770,8 @@
 
     // If revoked or percentage is 0, display the close icon (scaled down when percentage is 0)
     if (isRevoked || percentage === 0) {
-      // Use a scale multiplier: 0.7 for 0% progress, otherwise full size (1)
-      const scaleMultiplier = !isRevoked && percentage === 0 ? 0.7 : 1;
+      // Use a scale multiplier: 0.6 for 0% progress, otherwise full size (1)
+      const scaleMultiplier = !isRevoked && percentage === 0 ? 0.6 : 1;
       const baseScale = size / 24; // Maps the 24x24 icon into our 20x20 SVG
       const finalScale = baseScale * scaleMultiplier;
       // Center the icon: its center is at (12,12) in its native coordinate system.

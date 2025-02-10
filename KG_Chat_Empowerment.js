@@ -9857,6 +9857,9 @@
       });
       observer.observe(chatField, { attributes: true });
     }
+
+    // Listen for visibility change events and call handleChatStateChange
+    document.addEventListener('visibilitychange', handleChatStateChange);
   }
 
   // CHAT SWITCHER

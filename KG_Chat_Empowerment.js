@@ -6811,8 +6811,16 @@
 
     // Add input event listener to filter items as the user types
     chatlogsSearchInput.addEventListener('input', () => filterItems(chatlogsSearchInput.value));
-    // Add click event listener to clear the search input by LMB click with Ctrl key pressed
-    chatlogsSearchInput.addEventListener('click', () => isCtrlKeyPressed && (chatlogsSearchInput.value = ''));
+
+    // Clears the input when the left mouse button (LMB) is clicked while holding the Ctrl key  
+    // Also updates the filtered items accordingly  
+    chatlogsSearchInput.addEventListener('click', (event) => {
+      if (event.ctrlKey) {
+        chatlogsSearchInput.value = '';
+        // Call the function to update the filtered items based on the cleared input  
+        filterItems(chatlogsSearchInput.value);
+      }
+    });
 
     // Add keydown event listener to handle date format and validity check
     chatlogsSearchInput.addEventListener('keydown', async (event) => {
@@ -7757,9 +7765,6 @@
 
     // Filters message items based on the provided query and displays matching messages.
     function filterItems(query) {
-      query = query.trim();
-      if (!query) return; // Return if the query is empty or only spaces
-
       // If the query contains only digits, hyphens, or colons, do nothing
       if (/^[\d-:]+$/.test(query.trim())) return;
 

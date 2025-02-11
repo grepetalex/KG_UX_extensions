@@ -9870,7 +9870,14 @@
     }
 
     // Listen for visibility change events and call handleChatStateChange
-    document.addEventListener('visibilitychange', handleChatStateChange);
+    document.addEventListener('visibilitychange', () => {
+      // Check if the document is visible
+      if (document.visibilityState === 'visible') {
+        // Call the function only when the page becomes visible
+        handleChatStateChange();
+      }
+    });
+
   }
 
   // CHAT SWITCHER

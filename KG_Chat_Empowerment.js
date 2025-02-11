@@ -50,6 +50,8 @@
   const myNickname = document.querySelector('.userpanel .user-block .user-dropdown .name span').textContent;
   // Extract the user ID from the href attribute of the mail link for chat, direct profile, or messaging navigation
   const myUserId = document.querySelector('a.drop-btn.mail')?.href?.match(/\/u\/#\/(\d+)\/messages\//)?.[1];
+  // create today's date in the format 'YYYY-MM-DD'
+  const today = new Intl.DateTimeFormat('en-CA').format(new Date());
 
   // Function to dynamically append font link to the head
   function appendFontLink(fontFamily, fontWeights) {
@@ -6158,8 +6160,6 @@
     let pingMessages = false; // Initialize pingMessages as false
     let lastDate = null; // Store the last processed date
 
-    const today = new Intl.DateTimeFormat('en-CA').format(new Date()); // 'en-CA' gives 'YYYY-MM-DD' format
-
     // Create an array to store message elements for later appending
     const messageElements = [];
 
@@ -6510,16 +6510,11 @@
     // Clear the messagesContainer if it exists
     messagesContainer && (messagesContainer.innerHTML = '');
 
-    // Normalize date input to 'yyyy-mm-dd' format, supporting 'yyyy:mm:dd' format as well
-    const normalizeDate = date => /^\d{4}:\d{2}:\d{2}$/.test(date) ? date.replace(/:/g, '-') : date;
-    // Normalize and format the date
-    const formattedDate = new Intl.DateTimeFormat('en-CA').format(new Date(normalizeDate(date)));
-
     // Generate a random 20-digit number
     const randomParam = Math.floor(Math.random() * 10 ** 20);
 
     // Construct the URL to fetch chat logs for the specified date with the random parameter
-    const url = `https://klavogonki.ru/chatlogs/${formattedDate}.html?rand=${randomParam}`;
+    const url = `https://klavogonki.ru/chatlogs/${date}.html?rand=${randomParam}`;
 
     // Function to parse the HTML and extract chat log entries
     const parseChatLog = (html) => {
@@ -6849,7 +6844,6 @@
           const isValidDate = !isNaN(new Date(normalizedDate).getTime());
 
           if (isValidDate) {
-            updateDateInputAndTitle(normalizedDate); // Update the date input and title
             await loadChatLogs(normalizedDate); // Load chat logs for the determined date
             showDateInput(dateInput);
           } else {
@@ -7260,16 +7254,14 @@
 
     // Function to update the date input and title
     const updateDateInputAndTitle = (newDate) => {
-      const formattedDate = new Intl.DateTimeFormat('en-CA').format(new Date(newDate));
-      dateInput.value = formattedDate; // Update the date input
-      dateInputToggle.title = `Current date: ${formattedDate}`; // Update title
+      dateInput.value = newDate; // Update the date input
+      dateInputToggle.title = `Current date: ${newDate}`; // Update title
     };
 
     // Event listener for the chevron left button
     oneDayBackward.addEventListener('click', async () => {
       const currentDate = getEffectiveDate(); // Get the effective date
       currentDate.setDate(currentDate.getDate() - 1); // Go one day back
-      updateDateInputAndTitle(currentDate); // Use the new function
       await loadChatLogs(currentDate); // Load chat logs for the updated date
       showDateInput(dateInput);
       focusOnSearchField();
@@ -7280,7 +7272,6 @@
     oneDayForward.addEventListener('click', async () => {
       const currentDate = getEffectiveDate(); // Get the effective date
       currentDate.setDate(currentDate.getDate() + 1); // Go one day forward
-      updateDateInputAndTitle(currentDate); // Use the new function
       await loadChatLogs(currentDate); // Load chat logs for the updated date
       showDateInput(dateInput);
       focusOnSearchField();
@@ -7290,7 +7281,6 @@
     // Event listener for the shuffle button
     randomDay.addEventListener('click', async () => {
       const randomDate = getRandomDateInRange(); // Get a random date
-      updateDateInputAndTitle(randomDate); // Use the new function
       await loadChatLogs(randomDate); // Load chat logs for the random date
       showDateInput(dateInput);
       focusOnSearchField();
@@ -7482,14 +7472,22 @@
 
     // Function to load and display chat logs into the container
     const loadChatLogs = async (date) => {
-      // Check if the provided date is less than the minDate
-      if (date < minDate) {
-        alert(`The selected date cannot be earlier than ${minDate}.`);
+      // Normalize date input to 'yyyy-mm-dd' format, supporting 'yyyy:mm:dd' format as well
+      const normalizeDate = date => /^\d{4}:\d{2}:\d{2}$/.test(date) ? date.replace(/:/g, '-') : date;
+      // Normalize and format the date
+      const formattedDate = new Intl.DateTimeFormat('en-CA').format(new Date(normalizeDate(date)));
+
+      // Check if the provided date is out of bounds (less than minDate or greater than today)
+      if (formattedDate < minDate || formattedDate > today) {
+        alert(formattedDate < minDate ? `The selected date cannot be earlier than ${minDate}.` : "You cannot load a future date.");
         return; // Exit the function if the date is invalid
       }
 
+      // Call the updateDateInputAndTitle function with the formattedDate
+      updateDateInputAndTitle(formattedDate);
+
       // Fetch chat logs and pass the chatLogsContainer as the parent container
-      const { chatlogs, url, size, info, error } = await fetchChatLogs(date, chatLogsContainer);
+      const { chatlogs, url, size, info, error } = await fetchChatLogs(formattedDate, chatLogsContainer);
 
       // Convert size to KB
       const sizeInKB = (size / 1024).toFixed(2);
@@ -7733,8 +7731,6 @@
     }
 
     // Load chat logs based on the provided date or default to today's date
-    // create today's date in the format 'YYYY-MM-DD'
-    const today = new Intl.DateTimeFormat('en-CA').format(new Date());
     const dateToLoad = personalMessagesDate || today; // Use personalMessagesDate if available
     await loadChatLogs(dateToLoad); // Load chat logs for the determined date
     // Check if personalMessagesDate is given as parameter or null to show the date input field

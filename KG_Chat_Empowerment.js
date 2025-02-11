@@ -2824,7 +2824,7 @@
     return percentage;
   }
 
-  // Variable to store the last selected emoji
+  //  Variable to store the last selected emoji
   let lastEmojiAvatar = null;
 
   // Helper function to get a random emoji avatar
@@ -9115,17 +9115,17 @@
       const toggleSettings = [
         {
           name: 'showChatStaticNotifications',
-          description: 'Show chat static notifications',
+          description: '👀 Show chat static notifications',
           image: 'https://i.imgur.com/oUPSi9I.jpeg'
         },
         {
           name: 'showGlobalDynamicNotifications',
-          description: 'Show global dynamic notifications',
+          description: '👀 Show global dynamic notifications',
           image: 'https://i.imgur.com/8ffCdUG.jpeg'
         },
         {
           name: 'enabledBeepOnChatJoinLeave',
-          description: 'Play a beep sound and speak feedback when the user enters or leaves the chat',
+          description: '🔊 Play a beep sound and speak feedback when the user enters or leaves the chat',
           image: 'https://i.imgur.com/6PXFIES.jpeg'
         }
       ];

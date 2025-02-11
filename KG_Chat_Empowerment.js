@@ -9873,11 +9873,13 @@
     document.addEventListener('visibilitychange', () => {
       // Check if the document is visible
       if (document.visibilityState === 'visible') {
+        timeoutDuration = 1000; // Set to 1 second when page is visible
         // Call the function only when the page becomes visible
         handleChatStateChange();
+      } else {
+        timeoutDuration = initialTimeoutDuration; // Reset to default when hidden
       }
     });
-
   }
 
   // CHAT SWITCHER

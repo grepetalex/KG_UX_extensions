@@ -278,7 +278,6 @@ async function parseUserRegistrations(startId) {
       const avatarTimestamp = convertToUpdatedTimestamp(sec, usec);
 
       const userData = { id: currentId, login, rank, registeredDate, avatar, avatarTimestamp };
-      console.log(userData);
 
       // Add user data to localStorage only if not already present
       savedData.push(userData);

@@ -9802,87 +9802,68 @@
       <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
       </svg>`;
 
-  function checkForChatState() {
-    // Get references to the chat field and send button elements
-    let chatField = document.querySelector('.chat .text');
-    let chatSend = document.querySelector('.chat .send');
 
-    // Define the text patterns to check for in the chatField value
-    const blockedChatMessage = 'Вы не можете отправлять сообщения'; // Message indicating sending is blocked
-    const lostConnectionMessage = 'Связь с сервером потеряна'; // Message indicating connection loss
-
-    const initialTimeoutDuration = 5000; // Default timeout duration in milliseconds
-    // Get the previous timeout duration from localStorage, or use 5000 (5 seconds) if not set
-    let timeoutDuration = parseInt(localStorage.getItem('chatTimeoutDuration')) || initialTimeoutDuration;
-
-    // Function to handle changes when the chatField gets disabled
-    const handleChatStateChange = async () => {
-      // Reset timeout to 3 seconds only once at the beginning, if it's not the default
-      if (!chatField.disabled && timeoutDuration !== initialTimeoutDuration) {
-        timeoutDuration = initialTimeoutDuration;
-        localStorage.setItem('chatTimeoutDuration', timeoutDuration.toString());
-        return;
-      }
-
-      // Get the current value of chatField
-      const chatFieldValue = chatField.value;
-
-      // If the chatField is disabled, check for the blocked or lost connection messages
-      if (chatField.disabled) {
-        // If the chatField contains the blocked message
-        if (chatFieldValue.includes(blockedChatMessage)) {
-          // Enable the chatField and send button, applying styles to indicate the state
-          chatField.disabled = chatSend.disabled = false; // Enable chatField and send button
-          // Apply styles to the chatSend button with !important
-          chatSend.style.setProperty('background-color', 'rgb(160, 35, 35)', 'important');
-          chatSend.style.setProperty('background-image', `url("data:image/svg+xml,${encodeURIComponent(iconDenied)}")`, 'important');
-          chatSend.style.setProperty('background-repeat', 'no-repeat', 'important');
-          chatSend.style.setProperty('background-position', 'center', 'important');
-          chatSend.style.setProperty('color', 'transparent', 'important');
-          chatField.value = null; // Clear the chatField content
-        }
-        // If the chatField contains the lost connection message
-        else if (chatFieldValue.includes(lostConnectionMessage)) {
-          // Increment the timeout duration by 1 second (1000 ms) and store it in localStorage
-          timeoutDuration += 1000;
-          localStorage.setItem('chatTimeoutDuration', timeoutDuration.toString());
-
-          // Reload the page after the timeout duration
-          await new Promise(resolve => setTimeout(resolve, timeoutDuration));
-          window.location.reload();
-        }
-      }
-    };
-
-    // Run the function once on page load
-    handleChatStateChange();
-
-    // Observe the chatField for 'disabled' attribute changes
-    if (chatField) {
-      const observer = new MutationObserver(mutations => {
-        mutations.forEach(mutation => {
-          // Run the function when the 'disabled' attribute changes
-          if (mutation.attributeName === 'disabled') handleChatStateChange();
-          console.log('Mutation observer triggered:', mutation);
-        });
-      });
-      observer.observe(chatField, { attributes: true });
-    }
-
-    // Listen for visibility change events and call handleChatStateChange
-    document.addEventListener('visibilitychange', () => {
-      // Check if the document is visible
-      if (document.visibilityState === 'visible') {
-        timeoutDuration = 1000; // Set to 1 second when page is visible
-        // Call the function only when the page becomes visible
-        handleChatStateChange();
-      } else {
-        timeoutDuration = initialTimeoutDuration; // Reset to default when hidden
-      }
-    });
-  }
 
   // CHAT SWITCHER
+
+
+  // Define the text patterns to check for in the chat field’s value.
+  const blockedChatMessage = 'Вы не можете отправлять сообщения';
+  const lostConnectionMessage = 'Связь с сервером потеряна';
+  const extraTimeout = 5000;
+  const minimalTimeout = 1000;
+
+  // Helper function to dynamically retrieve the current chat elements
+  const getChatElements = () => ({
+    chatField: document.querySelector('.chat .text'),
+    chatSend: document.querySelector('.chat .send')
+  });
+
+  // Function to handle changes when the chat field is disabled.
+  function handleChatStateChange(timeout, chatField, chatSend) {
+    const chatFieldValue = chatField.value;
+
+    if (chatField.disabled) {
+      if (chatFieldValue.includes(blockedChatMessage)) {
+        // Re-enable the chat field and send button, and update their styles.
+        chatField.disabled = chatSend.disabled = false;
+        chatSend.style.setProperty('background-color', 'rgb(160, 35, 35)', 'important');
+        chatSend.style.setProperty('background-image', `url("data:image/svg+xml,${encodeURIComponent(iconDenied)}")`, 'important');
+        chatSend.style.setProperty('background-repeat', 'no-repeat', 'important');
+        chatSend.style.setProperty('background-position', 'center', 'important');
+        chatSend.style.setProperty('color', 'transparent', 'important');
+        chatField.value = null;
+        console.log('Chat field was blocked, re-enabled.');
+      } else if (chatFieldValue.includes(lostConnectionMessage)) {
+        // Schedule a reload using timeout.
+        console.log('Lost connection, reloading...');
+        setTimeout(() => { window.location.reload(); }, timeout);
+      }
+    }
+  }
+
+  // Create a MutationObserver to watch for attribute changes
+  const observer = new MutationObserver(() => {
+    // Get updated chat elements
+    const { chatField, chatSend } = getChatElements();
+    // Handle the change when the 'disabled' attribute is modified
+    handleChatStateChange(extraTimeout, chatField, chatSend);
+  });
+
+  // Get the chat field element
+  const { chatField: chatInputText } = getChatElements();
+  // Start observing the chatField for changes to the 'disabled' attribute
+  if (chatInputText) observer.observe(chatInputText, { attributes: true, attributeFilter: ['disabled'] });
+
+
+  // Compact visibilitychange event: When the document becomes visible,
+  // set a shorter timeout duration and check the chat state.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      const { chatField, chatSend } = getChatElements();
+      handleChatStateChange(minimalTimeout, chatField, chatSend);
+    }
+  });
 
   // Get all elements with the 'general' class
   let generalChatTabs = document.querySelectorAll('.general');
@@ -9918,8 +9899,8 @@
     const chatHidden = document.querySelector('#chat-wrapper.chat-hidden');
 
     // Get general chat tabs and game chat tabs
-    let generalChatTabs = document.querySelectorAll('.general');
-    let gameChatTabs = document.querySelectorAll('.game');
+    let generalChatTabs = document.querySelectorAll('.general.c, .general.c.active');
+    let gameChatTabs = document.querySelectorAll('.game.c, .game.c.active');
 
     // Find the first visible general chat tab that is not active
     let visibleGeneralChatTab = Array.from(generalChatTabs).find(function (tab) {
@@ -10140,7 +10121,7 @@
   }
 
   // create a new MutationObserver to wait for the chat to fully load with all messages
-  let waitForChatObserver = new MutationObserver(mutations => {
+  let waitForChatObserver = new MutationObserver(() => {
     // Get the container for all chat messages
     const messagesContainer = document.querySelector('.messages-content div');
     // Get all the message elements from messages container
@@ -10149,13 +10130,10 @@
     // check if the chat element has been added to the DOM
     if (document.contains(messagesContainer)) {
 
-
       // check if there are at least 20 messages in the container
       if (messages.length >= 20) {
         // stop observing the DOM
         waitForChatObserver.disconnect();
-        // Call the function to check for chat state and handle changes when the chatField gets disabled
-        checkForChatState();
         // Remove ignored users' messages if the page is not initialized
         removeIgnoredUserMessages();
         // Convert YouTube links to visible iframe containers

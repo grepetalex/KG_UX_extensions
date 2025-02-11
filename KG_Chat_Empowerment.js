@@ -6825,33 +6825,35 @@
       const inputValue = chatlogsSearchInput.value;
 
       if (event.key === 'Enter') {
-        // Check if the input is in 'yyyy:mm:dd' or 'yyyy-mm-dd' format or 8 digits like 'yyyyMMdd'
         let normalizedDate = inputValue;
 
+        // Handle 8-digit and 6-digit date formats
         if (/^\d{8}$/.test(inputValue)) {
-          // If it's 8 digits, format as 'yyyy-mm-dd'
-          normalizedDate = inputValue.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3');
+          normalizedDate = inputValue.length === 6 ? '20' + inputValue : inputValue;
+          normalizedDate = normalizedDate.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3');
+        } else if (/^\d{6}$/.test(inputValue)) {
+          normalizedDate = '20' + inputValue.replace(/(\d{2})(\d{2})(\d{2})/, '$1-$2-$3');
         }
 
         // Check if the normalized input matches either 'yyyy:mm:dd' or 'yyyy-mm-dd' format
-        const isValidFormat = /^\d{4}[:\-]\d{2}[:\-]\d{2}$/.test(normalizedDate);
+        const isValidFormat = /^\d{2,4}[:\-]\d{2}[:\-]\d{2}$/.test(normalizedDate.replace(/:/g, '-'));
 
-        if (isValidFormat) {
-          // Normalize the date format (replace colons with dashes if needed)
-          normalizedDate = normalizedDate.replace(/:/g, '-');
+        // Check if the normalized date is a valid date
+        const isValidDate = isValidFormat && !isNaN(new Date(normalizedDate.replace(/:/g, '-')).getTime());
 
-          // Check if the normalized date is a valid date
-          const isValidDate = !isNaN(new Date(normalizedDate).getTime());
-
-          if (isValidDate) {
-            await loadChatLogs(normalizedDate); // Load chat logs for the determined date
-            showDateInput(dateInput);
-          } else {
-            alert('Please enter a valid date.');
-          }
+        if (isValidDate) {
+          await loadChatLogs(normalizedDate); // Load chat logs for the determined date
+          showDateInput(dateInput);
         } else {
-          alert('Please enter a date in yyyy:mm:dd, yyyy-mm-dd format, or an 8-digit date (yyyyMMdd).');
+          alert('Please enter a valid date.\n\nValid formats include:\n' +
+            '1. yyyy-mm-dd\n' +
+            '2. yyyy:mm:dd\n' +
+            '3. yy-mm-dd\n' +
+            '4. yy:mm:dd\n' +
+            '5. yyyymmdd\n' +
+            '6. yymmdd\n\n');
         }
+
         // Clear the input value after processing the "Enter" key
         chatlogsSearchInput.value = '';
       }

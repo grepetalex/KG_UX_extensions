@@ -4495,8 +4495,8 @@
     audio.play();
   }
 
-  // Function to detect a system ban message based on the message text content
-  function isBanMessageFromSystem(messageText) {
+  // Function to detect a ban message based on the message text content
+  function isBanMessage(messageText) {
     return ['Клавобот', 'Пользователь', 'заблокирован'].every(word => messageText.includes(word));
   }
 
@@ -4612,7 +4612,7 @@
             const latinUsername = convertRussianUsernameToLatin(latestMessageUsername);
 
             // Detect and handle the ban message (play sound if detected)
-            if (isBanMessageFromSystem(actualModifiedMessageText)) {
+            if (isBanMessage(actualModifiedMessageText)) {
               console.log('Ban message detected:', actualModifiedMessageText);
               playSound(); // Play the Mario Game Over sound
             }

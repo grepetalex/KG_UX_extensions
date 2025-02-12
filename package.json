@@ -6,10 +6,9 @@
   "scripts": {
     "release": "standard-version"
   },
-  "dependencies": {},
   "devDependencies": {
-    "standard-version": "^9.3.2",
-    "husky": "^7.0.0"
+    "husky": "^7.0.4",
+    "standard-version": "^9.3.2"
   },
   "keywords": [
     "userscript",

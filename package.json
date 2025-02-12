@@ -1,6 +1,6 @@
 {
   "name": "KG_Chat_Empowerment",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Enhance the chat abilities",
   "main": "KG_Chat_Empowerment.js",
   "scripts": {

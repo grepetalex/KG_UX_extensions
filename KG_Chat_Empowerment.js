@@ -6033,7 +6033,11 @@
     copyPersonalMessagesButton.addEventListener('click', () => {
       addJumpEffect(copyPersonalMessagesButton, 0, 0);
       const textContent = Array.from(document.querySelector('.messages-container').children)
-        .filter(node => window.getComputedStyle(node).display !== 'none') // Ignore hidden messages
+        .filter(node => {
+          const style = window.getComputedStyle(node);
+          // Ignore hidden messages with contentVisibility 'hidden' or display 'none'
+          return style.contentVisibility !== 'hidden' && style.display !== 'none';
+        })
         .map(node => node.classList.contains('date-item') ? node.textContent.trim() :
           [node.querySelector('.message-time'), node.querySelector('.message-username'), node.querySelector('.message-text')]
             .map(el => el?.textContent.trim()).filter(Boolean).join(' '))

@@ -1,10 +1,10 @@
 {
   "name": "KG_Chat_Empowerment",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Enhance the chat abilities",
   "main": "KG_Chat_Empowerment.js",
   "scripts": {
-    "release": "standard-version && git push --tags",
+    "release": "standard-version && git push --tags && git push",
     "prepare": "husky install"
   },
   "devDependencies": {
@@ -13,7 +13,7 @@
   },
   "husky": {
     "hooks": {
-      "commit-msg": "standard-version"
+      "post-commit": "npm run release"
     }
   },
   "keywords": [

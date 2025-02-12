@@ -1,0 +1,22 @@
+{
+  "name": "KG_Chat_Empowerment",
+  "version": "1.0.1",
+  "description": "Enhance the chat abilities",
+  "main": "KG_Chat_Empowerment.js",
+  "scripts": {
+    "release": "standard-version"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "standard-version": "^9.3.2",
+    "husky": "^7.0.0"
+  },
+  "keywords": [
+    "userscript",
+    "tampermonkey",
+    "chat-enhancement",
+    "automation"
+  ],
+  "author": "Patcher",
+  "license": "MIT"
+}

@@ -6677,7 +6677,7 @@
 
     try {
       // Fetch the user ID
-      const [userId] = await getUserIdByName(username);
+      const userId = await getUserIdByName(username); // Remove destructuring
       if (userId) {
         userIdsCache[username] = userId;
         localStorage.setItem('userIdsCache', JSON.stringify(userIdsCache));

@@ -2589,14 +2589,20 @@
 
   // Helper function to get user IDs by username via the search API
   async function getUserIdByName(userName) {
+    // Define the search API URL
     const searchApiUrl = `https://klavogonki.ru/api/profile/search-users?query=${userName}`;
+
+    // Get search results from the API
     const searchResults = await fetchJSON(searchApiUrl);
 
-    const foundUsers = searchResults.all; // Get all search results
-    if (!foundUsers || foundUsers.length === 0) throw new Error(`User ${userName} not found.`);
+    // Ensure search results exist and contain data
+    if (!searchResults.all?.length) throw new Error(`User ${userName} not found.`);
 
-    // Return an array of user IDs
-    return foundUsers.map(user => user.id);
+    // Return the ID of the user with the exact matching login
+    const user = searchResults.all.find(user => user.login === userName);
+    if (!user) throw new Error(`Exact match for user ${userName} not found.`);
+
+    return user.id;
   }
 
   // Function to calculate time spent on the site

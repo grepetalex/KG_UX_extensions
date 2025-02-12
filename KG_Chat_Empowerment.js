@@ -9816,64 +9816,67 @@
 
   // CHAT SWITCHER
 
+  const currentLocationIncludes = part => window.location.href.includes(part);
 
-  // Define the text patterns to check for in the chat field’s value.
-  const blockedChatMessage = 'Вы не можете отправлять сообщения';
-  const lostConnectionMessage = 'Связь с сервером потеряна';
-  const extraTimeout = 5000;
-  const minimalTimeout = 1000;
+  if (currentLocationIncludes('gamelist')) {
+    // Define the text patterns to check for in the chat field’s value.
+    const blockedChatMessage = 'Вы не можете отправлять сообщения';
+    const lostConnectionMessage = 'Связь с сервером потеряна';
+    const extraTimeout = 5000;
+    const minimalTimeout = 1000;
 
-  // Helper function to dynamically retrieve the current chat elements
-  const getChatElements = () => ({
-    chatField: document.querySelector('.chat .text'),
-    chatSend: document.querySelector('.chat .send')
-  });
+    // Helper function to dynamically retrieve the current chat elements
+    const getChatElements = () => ({
+      chatField: document.querySelector('.chat .text'),
+      chatSend: document.querySelector('.chat .send')
+    });
 
-  // Function to handle changes when the chat field is disabled.
-  function handleChatStateChange(timeout, chatField, chatSend) {
-    const chatFieldValue = chatField.value;
+    // Function to handle changes when the chat field is disabled.
+    function handleChatStateChange(timeout, chatField, chatSend) {
+      const chatFieldValue = chatField.value;
 
-    if (chatField.disabled) {
-      if (chatFieldValue.includes(blockedChatMessage)) {
-        // Re-enable the chat field and send button, and update their styles.
-        chatField.disabled = chatSend.disabled = false;
-        chatSend.style.setProperty('background-color', 'rgb(160, 35, 35)', 'important');
-        chatSend.style.setProperty('background-image', `url("data:image/svg+xml,${encodeURIComponent(iconDenied)}")`, 'important');
-        chatSend.style.setProperty('background-repeat', 'no-repeat', 'important');
-        chatSend.style.setProperty('background-position', 'center', 'important');
-        chatSend.style.setProperty('color', 'transparent', 'important');
-        chatField.value = null;
-        console.log('Chat field was blocked, re-enabled.');
-      } else if (chatFieldValue.includes(lostConnectionMessage)) {
-        // Schedule a reload using timeout.
-        console.log('Lost connection, reloading...');
-        setTimeout(() => { window.location.reload(); }, timeout);
+      if (chatField.disabled) {
+        if (chatFieldValue.includes(blockedChatMessage)) {
+          // Re-enable the chat field and send button, and update their styles.
+          chatField.disabled = chatSend.disabled = false;
+          chatSend.style.setProperty('background-color', 'rgb(160, 35, 35)', 'important');
+          chatSend.style.setProperty('background-image', `url("data:image/svg+xml,${encodeURIComponent(iconDenied)}")`, 'important');
+          chatSend.style.setProperty('background-repeat', 'no-repeat', 'important');
+          chatSend.style.setProperty('background-position', 'center', 'important');
+          chatSend.style.setProperty('color', 'transparent', 'important');
+          chatField.value = null;
+          console.log('Chat field was blocked, re-enabled.');
+        } else if (chatFieldValue.includes(lostConnectionMessage)) {
+          // Schedule a reload using timeout.
+          console.log('Lost connection, reloading...');
+          setTimeout(() => { window.location.reload(); }, timeout);
+        }
       }
     }
-  }
 
-  // Create a MutationObserver to watch for attribute changes
-  const observer = new MutationObserver(() => {
-    // Get updated chat elements
-    const { chatField, chatSend } = getChatElements();
-    // Handle the change when the 'disabled' attribute is modified
-    handleChatStateChange(extraTimeout, chatField, chatSend);
-  });
-
-  // Get the chat field element
-  const { chatField: chatInputText } = getChatElements();
-  // Start observing the chatField for changes to the 'disabled' attribute
-  if (chatInputText) observer.observe(chatInputText, { attributes: true, attributeFilter: ['disabled'] });
-
-
-  // Compact visibilitychange event: When the document becomes visible,
-  // set a shorter timeout duration and check the chat state.
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') {
+    // Create a MutationObserver to watch for attribute changes
+    const observer = new MutationObserver(() => {
+      // Get updated chat elements
       const { chatField, chatSend } = getChatElements();
-      handleChatStateChange(minimalTimeout, chatField, chatSend);
-    }
-  });
+      // Handle the change when the 'disabled' attribute is modified
+      handleChatStateChange(extraTimeout, chatField, chatSend);
+    });
+
+    // Get the chat field element
+    const { chatField: chatInputText } = getChatElements();
+    // Start observing the chatField for changes to the 'disabled' attribute
+    if (chatInputText) observer.observe(chatInputText, { attributes: true, attributeFilter: ['disabled'] });
+
+
+    // Compact visibilitychange event: When the document becomes visible,
+    // set a shorter timeout duration and check the chat state.
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        const { chatField, chatSend } = getChatElements();
+        handleChatStateChange(minimalTimeout, chatField, chatSend);
+      }
+    });
+  }
 
   // Get all elements with the 'general' class
   let generalChatTabs = document.querySelectorAll('.general');

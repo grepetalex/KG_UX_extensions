@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_New_Registration_Parser
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      1.0.0 
 // @description  Let's have a look at this sun of a beach
 // @author       Patcher
 // @match        *://klavogonki.ru/gamelist/

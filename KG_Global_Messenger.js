@@ -238,7 +238,7 @@
     if (avatar && typeof avatar === 'object' && 'sec' in avatar && 'usec' in avatar) {
       return `${baseUrl}/storage/avatars/${user[USER_KEYS.ID]}_big.png?updated=${convertToUpdatedTimestamp(avatar.sec, avatar.usec)}`;
     }
-    return avatar || 'https://via.placeholder.com/50';
+    return avatar;
   }
 
   /**

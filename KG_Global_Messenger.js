@@ -1,49 +1,61 @@
-// Base URL for Klavogonki.
-const baseUrl = 'https://klavogonki.ru';
+// ==UserScript==
+// @name         KG_Profile_Messenger 
+// @namespace    http://tampermonkey.net/
+// @version      1.0.0
+// @description  Try just to open it at last easier than ever before.
+// @author       Patcher
+// @match        http*://klavogonki.ru/*
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=klavogonki.ru
+// @grant        none
+// ==/UserScript==
 
-// Message property keys from the API.
-const MESSAGE_KEYS = {
-  ID: 'id',
-  USER_ID: 'user_id',
-  RESPONDENT_ID: 'respondent_id',
-  TEXT: 'text',
-  DATE: 'date'
-};
+(function () {
+  // Base URL for Klavogonki.
+  const baseUrl = 'https://klavogonki.ru';
 
-// User property keys from the API.
-const USER_KEYS = {
-  ID: 'id',
-  LOGIN: 'login',
-  AVATAR: 'avatar' // May be an object (with sec/usec) or a URL string.
-};
+  // Message property keys from the API.
+  const MESSAGE_KEYS = {
+    ID: 'id',
+    USER_ID: 'user_id',
+    RESPONDENT_ID: 'respondent_id',
+    TEXT: 'text',
+    DATE: 'date'
+  };
 
-// UI style constants.
-const mainBackgroundColor = '#1b1b1b';
-const containerBorderRadius = '0.4em';
-const containerFixedWidth = '600px';
-const margin = '0.6em';
-const padding = '1em';
-const headerAvatarSize = '5em';
-const messageAvatarSize = '3em';
-const avatarBorderRadius = '0.2em';
-const respondentUsernameColor = 'coral';
-const meUsernameColor = 'cadetblue';
-const respondentMessageColor = 'antiquewhite';
-const meMessageColor = 'burlywood';
+  // User property keys from the API.
+  const USER_KEYS = {
+    ID: 'id',
+    LOGIN: 'login',
+    AVATAR: 'avatar' // May be an object (with sec/usec) or a URL string.
+  };
 
-/**
- * Clears all children from a container element.
- * @param {HTMLElement} container - The container element to clear.
- */
-function clearContainer(container) {
-  container.replaceChildren();
-}
+  // UI style constants.
+  const mainBackgroundColor = '#1b1b1b';
+  const containerBorderRadius = '0.4em';
+  const containerFixedWidth = '600px';
+  const margin = '0.6em';
+  const padding = '1em';
+  const headerAvatarSize = '5em';
+  const messageAvatarSize = '3em';
+  const avatarBorderRadius = '0.2em';
+  const respondentUsernameColor = 'coral';
+  const meUsernameColor = 'cadetblue';
+  const respondentMessageColor = 'antiquewhite';
+  const meMessageColor = 'burlywood';
 
-// Injects CSS styles dynamically into the document head.
-function injectStyles() {
-  const styleElement = document.createElement('style');
-  styleElement.classList.add('dynamic-styles');
-  styleElement.innerHTML = `
+  /**
+   * Clears all children from a container element.
+   * @param {HTMLElement} container - The container element to clear.
+   */
+  function clearContainer(container) {
+    container.replaceChildren();
+  }
+
+  // Injects CSS styles dynamically into the document head.
+  function injectStyles() {
+    const styleElement = document.createElement('style');
+    styleElement.classList.add('dynamic-styles');
+    styleElement.innerHTML = `
     .messages-wrapper {
       position: fixed;
       top: 0;
@@ -113,12 +125,12 @@ function injectStyles() {
       color: ${respondentMessageColor} !important;
     }
     .chat-message__me .chat-message__text {
-      color: ${meMessageColor} !important; 
+      color: ${meMessageColor} !important;
     }
     .chat-message__avatar {
       width: ${messageAvatarSize};
-      height: ${messageAvatarSize}; 
-      border-radius: ${avatarBorderRadius} !important; 
+      height: ${messageAvatarSize};
+      border-radius: ${avatarBorderRadius} !important;
       margin-right: ${margin};
     }
     .chat-message__username {
@@ -127,7 +139,7 @@ function injectStyles() {
       color: orange !important;
       margin-right: ${margin};
       line-height: 1.4;
-    } 
+    }
     /* Logged-in user's username style */
       .chat-message__me-username {
       color: ${meUsernameColor} !important; /* Light blue color for 'me' */
@@ -175,374 +187,376 @@ function injectStyles() {
       resize: none !important;
     }
   `;
-  document.head.appendChild(styleElement);
-}
-
-/**
- * Converts seconds and microseconds into a combined timestamp string.
- * @param {number} sec - The seconds component.
- * @param {number} usec - The microseconds component.
- * @returns {string} The combined timestamp.
- */
-function convertToUpdatedTimestamp(sec, usec) {
-  return sec.toString() + Math.floor(usec / 1000).toString();
-}
-
-/**
- * Returns the avatar URL for the logged-in user.
- * Retrieves the avatar src from the element ".userpanel .user-block .name img".
- * @returns {string|undefined} The logged-in user's avatar URL, or undefined if not found.
- */
-function getMyAvatarUrl() {
-  return document.querySelector('.userpanel .user-block .name img')?.src;
-}
-
-/**
- * Returns the avatar URL for a respondent.
- * If the user's avatar is an object containing sec and usec, the URL is constructed;
- * otherwise, the string value or a placeholder is returned.
- *
- * @param {Object} user - The user object.
- * @returns {string} The respondent's avatar URL.
- */
-function getRespondentAvatarUrl(user) {
-  const avatar = user[USER_KEYS.AVATAR];
-  if (avatar && typeof avatar === 'object' && 'sec' in avatar && 'usec' in avatar) {
-    return `${baseUrl}/storage/avatars/${user[USER_KEYS.ID]}_big.png?updated=${convertToUpdatedTimestamp(avatar.sec, avatar.usec)}`;
+    document.head.appendChild(styleElement);
   }
-  return avatar || 'https://via.placeholder.com/50';
-}
 
-/**
- * Retrieves messages and user details from the API.
- * @returns {Promise<Object>} The JSON data from the API.
- */
-async function fetchMessages() {
-  try {
-    const response = await fetch(`${baseUrl}/api/profile/get-messages-contacts`);
-    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-    return await response.json();
-  } catch (error) {
-    console.error('Error fetching messages:', error);
+  /**
+   * Converts seconds and microseconds into a combined timestamp string.
+   * @param {number} sec - The seconds component.
+   * @param {number} usec - The microseconds component.
+   * @returns {string} The combined timestamp.
+   */
+  function convertToUpdatedTimestamp(sec, usec) {
+    return sec.toString() + Math.floor(usec / 1000).toString();
   }
-}
 
-/**
- * Scrolls the chat container to the bottom.
- * 
- * This function selects the element with the class 'chat-container__opened'
- * and sets its scrollTop property to its scrollHeight, effectively scrolling
- * the container to the bottom.
- */
-function scrollToBottom() {
-  const chatContainer = document.querySelector('.messages-container');
-  if (chatContainer) {
-    chatContainer.scrollTop = chatContainer.scrollHeight;
+  /**
+   * Returns the avatar URL for the logged-in user.
+   * Retrieves the avatar src from the element ".userpanel .user-block .name img".
+   * @returns {string|undefined} The logged-in user's avatar URL, or undefined if not found.
+   */
+  function getMyAvatarUrl() {
+    return document.querySelector('.userpanel .user-block .name img')?.src;
   }
-}
 
-/**
- * Sends a message to a respondent and adds it to the chat UI.
- *
- * @param {string} text - The message text to be sent.
- * @param {string} respondentId - The ID of the respondent to whom the message is sent.
- * @returns {Promise<void>} - Sends the message and renders it on the UI.
- */
-async function sendMessage(text, respondentId) {
-  const csrfToken = document.cookie.split('; ').find(cookie => cookie.startsWith('XSRF-TOKEN='))?.split('=')[1];
-  if (!csrfToken) return console.error('CSRF token not found.');
+  /**
+   * Returns the avatar URL for a respondent.
+   * If the user's avatar is an object containing sec and usec, the URL is constructed;
+   * otherwise, the string value or a placeholder is returned.
+   *
+   * @param {Object} user - The user object.
+   * @returns {string} The respondent's avatar URL.
+   */
+  function getRespondentAvatarUrl(user) {
+    const avatar = user[USER_KEYS.AVATAR];
+    if (avatar && typeof avatar === 'object' && 'sec' in avatar && 'usec' in avatar) {
+      return `${baseUrl}/storage/avatars/${user[USER_KEYS.ID]}_big.png?updated=${convertToUpdatedTimestamp(avatar.sec, avatar.usec)}`;
+    }
+    return avatar || 'https://via.placeholder.com/50';
+  }
 
-  try {
-    const response = await fetch(`${baseUrl}/api/profile/send-message`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-XSRF-TOKEN': csrfToken,
-      },
-      body: JSON.stringify({ text, respondentId }),
+  /**
+   * Retrieves messages and user details from the API.
+   * @returns {Promise<Object>} The JSON data from the API.
+   */
+  async function fetchMessages() {
+    try {
+      const response = await fetch(`${baseUrl}/api/profile/get-messages-contacts`);
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
+  }
+
+  /**
+   * Scrolls the chat container to the bottom.
+   *
+   * This function selects the element with the class 'chat-container__opened'
+   * and sets its scrollTop property to its scrollHeight, effectively scrolling
+   * the container to the bottom.
+   */
+  function scrollToBottom() {
+    const chatContainer = document.querySelector('.messages-container');
+    if (chatContainer) {
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+  }
+
+  /**
+   * Sends a message to a respondent and adds it to the chat UI.
+   *
+   * @param {string} text - The message text to be sent.
+   * @param {string} respondentId - The ID of the respondent to whom the message is sent.
+   * @returns {Promise<void>} - Sends the message and renders it on the UI.
+   */
+  async function sendMessage(text, respondentId) {
+    const csrfToken = document.cookie.split('; ').find(cookie => cookie.startsWith('XSRF-TOKEN='))?.split('=')[1];
+    if (!csrfToken) return console.error('CSRF token not found.');
+
+    try {
+      const response = await fetch(`${baseUrl}/api/profile/send-message`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-XSRF-TOKEN': csrfToken,
+        },
+        body: JSON.stringify({ text, respondentId }),
+      });
+
+      const data = await response.json();
+      if (response.ok && data.ok === 1) {
+        // Use createMessageElement to render the new message on the UI
+        const loggedInUserName = document.querySelector('.userpanel .user-block .user-dropdown .name')?.textContent.trim() || 'Me';
+        const loggedInUserAvatar = getMyAvatarUrl();
+
+        const messageElement = createMessageElement(data.message, { [USER_KEYS.ID]: respondentId, [USER_KEYS.LOGIN]: 'Respondent' }, loggedInUserName, loggedInUserAvatar);
+
+        // Assuming you have a container where new messages are added (e.g., 'chat-container')
+        const chatContainer = document.querySelector('.chat-container__opened');
+        chatContainer.appendChild(messageElement);
+
+        // Scroll to the bottom of the messages container after sending a message
+        scrollToBottom();
+      } else {
+        console.error('Error sending message:', data);
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
+  }
+
+  /**
+   * Renders chat conversation previews in the main container.
+   * @param {Array} messages - The list of message objects.
+   * @param {Object} users - The users mapped by their IDs.
+   */
+  function displayChats(messages, users) {
+    let wrapper = document.querySelector('.messages-wrapper') ||
+      Object.assign(document.createElement('div'), { className: 'messages-wrapper' });
+    if (!wrapper.parentNode) document.body.appendChild(wrapper);
+
+    // Add click event to remove the wrapper
+    wrapper.addEventListener('click', (e) => {
+      if (e.target === wrapper) { // Ensure we only remove the wrapper if it's directly clicked, not on child elements
+        wrapper.remove();
+      }
     });
 
-    const data = await response.json();
-    if (response.ok && data.ok === 1) {
-      // Use createMessageElement to render the new message on the UI
+    let mainContainer = document.querySelector('.messages-container');
+    if (!mainContainer) {
+      mainContainer = document.createElement('div');
+      mainContainer.classList.add('messages-container');
+      wrapper.appendChild(mainContainer);
+    }
+    clearContainer(mainContainer);
+
+    messages.forEach(message => {
+      const respondentId = message[MESSAGE_KEYS.RESPONDENT_ID];
+      const user = users[respondentId];
+      const chatContainer = createChatContainer(message, user);
+      chatContainer.addEventListener('click', async () => {
+        const mainContainer = document.querySelector('.messages-container');
+        clearContainer(mainContainer);
+        await displayDialog(message, user, mainContainer);
+      });
+      mainContainer.appendChild(chatContainer);
+    });
+  }
+
+  /**
+   * Creates a container element for a single chat preview.
+   * @param {Object} message - A message object.
+   * @param {Object} user - The respondent's user object.
+   * @returns {HTMLElement} The chat container element.
+   */
+  function createChatContainer(message, user) {
+    const chatContainer = document.createElement('div');
+    chatContainer.classList.add('chat-container');
+
+    const userInfo = document.createElement('div');
+    userInfo.classList.add('chat-header'); // Wrap in a header container
+
+    // Avatar before username
+    const avatar = document.createElement('img');
+    avatar.classList.add('chat-message__avatar');
+    avatar.src = getRespondentAvatarUrl(user);
+    userInfo.appendChild(avatar);
+
+    const username = document.createElement('div');
+    username.textContent = user[USER_KEYS.LOGIN];
+    username.classList.add('chat-container__user-info');
+    userInfo.appendChild(username);
+
+    chatContainer.appendChild(userInfo);
+
+    const messageText = document.createElement('div');
+    messageText.textContent = message[MESSAGE_KEYS.TEXT];
+    messageText.classList.add('chat-container__message-text');
+    chatContainer.appendChild(messageText);
+
+    const date = new Date(message[MESSAGE_KEYS.DATE].sec * 1000);
+    const timestamp = document.createElement('div');
+    timestamp.textContent = date.toLocaleString();
+    timestamp.classList.add('chat-container__timestamp');
+    chatContainer.appendChild(timestamp);
+
+    return chatContainer;
+  }
+
+  /**
+   * Displays the full message dialog between the logged-in user and the selected respondent.
+   * @param {Object} message - The initial message object.
+   * @param {Object} user - The respondent's user object.
+   * @param {HTMLElement} mainContainer - The container where the dialog will be rendered.
+   */
+  async function displayDialog(message, user, mainContainer) {
+    try {
+      const respondentId = message[MESSAGE_KEYS.RESPONDENT_ID];
+      const dialogResponse = await fetch(`${baseUrl}/api/profile/get-messages-dialog?respondentId=${respondentId}`);
+      if (!dialogResponse.ok) throw new Error(`HTTP error! Status: ${dialogResponse.status}`);
+      const dialogData = await dialogResponse.json();
+
       const loggedInUserName = document.querySelector('.userpanel .user-block .user-dropdown .name')?.textContent.trim() || 'Me';
       const loggedInUserAvatar = getMyAvatarUrl();
 
-      const messageElement = createMessageElement(data.message, { [USER_KEYS.ID]: respondentId, [USER_KEYS.LOGIN]: 'Respondent' }, loggedInUserName, loggedInUserAvatar);
+      const backButton = document.createElement('button');
+      backButton.textContent = 'Back';
+      backButton.classList.add('chat-container__back-button');
+      backButton.addEventListener('click', () => {
+        clearContainer(mainContainer);
+        InitializeMessenger();
+      });
+      mainContainer.appendChild(backButton);
 
-      // Assuming you have a container where new messages are added (e.g., 'chat-container')
-      const chatContainer = document.querySelector('.chat-container__opened');
-      chatContainer.appendChild(messageElement);
+      const chatContainer = document.createElement('div');
+      // Double-click to quickly return to the chat list
+      chatContainer.addEventListener('dblclick', () => {
+        clearContainer(mainContainer);
+        InitializeMessenger();
+      });
 
-      // Scroll to the bottom of the messages container after sending a message
+      chatContainer.classList.add('chat-container', 'chat-container__opened');
+      mainContainer.appendChild(chatContainer);
+
+      // Chat header with respondent's avatar first, then name.
+      const headerContainer = document.createElement('div');
+      headerContainer.classList.add('chat-header');
+
+      const headerAvatar = document.createElement('img');
+      headerAvatar.classList.add('chat-header__avatar');
+      headerAvatar.src = getRespondentAvatarUrl(user);
+      headerContainer.appendChild(headerAvatar);
+
+      const headerUsername = document.createElement('div');
+      headerUsername.textContent = user[USER_KEYS.LOGIN];
+      headerUsername.classList.add('chat-header__username');
+      headerContainer.appendChild(headerUsername);
+
+      chatContainer.appendChild(headerContainer);
+
+      dialogData.messages.forEach(msg => {
+        const messageElement = createMessageElement(msg, user, loggedInUserName, loggedInUserAvatar);
+        chatContainer.appendChild(messageElement);
+      });
+      // Create send field (textarea for typing messages)
+      createSendField(chatContainer, respondentId, user, loggedInUserName, loggedInUserAvatar);
+      // Scroll to the bottom of the messages container after messages are created
       scrollToBottom();
+    } catch (error) {
+      console.error('Error fetching dialog:', error);
+    }
+  }
+
+  /**
+   * Creates a message element for the chat dialog.
+   * @param {Object} msg - The message object.
+   * @param {Object} user - The respondent's user object.
+   * @param {string} loggedInUserName - The logged-in user's name.
+   * @param {string} loggedInUserAvatar - The logged-in user's avatar URL.
+   * @returns {HTMLElement} The message element.
+   */
+  function createMessageElement(msg, user, loggedInUserName, loggedInUserAvatar) {
+    const messageContainer = document.createElement('div');
+    messageContainer.classList.add('chat-message');
+
+    const messageAvatar = document.createElement('img');
+    messageAvatar.classList.add('chat-message__avatar');
+    const messageTextContainer = document.createElement('div');
+    messageTextContainer.classList.add('chat-message__text');
+
+    const usernameContainer = document.createElement('div');
+    usernameContainer.classList.add('chat-message__username');
+
+    if (msg.folder === 'out') {
+      messageContainer.classList.add('chat-message__me');
+      messageAvatar.src = loggedInUserAvatar;
+      usernameContainer.textContent = loggedInUserName;
+      usernameContainer.classList.add('chat-message__me-username'); // Class for the logged-in user
+      messageTextContainer.textContent = `${msg[MESSAGE_KEYS.TEXT]}`;
     } else {
-      console.error('Error sending message:', data);
+      messageContainer.classList.add('chat-message__respondent');
+      messageAvatar.src = getRespondentAvatarUrl(user);
+      usernameContainer.textContent = user[USER_KEYS.LOGIN];
+      usernameContainer.classList.add('chat-message__respondent-username'); // Class for the respondent
+      messageTextContainer.textContent = `${msg[MESSAGE_KEYS.TEXT]}`;
     }
-  } catch (error) {
-    console.error('Error sending message:', error);
+
+    // Append username and message to the container
+    messageContainer.appendChild(messageAvatar);
+    messageContainer.appendChild(usernameContainer);
+    messageContainer.appendChild(messageTextContainer);
+
+    return messageContainer;
   }
-}
 
-/**
- * Renders chat conversation previews in the main container.
- * @param {Array} messages - The list of message objects.
- * @param {Object} users - The users mapped by their IDs.
- */
-function displayChats(messages, users) {
-  let wrapper = document.querySelector('.messages-wrapper') ||
-    Object.assign(document.createElement('div'), { className: 'messages-wrapper' });
-  if (!wrapper.parentNode) document.body.appendChild(wrapper);
+  /**
+   * Creates a send field with a textarea at the bottom of the chat container.
+   * The message is sent when Shift + Enter is pressed.
+   * @param {HTMLElement} chatContainer - The chat container where the field will be added.
+   * @param {string} respondentId - The ID of the respondent to send the message to.
+   * @param {Object} user - The respondent's user object.
+   * @param {string} loggedInUserName - The logged-in user's name.
+   * @param {string} loggedInUserAvatar - The logged-in user's avatar URL.
+   */
+  function createSendField(chatContainer, respondentId, user, loggedInUserName, loggedInUserAvatar) {
+    const sendFieldContainer = document.createElement('div');
+    sendFieldContainer.classList.add('chat-container__send-field');
 
-  // Add click event to remove the wrapper
-  wrapper.addEventListener('click', (e) => {
-    if (e.target === wrapper) { // Ensure we only remove the wrapper if it's directly clicked, not on child elements
-      wrapper.remove();
+    // Create textarea
+    const textArea = document.createElement('textarea');
+    textArea.classList.add('chat-container__textarea');
+
+    sendFieldContainer.appendChild(textArea);
+    chatContainer.appendChild(sendFieldContainer);
+    textArea.focus();
+
+    // Add event listener for Shift + Enter
+    textArea.addEventListener('keydown', async (e) => {
+      if (e.key === 'Enter') {
+        if (e.shiftKey) return; // Allow new line with Shift + Enter
+        e.preventDefault(); // Prevent default behavior (new line)
+        const text = textArea.value.trim();
+        // Clear the textarea immediately before sending the message
+        textArea.value = '';
+        if (text) {
+          // Call sendMessage function here, for example:
+          sendMessage(text, respondentId).then(message => {
+            if (message) {
+              // Display new message
+              const messageElement = createMessageElement(message, user, loggedInUserName, loggedInUserAvatar);
+              chatContainer.appendChild(messageElement);
+              textArea.value = ''; // Clear textarea
+            }
+          });
+        }
+      }
+    });
+  }
+
+  injectStyles();
+
+  // Fetches messages from the API and displays the chat previews.
+  async function InitializeMessenger() {
+    const data = await fetchMessages();
+    if (data) displayChats(data.messages, data.users);
+  }
+
+  let isMouseDown = false; // To track if LMB is pressed
+  let initialY = 0; // To store the initial vertical position of the cursor
+
+  // Add event listener for mouse down (LMB press)
+  document.addEventListener('mousedown', (e) => {
+    if (e.button === 0) { // Check if it's the left mouse button (0 is LMB)
+      isMouseDown = true;
+      initialY = e.clientY; // Store initial Y position of the cursor
     }
   });
 
-  let mainContainer = document.querySelector('.messages-container');
-  if (!mainContainer) {
-    mainContainer = document.createElement('div');
-    mainContainer.classList.add('messages-container');
-    wrapper.appendChild(mainContainer);
-  }
-  clearContainer(mainContainer);
-
-  messages.forEach(message => {
-    const respondentId = message[MESSAGE_KEYS.RESPONDENT_ID];
-    const user = users[respondentId];
-    const chatContainer = createChatContainer(message, user);
-    chatContainer.addEventListener('click', async () => {
-      clearContainer(mainContainer);
-      await displayDialog(message, user, mainContainer);
-    });
-    mainContainer.appendChild(chatContainer);
-  });
-}
-
-/**
- * Creates a container element for a single chat preview.
- * @param {Object} message - A message object.
- * @param {Object} user - The respondent's user object.
- * @returns {HTMLElement} The chat container element.
- */
-function createChatContainer(message, user) {
-  const chatContainer = document.createElement('div');
-  chatContainer.classList.add('chat-container');
-
-  const userInfo = document.createElement('div');
-  userInfo.classList.add('chat-header'); // Wrap in a header container
-
-  // Avatar before username
-  const avatar = document.createElement('img');
-  avatar.classList.add('chat-message__avatar');
-  avatar.src = getRespondentAvatarUrl(user);
-  userInfo.appendChild(avatar);
-
-  const username = document.createElement('div');
-  username.textContent = user[USER_KEYS.LOGIN];
-  username.classList.add('chat-container__user-info');
-  userInfo.appendChild(username);
-
-  chatContainer.appendChild(userInfo);
-
-  const messageText = document.createElement('div');
-  messageText.textContent = message[MESSAGE_KEYS.TEXT];
-  messageText.classList.add('chat-container__message-text');
-  chatContainer.appendChild(messageText);
-
-  const date = new Date(message[MESSAGE_KEYS.DATE].sec * 1000);
-  const timestamp = document.createElement('div');
-  timestamp.textContent = date.toLocaleString();
-  timestamp.classList.add('chat-container__timestamp');
-  chatContainer.appendChild(timestamp);
-
-  return chatContainer;
-}
-
-/**
- * Displays the full message dialog between the logged-in user and the selected respondent.
- * @param {Object} message - The initial message object.
- * @param {Object} user - The respondent's user object.
- * @param {HTMLElement} mainContainer - The container where the dialog will be rendered.
- */
-async function displayDialog(message, user, mainContainer) {
-  try {
-    const respondentId = message[MESSAGE_KEYS.RESPONDENT_ID];
-    const dialogResponse = await fetch(`${baseUrl}/api/profile/get-messages-dialog?respondentId=${respondentId}`);
-    if (!dialogResponse.ok) throw new Error(`HTTP error! Status: ${dialogResponse.status}`);
-    const dialogData = await dialogResponse.json();
-
-    const loggedInUserName = document.querySelector('.userpanel .user-block .user-dropdown .name')?.textContent.trim() || 'Me';
-    const loggedInUserAvatar = getMyAvatarUrl();
-
-    const backButton = document.createElement('button');
-    backButton.textContent = 'Back';
-    backButton.classList.add('chat-container__back-button');
-    backButton.addEventListener('click', () => {
-      clearContainer(mainContainer);
-      InitializeMessenger();
-    });
-    mainContainer.appendChild(backButton);
-
-    const chatContainer = document.createElement('div');
-    // Double-click to quickly return to the chat list
-    chatContainer.addEventListener('dblclick', () => {
-      clearContainer(mainContainer);
-      InitializeMessenger();
-    });
-
-    chatContainer.classList.add('chat-container', 'chat-container__opened');
-    mainContainer.appendChild(chatContainer);
-
-    // Chat header with respondent's avatar first, then name.
-    const headerContainer = document.createElement('div');
-    headerContainer.classList.add('chat-header');
-
-    const headerAvatar = document.createElement('img');
-    headerAvatar.classList.add('chat-header__avatar');
-    headerAvatar.src = getRespondentAvatarUrl(user);
-    headerContainer.appendChild(headerAvatar);
-
-    const headerUsername = document.createElement('div');
-    headerUsername.textContent = user[USER_KEYS.LOGIN];
-    headerUsername.classList.add('chat-header__username');
-    headerContainer.appendChild(headerUsername);
-
-    chatContainer.appendChild(headerContainer);
-
-    dialogData.messages.forEach(msg => {
-      const messageElement = createMessageElement(msg, user, loggedInUserName, loggedInUserAvatar);
-      chatContainer.appendChild(messageElement);
-    });
-    // Create send field (textarea for typing messages)
-    createSendField(chatContainer, respondentId);
-    // Scroll to the bottom of the messages container after messages are created
-    scrollToBottom();
-  } catch (error) {
-    console.error('Error fetching dialog:', error);
-  }
-}
-
-/**
- * Creates a message element for the chat dialog.
- * @param {Object} msg - The message object.
- * @param {Object} user - The respondent's user object.
- * @param {string} loggedInUserName - The logged-in user's name.
- * @param {string} loggedInUserAvatar - The logged-in user's avatar URL.
- * @returns {HTMLElement} The message element.
- */
-function createMessageElement(msg, user, loggedInUserName, loggedInUserAvatar) {
-  const messageContainer = document.createElement('div');
-  messageContainer.classList.add('chat-message');
-
-  const messageAvatar = document.createElement('img');
-  messageAvatar.classList.add('chat-message__avatar');
-  const messageTextContainer = document.createElement('div');
-  messageTextContainer.classList.add('chat-message__text');
-
-  const usernameContainer = document.createElement('div');
-  usernameContainer.classList.add('chat-message__username');
-
-  if (msg.folder === 'out') {
-    messageContainer.classList.add('chat-message__me');
-    messageAvatar.src = loggedInUserAvatar;
-    usernameContainer.textContent = loggedInUserName;
-    usernameContainer.classList.add('chat-message__me-username'); // Class for the logged-in user
-    messageTextContainer.textContent = `${msg[MESSAGE_KEYS.TEXT]}`;
-  } else {
-    messageContainer.classList.add('chat-message__respondent');
-    messageAvatar.src = getRespondentAvatarUrl(user);
-    usernameContainer.textContent = user[USER_KEYS.LOGIN];
-    usernameContainer.classList.add('chat-message__respondent-username'); // Class for the respondent
-    messageTextContainer.textContent = `${msg[MESSAGE_KEYS.TEXT]}`;
-  }
-
-  // Append username and message to the container
-  messageContainer.appendChild(messageAvatar);
-  messageContainer.appendChild(usernameContainer);
-  messageContainer.appendChild(messageTextContainer);
-
-  return messageContainer;
-}
-
-/**
- * Creates a send field with a textarea at the bottom of the chat container.
- * The message is sent when Shift + Enter is pressed.
- * @param {HTMLElement} chatContainer - The chat container where the field will be added.
- * @param {string} respondentId - The ID of the respondent to send the message to.
- */
-function createSendField(chatContainer, respondentId) {
-  const sendFieldContainer = document.createElement('div');
-  sendFieldContainer.classList.add('chat-container__send-field');
-
-  // Create textarea
-  const textArea = document.createElement('textarea');
-  textArea.classList.add('chat-container__textarea');
-
-  sendFieldContainer.appendChild(textArea);
-  chatContainer.appendChild(sendFieldContainer);
-  textArea.focus();
-
-  // Add event listener for Shift + Enter
-  textArea.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      if (e.shiftKey) return; // Allow new line with Shift + Enter
-      e.preventDefault(); // Prevent default behavior (new line)
-      const text = textArea.value.trim();
-      // Clear the textarea immediately before sending the message
-      textArea.value = '';
-      if (text) {
-        // Call sendMessage function here, for example:
-        sendMessage(text, respondentId).then(message => {
-          if (message) {
-            // Display new message
-            const messageElement = createMessageElement(message, user, loggedInUserName, loggedInUserAvatar);
-            chatContainer.appendChild(messageElement);
-            textArea.value = ''; // Clear textarea
-          }
-        });
+  // Add event listener for mouse move to track the cursor's movement
+  document.addEventListener('mousemove', (e) => {
+    if (isMouseDown) {
+      const distanceMoved = e.clientY - initialY; // Calculate distance moved from initial position
+      if (distanceMoved > 300) { // If moved more than 300px downward
+        // Trigger the desired action
+        InitializeMessenger();
+        isMouseDown = false; // Reset to prevent repeated triggers
       }
     }
   });
-}
 
-// Fetches messages from the API and displays the chat previews.
-async function InitializeMessenger() {
-  const data = await fetchMessages();
-  if (data) displayChats(data.messages, data.users);
-}
-
-// Initialization: Inject styles and fetch/display messages on page load.
-injectStyles();
-InitializeMessenger();
-
-let isMouseDown = false; // To track if LMB is pressed
-let initialY = 0; // To store the initial vertical position of the cursor
-
-// Add event listener for mouse down (LMB press)
-document.addEventListener('mousedown', (e) => {
-  if (e.button === 0) { // Check if it's the left mouse button (0 is LMB)
-    isMouseDown = true;
-    initialY = e.clientY; // Store initial Y position of the cursor
-  }
-});
-
-// Add event listener for mouse move to track the cursor's movement
-document.addEventListener('mousemove', (e) => {
-  if (isMouseDown) {
-    const distanceMoved = e.clientY - initialY; // Calculate distance moved from initial position
-    if (distanceMoved > 300) { // If moved more than 300px downward
-      // Trigger the desired action
-      injectStyles();
-      InitializeMessenger();
-      isMouseDown = false; // Reset to prevent repeated triggers
-    }
-  }
-});
-
-// Add event listener for mouse up to reset mouse state
-document.addEventListener('mouseup', () => {
-  isMouseDown = false; // Reset the mouse down state
-});
+  // Add event listener for mouse up to reset mouse state
+  document.addEventListener('mouseup', () => {
+    isMouseDown = false; // Reset the mouse down state
+  });
+})();

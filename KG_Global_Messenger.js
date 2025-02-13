@@ -70,6 +70,8 @@
     }
     .messages-container {
       height: 80vh;
+      overflow-y: auto;
+      scrollbar-width: none;
       width: ${containerFixedWidth};
       min-width: 400px;
     }

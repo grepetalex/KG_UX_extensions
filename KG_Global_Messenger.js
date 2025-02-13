@@ -70,14 +70,15 @@
       background-color: rgba(0, 0, 0, 0.5);
     }
     .messages-container {
-      height: 80vh;
+      margin-top: 50px;
+      height: 70vh;
       overflow-y: auto;
       scrollbar-width: none;
       width: ${containerDynamicWidth};
       min-width: ${containerFixedWidth};
     }
     .messages-container-inner {
-      height: 80vh; 
+      height: 70vh; 
       overflow-y: auto;
       scrollbar-width: none;
     }

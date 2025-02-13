@@ -32,7 +32,7 @@
   // UI style constants.
   const mainBackgroundColor = '#1b1b1b';
   const containerBorderRadius = '0.4em';
-  const containerFixedWidth = '600px';
+  const containerFixedWidth = '40vw';
   const margin = '0.6em';
   const padding = '1em';
   const headerAvatarSize = '5em';
@@ -69,12 +69,12 @@
       background-color: rgba(0, 0, 0, 0.5);
     }
     .messages-container {
-      margin-top: 55px;
       overflow-y: auto;
       overflow-x: hidden;
       scrollbar-width: none !important;
       height: 80vh;
       width: ${containerFixedWidth};
+      min-width: 400px;
     }
     .chat-container {
       padding: ${padding};
@@ -88,22 +88,29 @@
       display: flex;
       flex-direction: column;
     }
-    .chat-container__back-button {
-      position: fixed;
-      border-radius: ${containerBorderRadius} !important;
+    .chat-container__opened .chat-header {
       padding: ${padding};
+      border-radius: ${containerBorderRadius} !important;
+      background-color: ${mainBackgroundColor};
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1), 0 6px 20px rgba(0, 0, 0, 0.1) !important;
+      border: 1px solid #deb8871a !important;
+      position: sticky;
+      top: ${padding};
+    }
+    .chat-container__back-button {
+      width: 100%;
+      border-radius: ${containerBorderRadius} !important;
+      border: 1px solid #313131 !important;
+      padding: ${padding} 3em;
       margin-left: ${margin};
-      background-color: steelblue;
-      color: lightsteelblue;
-      border: none;
+      background-color: #111;
+      color: burlywood;
       cursor: pointer;
       font-size: 1em;
-      top: 0;
     }
     .chat-header {
       display: flex;
       align-items: center;
-      margin-bottom: ${margin};
     }
     .chat-header__username {
       font-size: 1.2em;
@@ -120,6 +127,7 @@
       display: flex;
       align-items: flex-start;
       margin: ${margin} 0;
+      width: calc(100% - 3em);
     }
     .chat-message__respondent .chat-message__text {
       color: ${respondentMessageColor} !important;
@@ -190,7 +198,7 @@
       font-size: 1em !important;
       resize: none !important;
     }
-  `;
+    `;
     document.head.appendChild(styleElement);
   }
 
@@ -401,19 +409,12 @@
         clearContainer(mainContainer);
         InitializeMessenger();
       });
-      mainContainer.appendChild(backButton);
 
       const chatContainer = document.createElement('div');
-      // Double-click to quickly return to the chat list
-      chatContainer.addEventListener('dblclick', () => {
-        clearContainer(mainContainer);
-        InitializeMessenger();
-      });
-
       chatContainer.classList.add('chat-container', 'chat-container__opened');
       mainContainer.appendChild(chatContainer);
 
-      // Chat header with respondent's avatar first, then name.
+      // Chat header with respondent's avatar first, then name, and back button.
       const headerContainer = document.createElement('div');
       headerContainer.classList.add('chat-header');
 
@@ -427,12 +428,19 @@
       headerUsername.classList.add('chat-header__username');
       headerContainer.appendChild(headerUsername);
 
+      headerContainer.appendChild(backButton);
       chatContainer.appendChild(headerContainer);
+
+      // Container for messages
+      const messagesContainer = document.createElement('div');
+      messagesContainer.classList.add('messages-container');
+      chatContainer.appendChild(messagesContainer);
 
       dialogData.messages.forEach(msg => {
         const messageElement = createMessageElement(msg, user, loggedInUserName, loggedInUserAvatar);
-        chatContainer.appendChild(messageElement);
+        messagesContainer.appendChild(messageElement);
       });
+
       // Create send field (textarea for typing messages)
       createSendField(chatContainer, respondentId, user, loggedInUserName, loggedInUserAvatar);
       // Scroll to the bottom of the messages container after messages are created

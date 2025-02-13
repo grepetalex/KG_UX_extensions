@@ -69,12 +69,14 @@
       background-color: rgba(0, 0, 0, 0.5);
     }
     .messages-container {
-      overflow-y: auto;
-      overflow-x: hidden;
-      scrollbar-width: none !important;
       height: 80vh;
       width: ${containerFixedWidth};
       min-width: 400px;
+    }
+    .messages-container-inner {
+      height: 80vh; 
+      overflow-y: auto;
+      scrollbar-width: none;
     }
     .chat-container {
       padding: ${padding};
@@ -127,7 +129,6 @@
       display: flex;
       align-items: flex-start;
       margin: ${margin} 0;
-      width: calc(100% - 3em);
     }
     .chat-message__respondent .chat-message__text {
       color: ${respondentMessageColor} !important;
@@ -166,6 +167,7 @@
     }
     .chat-container__user-info {
       color: ${respondentUsernameColor} !important;
+      margin-right: ${margin};
       font-size: 1.2em;
       font-weight: bold;
     }
@@ -259,7 +261,7 @@
    * the container to the bottom.
    */
   function scrollToBottom() {
-    const chatContainer = document.querySelector('.messages-container');
+    const chatContainer = document.querySelector('.messages-container-inner');
     if (chatContainer) {
       chatContainer.scrollTop = chatContainer.scrollHeight;
     }
@@ -294,8 +296,8 @@
 
         const messageElement = createMessageElement(data.message, { [USER_KEYS.ID]: respondentId, [USER_KEYS.LOGIN]: 'Respondent' }, loggedInUserName, loggedInUserAvatar);
 
-        // Assuming you have a container where new messages are added (e.g., 'chat-container')
-        const chatContainer = document.querySelector('.chat-container__opened');
+        // Assuming you have a container where new messages are added (e.g., 'messages-container-inner')
+        const chatContainer = document.querySelector('.messages-container-inner');
         chatContainer.appendChild(messageElement);
 
         // Scroll to the bottom of the messages container after sending a message
@@ -370,18 +372,18 @@
     username.classList.add('chat-container__user-info');
     userInfo.appendChild(username);
 
+    const date = new Date(message[MESSAGE_KEYS.DATE].sec * 1000);
+    const timestamp = document.createElement('div');
+    timestamp.textContent = date.toLocaleString();
+    timestamp.classList.add('chat-container__timestamp');
+    userInfo.appendChild(timestamp);
+
     chatContainer.appendChild(userInfo);
 
     const messageText = document.createElement('div');
     messageText.textContent = message[MESSAGE_KEYS.TEXT];
     messageText.classList.add('chat-container__message-text');
     chatContainer.appendChild(messageText);
-
-    const date = new Date(message[MESSAGE_KEYS.DATE].sec * 1000);
-    const timestamp = document.createElement('div');
-    timestamp.textContent = date.toLocaleString();
-    timestamp.classList.add('chat-container__timestamp');
-    chatContainer.appendChild(timestamp);
 
     return chatContainer;
   }
@@ -433,7 +435,7 @@
 
       // Container for messages
       const messagesContainer = document.createElement('div');
-      messagesContainer.classList.add('messages-container');
+      messagesContainer.classList.add('messages-container-inner');
       chatContainer.appendChild(messagesContainer);
 
       dialogData.messages.forEach(msg => {

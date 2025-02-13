@@ -770,7 +770,7 @@
     const containerSelectors = {
       generalMessages: ".messages-content div",
       chatlogsMessages: ".chat-logs-container",
-      personalMessages: ".messages-container"
+      personalMessages: ".messages-container-wrapper"
     };
 
     // Get the container element based on the provided containerType
@@ -1064,7 +1064,7 @@
     const containerSelectors = {
       generalMessages: '.messages-content div',
       chatlogsMessages: '.chat-logs-container',
-      personalMessages: '.messages-container'
+      personalMessages: '.messages-container-wrapper'
     };
 
     // Get the container selector based on the provided type
@@ -1173,7 +1173,7 @@
     document.querySelector(({
       generalMessages: ".messages-content div", // General messages container
       chatlogsMessages: ".chat-logs-container", // Chat logs container
-      personalMessages: ".messages-container" // Personal messages container
+      personalMessages: ".messages-container-wrapper" // Personal messages container
     })[type])?.querySelectorAll('a:not(.media):not(.decoded)').forEach(link => { // Select all <a> links that haven't been decoded yet
       try {
         // Ensure the link is a valid encoded URL before decoding
@@ -3451,7 +3451,7 @@
     const containerSelectors = {
       generalMessages: { container: '.messages-content div', messageElement: 'p' }, // For general chat
       chatlogsMessages: { container: '.chat-logs-container', messageElement: '.message-text' }, // For chat logs
-      personalMessages: { container: '.messages-container', messageElement: '.message-text' } // For personal messages panel
+      personalMessages: { container: '.messages-container-wrapper', messageElement: '.message-text' } // For personal messages panel
     };
 
     // Get the container and message element details based on the passed containerType
@@ -3768,7 +3768,7 @@
     const containerSelectors = {
       generalMessages: '.messages-content', // For general chat
       chatlogsMessages: '.chat-logs-container', // For chat logs
-      personalMessages: '.messages-container' // For personal messages panel
+      personalMessages: '.messages-container-wrapper' // For personal messages panel
     };
 
     // Get the container based on the passed containerType
@@ -6032,7 +6032,7 @@
     // Event listener to copy the text content of the messages container
     copyPersonalMessagesButton.addEventListener('click', () => {
       addJumpEffect(copyPersonalMessagesButton, 0, 0);
-      const textContent = Array.from(document.querySelector('.messages-container').children)
+      const textContent = Array.from(document.querySelector('.messages-container-wrapper').children)
         .filter(node => {
           const style = window.getComputedStyle(node);
           // Ignore hidden messages with contentVisibility 'hidden' or display 'none'

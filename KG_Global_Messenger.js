@@ -32,7 +32,8 @@
   // UI style constants.
   const mainBackgroundColor = '#1b1b1b';
   const containerBorderRadius = '0.4em';
-  const containerFixedWidth = '40vw';
+  const containerDynamicWidth = '40vw';
+  const containerFixedWidth = '400px';
   const margin = '0.6em';
   const padding = '1em';
   const headerAvatarSize = '5em';
@@ -72,8 +73,8 @@
       height: 80vh;
       overflow-y: auto;
       scrollbar-width: none;
-      width: ${containerFixedWidth};
-      min-width: 400px;
+      width: ${containerDynamicWidth};
+      min-width: ${containerFixedWidth};
     }
     .messages-container-inner {
       height: 80vh; 
@@ -184,6 +185,8 @@
     }
     /* Floating send field */
     .chat-container__send-field {
+      display: flex;
+      justify-content: center;
       position: fixed !important;
       bottom: 0 !important;
       left: 0 !important;
@@ -193,7 +196,8 @@
     }
 
     .chat-container__textarea {
-      width: 100% !important;
+      width: calc(${containerDynamicWidth} - ${padding});
+      min-width: ${containerFixedWidth};
       padding: ${padding} !important;
       background-color: #111 !important;
       border: 1px solid #313131 !important;
@@ -201,6 +205,8 @@
       color: ${meMessageColor} !important;
       font-size: 1em !important;
       resize: none !important;
+      height: calc(20vh - 1em);
+      line-height: 1.4em;
     }
     `;
     document.head.appendChild(styleElement);

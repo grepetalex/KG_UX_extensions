@@ -199,16 +199,51 @@ function determineChatRoom() {
   return roomField;
 }
 
+// Object to store event listeners
+const eventListeners = new Map();
+
 // Function to remove the emoticons popup
 function removeEmoticonsPopup() {
   const popupBox = document.querySelector('.emoticons-popup');
   if (popupBox) {
     document.body.removeChild(popupBox);
 
-    // Remove event listener for the "Tab" key press
-    document.removeEventListener('keydown', changeCategoryOnTabPress);
+    // Remove event listeners
+    for (const [element, listeners] of eventListeners.entries()) {
+      listeners.forEach(({ event, handler }) => {
+        element.removeEventListener(event, handler);
+      });
+    }
+    eventListeners.clear();
 
     isPopupCreated = false; // Reset the flag when the popup is removed
+  }
+}
+
+// Function to add event listeners and store them in the eventListeners object
+function addEventListener(element, event, handler) {
+  element.addEventListener(event, handler);
+  if (!eventListeners.has(element)) {
+    eventListeners.set(element, []);
+  }
+  eventListeners.get(element).push({ event, handler });
+}
+
+// Function to handle mousedown events for textareas
+function handleTextareaMousedown(event) {
+  const textareaSelectors = [
+    '.dlg-send-user-message .message-text textarea',
+    '.profile-messages .dialog-write textarea',
+    '.profile-edit-bio .edit textarea',
+    '.profile-root .journal .write textarea'
+  ];
+
+  if (textareaSelectors.some(selector => event.target.matches(selector))) {
+    if (event.shiftKey && event.detail === 2) {
+      event.preventDefault(); // Prevent the default behavior of double-click
+      toggleEmoticonsPopup();
+      console.log('Textarea Double-Click Event Executed');
+    }
   }
 }
 
@@ -241,59 +276,47 @@ function initializeEventListeners() {
     // Check if the "Favourites" button exists
     if (favouritesButton) {
       // Add a click event listener to the "Favourites" button
-      favouritesButton.addEventListener('click', function (event) {
+      document.addEventListener('click', function (event) {
         // Check if the shift key is pressed while clicking the button
         if (event.shiftKey) {
           // Check if there is a category history
           if (categoryHistory.length > 0) {
             // Pop the previous active category from the history
             const previousCategory = categoryHistory.pop();
-
             // Set the active category to the previous one
             changeActiveCategoryOnClick(previousCategory);
-
             // Clear all favorites from localStorage
             localStorage.removeItem('favoriteEmoticons');
-
             // Update the state of category buttons
             updateCategoryButtonsState(activeCategory);
-
             // Update the emoticons container
             updateEmoticonsContainer();
+            // Update the visual highlight for the current emoticon index
+            updateEmoticonHighlight();
           }
         }
       });
     }
 
+    // Listen for keydown events on the document
     document.addEventListener('keydown', function (event) {
+      // If Ctrl + Semicolon is pressed
       if (event.ctrlKey && event.code === 'Semicolon') {
-        event.preventDefault();
+        event.preventDefault(); // Prevent any default browser behavior
         toggleEmoticonsPopup(); // Toggle the emoticons panel
-        // console.log('Ctrl + Semicolon pressed');
-      } else if (event.key === 'Escape') {
-        removeEmoticonsPopup(); // Close the emoticons panel if it exists
-        console.log('Escape key pressed');
+      }
+    });
+
+    // Use the custom addEventListener function to track the Escape key listener
+    document.addEventListener('keydown', function (event) {
+      // If the Escape key is pressed
+      if (event.key === 'Escape') {
+        removeEmoticonsPopup(); // Close the emoticons panel if it's open
       }
     });
 
     // Attach a mousedown event listener to the document and use event delegation
-    document.addEventListener('mousedown', function (event) {
-      // Check if the target element matches any of the textarea selectors
-      const textareaSelectors = [
-        '.dlg-send-user-message .message-text textarea',
-        '.profile-messages .dialog-write textarea',
-        '.profile-edit-bio .edit textarea',
-        '.profile-root .journal .write textarea'
-      ];
-
-      if (textareaSelectors.some(selector => event.target.matches(selector))) {
-        if (event.shiftKey && event.detail === 2) {
-          event.preventDefault(); // Prevent the default behavior of double-click
-          toggleEmoticonsPopup();
-          console.log('Textarea Double-Click Event Executed');
-        }
-      }
-    });
+    addEventListener(document, 'mousedown', handleTextareaMousedown);
 
     // Attempt to find the chat input field
     roomField = determineChatRoom();
@@ -311,7 +334,7 @@ function initializeEventListeners() {
           });
         });
       } else {
-        roomField.addEventListener('mousedown', function (event) {
+        roomField.addEventListener('mousedown', function (event) { // Use roomField directly
           if (event.shiftKey && event.detail === 2) {
             event.preventDefault(); // Prevent the default behavior of double-click
             toggleEmoticonsPopup();
@@ -320,8 +343,17 @@ function initializeEventListeners() {
       }
     }
 
+    // Attach keydown event listener to the document for inserting emoticons
+    addEventListener(document, 'keydown', handleKeydownForEmoticons);
+
     isEventListenersInitialized = true;
   }
+}
+
+// Define the isEmoticonFavorite function
+function isEmoticonFavorite(emoticon) {
+  const favoriteEmoticons = JSON.parse(localStorage.getItem('favoriteEmoticons')) || [];
+  return favoriteEmoticons.includes(emoticon);
 }
 
 // Toggles the emoticons panel by checking its existence and taking appropriate action.
@@ -335,6 +367,7 @@ function toggleEmoticonsPopup() {
     removeEmoticonsPopup();
   } else {
     // If the panel doesn't exist, create and display it with the active category
+    currentEmoticonIndex = 0; // Reset the current emoticon index
     createEmoticonsPopup(activeCategory);
   }
 }
@@ -381,6 +414,9 @@ function getAdjustedBackground(caseType) {
     case 'activeButton':
       adjustment = 35;
       break;
+    case 'selectedButton':
+      adjustment = 45;
+      break;
     default:
       adjustment = 0; // Default case, no adjustment
   }
@@ -395,6 +431,7 @@ const popupBackground = getAdjustedBackground('popupBackground');
 const defaultButtonBackground = getAdjustedBackground('defaultButton');
 const hoverButtonBackground = getAdjustedBackground('hoverButton');
 const activeButtonBackground = getAdjustedBackground('activeButton');
+const selectedButtonBackground = getAdjustedBackground('selectedButton');
 
 // Function to create the emoticons popup for a given category
 function createEmoticonsPopup(category) {
@@ -426,7 +463,12 @@ function createEmoticonsPopup(category) {
     closeButton.style.right = '0';
 
     // Add a click event listener to the close button
-    closeButton.addEventListener('click', function () {
+    closeButton.addEventListener('click', function (event) {
+      if (event.ctrlKey) {
+        if (confirm("Clear emoticon usage data?")) {
+          localStorage.removeItem('emoticonUsageData');
+        }
+      }
       removeEmoticonsPopup();
     });
 
@@ -578,14 +620,42 @@ function setFavouritesButtonOpacity(categoryButton) {
   }
 }
 
-// Function to create the emoticons container with buttons for a given category
-function createEmoticonsContainer(category) {
-  // Define the isEmoticonFavorite function
-  function isEmoticonFavorite(emoticon) {
-    const favoriteEmoticons = JSON.parse(localStorage.getItem('favoriteEmoticons')) || [];
-    return favoriteEmoticons.includes(emoticon);
-  }
+// Function to load emoticon usage data from localStorage
+function loadEmoticonUsageData() {
+  const usageData = JSON.parse(localStorage.getItem('emoticonUsageData')) || {};
+  return usageData;
+}
 
+// Function to save emoticon usage data to localStorage
+function saveEmoticonUsageData(usageData) {
+  localStorage.setItem('emoticonUsageData', JSON.stringify(usageData));
+}
+
+// Function to increment the usage count of an emoticon
+function incrementEmoticonUsage(emoticon) {
+  const usageData = loadEmoticonUsageData();
+  if (!usageData[activeCategory]) {
+    usageData[activeCategory] = {};
+  }
+  if (!usageData[activeCategory][emoticon]) {
+    usageData[activeCategory][emoticon] = 0;
+  }
+  usageData[activeCategory][emoticon] += 1;
+  saveEmoticonUsageData(usageData);
+}
+
+// Function to get sorted emoticons by usage count
+function getSortedEmoticons(category) {
+  const usageData = loadEmoticonUsageData();
+  const emoticons = categories[category];
+  if (!usageData[category]) {
+    return emoticons;
+  }
+  return emoticons.sort((a, b) => (usageData[category][b] || 0) - (usageData[category][a] || 0));
+}
+
+// Function to create the emoticons container with buttons for a given category
+async function createEmoticonsContainer(category) {
   const emoticonButtonsContainer = document.createElement('div');
   emoticonButtonsContainer.classList.add('emoticon-buttons');
   emoticonButtonsContainer.style.display = 'none'; // Initially hide the container
@@ -593,7 +663,9 @@ function createEmoticonsContainer(category) {
 
   const imageLoadPromises = [];
 
-  categories[category].forEach(emoticon => {
+  const sortedEmoticons = getSortedEmoticons(category);
+
+  sortedEmoticons.forEach((emoticon, index) => {
     const emoticonButton = document.createElement('button');
     const emoticonName = emoticon;
     const imgSrc = `/img/smilies/${emoticonName}.gif`;
@@ -605,6 +677,11 @@ function createEmoticonsContainer(category) {
       emoticonButton.style.backgroundColor = isEmoticonFavorite(emoticon) ? activeButtonBackground : defaultButtonBackground;
     } else {
       emoticonButton.style.backgroundColor = defaultButtonBackground; // For the "Favourites" category, always use the default background
+    }
+
+    // Highlight the very first button with activeButtonBackground
+    if (index === 0) {
+      emoticonButton.style.backgroundColor = activeButtonBackground;
     }
 
     emoticonButton.innerHTML = `<img src="${imgSrc}" alt="${imgAlt}">`;
@@ -656,6 +733,7 @@ function createEmoticonsContainer(category) {
       } else {
         // If neither Ctrl nor Shift is pressed, insert the emoticon code and remove the emoticons popup
         insertEmoticonCode(emoticon);
+        incrementEmoticonUsage(emoticon); // Increment usage count
         removeEmoticonsPopup();
       }
     });
@@ -678,19 +756,17 @@ function createEmoticonsContainer(category) {
   });
 
   // Wait for all images to load before updating grid properties and making it visible
-  return Promise.all(imageLoadPromises).then(() => {
-    // Calculate the maximum image width and height again after all images are loaded
-    const { maxImageWidth: newMaxImageWidth, maxImageHeight: newMaxImageHeight } = calculateMaxImageDimensions(categories[category]);
-
-    // Update grid properties with new values
-    emoticonButtonsContainer.style.gridTemplateColumns = `repeat(auto-fit, minmax(${newMaxImageWidth}px, 1fr))`;
-    emoticonButtonsContainer.style.gridAutoRows = `minmax(${newMaxImageHeight}px, auto)`;
-
-    // Make it visible after all images are loaded
-    emoticonButtonsContainer.style.display = 'grid';
-
-    return emoticonButtonsContainer;
-  });
+  await Promise.all(imageLoadPromises);
+  // Calculate the maximum image width and height again after all images are loaded
+  const { maxImageWidth: newMaxImageWidth, maxImageHeight: newMaxImageHeight } = calculateMaxImageDimensions(categories[category]);
+  // Update grid properties with new values
+  emoticonButtonsContainer.style.gridTemplateColumns = `repeat(auto-fit, minmax(${newMaxImageWidth}px, 1fr))`;
+  emoticonButtonsContainer.style.gridAutoRows = `minmax(${newMaxImageHeight}px, auto)`;
+  // Make it visible after all images are loaded
+  emoticonButtonsContainer.style.display = 'grid';
+  // Update the visual highlight for the current emoticon index
+  updateEmoticonHighlight();
+  return emoticonButtonsContainer;
 }
 
 // Function to update the emoticons container based on the active category
@@ -756,6 +832,42 @@ function insertEmoticonCode(emoticon) {
   roomField.focus();
 }
 
+// Variable to keep track of the current emoticon index
+let currentEmoticonIndex = 0;
+
+// Function to handle keydown events for inserting emoticons
+function handleKeydownForEmoticons(event) {
+  const emoticonsPopup = document.querySelector('.emoticons-popup');
+  if (event.key === 'Enter' && emoticonsPopup && activeCategory) {
+    event.preventDefault();
+    const emoticons = categories[activeCategory];
+    if (emoticons && emoticons.length > 0) {
+      const emoticon = emoticons[currentEmoticonIndex];
+      insertEmoticonCode(emoticon);
+      incrementEmoticonUsage(emoticon); // Increment usage count
+      if (event.ctrlKey) {
+        removeEmoticonsPopup();
+      }
+    }
+  } else if (event.key === 'h' && activeCategory) {
+    event.preventDefault();
+    const emoticons = categories[activeCategory];
+    if (emoticons && emoticons.length > 0) {
+      currentEmoticonIndex = (currentEmoticonIndex - 1 + emoticons.length) % emoticons.length;
+      updateEmoticonHighlight();
+      console.log(`Current Emoticon: ${emoticons[currentEmoticonIndex]}`);
+    }
+  } else if (event.key === 'l' && activeCategory) {
+    event.preventDefault();
+    const emoticons = categories[activeCategory];
+    if (emoticons && emoticons.length > 0) {
+      currentEmoticonIndex = (currentEmoticonIndex + 1) % emoticons.length;
+      updateEmoticonHighlight();
+      console.log(`Current Emoticon: ${emoticons[currentEmoticonIndex]}`);
+    }
+  }
+}
+
 // Function to change the active category
 function changeActiveCategoryOnClick(newCategory) {
   // Check if the new category is empty and prevent switching if it is
@@ -774,11 +886,17 @@ function changeActiveCategoryOnClick(newCategory) {
   // Update the activeCategory variable
   activeCategory = newCategory;
 
+  // Reset the current emoticon index when the category changes
+  currentEmoticonIndex = 0;
+
   // Update the state of category buttons
   updateCategoryButtonsState(activeCategory);
 
   // Call the function to update the emoticons container
   updateEmoticonsContainer();
+
+  // Update the visual highlight for the current emoticon index
+  updateEmoticonHighlight();
 }
 
 const categoryKeys = Object.keys(categories); // Define categoryKeys
@@ -815,9 +933,23 @@ function changeCategoryOnTabPress(event) {
     // Optionally, you can call changeActiveCategory to handle the category change
     changeActiveCategoryOnClick(nextCategory);
 
-    // Log the active category for debugging
-    // console.log(`Active Category: ${nextCategory}`);
+    // Update the visual highlight for the current emoticon index
+    updateEmoticonHighlight();
   }
+}
+
+// Function to update the visual highlight of the current emoticon index
+function updateEmoticonHighlight() {
+  const emoticonButtons = document.querySelectorAll('.emoticon-buttons button');
+  emoticonButtons.forEach((button, index) => {
+    if (index === currentEmoticonIndex) {
+      button.style.backgroundColor = selectedButtonBackground; // Highlight color for the current index
+    } else {
+      // Reset background color based on whether the emoticon is a favorite or not
+      const emoticon = categories[activeCategory][index];
+      button.style.backgroundColor = isEmoticonFavorite(emoticon) ? activeButtonBackground : defaultButtonBackground;
+    }
+  });
 }
 
 // Initialize event listeners and create the emoticons popup with the default category

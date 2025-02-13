@@ -1698,7 +1698,7 @@
 
         try {
           // Fetch user IDs by username
-          const userIds = await getUserIdByName(username);
+          const userIds = await getUserIDsByName(username);
 
           // Iterate over each user ID and retrieve profile data
           await Promise.all(userIds.map(async (userId) => {
@@ -2587,8 +2587,8 @@
     return response.json();
   }
 
-  // Helper function to get user IDs by username via the search API
-  async function getUserIdByName(userName) {
+  // Helper function to get Exact user ID by username via the search API
+  async function getExactUserIdByName(userName) {
     // Define the search API URL
     const searchApiUrl = `https://klavogonki.ru/api/profile/search-users?query=${userName}`;
 
@@ -2603,6 +2603,18 @@
     if (!user) throw new Error(`Exact match for user ${userName} not found.`);
 
     return user.id;
+  }
+
+  // Helper function to get all user IDs by username via the search API
+  async function getUserIDsByName(userName) {
+    const searchApiUrl = `https://klavogonki.ru/api/profile/search-users?query=${userName}`;
+    const searchResults = await fetchJSON(searchApiUrl);
+
+    const foundUsers = searchResults.all; // Get all search results
+    if (!foundUsers || foundUsers.length === 0) throw new Error(`User ${userName} not found.`);
+
+    // Return an array of user IDs
+    return foundUsers.map(user => user.id);
   }
 
   // Function to calculate time spent on the site
@@ -6681,7 +6693,7 @@
 
     try {
       // Fetch the user ID
-      const userId = await getUserIdByName(username); // Remove destructuring
+      const userId = await getExactUserIdByName(username);
       if (userId) {
         userIdsCache[username] = userId;
         localStorage.setItem('userIdsCache', JSON.stringify(userIdsCache));

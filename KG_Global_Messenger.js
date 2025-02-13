@@ -387,6 +387,12 @@ async function displayDialog(message, user, mainContainer) {
     mainContainer.appendChild(backButton);
 
     const chatContainer = document.createElement('div');
+    // Double-click to quickly return to the chat list
+    chatContainer.addEventListener('dblclick', () => {
+      clearContainer(mainContainer);
+      InitializeMessenger();
+    });
+
     chatContainer.classList.add('chat-container', 'chat-container__opened');
     mainContainer.appendChild(chatContainer);
 

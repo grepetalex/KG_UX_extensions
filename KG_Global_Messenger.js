@@ -133,6 +133,10 @@
       border-radius: ${avatarBorderRadius} !important;
       margin-right: ${margin};
     }
+    .chat-message__username-timestamp {
+      display: flex;
+      align-items: center; 
+    }
     .chat-message__username {
       font-size: 1em;
       font-weight: bold;
@@ -452,11 +456,21 @@
 
     const messageAvatar = document.createElement('img');
     messageAvatar.classList.add('chat-message__avatar');
-    const messageTextContainer = document.createElement('div');
-    messageTextContainer.classList.add('chat-message__text');
+
+    const messageContentContainer = document.createElement('div');
+    messageContentContainer.classList.add('chat-message__content');
+
+    const usernameAndTimestampContainer = document.createElement('div');
+    usernameAndTimestampContainer.classList.add('chat-message__username-timestamp');
 
     const usernameContainer = document.createElement('div');
     usernameContainer.classList.add('chat-message__username');
+
+    const timestampContainer = document.createElement('div');
+    timestampContainer.classList.add('chat-container__timestamp');
+
+    const messageTextContainer = document.createElement('div');
+    messageTextContainer.classList.add('chat-message__text');
 
     if (msg.folder === 'out') {
       messageContainer.classList.add('chat-message__me');
@@ -472,10 +486,20 @@
       messageTextContainer.textContent = `${msg[MESSAGE_KEYS.TEXT]}`;
     }
 
-    // Append username and message to the container
+    const date = new Date(msg[MESSAGE_KEYS.DATE].sec * 1000);
+    timestampContainer.textContent = date.toLocaleString();
+
+    // Append username and timestamp to their container
+    usernameAndTimestampContainer.appendChild(usernameContainer);
+    usernameAndTimestampContainer.appendChild(timestampContainer);
+
+    // Append username-timestamp container and message text to the content container
+    messageContentContainer.appendChild(usernameAndTimestampContainer);
+    messageContentContainer.appendChild(messageTextContainer);
+
+    // Append avatar and content container to the main message container
     messageContainer.appendChild(messageAvatar);
-    messageContainer.appendChild(usernameContainer);
-    messageContainer.appendChild(messageTextContainer);
+    messageContainer.appendChild(messageContentContainer);
 
     return messageContainer;
   }

@@ -541,27 +541,44 @@
       });
     });
   }
-  // Update the keyboard handler
   function handleKeydownForEmoticons(e) {
+    // Get the emoticon popup element
     const popup = document.querySelector(".emoticons-popup");
-    if (!popup) return;
+    if (!popup) return; // Exit if the popup is not found
 
+    // Ensure there are available emoticons to navigate
     if (!currentSortedEmoticons || currentSortedEmoticons.length === 0) return;
 
+    // Handle "Enter" key: insert the selected emoticon
     if (e.key === "Enter") {
-      e.preventDefault();
+      e.preventDefault(); // Prevent default action (e.g., form submission)
+
       const emoticon = currentSortedEmoticons[currentEmoticonIndex];
-      insertEmoticonCode(emoticon);
-      incrementEmoticonUsage(emoticon);
+      insertEmoticonCode(emoticon); // Insert the selected emoticon
+      incrementEmoticonUsage(emoticon); // Track usage for sorting
+
+      // If "Ctrl + Enter" is pressed, close the emoticon popup
       if (e.ctrlKey) removeEmoticonsPopup();
-    } else if (e.key === "h") {
-      e.preventDefault();
-      currentEmoticonIndex = (currentEmoticonIndex - 1 + currentSortedEmoticons.length) % currentSortedEmoticons.length;
-      updateEmoticonHighlight();
-    } else if (e.key === "l") {
-      e.preventDefault();
-      currentEmoticonIndex = (currentEmoticonIndex + 1) % currentSortedEmoticons.length;
-      updateEmoticonHighlight();
+    }
+    // Handle left navigation: Move selection left (previous emoticon)
+    else if (e.code === "ArrowLeft" || e.code === "KeyH") {
+      e.preventDefault(); // Prevent unwanted scrolling or default behavior
+
+      // Move index to the previous emoticon, looping if necessary
+      currentEmoticonIndex =
+        (currentEmoticonIndex - 1 + currentSortedEmoticons.length) % currentSortedEmoticons.length;
+
+      updateEmoticonHighlight(); // Update the UI highlight
+    }
+    // Handle right navigation: Move selection right (next emoticon)
+    else if (e.code === "ArrowRight" || e.code === "KeyL") {
+      e.preventDefault(); // Prevent unwanted scrolling or default behavior
+
+      // Move index to the next emoticon, looping if necessary
+      currentEmoticonIndex =
+        (currentEmoticonIndex + 1) % currentSortedEmoticons.length;
+
+      updateEmoticonHighlight(); // Update the UI highlight
     }
   }
 })();

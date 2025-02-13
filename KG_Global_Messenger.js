@@ -517,3 +517,32 @@ async function InitializeMessenger() {
 // Initialization: Inject styles and fetch/display messages on page load.
 injectStyles();
 InitializeMessenger();
+
+let isMouseDown = false; // To track if LMB is pressed
+let initialY = 0; // To store the initial vertical position of the cursor
+
+// Add event listener for mouse down (LMB press)
+document.addEventListener('mousedown', (e) => {
+  if (e.button === 0) { // Check if it's the left mouse button (0 is LMB)
+    isMouseDown = true;
+    initialY = e.clientY; // Store initial Y position of the cursor
+  }
+});
+
+// Add event listener for mouse move to track the cursor's movement
+document.addEventListener('mousemove', (e) => {
+  if (isMouseDown) {
+    const distanceMoved = e.clientY - initialY; // Calculate distance moved from initial position
+    if (distanceMoved > 300) { // If moved more than 300px downward
+      // Trigger the desired action
+      injectStyles();
+      InitializeMessenger();
+      isMouseDown = false; // Reset to prevent repeated triggers
+    }
+  }
+});
+
+// Add event listener for mouse up to reset mouse state
+document.addEventListener('mouseup', () => {
+  isMouseDown = false; // Reset the mouse down state
+});

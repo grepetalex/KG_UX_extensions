@@ -115,7 +115,13 @@
     }
     return 0;
   }
-  // Returns an HSL background color based on the type.
+
+  // --------------------------
+  // Function to Adjust Background Colors Based on Background Lightness
+  // --------------------------
+
+  // Adjusts the background color based on the type of element (e.g., popup, button)
+  // It modifies the lightness of the color depending on whether the body background is light or dark.
   function getAdjustedBackground(type) {
     const adjustments = {
       popupBackground: 10,
@@ -128,6 +134,16 @@
     const adjustedLightness =
       bodyLightness < 50 ? bodyLightness + adjustment : bodyLightness - adjustment;
     return `hsl(0, 0%, ${adjustedLightness}%)`;
+  }
+
+  // --------------------------
+  // Function to Adjust Color Based on Background Lightness
+  // --------------------------
+
+  // Adjusts the color based on the lightness of the body background
+  // If the background is dark (lightness < 50), return a light color; otherwise, return a dark color
+  function getAdjustedColor() {
+    return bodyLightness < 50 ? "rgb(222, 222, 222)" : "rgb(22, 22, 22)";
   }
 
   // --------------------------
@@ -451,7 +467,7 @@
     const container = document.createElement("div");
     container.className = "emoticon-buttons";
     container.style.display = "none";
-    container.style.gap = "10px";
+    container.style.gap = "25px";
     currentSortedEmoticons = getSortedEmoticons(category);
     const promises = [];
     currentSortedEmoticons.forEach((emoticon, idx) => {
@@ -460,6 +476,7 @@
       const imgSrc = `/img/smilies/${emoticon}.gif`;
       btn.innerHTML = `<img src="${imgSrc}" alt="${emoticon}">`;
       btn.title = emoticon;
+      btn.style.position = 'relative';
       btn.style.border = "none";
       btn.style.cursor = "pointer";
       btn.style.setProperty('border-radius', borderRadius, 'important');
@@ -471,6 +488,29 @@
           img.src = imgSrc;
         })
       );
+
+      // Add usage count element
+      const usageData = loadEmoticonUsageData();
+      const categoryUsage = usageData[activeCategory] || {};
+      const count = categoryUsage[emoticon] || 0;
+
+      const countElement = document.createElement('div');
+      countElement.classList.add("emoticon-usage-counter");
+      countElement.textContent = count;
+      Object.assign(countElement.style, {
+        position: 'absolute',
+        bottom: '0',
+        right: '0',
+        fontSize: '0.7em',
+        fontWeight: 'bold',
+        fontFamily: 'Tahoma',
+        color: getAdjustedColor(),
+        padding: '0.4em 0.8em',
+        pointerEvents: 'none'
+      });
+
+      btn.appendChild(countElement);
+
       btn.addEventListener("click", ((emoticon) => {
         return (e) => {
           e.stopPropagation(); // Add this line to stop event propagation

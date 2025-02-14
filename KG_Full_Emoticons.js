@@ -42,7 +42,7 @@
     Inlove: [
       "adultery", "airkiss", "cave", "flowers", "flowers2", "frog", "girlfrog",
       "girlheart2", "girllove", "grose", "heart2", "heartcake", "hug", "inlove",
-      "nolove", "smell", "wecheers", "wedance", "wedding", "wine"
+      "nolove", "smell", "wecheers", "wedance", "wedding", "wine", "val", "girlval", "bemine"
     ],
     Army: [
       "ak47", "armyfriends", "armyscare", "armystar", "armytongue", "barret",

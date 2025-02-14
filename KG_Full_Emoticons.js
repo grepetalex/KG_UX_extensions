@@ -473,6 +473,7 @@
       );
       btn.addEventListener("click", ((emoticon) => {
         return (e) => {
+          e.stopPropagation(); // Add this line to stop event propagation
           if (e.ctrlKey) {
             insertEmoticonCode(emoticon);
           } else if (e.shiftKey && activeCategory === "Favourites") {

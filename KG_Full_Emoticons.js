@@ -336,7 +336,7 @@
     // Define the event listeners as an array of objects
     const eventListenersArray = [
       { event: "keydown", handler: handleKeydownForEmoticons },
-      { event: "keydown", handler: changeCategoryOnTabPress },
+      { event: "keydown", handler: switchEmoticonCategory },
       { event: "keydown", handler: closePopupOnKeydown },
       { event: "click", handler: closePopupOnClickOutside }
     ];
@@ -467,7 +467,7 @@
     const container = document.createElement("div");
     container.className = "emoticon-buttons";
     container.style.display = "none";
-    container.style.gap = "25px";
+    container.style.gap = "10px";
     currentSortedEmoticons = getSortedEmoticons(category);
     const promises = [];
     currentSortedEmoticons.forEach((emoticon, idx) => {
@@ -618,21 +618,31 @@
     updateEmoticonsContainer();
     requestAnimationFrame(updateEmoticonHighlight);
   }
-  function changeCategoryOnTabPress(e) {
-    if (e.key === "Tab" && document.querySelector(".emoticons-popup")) {
+  function switchEmoticonCategory(e) {
+    if (
+      (e.code === "Tab" || e.code === "KeyK" || e.code === "KeyJ") &&
+      document.querySelector(".emoticons-popup")
+    ) {
       e.preventDefault();
       const keys = Object.keys(categories);
       let idx = keys.indexOf(localStorage.getItem("activeCategory"));
-      idx = (idx + 1) % keys.length;
+
+      if (e.code === "Tab" || e.code === "KeyK") {
+        idx = (idx + 1) % keys.length; // Forward
+      } else if (e.code === "KeyJ") {
+        idx = (idx - 1 + keys.length) % keys.length; // Backward
+      }
+
       if (
         keys[idx] === "Favourites" &&
         (JSON.parse(localStorage.getItem("favoriteEmoticons")) || []).length === 0
       ) {
         idx = 0;
       }
+
       const next = keys[idx];
-      currentEmoticonIndex = 0; // Reset the current emoticon index on Tab press
-      currentSortedEmoticons = getSortedEmoticons(next); // Add this line
+      currentEmoticonIndex = 0; // Reset the current emoticon index on key press
+      currentSortedEmoticons = getSortedEmoticons(next);
       localStorage.setItem("activeCategory", next);
       changeActiveCategoryOnClick(next);
       requestAnimationFrame(updateEmoticonHighlight);

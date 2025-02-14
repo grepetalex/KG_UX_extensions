@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_Full_Emoticons
 // @namespace    http://klavogonki.ru/
-// @version      0.8
+// @version      1.0
 // @description  Display a popup panel with every available emoticon on the site.
 // @match        *://klavogonki.ru/g*
 // @match        *://klavogonki.ru/forum/*
@@ -11,6 +11,8 @@
 // ==/UserScript==
 
 (function () {
+  // Store the event listeners globally
+  let eventListeners = [];
   // --------------------------
   // Data & Global Variables
   // --------------------------
@@ -146,7 +148,7 @@
   document.addEventListener("mouseup", (e) => {
     if (e.ctrlKey && e.button === 0 && e.target.matches("textarea, input.text")) {
       e.preventDefault();
-      setTimeout(() => toggleEmoticonsPopup(), 10);
+      toggleEmoticonsPopup();
     }
   });
   document.addEventListener("keydown", (e) => {
@@ -155,9 +157,8 @@
       toggleEmoticonsPopup();
     }
   });
-  document.addEventListener("keydown", handleKeydownForEmoticons);
-  // Handle keyboard close events
-  document.addEventListener("keydown", (e) => {
+  // Function to handle closing the popup on certain keys
+  function closePopupOnKeydown(e) {
     const popup = document.querySelector(".emoticons-popup");
     const closeKeys = new Set(['Escape', ' ']);
 
@@ -165,15 +166,15 @@
       e.preventDefault();
       removeEmoticonsPopup();
     }
-  });
+  }
 
-  // Handle click-outside events
-  document.addEventListener("click", (e) => {
+  // Function to handle click-outside events
+  function closePopupOnClickOutside(e) {
     const popup = document.querySelector(".emoticons-popup");
     if (popup && !popup.contains(e.target)) {
       removeEmoticonsPopup();
     }
-  });
+  }
 
   // --------------------------
   // Emoticon Code Determination & Insertion
@@ -196,12 +197,25 @@
     lastFocusedInput.focus();
   }
 
+  function removeEventListeners() {
+    // Loop through all stored event listeners and remove them
+    eventListeners.forEach(({ event, handler }) => {
+      document.removeEventListener(event, handler);
+    });
+
+    // Clear the event listeners array after removal
+    eventListeners = [];
+  }
+
   // --------------------------
   // Popup Creation & Removal
   // --------------------------
   function removeEmoticonsPopup() {
     const popup = document.querySelector(".emoticons-popup");
     if (popup) {
+      // Remove all event listeners
+      removeEventListeners();
+
       popup.remove();
       isPopupCreated = false;
     }
@@ -210,8 +224,10 @@
     if (isPopupCreated) {
       removeEmoticonsPopup();
     } else {
-      currentEmoticonIndex = 0;
-      createEmoticonsPopup(activeCategory);
+      setTimeout(() => {
+        currentEmoticonIndex = 0;
+        createEmoticonsPopup(activeCategory);
+      }, 10);
     }
   }
   function createEmoticonsPopup(category) {
@@ -300,7 +316,21 @@
       requestAnimationFrame(updateEmoticonHighlight);
     })
     popup.addEventListener("dblclick", removeEmoticonsPopup);
-    document.addEventListener("keydown", changeCategoryOnTabPress);
+
+    // Define the event listeners as an array of objects
+    const eventListenersArray = [
+      { event: "keydown", handler: handleKeydownForEmoticons },
+      { event: "keydown", handler: changeCategoryOnTabPress },
+      { event: "keydown", handler: closePopupOnKeydown },
+      { event: "click", handler: closePopupOnClickOutside }
+    ];
+
+    // Store the event listeners and add them to the document
+    eventListenersArray.forEach(({ event, handler }) => {
+      eventListeners.push({ event, handler }); // Store the event and handler in the array
+      document.addEventListener(event, handler); // Add the event listener
+    });
+
     document.body.appendChild(popup);
     isPopupCreated = true;
   }

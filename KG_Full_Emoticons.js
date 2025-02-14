@@ -631,8 +631,8 @@
       insertEmoticonCode(emoticon); // Insert the selected emoticon
       incrementEmoticonUsage(emoticon); // Track usage for sorting
 
-      // If "Ctrl + Enter" is pressed, close the emoticon popup
-      if (e.ctrlKey) removeEmoticonsPopup();
+      // Close the emoticon popup ONLY if Ctrl is NOT pressed
+      if (!e.ctrlKey) removeEmoticonsPopup();
     }
     // Handle left navigation: Move selection left (previous emoticon)
     else if (e.code === "ArrowLeft" || e.code === "KeyH") {

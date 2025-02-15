@@ -495,6 +495,7 @@
         position: 'relative',
         border: "none",
         cursor: "pointer",
+        filter: (idx === categoryIndices[activeCategory]) ? "sepia(0.7)" : "none",
         background: idx === categoryIndices[activeCategory]
           ? selectedButtonBackground
           : defaultButtonBackground
@@ -626,8 +627,10 @@
       buttons.forEach((btn, idx) => {
         if (idx === categoryIndices[activeCategory]) {
           btn.style.background = selectedButtonBackground;
+          btn.style.filter = "sepia(0.7)";
         } else {
           const emoticon = btn.title;
+          btn.style.filter = "none";
           if (activeCategory !== "Favourites" && isEmoticonFavorite(emoticon)) {
             btn.style.background = activeButtonBackground;
           } else {

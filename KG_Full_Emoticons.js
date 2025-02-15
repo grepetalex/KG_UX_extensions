@@ -696,8 +696,9 @@
     // Ensure there are available emoticons to navigate
     if (!currentSortedEmoticons || currentSortedEmoticons.length === 0) return;
 
-    // Handle "Enter" key: insert the selected emoticon
-    if (e.key === "Enter") {
+    // Handle "Enter" key and Semicolon key on any keyboard layout
+    if (e.key === "Enter" || e.code === "Semicolon") {
+
       e.preventDefault(); // Prevent default action (e.g., form submission)
 
       const emoticon = currentSortedEmoticons[currentEmoticonIndex];

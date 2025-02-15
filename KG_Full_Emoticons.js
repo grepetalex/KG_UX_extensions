@@ -275,7 +275,6 @@
 
   // Function to store emoticons in localStorage
   async function storeEmoticons() {
-    const baseUrl = "https://klavogonki.ru/img/smilies/"; // Base URL for emoticons
     const storedEmoticons = {};
 
     // Loop through all categories and their emoticons
@@ -284,21 +283,20 @@
       storedEmoticons[category] = {}; // Initialize empty category object
 
       for (const emoticon of categories[category]) {
-        // Construct the URL for the emoticon image
-        const imageUrl = `${baseUrl}${emoticon}.gif`;
+        // Use the URL from the categories object
+        const imageUrl = emoticon.url;
         const base64Image = await convertImageToBase64(imageUrl); // Convert image to base64
 
         if (base64Image) {
-          storedEmoticons[category][emoticon] = base64Image; // Store base64 image in the object
+          storedEmoticons[category][emoticon.name] = base64Image; // Store base64 image in the object
         } else {
-          console.error(`Failed to convert image for emoticon: ${emoticon}`);
+          console.error(`Failed to convert image for emoticon: ${emoticon.name}`);
         }
       }
     }
 
-    // Store the base64 images in localStorage
+    // Assuming you want to store the result in localStorage
     localStorage.setItem('storedEmoticonsBase64', JSON.stringify(storedEmoticons));
-    console.log('Emoticons successfully stored in localStorage');
   }
 
   // Check if emoticons are already stored in localStorage
@@ -705,17 +703,17 @@
       const btn = document.createElement("button");
       btn.classList.add('emoticon-button');
 
-      // Fetch the base64 image from localStorage
-      const base64Image = storedEmoticonsBase64[category]?.[emoticon];
+      // Fetch the base64 image from localStorage using the emoticon's name
+      const base64Image = storedEmoticonsBase64[category]?.[emoticon.name];
       if (base64Image) {
-        emoticonBase64Images[emoticon] = base64Image; // Store the base64 image data for later
-        btn.innerHTML = `<img src="${base64Image}" alt="${emoticon}">`;
+        emoticonBase64Images[emoticon.name] = base64Image; // Store the base64 image data for later
+        btn.innerHTML = `<img src="${base64Image}" alt="${emoticon.name}">`;
       } else {
-        console.warn(`Base64 image for emoticon "${emoticon}" not found in localStorage`);
+        console.warn(`Base64 image for emoticon "${emoticon.name}" not found in localStorage`);
         return;
       }
 
-      btn.title = emoticon;
+      btn.title = emoticon.name;
       btn.style.position = 'relative';
       btn.style.border = "none";
       btn.style.cursor = "pointer";
@@ -734,7 +732,7 @@
       // Add usage count element
       const usageData = loadEmoticonUsageData();
       const categoryUsage = usageData[activeCategory] || {};
-      const count = categoryUsage[emoticon] || 0;
+      const count = categoryUsage[emoticon.name] || 0;
 
       const countElement = document.createElement('div');
       countElement.classList.add("emoticon-usage-counter");
@@ -757,15 +755,15 @@
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
         if (e.ctrlKey) {
-          insertEmoticonCode(emoticon);
+          insertEmoticonCode(emoticon.name);
         } else if (e.shiftKey && activeCategory === "Favourites") {
           // Remove from favorites logic
           const fav = JSON.parse(localStorage.getItem("favoriteEmoticons")) || [];
-          const pos = fav.indexOf(emoticon);
+          const pos = fav.indexOf(emoticon.name);
           if (pos !== -1) {
             fav.splice(pos, 1);
             localStorage.setItem("favoriteEmoticons", JSON.stringify(fav));
-            const favIndex = categories.Favourites.indexOf(emoticon);
+            const favIndex = categories.Favourites.indexOf(emoticon.name);
             if (favIndex !== -1) {
               categories.Favourites.splice(favIndex, 1);
             }
@@ -775,16 +773,16 @@
         } else if (e.shiftKey && activeCategory !== "Favourites") {
           // Add to favorites logic
           const fav = JSON.parse(localStorage.getItem("favoriteEmoticons")) || [];
-          if (!fav.includes(emoticon)) {
-            fav.push(emoticon);
+          if (!fav.includes(emoticon.name)) {
+            fav.push(emoticon.name);
             localStorage.setItem("favoriteEmoticons", JSON.stringify(fav));
-            categories.Favourites.push(emoticon);
+            categories.Favourites.push(emoticon.name);
             updateCategoryButtonsState(activeCategory);
             requestAnimationFrame(updateEmoticonHighlight);
           }
         } else {
-          insertEmoticonCode(emoticon);
-          incrementEmoticonUsage(emoticon);
+          insertEmoticonCode(emoticon.name);
+          incrementEmoticonUsage(emoticon.name);
           removeEmoticonsPopup();
         }
       });
@@ -800,7 +798,7 @@
           if (activeCategory === "Favourites") {
             btn.style.background = defaultButtonBackground;
           } else {
-            if (isEmoticonFavorite(emoticon)) {
+            if (isEmoticonFavorite(emoticon.name)) {
               btn.style.background = activeButtonBackground;
             } else {
               btn.style.background = defaultButtonBackground;

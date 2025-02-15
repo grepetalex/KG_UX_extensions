@@ -279,6 +279,11 @@
 
     // Loop through all categories and their emoticons
     for (const category in categories) {
+      // Skip this category if it's empty (or not an array)
+      if (!Array.isArray(categories[category]) || categories[category].length === 0) {
+        console.log(`Skipping empty category: ${category}`);
+        continue;
+      }
 
       storedEmoticons[category] = {}; // Initialize empty category object
 
@@ -295,7 +300,7 @@
       }
     }
 
-    // Assuming you want to store the result in localStorage
+    // Store the result in localStorage
     localStorage.setItem('storedEmoticonsBase64', JSON.stringify(storedEmoticons));
   }
 
@@ -677,7 +682,12 @@
 
   function getSortedEmoticons(category) {
     const usage = loadEmoticonUsageData()[category] || {};
-    return categories[category].slice().sort((a, b) => (usage[b] || 0) - (usage[a] || 0));
+    // For Favorites, the array is strings; others are objects
+    return categories[category].slice().sort((a, b) => {
+      const aName = (category === "Favourites" ? a : a.name);
+      const bName = (category === "Favourites" ? b : b.name);
+      return (usage[bName] || 0) - (usage[aName] || 0);
+    });
   }
 
   // Create a map for base64 images and collect promises for image loading
@@ -699,21 +709,42 @@
     const emoticonBase64Images = {};
     const promises = [];
 
-    currentSortedEmoticons.forEach((emoticon, idx) => {
+    currentSortedEmoticons.forEach((emoticonData, idx) => {
       const btn = document.createElement("button");
       btn.classList.add('emoticon-button');
 
-      // Fetch the base64 image from localStorage using the emoticon's name
-      const base64Image = storedEmoticonsBase64[category]?.[emoticon.name];
-      if (base64Image) {
-        emoticonBase64Images[emoticon.name] = base64Image; // Store the base64 image data for later
-        btn.innerHTML = `<img src="${base64Image}" alt="${emoticon.name}">`;
+      // Determine emoticon name based on category
+      let emoticonName;
+      if (category === "Favourites") {
+        emoticonName = emoticonData; // Favorites stores names as strings
       } else {
-        console.warn(`Base64 image for emoticon "${emoticon.name}" not found in localStorage`);
-        return;
+        emoticonName = emoticonData.name; // Other categories use objects with 'name'
       }
 
-      btn.title = emoticon.name;
+      // Retrieve base64 image data
+      let base64Image;
+      if (category === "Favourites") {
+        // Search all categories except Favorites for the emoticon's base64
+        for (const catKey in storedEmoticonsBase64) {
+          if (catKey === "Favourites") continue;
+          if (storedEmoticonsBase64[catKey][emoticonName]) {
+            base64Image = storedEmoticonsBase64[catKey][emoticonName];
+            break;
+          }
+        }
+      } else {
+        // Directly access the category's stored data
+        base64Image = storedEmoticonsBase64[category]?.[emoticonName];
+      }
+
+      if (base64Image) {
+        btn.innerHTML = `<img src="${base64Image}" alt="${emoticonName}">`;
+      } else {
+        console.warn(`Base64 image for "${emoticonName}" not found.`);
+        return; // Skip creating the button if image is missing
+      }
+
+      btn.title = emoticonData.name;
       btn.style.position = 'relative';
       btn.style.border = "none";
       btn.style.cursor = "pointer";
@@ -732,7 +763,7 @@
       // Add usage count element
       const usageData = loadEmoticonUsageData();
       const categoryUsage = usageData[activeCategory] || {};
-      const count = categoryUsage[emoticon.name] || 0;
+      const count = categoryUsage[emoticonData.name] || 0;
 
       const countElement = document.createElement('div');
       countElement.classList.add("emoticon-usage-counter");
@@ -755,15 +786,15 @@
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
         if (e.ctrlKey) {
-          insertEmoticonCode(emoticon.name);
+          insertEmoticonCode(emoticonData.name);
         } else if (e.shiftKey && activeCategory === "Favourites") {
           // Remove from favorites logic
           const fav = JSON.parse(localStorage.getItem("favoriteEmoticons")) || [];
-          const pos = fav.indexOf(emoticon.name);
+          const pos = fav.indexOf(emoticonData.name);
           if (pos !== -1) {
             fav.splice(pos, 1);
             localStorage.setItem("favoriteEmoticons", JSON.stringify(fav));
-            const favIndex = categories.Favourites.indexOf(emoticon.name);
+            const favIndex = categories.Favourites.indexOf(emoticonData.name);
             if (favIndex !== -1) {
               categories.Favourites.splice(favIndex, 1);
             }
@@ -773,16 +804,17 @@
         } else if (e.shiftKey && activeCategory !== "Favourites") {
           // Add to favorites logic
           const fav = JSON.parse(localStorage.getItem("favoriteEmoticons")) || [];
-          if (!fav.includes(emoticon.name)) {
-            fav.push(emoticon.name);
+          if (!fav.includes(emoticonName)) { // Use emoticonName here
+            fav.push(emoticonName);
             localStorage.setItem("favoriteEmoticons", JSON.stringify(fav));
-            categories.Favourites.push(emoticon.name);
+            categories.Favourites.push(emoticonName);
+            // Update UI
             updateCategoryButtonsState(activeCategory);
             requestAnimationFrame(updateEmoticonHighlight);
           }
         } else {
-          insertEmoticonCode(emoticon.name);
-          incrementEmoticonUsage(emoticon.name);
+          insertEmoticonCode(emoticonData.name);
+          incrementEmoticonUsage(emoticonData.name);
           removeEmoticonsPopup();
         }
       });
@@ -798,7 +830,7 @@
           if (activeCategory === "Favourites") {
             btn.style.background = defaultButtonBackground;
           } else {
-            if (isEmoticonFavorite(emoticon.name)) {
+            if (isEmoticonFavorite(emoticonData.name)) {
               btn.style.background = activeButtonBackground;
             } else {
               btn.style.background = defaultButtonBackground;

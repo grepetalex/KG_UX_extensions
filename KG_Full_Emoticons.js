@@ -533,7 +533,7 @@
       const base64Image = storedEmoticonsBase64[category]?.[emoticon];
       if (base64Image) {
         emoticonBase64Images[emoticon] = base64Image; // Store the base64 image data for later
-        btn.innerHTML = `<img src="${base64Image}" alt="${emoticon}">`;
+        btn.innerHTML = `<img src="${base64Image}" alt="${emoticon}" class="emoticon-${emoticon}">`;
       } else {
         console.warn(`Base64 image for emoticon "${emoticon}" not found in localStorage`);
         return;

@@ -304,6 +304,7 @@
     // Create the clear button (Trash icon 🗑️)
     const clearButton = document.createElement("button");
     clearButton.classList.add('clear-button');
+    clearButton.title = "Clear usage data"
     clearButton.innerHTML = "🗑️"; // Trash emoji
     clearButton.style.setProperty('border-radius', borderRadius, 'important');
     Object.assign(clearButton.style, {
@@ -326,6 +327,7 @@
     // Create the close button (Cross icon ❌)
     const closeButton = document.createElement("button");
     closeButton.classList.add('close-button');
+    closeButton.title = "Close emoticons panel"
     closeButton.innerHTML = "❌"; // Cross emoji
     closeButton.style.setProperty('border-radius', borderRadius, 'important');
     Object.assign(closeButton.style, {
@@ -384,6 +386,7 @@
         btn.classList.add("category-button");
         btn.innerHTML = categoryEmojis[cat];
         btn.dataset.category = cat;
+        btn.title = cat;
         btn.style.background = (cat === activeCategory ? activeButtonBackground : defaultButtonBackground);
         btn.style.border = "none";
         btn.style.cursor = "pointer";

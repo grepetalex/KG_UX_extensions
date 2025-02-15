@@ -707,8 +707,7 @@
     const emoticonPopup = document.querySelector(".emoticons-popup");
 
     // If there's no emoticon popup or the key pressed isn't one of the valid keys, return early
-    if (!emoticonPopup || (!["Tab", "KeyH", "KeyL"].includes(e.code) && !(e.code === "Tab" && e.shiftKey)))
-      return;
+    if (!emoticonPopup || (!["Tab", "KeyH", "KeyL"].includes(e.code) && !(e.code === "Tab" && e.shiftKey))) return;
 
     e.preventDefault();
 

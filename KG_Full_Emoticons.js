@@ -80,66 +80,6 @@
     Favourites: "🌟"
   };
 
-  // Function to convert image to base64
-  async function convertImageToBase64(url) {
-    try {
-      const response = await fetch(url);
-      const imageBlob = await response.blob();
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result); // Return the base64 string
-        reader.onerror = reject;
-        reader.readAsDataURL(imageBlob); // Read the image blob as data URL
-      });
-    } catch (error) {
-      console.error(`Error converting image ${url}:`, error);
-      return null; // Return null in case of error
-    }
-  }
-
-  // Function to store emoticons in localStorage
-  async function storeEmoticons() {
-    const baseUrl = "https://klavogonki.ru/img/smilies/"; // Base URL for emoticons
-    const storedEmoticons = {};
-
-    // Loop through all categories and their emoticons
-    for (const category in categories) {
-
-      storedEmoticons[category] = {}; // Initialize empty category object
-
-      for (const emoticon of categories[category]) {
-        // Construct the URL for the emoticon image
-        const imageUrl = `${baseUrl}${emoticon}.gif`;
-        const base64Image = await convertImageToBase64(imageUrl); // Convert image to base64
-
-        if (base64Image) {
-          storedEmoticons[category][emoticon] = base64Image; // Store base64 image in the object
-        } else {
-          console.error(`Failed to convert image for emoticon: ${emoticon}`);
-        }
-      }
-    }
-
-    // Store the base64 images in localStorage
-    localStorage.setItem('storedEmoticonsBase64', JSON.stringify(storedEmoticons));
-    console.log('Emoticons successfully stored in localStorage');
-  }
-
-  // Check if emoticons are already stored in localStorage
-  async function initializeEmoticonsStorage() {
-    // Check if the key 'storedEmoticonsBase64' exists in localStorage
-    if (!localStorage.getItem('storedEmoticonsBase64')) {
-      try {
-        // Store emoticons only if they are not already in localStorage
-        await storeEmoticons(); // Trigger the emoticon storing process
-      } catch (error) {
-        console.error('Error storing emoticons in localStorage:', error);
-      }
-    } else {
-      console.log('Emoticons already stored in localStorage. No action taken.');
-    }
-  }
-
   let activeCategory = localStorage.getItem("activeCategory") || "Boys";
   let isPopupCreated = false;
   let currentEmoticonIndex = 0;
@@ -506,39 +446,20 @@
     return categories[category].slice().sort((a, b) => (usage[b] || 0) - (usage[a] || 0));
   }
 
-  // Create a map for base64 images and collect promises for image loading
   async function createEmoticonsContainer(category) {
     const container = document.createElement("div");
-    container.classList.add("emoticon-buttons");
+    container.className = "emoticon-buttons";
 
-    // Retrieve stored emoticons from localStorage (if available)
-    let storedEmoticonsBase64 = JSON.parse(localStorage.getItem('storedEmoticonsBase64')) || {};
-
-    // If no emoticons are stored yet, initialize them
-    if (!storedEmoticonsBase64[category]) {
-      // Wait until emoticons are initialized
-      await initializeEmoticonsStorage();
-      storedEmoticonsBase64 = JSON.parse(localStorage.getItem('storedEmoticonsBase64')); // Refresh the data
-    }
-
+    // Get the sorted emoticons for the given category
     const currentSortedEmoticons = getSortedEmoticons(category);
-    const emoticonBase64Images = {};
-    const promises = [];
 
+    // Preload images for each emoticon and create buttons
+    const promises = [];
     currentSortedEmoticons.forEach((emoticon, idx) => {
       const btn = document.createElement("button");
       btn.classList.add('emoticon-button');
-
-      // Fetch the base64 image from localStorage
-      const base64Image = storedEmoticonsBase64[category]?.[emoticon];
-      if (base64Image) {
-        emoticonBase64Images[emoticon] = base64Image; // Store the base64 image data for later
-        btn.innerHTML = `<img src="${base64Image}" alt="${emoticon}">`;
-      } else {
-        console.warn(`Base64 image for emoticon "${emoticon}" not found in localStorage`);
-        return;
-      }
-
+      const imgSrc = `/img/smilies/${emoticon}.gif`;
+      btn.innerHTML = `<img src="${imgSrc}" alt="${emoticon}">`;
       btn.title = emoticon;
       btn.style.position = 'relative';
       btn.style.border = "none";
@@ -546,18 +467,18 @@
       btn.style.setProperty('border-radius', borderRadius, 'important');
       btn.style.background = (idx === currentEmoticonIndex ? selectedButtonBackground : defaultButtonBackground);
 
-      // Create promise for image loading to calculate max dimensions
+      // Preload the image and push the promise into the array
       promises.push(
         new Promise((resolve) => {
           const img = new Image();
           img.onload = resolve;
-          img.src = base64Image;
+          img.src = imgSrc;
         })
       );
 
       // Add usage count element
       const usageData = loadEmoticonUsageData();
-      const categoryUsage = usageData[activeCategory] || {};
+      const categoryUsage = usageData[category] || {};
       const count = categoryUsage[emoticon] || 0;
 
       const countElement = document.createElement('div');
@@ -582,7 +503,7 @@
         e.stopPropagation();
         if (e.ctrlKey) {
           insertEmoticonCode(emoticon);
-        } else if (e.shiftKey && activeCategory === "Favourites") {
+        } else if (e.shiftKey && category === "Favourites") {
           // Remove from favorites logic
           const fav = JSON.parse(localStorage.getItem("favoriteEmoticons")) || [];
           const pos = fav.indexOf(emoticon);
@@ -593,17 +514,17 @@
             if (favIndex !== -1) {
               categories.Favourites.splice(favIndex, 1);
             }
-            updateCategoryButtonsState(activeCategory);
+            updateCategoryButtonsState(category);
             updateEmoticonsContainer();
           }
-        } else if (e.shiftKey && activeCategory !== "Favourites") {
+        } else if (e.shiftKey && category !== "Favourites") {
           // Add to favorites logic
           const fav = JSON.parse(localStorage.getItem("favoriteEmoticons")) || [];
           if (!fav.includes(emoticon)) {
             fav.push(emoticon);
             localStorage.setItem("favoriteEmoticons", JSON.stringify(fav));
             categories.Favourites.push(emoticon);
-            updateCategoryButtonsState(activeCategory);
+            updateCategoryButtonsState(category);
             requestAnimationFrame(updateEmoticonHighlight);
           }
         } else {
@@ -621,7 +542,7 @@
         if (idx === currentEmoticonIndex) {
           btn.style.background = selectedButtonBackground;
         } else {
-          if (activeCategory === "Favourites") {
+          if (category === "Favourites") {
             btn.style.background = defaultButtonBackground;
           } else {
             if (isEmoticonFavorite(emoticon)) {
@@ -636,10 +557,13 @@
       container.appendChild(btn);
     });
 
-    // Calculate the maximum image dimensions from base64 images
-    const { maxImageWidth, maxImageHeight } = await calculateMaxImageDimensions(emoticonBase64Images);
+    // Wait for all button images to load before proceeding
+    await Promise.all(promises);
 
-    // Apply final styles after image sizes are calculated
+    // Calculate the maximum image dimensions using the current emoticons array
+    const { maxImageWidth, maxImageHeight } = await calculateMaxImageDimensions(currentSortedEmoticons);
+
+    // Apply final container styles based on the calculated dimensions
     Object.assign(container.style, {
       display: "grid",
       gap: "10px",
@@ -655,23 +579,25 @@
     return container;
   }
 
-  // Function to calculate max image dimensions from base64 image data
-  async function calculateMaxImageDimensions(emoticonsBase64Images) {
+  // Function to calculate maximum image dimensions from emoticon names
+  async function calculateMaxImageDimensions(emoticonsImages) {
     const minValue = 34;
-    const images = Object.values(emoticonsBase64Images);
-
-    const imageDimensions = await Promise.all(images.map((base64Image) => {
-      return new Promise((resolve) => {
-        const img = new Image();
-        img.onload = () => resolve({ width: img.width, height: img.height });
-        img.src = base64Image;
-      });
-    }));
+    // Here we assume emoticonsImages is an array of emoticon names
+    const imageDimensions = await Promise.all(
+      emoticonsImages.map((imageName) => {
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => resolve({ width: img.width, height: img.height });
+          img.src = `/img/smilies/${imageName}.gif`;
+        });
+      })
+    );
 
     const maxWidth = Math.max(minValue, ...imageDimensions.map(img => img.width));
     const maxHeight = Math.max(minValue, ...imageDimensions.map(img => img.height));
     return { maxImageWidth: maxWidth, maxImageHeight: maxHeight };
   }
+
 
   function updateEmoticonsContainer() {
     const old = document.querySelector(".emoticon-buttons");

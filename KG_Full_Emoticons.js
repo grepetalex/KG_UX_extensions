@@ -490,11 +490,11 @@
       btn.title = emoticon;
 
       // Styling
+      btn.style.setProperty('border-radius', borderRadius, 'important');
       Object.assign(btn.style, {
         position: 'relative',
         border: "none",
         cursor: "pointer",
-        borderRadius: borderRadius,
         background: idx === categoryIndices[activeCategory]
           ? selectedButtonBackground
           : defaultButtonBackground

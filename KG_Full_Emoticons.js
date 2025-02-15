@@ -175,23 +175,65 @@
     }
   }
 
+  function getPageContext() {
+    const path = window.location.pathname;
+    const hash = window.location.hash;
+    const searchParams = new URLSearchParams(window.location.search);
+    const gmid = searchParams.get('gmid');
+    const profileMatch = hash.match(/#\/(\d+)\//);
+
+    return {
+      isForum: path.includes('/forum/'),
+      isGamelist: path.includes('/gamelist/'),
+      isGame: !!gmid,
+      isProfile: path === '/u/' && !!profileMatch,
+      gmid: gmid || null, // Simplified
+      profileId: profileMatch?.[1] || null
+    };
+  }
+
   function getEmoticonCode(emoticon) {
-    return window.location.pathname.includes("/forum")
+    const { isForum } = getPageContext();
+    return isForum
       ? `[img]https://klavogonki.ru/img/smilies/${emoticon}.gif[/img] `
       : `:${emoticon}: `;
   }
 
   function insertEmoticonCode(emoticon) {
-    if (!lastFocusedInput) {
-      alert("No input field in focus.");
-      return;
+    const context = getPageContext();
+    let targetInput = lastFocusedInput;
+
+    // Auto-find target input if none is focused
+    if (!targetInput) {
+      if (context.isForum) targetInput = document.getElementById('fast-reply_textarea');
+      else if (context.isGame || context.isGamelist) targetInput = document.querySelector('div.chat form input.text[type="text"]');
+      else if (context.isProfile) targetInput = document.querySelector('.profile-comments-form textarea');
+
+      if (!targetInput) {
+        const labels = {
+          isForum: "the forum",
+          isProfile: "the profile",
+          isGamelist: "general chat",
+          isGame: "game chat"
+        };
+        const detected = Object.entries(labels)
+          .filter(([key]) => context[key])
+          .map(([_, value]) => value)
+          .join(", ");
+        alert(`Please focus on a text field in ${detected}.`);
+        return;
+      }
+      targetInput.focus();
+      lastFocusedInput = targetInput;
     }
+
+    // Insert emoticon code at the current cursor position
     const code = getEmoticonCode(emoticon);
-    const pos = lastFocusedInput.selectionStart || 0;
-    const currentVal = lastFocusedInput.value || "";
-    lastFocusedInput.value = currentVal.slice(0, pos) + code + currentVal.slice(pos);
-    lastFocusedInput.setSelectionRange(pos + code.length, pos + code.length);
-    lastFocusedInput.focus();
+    const pos = targetInput.selectionStart || 0;
+    targetInput.value =
+      targetInput.value.slice(0, pos) + code + targetInput.value.slice(pos);
+    targetInput.setSelectionRange(pos + code.length, pos + code.length);
+    targetInput.focus();
   }
 
   function removeEventListeners() {
@@ -313,7 +355,7 @@
 
     // Define the event listeners as an array of objects
     const eventListenersArray = [
-      { event: "keydown", handler: handleKeydownForEmoticons },
+      { event: "keydown", handler: navigateEmoticons },
       { event: "keydown", handler: switchEmoticonCategory },
       { event: "keydown", handler: closePopupOnKeydown },
       { event: "click", handler: closePopupOnClickOutside }
@@ -451,7 +493,7 @@
     container.className = "emoticon-buttons";
 
     // Get the sorted emoticons for the given category
-    const currentSortedEmoticons = getSortedEmoticons(category);
+    currentSortedEmoticons = getSortedEmoticons(category);
 
     // Preload images for each emoticon and create buttons
     const promises = [];
@@ -688,7 +730,7 @@
     });
   }
 
-  function handleKeydownForEmoticons(e) {
+  function navigateEmoticons(e) {
     // Get the emoticon popup element
     const popup = document.querySelector(".emoticons-popup");
     if (!popup) return; // Exit if the popup is not found

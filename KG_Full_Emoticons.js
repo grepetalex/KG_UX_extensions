@@ -67,7 +67,7 @@
 
   const categoryEmojis = {
     Boys: "😃",
-    Girls: "👧",
+    Girls: "👩‍🦰",
     Christmas: "🎄",
     Inlove: "❤️",
     Army: "🔫",

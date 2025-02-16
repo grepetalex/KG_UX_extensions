@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         KG_Full_Emoticons
 // @namespace    http://klavogonki.ru/
-// @version      1.2
-// @description  Display a popup panel with every available emoticon on the site, remembering the last selected emoticon per category.
+// @version      1.3
+// @description  Display a popup panel with every available emoticon on the site, remembering the last selected emoticon per category by name.
 // @match        *://klavogonki.ru/g*
 // @match        *://klavogonki.ru/forum/*
 // @match        *://klavogonki.ru/u/*
@@ -96,10 +96,10 @@
   const activeButtonBackground = getAdjustedBackground("activeButton");
   const selectedButtonBackground = getAdjustedBackground("selectedButton");
 
-  let categoryIndices = JSON.parse(localStorage.getItem("categoryIndices")) || {};
+  let lastUsedEmoticons = JSON.parse(localStorage.getItem("lastUsedEmoticons")) || {};
   Object.keys(categories).forEach(cat => {
-    if (!(cat in categoryIndices)) {
-      categoryIndices[cat] = 0;
+    if (!lastUsedEmoticons.hasOwnProperty(cat) || !categories[cat].includes(lastUsedEmoticons[cat])) {
+      lastUsedEmoticons[cat] = categories[cat][0] || '';
     }
   });
 
@@ -459,62 +459,42 @@
     return categories[category].slice().sort((a, b) => (usage[b] || 0) - (usage[a] || 0));
   }
 
-  // Shared index management function
-  function updateCurrentIndex(newIndex) {
-    if (!currentSortedEmoticons.length) return;
-
-    // Handle index wrapping and clamping
-    const processedIndex = (newIndex + currentSortedEmoticons.length) % currentSortedEmoticons.length;
-
-    if (categoryIndices[activeCategory] !== processedIndex) {
-      categoryIndices[activeCategory] = processedIndex;
-      localStorage.setItem("categoryIndices", JSON.stringify(categoryIndices));
-      updateEmoticonHighlight();
-    }
-  }
-
   async function createEmoticonsContainer(category) {
     const container = document.createElement("div");
     container.className = "emoticon-buttons";
 
-    // Initialize emoticons and indices
     currentSortedEmoticons = getSortedEmoticons(category);
-    updateCurrentIndex(categoryIndices[category]); // Apply clamping
 
     const promises = [];
-    currentSortedEmoticons.forEach((emoticon, idx) => {
+    currentSortedEmoticons.forEach((emoticon) => {
       const btn = document.createElement("button");
       btn.classList.add('emoticon-button');
       const imgSrc = `/img/smilies/${emoticon}.gif`;
       btn.innerHTML = `<img src="${imgSrc}" alt="${emoticon}">`;
       btn.title = emoticon;
 
-      // Styling
       btn.style.setProperty('border-radius', borderRadius, 'important');
       Object.assign(btn.style, {
         position: 'relative',
         border: "none",
         cursor: "pointer",
-        filter: (idx === categoryIndices[activeCategory]) ? "sepia(0.7)" : "none",
-        background: idx === categoryIndices[activeCategory]
+        filter: emoticon === lastUsedEmoticons[activeCategory] ? "sepia(0.7)" : "none",
+        background: emoticon === lastUsedEmoticons[activeCategory]
           ? selectedButtonBackground
           : defaultButtonBackground
       });
 
-      // Image preloading
       promises.push(new Promise(resolve => {
         const img = new Image();
         img.onload = resolve;
         img.src = imgSrc;
       }));
 
-      // Click handler
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
         if (e.ctrlKey) {
           insertEmoticonCode(emoticon);
         } else if (e.shiftKey) {
-          // Favorite handling
           const fav = JSON.parse(localStorage.getItem("favoriteEmoticons")) || [];
           const pos = fav.indexOf(emoticon);
           if (category === "Favourites" && pos !== -1) {
@@ -530,15 +510,16 @@
         } else {
           insertEmoticonCode(emoticon);
           incrementEmoticonUsage(emoticon);
+          lastUsedEmoticons[activeCategory] = emoticon;
+          localStorage.setItem("lastUsedEmoticons", JSON.stringify(lastUsedEmoticons));
           removeEmoticonsPopup();
         }
-        updateCurrentIndex(idx);
+        updateEmoticonHighlight();
       });
 
       container.appendChild(btn);
     });
 
-    // Finalize container setup
     await Promise.all(promises);
     const { maxImageWidth, maxImageHeight } = await calculateMaxImageDimensions(currentSortedEmoticons);
     Object.assign(container.style, {
@@ -597,7 +578,6 @@
     currentSortedEmoticons = getSortedEmoticons(activeCategory);
     updateCategoryButtonsState(activeCategory);
     updateEmoticonsContainer();
-    requestAnimationFrame(updateEmoticonHighlight);
   }
 
   function switchEmoticonCategory(e) {
@@ -624,12 +604,13 @@
   function updateEmoticonHighlight() {
     requestAnimationFrame(() => {
       const buttons = document.querySelectorAll(".emoticon-buttons button");
-      buttons.forEach((btn, idx) => {
-        if (idx === categoryIndices[activeCategory]) {
+      buttons.forEach((btn) => {
+        const emoticon = btn.title;
+        const isSelected = emoticon === lastUsedEmoticons[activeCategory];
+        if (isSelected) {
           btn.style.background = selectedButtonBackground;
           btn.style.filter = "sepia(0.7)";
         } else {
-          const emoticon = btn.title;
           btn.style.filter = "none";
           if (activeCategory !== "Favourites" && isEmoticonFavorite(emoticon)) {
             btn.style.background = activeButtonBackground;
@@ -641,6 +622,22 @@
     });
   }
 
+  function updateActiveEmoticon(direction) {
+    const currentIndex = currentSortedEmoticons.indexOf(lastUsedEmoticons[activeCategory]);
+    let newIndex = currentIndex === -1 ? 0 : currentIndex + direction;
+
+    // Handle wrapping
+    if (newIndex < 0) newIndex = currentSortedEmoticons.length - 1;
+    if (newIndex >= currentSortedEmoticons.length) newIndex = 0;
+
+    // Update state
+    lastUsedEmoticons[activeCategory] = currentSortedEmoticons[newIndex];
+    localStorage.setItem("lastUsedEmoticons", JSON.stringify(lastUsedEmoticons));
+
+    // Update UI
+    updateEmoticonHighlight();
+  }
+
   function navigateEmoticons(e) {
     const popup = document.querySelector(".emoticons-popup");
     if (!popup || !currentSortedEmoticons || currentSortedEmoticons.length === 0) return;
@@ -648,19 +645,21 @@
     const handledKeys = new Set(['Enter', 'Semicolon', 'ArrowLeft', 'KeyJ', 'ArrowRight', 'KeyK']);
     if (!handledKeys.has(e.code)) return;
 
-    e.preventDefault(); // Single prevention point
+    e.preventDefault();
 
     if (e.code === "Enter" || e.code === "Semicolon") {
-      const emoticon = currentSortedEmoticons[categoryIndices[activeCategory]];
-      insertEmoticonCode(emoticon);
-      incrementEmoticonUsage(emoticon);
-      if (!e.ctrlKey) removeEmoticonsPopup();
+      const emoticon = lastUsedEmoticons[activeCategory];
+      if (emoticon && currentSortedEmoticons.includes(emoticon)) {
+        insertEmoticonCode(emoticon);
+        incrementEmoticonUsage(emoticon);
+        if (!e.ctrlKey) removeEmoticonsPopup();
+      }
     }
     else if (e.code === "ArrowLeft" || e.code === "KeyJ") {
-      updateCurrentIndex(categoryIndices[activeCategory] - 1);
+      updateActiveEmoticon(-1); // Move left
     }
     else if (e.code === "ArrowRight" || e.code === "KeyK") {
-      updateCurrentIndex(categoryIndices[activeCategory] + 1);
+      updateActiveEmoticon(1); // Move right
     }
   }
 })();

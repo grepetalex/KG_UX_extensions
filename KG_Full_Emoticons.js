@@ -128,10 +128,6 @@
     return `hsl(0, 0%, ${adjustedLightness}%)`;
   }
 
-  function getAdjustedColor() {
-    return bodyLightness < 50 ? "rgb(222, 222, 222)" : "rgb(22, 22, 22)";
-  }
-
   function loadFavoriteEmoticons() {
     categories.Favourites = JSON.parse(localStorage.getItem("favoriteEmoticons")) || [];
   }
@@ -387,9 +383,11 @@
           }
           btn.addEventListener("click", ((btn) => {
             return (e) => {
-              if (e.shiftKey) {
+              // Remove all favorites at once
+              if (e.ctrlKey) {
                 localStorage.removeItem("favoriteEmoticons");
                 categories.Favourites = [];
+                updateEmoticonHighlight();
                 if (categoryHistory.length) {
                   activeCategory = categoryHistory.pop();
                   localStorage.setItem("activeCategory", activeCategory);
@@ -492,9 +490,9 @@
 
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
-        if (e.ctrlKey) {
+        if (e.shiftKey) {
           insertEmoticonCode(emoticon);
-        } else if (e.shiftKey) {
+        } else if (e.ctrlKey) {
           const fav = JSON.parse(localStorage.getItem("favoriteEmoticons")) || [];
           const pos = fav.indexOf(emoticon);
           if (category === "Favourites" && pos !== -1) {

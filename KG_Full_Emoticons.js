@@ -652,7 +652,7 @@
       if (emoticon && currentSortedEmoticons.includes(emoticon)) {
         insertEmoticonCode(emoticon);
         incrementEmoticonUsage(emoticon);
-        if (!e.ctrlKey) removeEmoticonsPopup();
+        if (!e.shiftKey) removeEmoticonsPopup();
       }
     }
     else if (e.code === "ArrowLeft" || e.code === "KeyJ") {

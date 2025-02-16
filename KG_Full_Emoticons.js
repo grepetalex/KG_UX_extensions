@@ -576,10 +576,19 @@
     return { maxImageWidth: maxWidth, maxImageHeight: maxHeight };
   }
 
+  let latestCategoryRequest = null;
+
   function updateEmoticonsContainer() {
-    const old = document.querySelector(".emoticon-buttons");
-    if (old) old.remove();
+    const requestTimestamp = Date.now();
+    latestCategoryRequest = requestTimestamp;
+
+    // Remove all old containers
+    document.querySelectorAll(".emoticon-buttons").forEach(container => container.remove());
+
     createEmoticonsContainer(activeCategory).then((container) => {
+      // Ensure this is still the latest request before appending
+      if (latestCategoryRequest !== requestTimestamp) return;
+
       const popup = document.querySelector(".emoticons-popup");
       if (popup) {
         popup.appendChild(container);

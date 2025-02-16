@@ -21,7 +21,7 @@
       "kidtruck", "angry2", "spiteful", "sorry", "boykiss", "kissed", "yes", "no", "heart",
       "hi", "ok", "facepalm", "friends", "shok", "megashok", "dash", "music", "acute", "victory",
       "scare", "clapping", "whistle", "popcorn", "hello", "rose", "good", "silence", "bad", "tea",
-      "sick", "confuse", "rofl2", "nervous", "chaingun", "diablo", "cult", "russian", "birthday",
+      "sick", "confuse", "rofl2", "nervous", "diablo", "cult", "russian", "birthday",
       "champ2", "champ", "confetti", "formula1"
     ],
     Girls: [
@@ -45,9 +45,9 @@
     ],
     Army: [
       "ak47", "armyfriends", "armyscare", "armystar", "armytongue", "barret",
-      "bayanist", "budenov", "captain", "comandos", "fly", "foolrifle", "girlpogran",
-      "girlranker", "girlrogatka", "girlvdv", "kirpich", "partizan", "pogran",
-      "pogranflowers", "pogranmail", "pogranmama", "pogranminigun", "pogranrose",
+      "bayanist", "budenov", "captain", "comandos", "fly", "foolrifle", "chaingun",
+      "girlpogran", "girlranker", "girlrogatka", "girlvdv", "kirpich", "partizan",
+      "pogran", "pogranflowers", "pogranmail", "pogranmama", "pogranminigun", "pogranrose",
       "pograntort", "prival", "radistka", "ranker", "rogatka", "soldier", "tank",
       "uzi", "vdv", "vpered", "vtik"
     ],

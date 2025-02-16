@@ -45,11 +45,11 @@
     ],
     Army: [
       "ak47", "armyfriends", "armyscare", "armystar", "armytongue", "barret",
-      "bayanist", "budenov", "captain", "comandos", "fly", "foolrifle", "chaingun",
-      "girlpogran", "girlranker", "girlrogatka", "girlvdv", "kirpich", "partizan",
-      "pogran", "pogranflowers", "pogranmail", "pogranmama", "pogranminigun", "pogranrose",
-      "pograntort", "prival", "radistka", "ranker", "rogatka", "soldier", "tank",
-      "uzi", "vdv", "vpered", "vtik"
+      "bayanist", "budenov", "captain", "comandos", "fly", "foolrifle", "girlpogran",
+      "girlranker", "girlrogatka", "girlvdv", "kirpich", "partizan", "pogran",
+      "pogranflowers", "pogranmail", "pogranmama", "chaingun", "pogranminigun",
+      "pogranrose", "pograntort", "prival", "radistka", "ranker", "rogatka", "soldier",
+      "tank", "uzi", "vdv", "vpered", "vtik"
     ],
     WomenDay: [
       "boystroking", "cheerleader", "confetti", "enjoygift", "firework", "girlicecream",

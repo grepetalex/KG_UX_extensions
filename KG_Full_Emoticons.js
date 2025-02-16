@@ -235,12 +235,34 @@
     eventListeners = [];
   }
 
+  // function removeEmoticonsPopup() {
+  //   const popup = document.querySelector(".emoticons-popup");
+  //   if (popup) {
+  //     removeEventListeners();
+  //     popup.remove();
+  //     isPopupCreated = false;
+  //   }
+  // }
+
+
+  // Function to remove the emoticons popup
   function removeEmoticonsPopup() {
     const popup = document.querySelector(".emoticons-popup");
     if (popup) {
-      removeEventListeners();
-      popup.remove();
+      removeEventListeners(); // Assuming this function is defined elsewhere
+      toggleContainerSmoothly(popup, "hide");
       isPopupCreated = false;
+    }
+  }
+
+  // Function to show or hide a container smoothly
+  function toggleContainerSmoothly(container, action) {
+    if (action === "show") {
+      document.body.appendChild(container);
+      requestAnimationFrame(() => container.style.opacity = "1");
+    } else {
+      container.style.opacity = "0";
+      setTimeout(() => container.remove(), 500);
     }
   }
 
@@ -262,6 +284,8 @@
     popup.style.setProperty('border-radius', '0.4em', 'important');
     popup.style.setProperty('box-shadow', boxShadow, 'important');
     Object.assign(popup.style, {
+      opacity: "0",
+      transition: "opacity 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)",
       position: "fixed",
       display: "grid",
       gridTemplateRows: "50px auto",
@@ -348,6 +372,7 @@
     });
 
     document.body.appendChild(popup);
+    toggleContainerSmoothly(popup, "show");
     isPopupCreated = true;
   }
 

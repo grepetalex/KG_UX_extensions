@@ -28,9 +28,9 @@
       "girlnotebook", "girlkiss", "curtsey", "girlblum", "girlcrazy", "girlcry",
       "girlwink", "girlwacko", "umbrage", "girlinlove", "girldevil", "girlimpossible",
       "girlwitch", "hysteric", "tender", "spruceup", "girlsad", "girlscare", "girltea",
-      "girlsick", "grose", "cheerful", "cheerleader", "girlconfuse", "spruceup1",
+      "girlsick", "cheerful", "girlconfuse", "spruceup1",
       "angrygirl", "clapgirl", "goody", "hiya", "girlsilence", "girlstop", "girlnervous",
-      "girlwonder", "girlwonder", "kgrace", "kgagainstaz", "girlkissboy", "girlmusic"
+      "girlwonder", "kgrace", "kgagainstaz", "girlkissboy", "girlmusic"
     ],
     Christmas: [
       "cheers", "christmasevil", "heyfrombag", "merrychristmas", "moose", "santa",
@@ -40,7 +40,8 @@
     Inlove: [
       "adultery", "airkiss", "cave", "flowers", "flowers2", "frog", "girlfrog",
       "girlheart2", "girllove", "grose", "heart2", "heartcake", "hug", "inlove",
-      "nolove", "smell", "wecheers", "wedance", "wedding", "wine", "val", "girlval", "bemine"
+      "nolove", "smell", "wecheers", "wedance", "wedding", "wine", "val", "girlval",
+      "bemine"
     ],
     Army: [
       "ak47", "armyfriends", "armyscare", "armystar", "armytongue", "barret",
@@ -61,8 +62,7 @@
       "indigenous", "jester", "mafia", "musketeer", "paladin", "pioneer", "pirate",
       "pirates", "robot", "rocker", "spider", "supergirl", "terminator", "turtle",
       "vampire", "witch", "wizard"
-    ],
-    Favourites: []
+    ]
   };
 
   const categoryEmojis = {

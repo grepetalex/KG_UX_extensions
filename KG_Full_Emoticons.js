@@ -235,16 +235,6 @@
     eventListeners = [];
   }
 
-  // function removeEmoticonsPopup() {
-  //   const popup = document.querySelector(".emoticons-popup");
-  //   if (popup) {
-  //     removeEventListeners();
-  //     popup.remove();
-  //     isPopupCreated = false;
-  //   }
-  // }
-
-
   // Function to remove the emoticons popup
   function removeEmoticonsPopup() {
     const popup = document.querySelector(".emoticons-popup");
@@ -259,7 +249,9 @@
   function toggleContainerSmoothly(container, action) {
     if (action === "show") {
       document.body.appendChild(container);
-      requestAnimationFrame(() => container.style.opacity = "1");
+      requestAnimationFrame(() => {
+        container.style.opacity = "1";
+      });
     } else {
       container.style.opacity = "0";
       setTimeout(() => container.remove(), 500);
@@ -383,6 +375,7 @@
       display: "flex",
       justifyContent: "center",
     });
+
     for (let cat in categories) {
       if (categories.hasOwnProperty(cat)) {
         const btn = document.createElement("button");
@@ -397,7 +390,9 @@
         btn.style.height = "50px";
         btn.style.fontSize = "1.4em";
         btn.style.margin = "0 5px";
-        btn.style.setProperty('border-radius', borderRadius, 'important');
+        btn.style.setProperty("border-radius", borderRadius, "important");
+
+        // Special handling for "Favourites"
         if (cat === "Favourites") {
           if (categories.Favourites.length === 0) {
             btn.style.opacity = "0.5";
@@ -406,45 +401,52 @@
             btn.style.removeProperty("opacity");
             btn.style.removeProperty("pointer-events");
           }
-          btn.addEventListener("click", ((btn) => {
-            return (e) => {
-              // Remove all favorites at once
-              if (e.ctrlKey) {
-                localStorage.removeItem("favoriteEmoticons");
-                categories.Favourites = [];
-                updateEmoticonHighlight();
-                if (categoryHistory.length) {
-                  activeCategory = categoryHistory.pop();
-                  localStorage.setItem("activeCategory", activeCategory);
-                  updateCategoryButtonsState(activeCategory);
-                  updateEmoticonsContainer();
-                }
-              }
-            };
-          })(btn));
+          // Use an external function for the favorites click event
+          btn.addEventListener("click", handleFavouritesClick);
         }
-        btn.addEventListener("click", ((cat) => {
-          return (e) => {
-            if (!e.shiftKey && !e.ctrlKey) {
-              changeActiveCategoryOnClick(cat);
-            }
-          };
-        })(cat));
+
+        // Bind the click handler with the current category
+        btn.addEventListener("click", handleCategoryClick.bind(null, cat));
+        // Bind the mouseout handler with the current button and category
+        btn.addEventListener("mouseout", handleCategoryMouseOut.bind(null, btn, cat));
+        // Mouseover to change background
         btn.addEventListener("mouseover", () => {
           btn.style.background = hoverButtonBackground;
         });
-        btn.addEventListener("mouseout", ((btn, cat) => {
-          return () => {
-            btn.style.background = (cat === activeCategory ? activeButtonBackground : defaultButtonBackground);
-            if (cat === "Favourites") {
-              btn.style.opacity = categories.Favourites.length ? "" : "0.5";
-            }
-          };
-        })(btn, cat));
+
         container.appendChild(btn);
       }
     }
     return container;
+  }
+
+  function handleCategoryClick(cat, e) {
+    // Only change category if neither Shift nor Ctrl is pressed.
+    if (!e.shiftKey && !e.ctrlKey) {
+      changeActiveCategoryOnClick(cat);
+    }
+  }
+
+  function handleCategoryMouseOut(btn, cat) {
+    btn.style.background = (cat === activeCategory ? activeButtonBackground : defaultButtonBackground);
+    if (cat === "Favourites") {
+      btn.style.opacity = categories.Favourites.length ? "" : "0.5";
+    }
+  }
+
+  function handleFavouritesClick(e) {
+    // If ctrlKey is pressed, remove all favourites.
+    if (e.ctrlKey) {
+      localStorage.removeItem("favoriteEmoticons");
+      categories.Favourites = [];
+      updateEmoticonHighlight();
+      if (categoryHistory.length) {
+        activeCategory = categoryHistory.pop();
+        localStorage.setItem("activeCategory", activeCategory);
+        updateCategoryButtonsState(activeCategory);
+        updateEmoticonsContainer();
+      }
+    }
   }
 
   function updateCategoryButtonsState(newCategory) {

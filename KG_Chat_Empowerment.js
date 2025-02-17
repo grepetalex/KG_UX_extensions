@@ -165,32 +165,29 @@
 
   // Key Events: CTRL and ALT
 
-  // Initialize variables to track the state of Ctrl and Alt keys
-  let isCtrlKeyPressed = false;
-  let isAltKeyPressed = false;
+  // Initialize global variables to track the state of Ctrl and Alt keys
+  let isCtrlKeyPressed = false, isAltKeyPressed = false;
 
-  // Helper function to set key state based on key events
-  const setKeyPressed = (key, value) => {
+  // Helper function to set key states
+  const setKeyState = (key, value) => {
     if (key === 'Control') isCtrlKeyPressed = value;
     if (key === 'Alt') isAltKeyPressed = value;
   };
 
   // Add event listeners for keydown and keyup events
-  document.addEventListener('keydown', (event) => setKeyPressed(event.key, true));
-  document.addEventListener('keyup', (event) => setKeyPressed(event.key, false));
+  ['keydown', 'keyup'].forEach(eventType =>
+    document.addEventListener(eventType, (event) => setKeyState(event.key, eventType === 'keydown'))
+  );
 
-  // Add a blur event listener to reset variables when the document loses focus
-  document.addEventListener('blur', () => {
-    // Check if Ctrl or Alt keys were pressed
-    if (isCtrlKeyPressed || isAltKeyPressed) {
-      // Log the combination of keys that were true
-      console.log(`${isCtrlKeyPressed ? 'Ctrl ' : ''}${isAltKeyPressed ? 'Alt ' : ''}key was true`);
-      // Reset key states
-      isCtrlKeyPressed = false;
-      isAltKeyPressed = false;
-    }
-  });
-
+  // Reset key states when focus or blur events occur
+  ['blur', 'focus'].forEach(eventType =>
+    document.addEventListener(eventType, () => {
+      if (isCtrlKeyPressed || isAltKeyPressed) {
+        console.log(`${isCtrlKeyPressed ? 'Ctrl ' : ''}${isAltKeyPressed ? 'Alt ' : ''}key was true`);
+        isCtrlKeyPressed = isAltKeyPressed = false;
+      }
+    })
+  );
 
   // SOUND NOTIFICATION
 
@@ -528,26 +525,31 @@
   }
 
   // Function to create and display a static notification
-  function createStaticNotification(user, iconType, time, presence, container) {
-    // Select the appropriate container directly based on the parameter
-    const generalChat = document.querySelector('.messages-content div'); // Container for general chat notifications
-    const cachePanel = document.querySelector('.fetched-users .action-log'); // Container for cache notifications
+  function createStaticNotification(user, iconType, time, presence, containerType) {
+    // Define a mapping for container types to their respective selectors
+    const containerSelectors = {
+      generalChat: '.messages-content div', // For general chat notifications
+      cachePanel: '.fetched-users .action-log' // For cache notifications
+    };
 
-    let staticNotificationsContainer;
+    // Get the container based on the passed containerType
+    const containerSelector = containerSelectors[containerType];
 
-    // Use 'generalChat' as the default or 'cachePanel' if specified
-    if (container === 'generalChat' && generalChat) {
-      staticNotificationsContainer = generalChat;
-      staticNotificationsContainer.classList.add('static-chat-notifications-container');
-    } else if (container === 'cachePanel' && cachePanel) {
-      staticNotificationsContainer = cachePanel;
-      staticNotificationsContainer.classList.add('static-cache-notifications-container');
-    } else {
+    // If the container selector is not defined, return
+    if (!containerSelector) {
       console.error("Invalid or missing container. Please provide 'generalChat' or 'cachePanel'.");
-      console.log("General Chat:", generalChat);
-      console.log("Cache Panel:", cachePanel);
       return;
     }
+
+    const staticNotificationsContainer = document.querySelector(containerSelector);
+    if (!staticNotificationsContainer) {
+      console.error("Container not found in DOM.");
+      return;
+    }
+
+    staticNotificationsContainer.classList.add(
+      containerType === 'generalChat' ? 'static-chat-notifications-container' : 'static-cache-notifications-container'
+    );
 
     // Create the action icon based on the iconType provided
     const actionIcon = createActionIcon(iconType);
@@ -5239,15 +5241,13 @@
         display: 'block',
         width: '120px',
         height: '12px',
-        backgroundColor: 'hsl(90, 60%, 30%)',
-        borderRadius: '6px'
+        backgroundColor: 'hsl(90, 60%, 30%)'
       };
 
       const fillStyle = {
         display: 'block',
         height: '100%',
-        backgroundColor: 'hsl(90, 60%, 50%)',
-        borderRadius: '6px'
+        backgroundColor: 'hsl(90, 60%, 50%)'
       };
 
       for (let property in progressStyle) {
@@ -5337,15 +5337,13 @@
         display: 'block',
         width: '120px',
         height: '12px',
-        backgroundColor: 'hsl(180, 60%, 30%)',
-        borderRadius: '6px'
+        backgroundColor: 'hsl(180, 60%, 30%)'
       };
 
       const fillStyle = {
         display: 'block',
         height: '100%',
-        backgroundColor: 'hsl(180, 60%, 50%)',
-        borderRadius: '6px'
+        backgroundColor: 'hsl(180, 60%, 50%)'
       };
 
       for (let property in progressStyle) {
@@ -8141,24 +8139,12 @@
     // Add an event listener to handle file selection
     importFileInput.addEventListener('change', handleUploadSettings);
 
-    // Add a click event listener to the button
-    showSettingsButton.addEventListener('click', function () {
-      // Add pulse effect for the settings button
+    showSettingsButton.addEventListener('click', event => {
       addPulseEffect(showSettingsButton);
-
-      if (isAltKeyPressed) {
-        // Export settings
-        const settingsData = getSettingsData(); // Retrieve the settings data
-        handleDownloadSettings(settingsData); // Pass the retrieved settings data to the download function
-      }
-      else if (isCtrlKeyPressed) {
-        // Import settings
-        importFileInput.click();
-      }
-      else {
-        // If Alt or Ctrl is not pressed open settings panel
-        showSettingsPanel();
-      }
+      if (isAltKeyPressed) handleDownloadSettings(getSettingsData());
+      if (isCtrlKeyPressed) importFileInput.click();
+      if (isAltKeyPressed || isCtrlKeyPressed) return;
+      showSettingsPanel();
     });
 
     // Append the file input to the button

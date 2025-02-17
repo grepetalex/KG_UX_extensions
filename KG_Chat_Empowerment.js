@@ -38,6 +38,12 @@
     }
   `;
 
+  const boxShadow = `
+    0 8px 30px rgba(0, 0, 0, 0.12),
+    0 4px 6px rgba(0, 0, 0, 0.04),
+    0 2px 2px rgba(0, 0, 0, 0.08)
+  `;
+
   // Create a <style> element for the empowerment-styles class
   const empowermentStylesElement = document.createElement('style');
   empowermentStylesElement.classList.add('empowerment-additional-corrections');
@@ -522,16 +528,28 @@
   }
 
   // Function to create and display a static notification
-  function createStaticNotification(user, iconType, time, presence) {
-    const messagesContainer = document.querySelector('.messages-content div');
-    // Try to find an existing container; if not, create one.
-    let staticChatNotificationsContainer = messagesContainer.querySelector('.static-chat-notifications-container');
-    if (!staticChatNotificationsContainer) {
-      staticChatNotificationsContainer = document.createElement('div');
-      staticChatNotificationsContainer.classList.add('static-chat-notifications-container');
-      messagesContainer.appendChild(staticChatNotificationsContainer);
+  function createStaticNotification(user, iconType, time, presence, container) {
+    // Select the appropriate container directly based on the parameter
+    const generalChat = document.querySelector('.messages-content div');  // Container for general chat notifications
+    const cachePanel = document.querySelector('.fetched-users .action-log');  // Container for cache notifications
+
+    let staticNotificationsContainer;
+
+    // Use 'generalChat' as the default or 'cachePanel' if specified
+    if (container === 'generalChat' && generalChat) {
+      staticNotificationsContainer = generalChat;
+      staticNotificationsContainer.classList.add('static-chat-notifications-container');
+    } else if (container === 'cachePanel' && cachePanel) {
+      staticNotificationsContainer = cachePanel;
+      staticNotificationsContainer.classList.add('static-cache-notifications-container');
+    } else {
+      console.error("Invalid or missing container. Please provide 'generalChat' or 'cachePanel'.");
+      console.log("General Chat:", generalChat);
+      console.log("Cache Panel:", cachePanel);
+      return;
     }
 
+    // Create the action icon based on the iconType provided
     const actionIcon = createActionIcon(iconType);
     const staticChatNotification = document.createElement('div');
 
@@ -542,7 +560,6 @@
 
     // Insert the user, icon, and time info
     staticChatNotification.innerHTML = `${user} ${actionIcon.outerHTML} ${time}`;
-    staticChatNotification.innerHTML = `${user ? user : ''} ${actionIcon.outerHTML} ${time}`;
     staticChatNotification.classList.add('static-chat-notification');
 
     // Style based on presence
@@ -563,9 +580,11 @@
     staticChatNotification.style.display = 'inline-flex';
     staticChatNotification.style.margin = '4px 2px';
     staticChatNotification.style.fontSize = '1em';
+    staticChatNotification.style.alignItems = 'center';
+    staticChatNotification.style.setProperty('border-radius', '4px', 'important');
 
-    // Append the notification and scroll down
-    staticChatNotificationsContainer.appendChild(staticChatNotification);
+    // Append the notification to the selected container
+    staticNotificationsContainer.appendChild(staticChatNotification);
   }
 
   // Function to create and animate a dynamic notification
@@ -596,11 +615,11 @@
 
     // Set initial styles and position (off-screen)
     dynamicChatNotification.style.position = 'relative';
+    dynamicChatNotification.style.alignItems = 'center';
     dynamicChatNotification.style.width = 'fit-content';
     dynamicChatNotification.style.display = 'flex';
     dynamicChatNotification.style.marginBottom = '0.2em';
     dynamicChatNotification.style.padding = '8px 16px 8px 12px';
-    dynamicChatNotification.style.alignItems = 'center';
     dynamicChatNotification.style.left = '0';
     dynamicChatNotification.style.transform = 'translateX(-100%)';
     dynamicChatNotification.style.opacity = '1';
@@ -651,7 +670,7 @@
     const time = getCurrentTimeFormatted();
 
     if (shouldShowStatic && isTrackedUser) {
-      createStaticNotification(user, iconType, time, presence);
+      createStaticNotification(user, iconType, time, presence, 'generalChat');
       scrollMessagesToBottom();
     }
 
@@ -1990,6 +2009,9 @@
     // Create an array to hold user elements
     const userElements = [];
 
+    // Flag to control if action log processing should continue
+    let shouldProcessActionLog = true;
+
     // Get current date for comparison
     const currentDate = new Date();
 
@@ -2112,7 +2134,7 @@
         }
       });
 
-      // Create a separate element for the visits if userData.visits exists
+      // Assuming 'userData' and 'userId' are available
       if (userData.visits !== undefined) {
         const visitsElement = document.createElement('span');
         visitsElement.className = 'visits';
@@ -2120,21 +2142,83 @@
         visitsElement.textContent = userData.visits;
         visitsElement.dataset.userId = userId;
 
-        // Add click event listener
-        visitsElement.addEventListener('click', () => {
+        // Add the visitsElement to the fetchedUsersContainer
+        loginContainer.appendChild(visitsElement);
+
+        // Create an object for action log container styles
+        const actionLogContainerStyles = {
+          position: 'fixed',
+          opacity: '1',
+          padding: '12px',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 'fit-content',
+          height: '90vh',
+          overflowY: 'auto',
+          scrollbarWidth: 'none',
+          overflowX: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          backgroundColor: '#111111',
+          border: '3px dashed #212121',
+          borderRadius: '0.2em',
+          boxShadow: boxShadow
+        };
+
+        // Add click event listener to visitsElement
+        visitsElement.addEventListener('click', (event) => {
+          shouldProcessActionLog = true;  // Set back to true to resume processing the action log
           const userId = visitsElement.dataset.userId; // Get the userId from the dataset
           const user = fetchedUsers[userId]; // Retrieve the user data
           const actionLog = user ? user.actionLog : null; // Access actionLog if user exists
 
           if (user) {
-            console.log('Action Log:', actionLog); // Display action log
+            // Create a container for the action log display
+            const actionLogContainer = document.createElement('div');
+            actionLogContainer.className = 'action-log';
+
+            // Apply the styles from the object
+            Object.assign(actionLogContainer.style, actionLogContainerStyles);
+
+            if (actionLog && shouldProcessActionLog) {  // Ensure actionLog exists and processing is allowed
+              for (let index = 0; index < actionLog.length; index++) {
+                if (!shouldProcessActionLog) break; // Stop processing if flag is set to false
+                const action = actionLog[index];
+                if (typeof action !== "object" || action === null) continue; // Prevent errors if action is not an object
+                const { type, timestamp } = action;
+                const userAction = userData?.login || "Unknown User";
+                const actionIconType = type === 'enter' ? enterIcon : leaveIcon;
+                const userPresence = type === 'enter';
+                setTimeout(() => {
+                  if (shouldProcessActionLog) {
+                    createStaticNotification(userAction, actionIconType, timestamp, userPresence, 'cachePanel');
+                  }
+                }, 10 * (index + 1));
+              }
+            }
+
+            // Append the action log container to the specific container (fetchedUsersContainer)
+            fetchedUsersContainer.appendChild(actionLogContainer);
+
+            // Close the action log container if click occurs outside of it
+            const closeActionLogOnClickOutside = (e) => {
+              if (!actionLogContainer.contains(e.target)) {
+                fetchedUsersContainer.removeChild(actionLogContainer); // Remove the action log container
+                shouldProcessActionLog = false;  // Set to false to stop processing the action log
+                document.removeEventListener('click', closeActionLogOnClickOutside); // Clean up the event listener
+              }
+            };
+
+            // Add event listener for clicks outside the action log container
+            document.addEventListener('click', closeActionLogOnClickOutside);
+
+            // Prevent the click on visitsElement from propagating, so it doesn't close immediately
+            event.stopPropagation();
           } else {
             console.error('User data not found');
           }
         });
-
-        // Append visitsElement next to loginElement inside loginContainer
-        loginContainer.appendChild(visitsElement);
       }
 
       // Append login container to user data element
@@ -3212,7 +3296,7 @@
   let isInitialObservation = true; // Initialize the flag for initial observation
 
   let isAnimated = false; // Animation control
-  const debounceTimeout = 1000;
+  const debounceTimeout = 2000;
 
   const debounce = (func, delay) => {
     let timeoutId;
@@ -3222,14 +3306,19 @@
     };
   };
 
-  // Helper function to log user actions
   function logUserAction(userId, actionType) {
-    if (userId && fetchedUsers[userId]) {
-      fetchedUsers[userId].actionLog ??= [];
+    if (userId && actionType) {
+      // Initialize user object and ensure actionLog is an array
+      fetchedUsers[userId] = fetchedUsers[userId] || {};
+      fetchedUsers[userId].actionLog = fetchedUsers[userId].actionLog || [];
+
+      // Log the action
       fetchedUsers[userId].actionLog.push({
         type: actionType,
         timestamp: getCurrentTimeFormatted()
       });
+    } else {
+      console.error('Missing userId or actionType');
     }
   }
 

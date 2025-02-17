@@ -2188,18 +2188,24 @@
           const actionLog = user ? user.actionLog : null; // Access actionLog if user exists
 
           if (user) {
-            // Create a container for the action log display
-            const actionLogContainer = document.createElement('div');
-            actionLogContainer.className = 'action-log';
+            // Check if the action log container already exists
+            let actionLogContainer = document.querySelector('.action-log');
+            if (!actionLogContainer) {
+              // Create a container for the action log display if it doesn't exist
+              actionLogContainer = document.createElement('div');
+              actionLogContainer.className = 'action-log';
+              // Apply the styles from the object
+              actionLogContainer.style.setProperty('box-shadow', boxShadow, 'important');
+              actionLogContainer.style.setProperty('border-radius', '0.2em', 'important');
+              Object.assign(actionLogContainer.style, actionLogContainerStyles);
 
-            // Apply the styles from the object
-            actionLogContainer.style.setProperty('box-shadow', boxShadow, 'important');
-            actionLogContainer.style.setProperty('border-radius', '0.2em', 'important');
-            Object.assign(actionLogContainer.style, actionLogContainerStyles);
-
-            // Append the action log container to the specific container (fetchedUsersContainer)
-            fetchedUsersContainer.appendChild(actionLogContainer);
-            adjustVisibility(actionLogContainer, 'show', 1);
+              // Append the action log container to the specific container (fetchedUsersContainer)
+              fetchedUsersContainer.appendChild(actionLogContainer);
+              adjustVisibility(actionLogContainer, 'show', 1);
+            } else {
+              // Clear all child elements using replaceChildren (it's an empty operation for now)
+              actionLogContainer.replaceChildren();
+            }
 
             if (actionLog && shouldProcessActionLog) {
               for (let index = 0; index < actionLog.length; index++) {
@@ -3315,7 +3321,7 @@
   let isInitialObservation = true; // Initialize the flag for initial observation
 
   let isAnimated = false; // Animation control
-  const debounceTimeout = 2000;
+  const debounceTimeout = 300;
 
   const debounce = (func, delay) => {
     let timeoutId;
@@ -5012,26 +5018,6 @@
     });
   }
 
-  // Helper function to add a blink effect using color opacity.
-  function addBlinkEffect(element) {
-    // Set the initial color to bisque with full opacity.
-    element.style.backgroundColor = 'darkgreen'; // Initial color.
-
-    const opacities = [1, 0, 1, 0]; // Full -> Hidden -> Full -> End at Hidden.
-    const delay = 100; // Static delay of 200ms between frames.
-
-    // Repeat the blink effect three times.
-    for (let i = 0; i < 3; i++) {
-      opacities.forEach((opacity, index) => {
-        setTimeout(() => {
-          // Apply the opacity to the background color darkgreen represented in RGBA.
-          element.style.backgroundColor = `rgba(0, 100, 0, ${opacity})`; // Change the opacity.
-          element.style.transition = 'background-color 0.3s ease'; // Smooth transition.
-        }, delay * (i * opacities.length + index)); // Schedule the color change.
-      });
-    }
-  }
-
   // Helper function to apply common styles to buttons
   function applyBaseButtonStyles(element) {
     Object.assign(element.style, {
@@ -5374,40 +5360,77 @@
     }
   }
 
-  // Add event listeners for both regular click and right-click (contextmenu)
-  soundSwitcher.addEventListener('click', handleVoiceChange);
-  soundSwitcher.addEventListener('contextmenu', handleVoiceChange);
+  let holdTimeout = null;
+  let holdInterval = null;
 
-  // Event handler function for handling both click and right-click events
-  function handleVoiceChange(event) {
-    event.preventDefault(); // Prevent default context menu on right-click
+  // Replace original click/contextmenu listeners with mousedown
+  soundSwitcher.addEventListener('mousedown', handleMouseDown);
+  soundSwitcher.addEventListener('contextmenu', (event) => event.preventDefault());
 
-    // Check if it's a left click or right click
-    const isLeftClick = event.button === 0;
-    const isRightClick = event.button === 2;
+  function handleMouseDown(event) {
+    event.preventDefault(); // Prevent context menu on right-click
 
-    // Check for Ctrl + Left Click or Ctrl + Right Click
-    if ((isCtrlKeyPressed && isLeftClick) || (isCtrlKeyPressed && isRightClick)) {
-      // Determine whether to change voice speed or pitch
-      const prop = 'voiceSpeed';
-      // Calculate new value and limit it within specified bounds
-      const newValue = parseFloat(KG_Chat_Empowerment.voiceSettings[prop]) +
-        (isLeftClick ? -0.1 : 0.1);
-      const limitedValue = Math.min(maxVoiceSpeed, Math.max(minVoiceSpeed, newValue));
-      // Update the voice setting with the limited value
-      updateVoiceSetting(prop, limitedValue);
-    }
-    // Check for Alt + Left Click or Alt + Right Click
-    else if ((isAltKeyPressed && isLeftClick) || (isAltKeyPressed && isRightClick)) {
-      // Determine whether to change voice speed or pitch
-      const prop = 'voicePitch';
-      // Calculate new value and limit it within specified bounds
-      const newValue = parseFloat(KG_Chat_Empowerment.voiceSettings[prop]) +
-        (isLeftClick ? -0.1 : 0.1);
-      const limitedValue = Math.min(maxVoicePitch, Math.max(minVoicePitch, newValue));
-      // Update the voice setting with the limited value
-      updateVoiceSetting(prop, limitedValue);
-    }
+    const params = getAdjustmentParams(event);
+    if (!params) return;
+
+    const { prop, step } = params;
+    adjustValue(prop, step); // Initial adjustment
+
+    // Set up delayed repeat
+    holdTimeout = setTimeout(() => {
+      holdInterval = setInterval(() => {
+        const canContinue = adjustValue(prop, step);
+        if (!canContinue) clearInterval(holdInterval);
+      }, 100);
+    }, 500);
+
+    // Cleanup listeners
+    const stopHolding = () => {
+      clearTimeout(holdTimeout);
+      clearInterval(holdInterval);
+      soundSwitcher.removeEventListener('mouseup', stopHolding);
+      soundSwitcher.removeEventListener('mouseleave', stopHolding);
+    };
+
+    soundSwitcher.addEventListener('mouseup', stopHolding);
+    soundSwitcher.addEventListener('mouseleave', stopHolding);
+  }
+
+  function getAdjustmentParams(event) {
+    const isLeft = event.button === 0;
+    // const isRight = event.button === 2; // Unused declaration
+    const isCtrl = event.ctrlKey || event.metaKey;
+    const isAlt = event.altKey;
+
+    if (!isCtrl && !isAlt) return null;
+
+    const prop = isCtrl ? 'voiceSpeed' : 'voicePitch';
+    const step = isLeft ? -0.1 : 0.1;
+
+    // Boundary checks
+    const current = KG_Chat_Empowerment.voiceSettings[prop];
+    const [min, max] = prop === 'voiceSpeed'
+      ? [minVoiceSpeed, maxVoiceSpeed]
+      : [minVoicePitch, maxVoicePitch];
+
+    if ((step < 0 && current <= min) || (step > 0 && current >= max)) return null;
+
+    return { prop, step };
+  }
+
+  function adjustValue(prop, step) {
+    const current = parseFloat(KG_Chat_Empowerment.voiceSettings[prop]);
+    const [min, max] = prop === 'voiceSpeed'
+      ? [minVoiceSpeed, maxVoiceSpeed]
+      : [minVoicePitch, maxVoicePitch];
+
+    const newValue = current + step;
+    const clamped = Math.min(max, Math.max(min, newValue));
+
+    if (current === clamped) return false; // No change
+
+    updateVoiceSetting(prop, clamped);
+    return (step > 0 ? clamped < max : clamped > min);
   }
 
   // Function to update the voice setting, round the value, and update storage

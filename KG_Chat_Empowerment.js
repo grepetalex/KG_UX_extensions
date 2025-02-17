@@ -2037,13 +2037,14 @@
       // Define base styling for tracked and untracked users for visits element
       const baseStyle = {
         marginLeft: '8px',
+        padding: '0 6px',
         borderRadius: '2px !important',
         cursor: 'pointer'
       };
 
       // Styles for tracked and untracked users for visits element
       const styles = {
-        tracked: { ...baseStyle, color: 'greenyellow', backgroundColor: 'darkgreen', fontWeight: 'bold', padding: '0 6px' },
+        tracked: { ...baseStyle, color: 'greenyellow', backgroundColor: 'darkgreen', fontWeight: 'bold' },
         untracked: { ...baseStyle, color: 'orange', fontWeight: 'normal' }
       };
 

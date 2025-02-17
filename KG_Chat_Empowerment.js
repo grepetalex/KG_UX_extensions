@@ -5201,7 +5201,7 @@
         if (voiceSpeed <= minVoiceSpeed || voiceSpeed >= maxVoiceSpeed) {
           voiceSpeedInfo.innerHTML = iconRangeisOut;
         } else {
-          voiceSpeedInfo.innerHTML = voiceSpeed.toFixed(1);
+          voiceSpeedInfo.innerHTML = `SPEED ${Number(voiceSpeed).toFixed(1)}`;
         }
       }
 
@@ -5297,7 +5297,7 @@
         if (voicePitch <= minVoicePitch || voicePitch >= maxVoicePitch) {
           voicePitchInfo.innerHTML = iconRangeisOut;
         } else {
-          voicePitchInfo.innerHTML = voicePitch.toFixed(1);
+          voicePitchInfo.innerHTML = `PITCH ${voicePitch.toFixed(1)}`;
         }
       }
 

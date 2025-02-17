@@ -1452,6 +1452,18 @@
     };
   };
 
+  // Global function to prepend an emoticon to the visits element in the cache panel.
+  function updateVisitsEmoticon(visitsElement) {
+    // Convert content to number; exit if invalid
+    const count = Number(visitsElement.textContent);
+    if (isNaN(count)) return console.warn('Invalid visits count!');
+
+    // Select emoticon: 0–10: 💧, 11–20: 💦, 21–30: 🌊, above 30: 🔥
+    const emoticon = count <= 10 ? '💧' : count <= 20 ? '💦' : count <= 30 ? '🌊' : '🔥';
+
+    visitsElement.textContent = `${emoticon} ${count}`;
+  }
+
   // Function to display the cached user list panel
   function showCachePanel() {
     // Check if the panel already exists
@@ -2037,7 +2049,7 @@
       // Define base styling for tracked and untracked users for visits element
       const baseStyle = {
         marginLeft: '8px',
-        padding: '0 6px',
+        padding: '4px 6px',
         borderRadius: '2px !important',
         cursor: 'pointer'
       };
@@ -2045,7 +2057,7 @@
       // Styles for tracked and untracked users for visits element
       const styles = {
         tracked: { ...baseStyle, color: 'greenyellow', backgroundColor: 'darkgreen', fontWeight: 'bold' },
-        untracked: { ...baseStyle, color: 'orange', fontWeight: 'normal' }
+        untracked: { ...baseStyle, color: 'orange', backgroundColor: '#111111', fontWeight: 'normal' }
       };
 
       // Helper function to convert styles into a CSS string.
@@ -2142,6 +2154,8 @@
         visitsElement.style.cssText = generateStylesString(chosenStyles);
         visitsElement.textContent = userData.visits;
         visitsElement.dataset.userId = userId;
+        // Call the function to prepend an emoticon
+        updateVisitsEmoticon(visitsElement);
 
         // Add the visitsElement to the fetchedUsersContainer
         loginContainer.appendChild(visitsElement);
@@ -2430,7 +2444,7 @@
 
     // Initial update
     updateRemainingTime();
-  }
+  } // showCachePanel END
 
   // Global function to smoothly hide and remove the cachedUsersPanel
   function hideCachePanel() {
@@ -2442,7 +2456,7 @@
       // Call the fade function for the dimming element
       triggerDimmingElement('hide');
     }
-  }
+  } // hideCachePanel END
 
   // NEW CHAT CACHE CONTROL PANEL (END)
 

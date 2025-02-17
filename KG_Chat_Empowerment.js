@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_Chat_Empowerment
 // @namespace    klavogonki
-// @version      1.0.0 
+// @version      1.0.0
 // @description  Enhance the chat abilities
 // @author       Patcher
 // @match        *://klavogonki.ru/g*
@@ -30,11 +30,11 @@
 
     /* clickable thumbnail hover effect */
     .thumbnail {
-      opacity: 1;    
+      opacity: 1;
       transition: opacity 0.15s ease-in-out;
     }
     .thumbnail:hover {
-      opacity: 0.8; 
+      opacity: 0.8;
     }
   `;
 
@@ -123,7 +123,7 @@
 
   // Define the users to track and notify with popup and audio
   let usersToTrack = [
-    { name: 'Даниэль', gender: 'Male', pronunciation: 'Даниэль' }
+    { name: 'Даниэль', gender: 'Male', pronunciation: 'Даниэль', state: 'thawed' }
   ];
 
   // Define the base URL for user profiles
@@ -347,19 +347,13 @@
 
   // Handles user entering and leaving actions
   function userAction(user, actionType, userGender) {
-    // Return early if beep.presence setting is disabled
-    if (!shouldEnableSetting('beep', 'presence')) return;
-
+    const gender = userGender || 'Male'; // Default to 'Male' if no gender provided
     const userToTrack = usersToTrack.find(userToTrack => userToTrack.name === user);
-    const action = actionType === "enter" ? verbs[userGender].enter : verbs[userGender].leave;
+    const action = actionType === "enter" ? verbs[gender].enter : verbs[gender].leave;
     const frequencies = actionType === "enter" ? userEnteredFrequencies : userLeftFrequencies;
-    const message = `${userToTrack.pronunciation} ${action}`;
 
     playBeep(frequencies, beepVolume);
-
-    setTimeout(() => {
-      textToSpeech(message, voiceSpeed);
-    }, 300);
+    setTimeout(() => textToSpeech(`${userToTrack.pronunciation} ${action}`, voiceSpeed), 300);
   }
 
   // POPUPS
@@ -502,12 +496,22 @@
     );
   }
 
+  // Helper function to get current time formatted as [HH:MM:SS]
+  function getCurrentTimeFormatted() {
+    return new Date().toLocaleTimeString('en-US', {
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  }
+
   // Timeout before the dynamicChatNotification should be removed
   const dynamicChatNotificationTimeout = 5000;
   // Set the initial top distance for the first dynamicChatNotification
   const dynamicChatNotificationTopOffset = 160;
 
-  // Helper function to create an action icon element for user notifications
+  // Creates the action icon element
   function createActionIcon(iconType) {
     const actionIcon = document.createElement('div');
     actionIcon.classList.add('action-icon');
@@ -517,161 +521,144 @@
     return actionIcon;
   }
 
-  function showUserAction(user, iconType, presence) {
-    // Make sure if the user is tracked and has the state 'thawed' (watched) to notify about presence in the chat to leave static stamps
-    const isTrackedUser = usersToTrack.some((trackedUser) =>
-      trackedUser.name === user && trackedUser.state === 'thawed'
-    );
+  // Function to create and display a static notification
+  function createStaticNotification(user, iconType, time, presence) {
+    const messagesContainer = document.querySelector('.messages-content div');
+    // Try to find an existing container; if not, create one.
+    let staticChatNotificationsContainer = messagesContainer.querySelector('.static-chat-notifications-container');
+    if (!staticChatNotificationsContainer) {
+      staticChatNotificationsContainer = document.createElement('div');
+      staticChatNotificationsContainer.classList.add('static-chat-notifications-container');
+      messagesContainer.appendChild(staticChatNotificationsContainer);
+    }
 
-    // Define a condition that checks if the user is tracked and the 'notifications.static' setting is enabled
-    const shouldShowStatic = isTrackedUser && shouldEnableSetting('notifications', 'static');
-    // Define a condition that checks if the 'notifications.dynamic' setting is enabled, regardless of user tracking
-    const shouldShowDynamic = shouldEnableSetting('notifications', 'dynamic');
-
-    // If neither static nor dynamic notifications should be shown, return early
-    if (!shouldShowStatic && !shouldShowDynamic) return;
-
-    // Get current time in format "[hour:minutes:seconds]"
-    const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-    // Create the action icon only when the respective notification condition is met
     const actionIcon = createActionIcon(iconType);
+    const staticChatNotification = document.createElement('div');
 
-    // Append containers with notifications inside the chat only for the tracked users
-    // Ensure static notifications are enabled for tracked users
-    if (isTrackedUser && shouldShowStatic) {
-      // Get the container for all chat messages
-      const messagesContainer = document.querySelector('.messages-content div');
+    // Add double-click listener to purge notifications
+    staticChatNotification.addEventListener('dblclick', () => {
+      purgeStaticChatNotifications(150, 100);
+    });
 
-      // Get the last child of messagesContainer
-      const latestChild = messagesContainer.lastElementChild;
+    // Insert the user, icon, and time info
+    staticChatNotification.innerHTML = `${user} ${actionIcon.outerHTML} ${time}`;
+    staticChatNotification.innerHTML = `${user ? user : ''} ${actionIcon.outerHTML} ${time}`;
+    staticChatNotification.classList.add('static-chat-notification');
 
-      // Check if the latest child is a static-chat-notifications-container
-      const isLatestContainer = latestChild && latestChild.classList.contains('static-chat-notifications-container');
+    // Style based on presence
+    if (presence) {
+      staticChatNotification.classList.add('user-entered');
+      staticChatNotification.style.color = getHSLColor(100, 50, 50);
+      staticChatNotification.style.backgroundColor = getHSLColor(100, 50, 10);
+      staticChatNotification.style.setProperty('border', `1px solid ${getHSLColor(100, 50, 25)}`, 'important');
+    } else {
+      staticChatNotification.classList.add('user-left');
+      staticChatNotification.style.color = getHSLColor(0, 50, 70);
+      staticChatNotification.style.backgroundColor = getHSLColor(0, 50, 15);
+      staticChatNotification.style.setProperty('border', `1px solid ${getHSLColor(0, 50, 40)}`, 'important');
+    }
 
-      // If the latest child is not a container or the container doesn't exist, create a new one
-      if (!isLatestContainer) {
-        // Create a new container for chat notifications
-        const staticChatNotificationsContainer = document.createElement('div');
-        staticChatNotificationsContainer.classList.add('static-chat-notifications-container');
-        // Append the container to the messages container
-        messagesContainer.appendChild(staticChatNotificationsContainer);
-      }
+    // Set layout styles
+    staticChatNotification.style.padding = '8px';
+    staticChatNotification.style.display = 'inline-flex';
+    staticChatNotification.style.margin = '4px 2px';
+    staticChatNotification.style.fontSize = '1em';
 
-      // Create a new div element for the chat notification
-      const staticChatNotification = document.createElement('div');
-
-      // Add a double-click event listener to initiate the removal of chat user actions
-      staticChatNotification.addEventListener('dblclick', () => {
-        // Call the function to purge chat user actions with a delay of (N)ms between animations and (N) scroll speed
-        purgeStaticChatNotifications(150, 100);
-      });
-
-      // Set the text content of the chat notification to include the user and time
-      staticChatNotification.innerHTML = `${user} ${actionIcon.outerHTML} ${time}`;
-      // Add main class for chat notifications
-      staticChatNotification.classList.add('static-chat-notification');
-
-      // Check if the presence is true or false
-      if (presence) {
-        // Add the 'user-entered' class to the chat notification
-        staticChatNotification.classList.add('user-entered');
-        // Set the background color, font color, and border color for the chat notification
-        staticChatNotification.style.color = getHSLColor(100, 50, 50);
-        staticChatNotification.style.backgroundColor = getHSLColor(100, 50, 10);
-        staticChatNotification.style.setProperty('border', `1px solid ${getHSLColor(100, 50, 25)}`, 'important');
-      } else {
-        // Add the 'user-left' class to the chat notification
-        staticChatNotification.classList.add('user-left');
-        // Set the background color, font color, and border color for the chat notification
-        staticChatNotification.style.color = getHSLColor(0, 50, 70);
-        staticChatNotification.style.backgroundColor = getHSLColor(0, 50, 15);
-        staticChatNotification.style.setProperty('border', `1px solid ${getHSLColor(0, 50, 40)}`, 'important');
-      }
-
-      // Set the padding, display, and margin for the chat notification
-      staticChatNotification.style.padding = '8px';
-      staticChatNotification.style.display = 'inline-flex';
-      staticChatNotification.style.margin = '4px 2px';
-      staticChatNotification.style.fontSize = '1em';
-
-      // Append the chat notification to the latest chat notifications container
-      messagesContainer.lastElementChild.appendChild(staticChatNotification);
-
-      // Call the function to scroll to the bottom of the chat
-      scrollMessagesToBottom();
-    } // Static notifications END
-
-    // Handle dynamic notifications only if dynamic notifications are enabled for all users
-    if (shouldShowDynamic) {
-      // Check dynamicChatNotificationsContainer for accessibility
-      let dynamicChatNotificationsContainer = document.querySelector('.dynamic-chat-notifications-container');
-      // Create container for dynamic chat notifications if not exist in DOM
-      if (!dynamicChatNotificationsContainer) {
-        // Container doesn't exist, so create it
-        dynamicChatNotificationsContainer = document.createElement('div');
-        dynamicChatNotificationsContainer.classList.add('dynamic-chat-notifications-container');
-        dynamicChatNotificationsContainer.style.pointerEvents = 'none';
-        dynamicChatNotificationsContainer.style.position = 'fixed';
-        dynamicChatNotificationsContainer.style.display = 'flex';
-        dynamicChatNotificationsContainer.style.flexDirection = 'column';
-        dynamicChatNotificationsContainer.style.top = '0';
-        dynamicChatNotificationsContainer.style.bottom = '0';
-        dynamicChatNotificationsContainer.style.left = '0';
-        dynamicChatNotificationsContainer.style.right = '0';
-        dynamicChatNotificationsContainer.style.paddingTop = dynamicChatNotificationTopOffset + 'px';
-
-        // Append the container to the body
-        document.body.appendChild(dynamicChatNotificationsContainer);
-      }
-
-      // Create dynamicChatNotification element
-      const dynamicChatNotification = document.createElement('div');
-      dynamicChatNotification.classList.add('dynamic-chat-notification');
-
-      // Set the text content of the dynamicChatNotification to include the user and append the icon
-      dynamicChatNotification.insertAdjacentHTML('beforeend', `${user}${actionIcon.outerHTML}${time}`);
-
-      // Set the initial static styles for the dynamicChatNotification
-      dynamicChatNotification.style.position = 'relative';
-      dynamicChatNotification.style.width = 'fit-content';
-      dynamicChatNotification.style.display = 'flex';
-      dynamicChatNotification.style.marginBottom = '0.2em';
-      dynamicChatNotification.style.padding = '8px 16px 8px 12px';
-      dynamicChatNotification.style.alignItems = 'center';
-      dynamicChatNotification.style.left = '0';
-      // Set the initial dynamicChatNotification transform beyond the screen of its 100% width
-      dynamicChatNotification.style.transform = 'translateX(-100%)';
-      dynamicChatNotification.style.opacity = '1';
-      dynamicChatNotification.style.transition = 'transform 0.3s cubic-bezier(0.83, 0, 0.17, 1), opacity 0.3s cubic-bezier(0.83, 0, 0.17, 1)';
-      // Set the dynamic colorization of the dynamicChatNotification
-      dynamicChatNotification.style.color = presence ? getHSLColor(100, 50, 50) : getHSLColor(0, 50, 70); // fontColor green && red
-      dynamicChatNotification.style.backgroundColor = presence ? getHSLColor(100, 50, 10) : getHSLColor(0, 50, 15); // backgroundColor green && red
-      dynamicChatNotification.style.border = presence ? `1px solid ${getHSLColor(100, 50, 25)}` : `1px solid ${getHSLColor(0, 50, 40)}`; // borderColor green && red
-      dynamicChatNotification.style.setProperty('border-radius', '0 4px 4px 0', 'important');
-
-      // Append dynamicChatNotification to dynamicChatNotificationsContainer
-      dynamicChatNotificationsContainer.appendChild(dynamicChatNotification);
-
-      // Animate dynamicChatNotification
-      setTimeout(() => {
-        // Initiate the animation by showing the dynamicChatNotification
-        dynamicChatNotification.style.transform = 'translateX(0)';
-
-        setTimeout(() => {
-          // After (N) seconds, hide it beyond the screen
-          dynamicChatNotification.style.transform = 'translateX(-100%)';
-
-          setTimeout(() => {
-            // Remove the dynamicChatNotification from DOM after 300ms
-            dynamicChatNotificationsContainer.removeChild(dynamicChatNotification);
-          }, 300); // Remove
-        }, dynamicChatNotificationTimeout); // Hide
-      }, 300);
-    } // Dynamic notifications END
-
+    // Append the notification and scroll down
+    staticChatNotificationsContainer.appendChild(staticChatNotification);
   }
 
+  // Function to create and animate a dynamic notification
+  function createDynamicNotification(user, iconType, time, presence) {
+    let dynamicChatNotificationsContainer = document.querySelector('.dynamic-chat-notifications-container');
+    // Create container if it doesn't exist
+    if (!dynamicChatNotificationsContainer) {
+      dynamicChatNotificationsContainer = document.createElement('div');
+      dynamicChatNotificationsContainer.classList.add('dynamic-chat-notifications-container');
+      dynamicChatNotificationsContainer.style.pointerEvents = 'none';
+      dynamicChatNotificationsContainer.style.position = 'fixed';
+      dynamicChatNotificationsContainer.style.display = 'flex';
+      dynamicChatNotificationsContainer.style.flexDirection = 'column';
+      dynamicChatNotificationsContainer.style.top = '0';
+      dynamicChatNotificationsContainer.style.bottom = '0';
+      dynamicChatNotificationsContainer.style.left = '0';
+      dynamicChatNotificationsContainer.style.right = '0';
+      dynamicChatNotificationsContainer.style.paddingTop = dynamicChatNotificationTopOffset + 'px';
+      document.body.appendChild(dynamicChatNotificationsContainer);
+    }
+
+    const actionIcon = createActionIcon(iconType);
+    const dynamicChatNotification = document.createElement('div');
+    dynamicChatNotification.classList.add('dynamic-chat-notification');
+
+    // Insert the user, icon, and time info
+    dynamicChatNotification.insertAdjacentHTML('beforeend', `${user}${actionIcon.outerHTML}${time}`);
+
+    // Set initial styles and position (off-screen)
+    dynamicChatNotification.style.position = 'relative';
+    dynamicChatNotification.style.width = 'fit-content';
+    dynamicChatNotification.style.display = 'flex';
+    dynamicChatNotification.style.marginBottom = '0.2em';
+    dynamicChatNotification.style.padding = '8px 16px 8px 12px';
+    dynamicChatNotification.style.alignItems = 'center';
+    dynamicChatNotification.style.left = '0';
+    dynamicChatNotification.style.transform = 'translateX(-100%)';
+    dynamicChatNotification.style.opacity = '1';
+    dynamicChatNotification.style.transition =
+      'transform 0.3s cubic-bezier(0.83, 0, 0.17, 1), opacity 0.3s cubic-bezier(0.83, 0, 0.17, 1)';
+
+    // Set colorization based on presence
+    if (presence) {
+      dynamicChatNotification.style.color = getHSLColor(100, 50, 50);
+      dynamicChatNotification.style.backgroundColor = getHSLColor(100, 50, 10);
+      dynamicChatNotification.style.border = `1px solid ${getHSLColor(100, 50, 25)}`;
+    } else {
+      dynamicChatNotification.style.color = getHSLColor(0, 50, 70);
+      dynamicChatNotification.style.backgroundColor = getHSLColor(0, 50, 15);
+      dynamicChatNotification.style.border = `1px solid ${getHSLColor(0, 50, 40)}`;
+    }
+    dynamicChatNotification.style.setProperty('border-radius', '0 4px 4px 0', 'important');
+
+    // Append to the container
+    dynamicChatNotificationsContainer.appendChild(dynamicChatNotification);
+
+    // Animate: slide in, then slide out and remove
+    setTimeout(() => {
+      dynamicChatNotification.style.transform = 'translateX(0)';
+      setTimeout(() => {
+        dynamicChatNotification.style.transform = 'translateX(-100%)';
+        setTimeout(() => {
+          dynamicChatNotificationsContainer.removeChild(dynamicChatNotification);
+        }, 300); // after slide-out animation
+      }, dynamicChatNotificationTimeout);
+    }, 300);
+  }
+
+  // Main function which now calls the appropriate notification function(s)
+  function showUserAction(user, iconType, presence) {
+    // Check if the user is tracked and in the correct state
+    const isTrackedUser = usersToTrack.some(
+      (trackedUser) => trackedUser.name === user && trackedUser.state === 'thawed'
+    );
+
+    const shouldShowStatic = isTrackedUser && shouldEnableSetting('notifications', 'static');
+    const shouldShowDynamic = shouldEnableSetting('notifications', 'dynamic');
+
+    // If neither notification is enabled, exit early.
+    if (!shouldShowStatic && !shouldShowDynamic) return;
+
+    // Get current time formatted as [HH:MM:SS]
+    const time = getCurrentTimeFormatted();
+
+    if (shouldShowStatic && isTrackedUser) {
+      createStaticNotification(user, iconType, time, presence);
+      scrollMessagesToBottom();
+    }
+
+    if (shouldShowDynamic) {
+      createDynamicNotification(user, iconType, time, presence);
+    }
+  }
 
   // FUNCTIONALITY
 
@@ -2025,13 +2012,14 @@
       userElement.style.alignItems = 'center';
       userElement.style.height = 'fit-content';
 
-      // Define base styling for tracked and untracked users.
+      // Define base styling for tracked and untracked users for visits element
       const baseStyle = {
         marginLeft: '8px',
-        borderRadius: '2px !important'
+        borderRadius: '2px !important',
+        cursor: 'pointer'
       };
 
-      // Styles for tracked and untracked users.
+      // Styles for tracked and untracked users for visits element
       const styles = {
         tracked: { ...baseStyle, color: 'greenyellow', backgroundColor: 'darkgreen', fontWeight: 'bold', padding: '0 6px' },
         untracked: { ...baseStyle, color: 'orange', fontWeight: 'normal' }
@@ -2074,16 +2062,18 @@
       const userDataElement = document.createElement('div');
       userDataElement.className = 'user-data';
 
-      // Create the login element with a link to the user's profile.
+      // Create a container to hold the login and visits elements
+      const loginContainer = document.createElement('div');
+      loginContainer.className = 'login-container';
+
+      // Create the login element with a link to the user's profile
       const loginElement = document.createElement('a');
       loginElement.className = 'login';
       loginElement.textContent = userData.login;
       loginElement.href = `https://klavogonki.ru/profile/${userId}`;
 
-      // If the user has visit data, display it.
-      if (userData.visits !== undefined) {
-        loginElement.innerHTML += `<span style="${generateStylesString(chosenStyles)}">${userData.visits}</span>`;
-      }
+      // Append the login element to the container
+      loginContainer.appendChild(loginElement);
 
       // Set styles and hover behavior for the login link.
       loginElement.style.setProperty('color', 'skyblue', 'important');
@@ -2122,8 +2112,33 @@
         }
       });
 
-      // Append login element to user data element
-      userDataElement.appendChild(loginElement);
+      // Create a separate element for the visits if userData.visits exists
+      if (userData.visits !== undefined) {
+        const visitsElement = document.createElement('span');
+        visitsElement.className = 'visits';
+        visitsElement.style.cssText = generateStylesString(chosenStyles);
+        visitsElement.textContent = userData.visits;
+        visitsElement.dataset.userId = userId;
+
+        // Add click event listener
+        visitsElement.addEventListener('click', () => {
+          const userId = visitsElement.dataset.userId; // Get the userId from the dataset
+          const user = fetchedUsers[userId]; // Retrieve the user data
+          const actionLog = user ? user.actionLog : null; // Access actionLog if user exists
+
+          if (user) {
+            console.log('Action Log:', actionLog); // Display action log
+          } else {
+            console.error('User data not found');
+          }
+        });
+
+        // Append visitsElement next to loginElement inside loginContainer
+        loginContainer.appendChild(visitsElement);
+      }
+
+      // Append login container to user data element
+      userDataElement.appendChild(loginContainer);
 
       const rankElement = document.createElement('div');
       rankElement.className = 'rank';
@@ -2827,7 +2842,7 @@
   /**
    * Calculates the percentage of a given number within its nearest range.
    * The function dynamically determines the range based on the input value.
-   * 
+   *
    * @param {number} value - The input value to calculate the percentage for.
    * @returns {number} - The percentage of the input value within its identified range.
    */
@@ -3082,11 +3097,12 @@
               fetchedUsers[userId].avatarTimestamp = avatarTimestamp;
             }
 
-            // If actionType is 'enter' and retrievedLogin === userName, multiply the visits for the entered user
-            if (actionType === 'enter' && retrievedLogin === userName) {
-              fetchedUsers[userId].visits = (fetchedUsers[userId].visits || 0) + 1;
-              // Check if the user is in the usersToTrack array
-              fetchedUsers[userId].tracked = usersToTrack.some(userToTrack => userToTrack.name === retrievedLogin);
+            // Logging user action (enter or leave) using the formatted time
+            if (retrievedLogin === userName) {
+              if (actionType === 'enter') {
+                fetchedUsers[userId].visits = (fetchedUsers[userId].visits || 0) + 1;
+                fetchedUsers[userId].tracked = usersToTrack.some(u => u.name === retrievedLogin);
+              }
             }
 
             // Check if the user with the same ID already exists in the corresponding rank group
@@ -3190,145 +3206,140 @@
   // Define reference for chat user list
   const userList = document.querySelector('.userlist-content');
 
-  // Initialize variables to keep track of the current and previous users
-  let currentUsers = [];
-  let previousUsers = [];
-  // Set flag to false to prevent initialization of the notifications
-  // About entered and left users on the page load after refreshing the page
-  let hasObservedChanges = false;
-  let prevUserCountValue = 0;
+  // Initialize user tracking map
+  let userMap = new Map(); // Store as [userId]: {userName, ...}
+  let prevUserCount = 0;
+  let isInitialObservation = true; // Initialize the flag for initial observation
 
-  // Initialize variables for the user count animation
-  let currentTextContent = [];
-  let isAnimated = false;
+  let isAnimated = false; // Animation control
+  const debounceTimeout = 1000;
 
-  // Define a constant to set the debounce delay
-  const debounceTimeout = 1500;
-
-  // Define a debounce function to limit the rate at which the mutation observer callback is called
   const debounce = (func, delay) => {
     let timeoutId;
     return (...args) => {
       clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        func.apply(this, args);
-      }, delay);
+      timeoutId = setTimeout(() => func.apply(this, args), delay);
     };
   };
 
-  // Mutation observer to track all the users with only graphical popup notification
-  // Also play notification sound "Left" or "Entered" if the one of them is identical from "usersToTrack" array
-  // Create a mutation observer to detect when the user list is modified
+  // Helper function to log user actions
+  function logUserAction(userId, actionType) {
+    if (userId && fetchedUsers[userId]) {
+      fetchedUsers[userId].actionLog ??= [];
+      fetchedUsers[userId].actionLog.push({
+        type: actionType,
+        timestamp: getCurrentTimeFormatted()
+      });
+    }
+  }
+
+  // Function to animate user count change
+  function animateUserCount(actualUserCount, userCountElement) {
+    isAnimated = true;
+    let count = 0;
+    const speed = 20;
+
+    const userCountIncrement = () => {
+      if (count <= actualUserCount) {
+        const progress = Math.min(count / (actualUserCount || 1), 1); // Handle zero case
+        userCountElement.textContent = `${count++}`;
+        userCountElement.style.filter = `grayscale(${100 - progress * 100}%)`;
+        setTimeout(userCountIncrement, speed);
+      } else {
+        userCountElement.style.filter = actualUserCount > 0 ? 'none' : 'grayscale(100%)';
+        addPulseEffect(userCountElement);
+        isAnimated = false;
+      }
+    };
+
+    setTimeout(userCountIncrement, speed);
+  }
+
+  // Mutation Observer for new users
   const chatUsersObserver = new MutationObserver(debounce((mutations) => {
     mutations.forEach((mutation) => {
       if (mutation.type === 'childList') {
-        // Get the sound switcher element and check which option is selected
         const soundSwitcher = document.querySelector('#voice, #beep, #silence');
         const isSilence = soundSwitcher && soundSwitcher.id === 'silence';
-
-        // Check if the chat is closed or opened
         const chatHidden = document.querySelector('#chat-wrapper.chat-hidden');
-        // Retrieve all users textContent from userList ins elements
-        const newUserList = Array.from(userList.children).map(child => child.textContent);
+        const userCountElement = document.querySelector('.user-count-indicator');
 
-        // Find new users and left users
-        const newUsers = newUserList.filter(user => !currentUsers.includes(user));
-        const leftUsers = currentUsers.filter(user => !newUserList.includes(user));
+        if (chatHidden) {
+          // If the chat is hidden, update the user count to 0 and exit early
+          userCountElement.style.filter = "grayscale(100%)";
+          userCountElement.textContent = "0";
+          return;
+        }
 
-        // Retrieve fresh user count length
-        const userCountValue = newUserList.length;
-        // Retrieve the counter element
-        const userCount = document.querySelector('.user-count-indicator');
+        // Build current user map
+        const newUsers = new Map(
+          Array.from(userList.children)
+            .map(child => {
+              const nameElement = child.querySelector('.name');
+              const userId = nameElement?.getAttribute('data-user');
+              const userName = nameElement?.textContent?.trim();
+              return userId ? [userId, { userName }] : null;
+            })
+            .filter(Boolean) // Remove null entries
+        );
 
-        // Update grayscale filter
-        userCount.style.filter = userCountValue > 0 ? 'none' : 'grayscale(100%)';
+        // Handle initial observation
+        if (isInitialObservation) {
+          if (userCountElement && Number(userCountElement.textContent) === 0 && !isAnimated) {
+            animateUserCount(newUsers.size, userCountElement);
+          }
+          newUsers.forEach((value, key) => userMap.set(key, value));
+          isInitialObservation = false; // Mark the initial observation as complete
+          return; // Skip processing for initial load
+        }
 
-        // Check if the user count animation needs to be started only when the chat is not closed
-        if (!chatHidden && currentTextContent.length === 0 && newUserList.length > 0 && !isAnimated) {
-          isAnimated = true; // Set this to true immediately to prevent starting a new animation
-          const actualUserCount = newUserList.length;
-          const speed = 20; // Change the speed here (in milliseconds)
-          let count = 0;
-          const userCountIncrement = () => {
-            if (count <= actualUserCount) {
-              const progress = count / actualUserCount;
-              const grayscale = 100 - progress * 100;
-              userCount.innerHTML = `${count++}`;
-              userCount.style.filter = `grayscale(${grayscale}%)`;
-              setTimeout(userCountIncrement, speed);
-            } else {
-              currentTextContent = Array.from(userList.children).map(child => child.textContent);
-              userCount.style.filter = 'none';
-              addPulseEffect(userCount);
-            }
-          };
-          setTimeout(userCountIncrement, speed);
-        } // Animation END
+        // Detect users who entered (exist in newUsers but not in userMap)
+        let entered = [...newUsers].filter(([userId]) => !userMap.has(userId))
+          .map(([userId, data]) => ({ userId, ...data }));
 
-        // Check if chat is not closed and animation is finished
-        if (!chatHidden && isAnimated) {
-          // Check if the user count has changed and add pulse animation
-          if (userCountValue !== prevUserCountValue) {
-            addPulseEffect(userCount);
-            // Updating the counter element value
-            userCount.innerHTML = userCountValue;
+        // Detect users who left (exist in userMap but not in newUsers)
+        let left = [...userMap].filter(([userId]) => !newUsers.has(userId))
+          .map(([userId, data]) => ({ userId, userName: data.userName }));
+
+        // Reassign userMap instead of clearing and repopulating it
+        userMap = new Map(newUsers);
+
+        // User count management
+        const currentCount = userMap.size;
+        if (currentCount !== prevUserCount) {
+          userCountElement.textContent = currentCount;
+          userCountElement.style.filter = currentCount > 0 ? 'none' : 'grayscale(100%)';
+          addPulseEffect(userCountElement);
+        }
+
+        // Common logic for processing both entered and left users
+        function processUserAction(user, actionType) {
+          const { userName, userId } = user;
+          const userGender = getUserGender(userName);
+          const isTracked = usersToTrack.some(u => u.name === userName && u.state === 'thawed');
+
+          showUserAction(userName, actionType === "enter" ? enterIcon : leaveIcon, actionType === "enter");
+          refreshUserList(userName, actionType);
+          logUserAction(userId, actionType);
+
+          if (!isSilence && isTracked) {
+            userAction(userName, actionType, userGender);
           }
         }
 
-        // Check if chat is not closed and animation is not in progress
-        if (!chatHidden && hasObservedChanges) {
-          newUsers.forEach((newUser) => {
-            if (!previousUsers.includes(newUser)) {
-              const userGender = getUserGender(newUser) || 'male'; // use 'male' as default
-              // Check if the user is in the usersToTrack array for 'enter'
-              const isUserToTrackEnter = usersToTrack.some(user =>
-                user.name === newUser && user.state === 'thawed'
-              );
-              const iconType = enterIcon;
-              showUserAction(newUser, iconType, true);
-              // Pass 'enter' as the action type and the user's login to refreshUserList
-              refreshUserList(newUser, "enter");
-              // Prevent voice notification if mode is silence
-              if (!isSilence && isUserToTrackEnter) {
-                userAction(newUser, "enter", userGender);
-              }
-            }
-          });
+        // Process entries
+        entered.forEach(newUser => processUserAction(newUser, "enter"));
 
-          leftUsers.forEach((leftUser) => {
-            const userGender = getUserGender(leftUser) || 'male'; // use 'male' as default
-            // Check if the user is in the usersToTrack array for 'leave'
-            const isUserToTrackLeave = usersToTrack.some(user =>
-              user.name === leftUser && user.state === 'thawed'
-            );
-            const iconType = leaveIcon;
-            showUserAction(leftUser, iconType, false);
-            // Pass 'leave' as the action type and the user's login to refreshUserList
-            refreshUserList(leftUser, "leave");
-            // Prevent voice notification if mode is silence
-            if (!isSilence && isUserToTrackLeave) {
-              userAction(leftUser, "leave", userGender);
-            }
-          });
+        // Process exits
+        left.forEach(oldUser => processUserAction(oldUser, "leave"));
 
-        } else {
-          // Indicator should look deactivated after the chat is closed
-          userCount.style.filter = "grayscale(1)";
-          userCount.innerHTML = "0";
-          // Set flag to true to initialize notifications about entered and left users
-          hasObservedChanges = true;
-        }
 
-        // Update the previous users and user count
-        previousUsers = currentUsers;
-        currentUsers = newUserList;
-        prevUserCountValue = userCountValue;
-
+        prevUserCount = currentCount; // Update previous count for next mutation
       }
     });
   }, debounceTimeout));
 
-  // Start observing the chat user list for changes to notify about them
+  // Start observing
   chatUsersObserver.observe(userList, { childList: true });
 
   // Button to close the chat
@@ -5818,7 +5829,7 @@
     // Function to get messages from localStorage
     function getMessages() {
       const cachedMessagesData = localStorage.getItem('personalMessages');
-      // Initialize messages by parsing fetched data or setting as empty object 
+      // Initialize messages by parsing fetched data or setting as empty object
       return JSON.parse(cachedMessagesData) || {};
     }
 
@@ -6832,12 +6843,12 @@
     // Add input event listener to filter items as the user types
     chatlogsSearchInput.addEventListener('input', () => filterItems(chatlogsSearchInput.value));
 
-    // Clears the input when the left mouse button (LMB) is clicked while holding the Ctrl key  
-    // Also updates the filtered items accordingly  
+    // Clears the input when the left mouse button (LMB) is clicked while holding the Ctrl key
+    // Also updates the filtered items accordingly
     chatlogsSearchInput.addEventListener('click', (event) => {
       if (event.ctrlKey) {
         chatlogsSearchInput.value = '';
-        // Call the function to update the filtered items based on the cleared input  
+        // Call the function to update the filtered items based on the cleared input
         filterItems(chatlogsSearchInput.value);
       }
     });

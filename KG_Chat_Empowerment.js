@@ -1983,8 +1983,8 @@
 
       // Add common CSS styles for grid layout and centering
       userContainer.style.display = 'grid';
-      userContainer.style.gridAutoFlow = 'dense'; // Allows items to fill empty spaces
-      userContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(200px, 1fr))'; // Responsive columns
+      // userContainer.style.gridAutoFlow = 'dense'; // Allows items to fill empty spaces
+      userContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(210px, 1fr))'; // Responsive columns
       userContainer.style.gap = '12px'; // Space between items
       userContainer.style.padding = '24px';
       userContainer.style.height = 'fit-content';
@@ -2057,7 +2057,8 @@
         marginLeft: '8px',
         padding: '4px 6px',
         borderRadius: '2px !important',
-        cursor: 'pointer'
+        cursor: 'pointer',
+        whiteSpace: 'pre'
       };
 
       // Styles for tracked and untracked users for visits element

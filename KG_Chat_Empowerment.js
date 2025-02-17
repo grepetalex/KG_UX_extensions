@@ -2149,7 +2149,7 @@
         // Create an object for action log container styles
         const actionLogContainerStyles = {
           position: 'fixed',
-          opacity: '1',
+          opacity: '0',
           padding: '12px',
           top: '50%',
           left: '50%',
@@ -2181,6 +2181,10 @@
             actionLogContainer.style.setProperty('border-radius', '0.2em', 'important');
             Object.assign(actionLogContainer.style, actionLogContainerStyles);
 
+            // Append the action log container to the specific container (fetchedUsersContainer)
+            fetchedUsersContainer.appendChild(actionLogContainer);
+            adjustVisibility(actionLogContainer, 'show', 1);
+
             if (actionLog && shouldProcessActionLog) {
               for (let index = 0; index < actionLog.length; index++) {
                 if (!shouldProcessActionLog) break;
@@ -2201,13 +2205,10 @@
               }
             }
 
-            // Append the action log container to the specific container (fetchedUsersContainer)
-            fetchedUsersContainer.appendChild(actionLogContainer);
-
             const closeActionLog = (e) => {
               if (!actionLogContainer.contains(e.target) || e.code === 'Space') {
                 if (e.code === 'Space') e.preventDefault(); // Prevent the default space key behavior
-                fetchedUsersContainer.removeChild(actionLogContainer);
+                adjustVisibility(actionLogContainer, 'hide', 0);
                 shouldProcessActionLog = false;
                 ['click', 'keydown'].forEach(event => document.removeEventListener(event, closeActionLog));
               }

@@ -530,8 +530,8 @@
   // Function to create and display a static notification
   function createStaticNotification(user, iconType, time, presence, container) {
     // Select the appropriate container directly based on the parameter
-    const generalChat = document.querySelector('.messages-content div');  // Container for general chat notifications
-    const cachePanel = document.querySelector('.fetched-users .action-log');  // Container for cache notifications
+    const generalChat = document.querySelector('.messages-content div'); // Container for general chat notifications
+    const cachePanel = document.querySelector('.fetched-users .action-log'); // Container for cache notifications
 
     let staticNotificationsContainer;
 
@@ -2168,7 +2168,7 @@
 
         // Add click event listener to visitsElement
         visitsElement.addEventListener('click', (event) => {
-          shouldProcessActionLog = true;  // Set back to true to resume processing the action log
+          shouldProcessActionLog = true; // Set back to true to resume processing the action log
           const userId = visitsElement.dataset.userId; // Get the userId from the dataset
           const user = fetchedUsers[userId]; // Retrieve the user data
           const actionLog = user ? user.actionLog : null; // Access actionLog if user exists
@@ -2181,37 +2181,39 @@
             // Apply the styles from the object
             Object.assign(actionLogContainer.style, actionLogContainerStyles);
 
-            if (actionLog && shouldProcessActionLog) {  // Ensure actionLog exists and processing is allowed
+            if (actionLog && shouldProcessActionLog) {
               for (let index = 0; index < actionLog.length; index++) {
-                if (!shouldProcessActionLog) break; // Stop processing if flag is set to false
+                if (!shouldProcessActionLog) break;
                 const action = actionLog[index];
-                if (typeof action !== "object" || action === null) continue; // Prevent errors if action is not an object
+                if (typeof action !== "object" || action === null) continue;
                 const { type, timestamp } = action;
                 const userAction = userData?.login || "Unknown User";
                 const actionIconType = type === 'enter' ? enterIcon : leaveIcon;
                 const userPresence = type === 'enter';
-                setTimeout(() => {
-                  if (shouldProcessActionLog) {
-                    createStaticNotification(userAction, actionIconType, timestamp, userPresence, 'cachePanel');
-                  }
-                }, 10 * (index + 1));
+                // Use IIFE to capture the current value of shouldProcessActionLog
+                ((currentShouldProcess) => {
+                  setTimeout(() => {
+                    if (currentShouldProcess) {
+                      createStaticNotification(userAction, actionIconType, timestamp, userPresence, 'cachePanel');
+                    }
+                  }, 10 * (index + 1));
+                })(shouldProcessActionLog);
               }
             }
 
             // Append the action log container to the specific container (fetchedUsersContainer)
             fetchedUsersContainer.appendChild(actionLogContainer);
 
-            // Close the action log container if click occurs outside of it
-            const closeActionLogOnClickOutside = (e) => {
-              if (!actionLogContainer.contains(e.target)) {
-                fetchedUsersContainer.removeChild(actionLogContainer); // Remove the action log container
-                shouldProcessActionLog = false;  // Set to false to stop processing the action log
-                document.removeEventListener('click', closeActionLogOnClickOutside); // Clean up the event listener
+            const closeActionLog = (e) => {
+              if (!actionLogContainer.contains(e.target) || e.code === 'Space') {
+                if (e.code === 'Space') e.preventDefault(); // Prevent the default space key behavior
+                fetchedUsersContainer.removeChild(actionLogContainer);
+                shouldProcessActionLog = false;
+                ['click', 'keydown'].forEach(event => document.removeEventListener(event, closeActionLog));
               }
             };
 
-            // Add event listener for clicks outside the action log container
-            document.addEventListener('click', closeActionLogOnClickOutside);
+            ['click', 'keydown'].forEach(event => document.addEventListener(event, closeActionLog));
 
             // Prevent the click on visitsElement from propagating, so it doesn't close immediately
             event.stopPropagation();

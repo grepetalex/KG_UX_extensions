@@ -350,6 +350,10 @@
 
   // Handles user entering and leaving actions
   function userAction(user, actionType, userGender) {
+    const shouldPlayAction = shouldEnableSetting('beep', 'presence');
+    // If neither beep and voice is enabled, exit early.
+    if (!shouldPlayAction) return;
+
     const gender = userGender || 'Male'; // Default to 'Male' if no gender provided
     const userToTrack = usersToTrack.find(userToTrack => userToTrack.name === user);
     const action = actionType === "enter" ? verbs[gender].enter : verbs[gender].leave;

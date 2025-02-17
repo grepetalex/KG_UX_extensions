@@ -2161,9 +2161,7 @@
           display: 'flex',
           flexDirection: 'column',
           backgroundColor: '#111111',
-          border: '3px dashed #212121',
-          borderRadius: '0.2em',
-          boxShadow: boxShadow
+          border: '3px dashed #212121'
         };
 
         // Add click event listener to visitsElement
@@ -2179,6 +2177,8 @@
             actionLogContainer.className = 'action-log';
 
             // Apply the styles from the object
+            actionLogContainer.style.setProperty('box-shadow', boxShadow, 'important');
+            actionLogContainer.style.setProperty('border-radius', '0.2em', 'important');
             Object.assign(actionLogContainer.style, actionLogContainerStyles);
 
             if (actionLog && shouldProcessActionLog) {

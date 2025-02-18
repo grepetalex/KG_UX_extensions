@@ -4,7 +4,7 @@
 // @version      1.0.0
 // @description  Try just to open it at last easier than ever before.
 // @author       Patcher
-// @match        http*://klavogonki.ru/*
+// @match        *://klavogonki.ru/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=klavogonki.ru
 // @grant        none
 // ==/UserScript==

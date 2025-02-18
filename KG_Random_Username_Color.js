@@ -4,7 +4,7 @@
 // @version      2024-10-12
 // @description  Try to highlight yourself in a different colors
 // @author       Patcher
-// @match        https://klavogonki.ru/gamelist/
+// @match        *://klavogonki.ru/gamelist/
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=klavogonki.ru
 // @grant        none
 // ==/UserScript==

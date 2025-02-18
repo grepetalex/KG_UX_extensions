@@ -3,9 +3,9 @@
 // @namespace     klavogonki
 // @version       1.4.0
 // @description   Fast game creation buttons on main and gamelist page
-// @match         http*://klavogonki.ru/
-// @match         http*://klavogonki.ru/gamelist/
-// @match         http*://klavogonki.ru/g/*
+// @match         *://klavogonki.ru/
+// @match         *://klavogonki.ru/gamelist/
+// @match         *://klavogonki.ru/g/*
 // @author        NoAuthorAnymore
 // @icon          https://www.google.com/s2/favicons?sz=64&domain=klavogonki.ru
 // ==/UserScript==

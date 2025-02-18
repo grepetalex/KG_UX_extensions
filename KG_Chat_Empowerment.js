@@ -36,6 +36,50 @@
     .thumbnail:hover {
       opacity: 0.8;
     }
+    
+    /* element animations */
+    .pulse-effect {
+      animation: pulse 500ms ease-out; 
+    }
+
+    @keyframes pulse {
+      0% { filter: brightness(1); }
+      50% { filter: brightness(1.5); }
+      100% { filter: brightness(1); }
+    }
+
+    .shake-effect {
+      animation: shake 500ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+    }
+
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      10% { transform: translateX(-4px); }
+      20% { transform: translateX(6px); }
+      30% { transform: translateX(-8px); }
+      40% { transform: translateX(8px); }
+      50% { transform: translateX(-6px); }
+      60% { transform: translateX(5px); }
+      70% { transform: translateX(-3px); }
+      80% { transform: translateX(2px); }
+      90% { transform: translateX(-1px); }
+      100% { transform: translateX(0); }
+    }
+
+    .jump-effect {
+      animation: jump 500ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    @keyframes jump {
+      0% { transform: translate(0%, 0%); }
+      20% { transform: translate(0%, -60%); animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+      40% { transform: translate(0%, 15%); animation-timing-function: cubic-bezier(0.55, 0.085, 0.68, 0.53); }
+      60% { transform: translate(0%, -20%); }
+      75% { transform: translate(0%, 8%); }
+      85% { transform: translate(0%, -10%); }
+      92% { transform: translate(0%, 4%); }
+      100% { transform: translate(0%, 0%); }
+    }
   `;
 
   const boxShadow = `
@@ -46,7 +90,7 @@
 
   // Create a <style> element for the empowerment-styles class
   const empowermentStylesElement = document.createElement('style');
-  empowermentStylesElement.classList.add('empowerment-additional-corrections');
+  empowermentStylesElement.classList.add('empowerment-global-styles');
   // Set the inner HTML of the <style> element with the class-based CSS
   empowermentStylesElement.innerHTML = empowermentStyles;
   // Append the <style> element to the <head> of the document
@@ -1209,28 +1253,28 @@
   const empowermentButtonsPanel = document.createElement('div');
   empowermentButtonsPanel.classList.add('empowerment-panel');
 
-  // Create user count container to store the user count number
-  const userCount = document.createElement('div');
-  userCount.title = 'Current Chat Users Count';
-  userCount.classList.add('user-count-indicator');
-  userCount.style.filter = 'grayscale(100%)';
-  userCount.style.transition = '0.2s ease-in-out';
-  userCount.style.fontFamily = "'Orbitron', sans-serif";
-  userCount.style.fontSize = '24px';
-  userCount.style.color = '#83cf40';
-  userCount.style.backgroundColor = '#2b4317';
-  userCount.style.width = '48px';
-  userCount.style.height = '48px';
-  userCount.style.display = 'flex';
-  userCount.style.justifyContent = 'center';
-  userCount.style.alignItems = 'center';
-  userCount.style.border = '1px solid #4b7328';
-  userCount.style.margin = `${empowermentButtonsMargin}px`;
+  // Create chat user count container to store the user count number
+  const chatUserCount = document.createElement('div');
+  chatUserCount.title = 'Current Chat Users Count';
+  chatUserCount.classList.add('chat-user-count');
+  chatUserCount.style.filter = 'grayscale(100%)';
+  chatUserCount.style.transition = '0.2s ease-in-out';
+  chatUserCount.style.fontFamily = "'Orbitron', sans-serif";
+  chatUserCount.style.fontSize = '24px';
+  chatUserCount.style.color = '#83cf40';
+  chatUserCount.style.backgroundColor = '#2b4317';
+  chatUserCount.style.width = '48px';
+  chatUserCount.style.height = '48px';
+  chatUserCount.style.display = 'flex';
+  chatUserCount.style.justifyContent = 'center';
+  chatUserCount.style.alignItems = 'center';
+  chatUserCount.style.border = '1px solid #4b7328';
+  chatUserCount.style.margin = `${empowermentButtonsMargin}px`;
   // Set initial value as 0
-  userCount.innerHTML = '0';
+  chatUserCount.innerHTML = '0';
 
   // Append user count element inside empowerment panel
-  empowermentButtonsPanel.appendChild(userCount);
+  empowermentButtonsPanel.appendChild(chatUserCount);
   // Apply positioning styles for the empowerment panel
   empowermentButtonsPanel.style.position = 'fixed';
   empowermentButtonsPanel.style.top = '60px';
@@ -1239,32 +1283,6 @@
   empowermentButtonsPanel.style.zIndex = '1000';
   // Append panel element inside the body
   bodyElement.appendChild(empowermentButtonsPanel);
-
-  const userCountStyles = `
-  .pulse {
-    animation-name: pulse;
-    animation-duration: 0.5s;
-    animation-iteration-count: 1;
-  }
-
-  @keyframes pulse {
-    0% {
-      filter: brightness(1);
-    }
-    50% {
-      filter: brightness(1.5);
-    }
-    100% {
-      filter: brightness(1);
-    }
-  }
-`;
-
-  // Append styles in head element for the user count element
-  const userCountStylesElement = document.createElement('style');
-  userCountStylesElement.classList.add('user-count-pulse');
-  userCountStylesElement.textContent = userCountStyles;
-  document.head.appendChild(userCountStylesElement);
 
   // Adjust element visibility with smooth opacity transition
   function adjustVisibility(element, action, opacity) {
@@ -1923,7 +1941,7 @@
       refreshFetchedUsers(true, cacheRefreshThresholdHours);
 
       // Set the user count element to 0
-      const userCountElement = document.querySelector('.cache-panel-load-button .user-count');
+      const userCountElement = document.querySelector('.cache-panel-load-button .cache-user-count');
       if (userCountElement) userCountElement.textContent = '0'; // Set the user count to 0
     });
 
@@ -3225,6 +3243,8 @@
               const newUserElement = createUserChatElement(userId, mainTitle, userName, bestSpeed, userElement.classList.contains('revoked'));
               // Add the user to the corresponding rank group
               rankSubparents[getRankClass(mainTitle)].appendChild(newUserElement);
+              // Make sure the mutation observer for the new users changed flag to false to make it work
+              if (!isInitialObservation) addShakeEffect(newUserElement); // Add shake effect on entered users
             }
 
             // Update existing user IDs
@@ -3325,7 +3345,7 @@
   let prevUserCount = 0;
   let isInitialObservation = true; // Initialize the flag for initial observation
 
-  let isAnimated = false; // Animation control
+  let isAnimated = false;
   const debounceTimeout = 300;
 
   const debounce = (func, delay) => {
@@ -3352,22 +3372,32 @@
     }
   }
 
+  /**
+   * Updates the given user count element with the count, adjusting the font size based on the number of digits.
+   * @param {HTMLElement} element - The DOM element displaying the user count.
+   * @param {number} count - The user count.
+   */
+  function updateUserCount(element, count) {
+    if (!element) return; // Exit if the element doesn't exist.
+    const digits = count.toString().length;
+    element.textContent = count;
+    element.style.fontSize = Math.max(24 - (digits - 1) * 2, 12) + 'px';
+  }
+
   // Function to animate user count change
   function animateUserCount(actualUserCount, userCountElement) {
-    isAnimated = true;
     let count = 0;
     const speed = 20;
 
     const userCountIncrement = () => {
       if (count <= actualUserCount) {
         const progress = Math.min(count / (actualUserCount || 1), 1); // Handle zero case
-        userCountElement.textContent = `${count++}`;
+        updateUserCount(userCountElement, count++);
         userCountElement.style.filter = `grayscale(${100 - progress * 100}%)`;
         setTimeout(userCountIncrement, speed);
       } else {
-        userCountElement.style.filter = actualUserCount > 0 ? 'none' : 'grayscale(100%)';
         addPulseEffect(userCountElement);
-        isAnimated = false;
+        isAnimated = true;
       }
     };
 
@@ -3381,7 +3411,7 @@
         const soundSwitcher = document.querySelector('#voice, #beep, #silence');
         const isSilence = soundSwitcher && soundSwitcher.id === 'silence';
         const chatHidden = document.querySelector('#chat-wrapper.chat-hidden');
-        const userCountElement = document.querySelector('.user-count-indicator');
+        const userCountElement = document.querySelector('.chat-user-count');
 
         if (chatHidden) {
           // If the chat is hidden, update the user count to 0 and exit early
@@ -3425,8 +3455,8 @@
 
         // User count management
         const currentCount = userMap.size;
-        if (currentCount !== prevUserCount) {
-          userCountElement.textContent = currentCount;
+        if (currentCount !== prevUserCount && isAnimated) {
+          updateUserCount(userCountElement, currentCount);
           userCountElement.style.filter = currentCount > 0 ? 'none' : 'grayscale(100%)';
           addPulseEffect(userCountElement);
         }
@@ -4968,59 +4998,26 @@
 
   // Helper function to add pulse effect
   function addPulseEffect(element) {
-    element.classList.add('pulse');
+    element.classList.add('pulse-effect');
     setTimeout(() => {
-      element.classList.remove('pulse');
-    }, 300);
+      element.classList.remove('pulse-effect');
+    }, 500);
   }
 
-  // Helper function to add jump effect like a ball with more keyframes
-  function addJumpEffect(element, initialTranslateX = 50, initialTranslateY = 50) {
-    const transforms = [
-      `translate(${initialTranslateX}%, ${initialTranslateY}%)`, // Initial start position
-      `translate(${initialTranslateX}%, ${initialTranslateY - 30}%)`, // Jump up
-      `translate(${initialTranslateX}%, ${initialTranslateY - 50}%)`, // Higher jump peak
-      `translate(${initialTranslateX}%, ${initialTranslateY}%)`, // Return to original position
-      `translate(${initialTranslateX}%, ${initialTranslateY + 10}%)`, // Slight bounce down
-      `translate(${initialTranslateX}%, ${initialTranslateY + 20}%)`, // Adjust slightly up
-      `translate(${initialTranslateX}%, ${initialTranslateY}%)` // Final position (original)
-    ];
-
-    // Define an initial delay and a decrement factor for timing
-    let delay = 300; // Start with 300ms
-    const decrement = 40; // Decrease the delay by 40ms for each keyframe
-
-    transforms.forEach((transform, index) => {
-      setTimeout(() => {
-        element.style.transform = transform; // Apply the current transform
-      }, delay); // Schedule the transform
-      delay -= decrement; // Decrease delay for the next keyframe
-    });
+  // Helper function to add jump effect
+  function addJumpEffect(element) {
+    element.classList.add('jump-effect');
+    setTimeout(() => {
+      element.classList.remove('jump-effect');
+    }, 500);
   }
 
-  // Helper function to add a shake effect for messages not found in the personal messages panel.
+  // Helper function to add shake effect
   function addShakeEffect(element) {
-    const transforms = [
-      'translate3d(0, 0, 0)', // Initial start position
-      'translate3d(-2px, 0, 0)', // Shake left (larger)
-      'translate3d(4px, 0, 0)', // Shake right (larger)
-      'translate3d(-8px, 0, 0)', // Shake left more (larger)
-      'translate3d(8px, 0, 0)', // Shake right more (larger)
-      'translate3d(-2px, 0, 0)', // Shake left (larger)
-      'translate3d(0, 0, 0)' // Return to original position
-    ];
-
-    // Define an initial delay and a decrement factor for timing
-    let delay = 100; // Start with 100ms
-    const increment = 50; // Increase the delay by 50ms for each keyframe
-
-    transforms.forEach((transform, index) => {
-      setTimeout(() => {
-        element.style.transform = transform; // Apply the current transform
-        element.style.transition = 'transform 0.1s ease'; // Ensure smooth transition
-      }, delay); // Schedule the transform
-      delay += increment; // Increase delay for the next keyframe
-    });
+    element.classList.add('shake-effect');
+    setTimeout(() => {
+      element.classList.remove('shake-effect');
+    }, 500);
   }
 
   // Helper function to apply common styles to buttons
@@ -5555,31 +5552,31 @@
     showUserListCacheButton.innerHTML = iconUserlistCache;
 
     // Create the small indicator for user count
-    const userCount = document.createElement('div');
-    userCount.classList.add('user-count');
-    userCount.style.display = 'flex';
-    userCount.style.position = 'absolute';
-    userCount.style.justifyContent = 'center';
-    userCount.style.alignItems = 'center';
-    userCount.style.left = '0';
-    userCount.style.bottom = '0';
-    userCount.style.transform = 'translate(-50%, 50%)';
-    userCount.style.zIndex = '1';
-    userCount.style.height = '20px';
-    userCount.style.padding = '0 4px';
-    userCount.style.setProperty('border-radius', '2px', 'important');
-    userCount.style.backgroundColor = '#9db380';
-    userCount.style.color = 'rgb(2, 2, 2)';
-    userCount.style.fontSize = '12px';
-    userCount.style.fontFamily = 'Roboto';
-    userCount.style.fontWeight = 'bold';
+    const cacheUserCount = document.createElement('div');
+    cacheUserCount.classList.add('cache-user-count');
+    cacheUserCount.style.display = 'flex';
+    cacheUserCount.style.position = 'absolute';
+    cacheUserCount.style.justifyContent = 'center';
+    cacheUserCount.style.alignItems = 'center';
+    cacheUserCount.style.left = '0';
+    cacheUserCount.style.bottom = '0';
+    cacheUserCount.style.transform = 'translate(-50%, 50%)';
+    cacheUserCount.style.zIndex = '1';
+    cacheUserCount.style.height = '20px';
+    cacheUserCount.style.padding = '0 4px';
+    cacheUserCount.style.setProperty('border-radius', '2px', 'important');
+    cacheUserCount.style.backgroundColor = '#9db380';
+    cacheUserCount.style.color = 'rgb(2, 2, 2)';
+    cacheUserCount.style.fontSize = '12px';
+    cacheUserCount.style.fontFamily = 'Roboto';
+    cacheUserCount.style.fontWeight = 'bold';
 
     // Initially set the count based on localStorage
     const fetchedUsers = JSON.parse(localStorage.getItem('fetchedUsers')) || {};
-    const userCountValue = Object.keys(fetchedUsers).length;
-    userCount.textContent = userCountValue;
+    const cacheUserCountValue = Object.keys(fetchedUsers).length;
+    cacheUserCount.textContent = cacheUserCountValue;
 
-    showUserListCacheButton.appendChild(userCount);
+    showUserListCacheButton.appendChild(cacheUserCount);
 
     // Assign a title to the button
     showUserListCacheButton.title = 'Show Cache Panel';
@@ -5600,7 +5597,7 @@
 
   // Function to update the user count displayed near the cache button based on localStorage
   function updateUserCountText() {
-    const userCountElement = document.querySelector('.cache-panel-load-button .user-count');
+    const userCountElement = document.querySelector('.cache-panel-load-button .cache-user-count');
     if (!userCountElement) return; // Ensure the element exists
 
     const newUserCount = Object.keys(JSON.parse(localStorage.getItem('fetchedUsers')) || {}).length.toString();

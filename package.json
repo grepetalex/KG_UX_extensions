@@ -1,9 +1,29 @@
 {
+  "name": "kg_goodies",
+  "version": "1.0.0",
+  "main": "KG_Better_Chatlogs.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node KG_Better_Chatlogs.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VimiummuimiV/KG_Goddies.git"
+  },
+  "keywords": [
+    "chat", "logging", "KG", "chatbot", "goodies"
+  ],
+  "author": "Patcher",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/VimiummuimiV/KG_Goddies/issues"
+  },
+  "homepage": "https://github.com/VimiummuimiV/KG_Goddies#readme",
+  "description": "A collection of enhancements and tools for KG Chatlogs.",
   "devDependencies": {
     "@eslint/js": "^9.20.0",
     "eslint": "^9.20.1",
     "eslint-plugin-react": "^7.37.4",
-    "globals": "^15.15.0",
-    "typescript-eslint": "^8.24.1"
+    "globals": "^15.15.0"
   }
 }

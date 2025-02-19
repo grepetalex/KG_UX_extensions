@@ -2958,57 +2958,85 @@
   </svg>`;
 
   function createCircularProgress(percentage, color, isRevoked) {
-    // Define constants for the SVG container and circles.
-    const size = 20; // Width and height of the SVG container
-    const strokeWidth = 2; // Stroke width for the outer circle
-    const radius = size / 2 - strokeWidth; // Radius for the inner (progress) circle
-    const outerRadius = size / 2 - strokeWidth; // Radius for the outer circle
-
-    // Generate a random string to use for unique gradient IDs.
+    const svgUrl = "http://www.w3.org/2000/svg";
+    const size = 20;
+    const center = size / 2;
+    const strokeWidth = 2;
+    const radius = center - strokeWidth;
+    const diameter = radius * 2;
     const randomString = Math.random().toString(36).substring(2, 22);
+    const scaleMultiplier = !isRevoked && percentage === 0 ? 0.6 : 1;
 
-    // Define the outer circle (the border circle).
-    const outerCircle = `<circle cx="${size / 2}" cy="${size / 2}" r="${outerRadius}" fill="none" stroke="${color}" stroke-width="${strokeWidth}" />`;
+    const svg = document.createElementNS(svgUrl, "svg");
+    Object.entries({
+      width: size, height: size, viewBox: `0 0 ${size} ${size}`, xmlns: svgUrl
+    }).forEach(([k, v]) => svg.setAttribute(k, v));
+    svg.classList.add("circularProgress");
 
-    // Define the close icon once as a path (using the 24x24 coordinate system).
-    const closeIconPath = `<path d="M18.364 5.636a1 1 0 0 1 0 1.414L13.414 12l4.95 4.95a1 1 0 0 1-1.414 1.414L12 13.414l-4.95 4.95a1 1 0 0 1-1.414-1.414L10.586 12l-4.95-4.95a1 1 0 0 1 1.414-1.414L12 10.586l4.95-4.95a1 1 0 0 1 1.414 0z" fill="${color}"/>`;
-
-    // Create the main SVG element.
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("width", size);
-    svg.setAttribute("height", size);
-    svg.setAttribute("viewBox", `0 0 ${size} ${size}`);
-
-    // If revoked or percentage is 0, display the close icon (scaled down when percentage is 0)
     if (isRevoked || percentage === 0) {
-      // Use a scale multiplier: 0.6 for 0% progress, otherwise full size (1)
-      const scaleMultiplier = !isRevoked && percentage === 0 ? 0.6 : 1;
-      const baseScale = size / 24; // Maps the 24x24 icon into our 20x20 SVG
-      const finalScale = baseScale * scaleMultiplier;
-      // Center the icon: its center is at (12,12) in its native coordinate system.
-      const translateOffset = (size / 2) - (12 * finalScale);
-      const iconTransform = `translate(${translateOffset}, ${translateOffset}) scale(${finalScale})`;
-      const iconGroup = `<g transform="${iconTransform}">${closeIconPath}</g>`;
-      svg.innerHTML = !isRevoked ? outerCircle + iconGroup : iconGroup;
+      if (!isRevoked) {
+        const outerCircle = document.createElementNS(svgUrl, "circle");
+        Object.entries({
+          cx: center, cy: center, r: radius, fill: "none", stroke: color, "stroke-width": strokeWidth
+        }).forEach(([k, v]) => outerCircle.setAttribute(k, v));
+        outerCircle.classList.add("outerCircle");
+        svg.appendChild(outerCircle);
+      }
+
+      const scale = (size / 24) * scaleMultiplier;
+      const offset = center - 12 * scale;
+      const closeIconGroup = document.createElementNS(svgUrl, "g");
+      closeIconGroup.setAttribute("transform", `translate(${offset}, ${offset}) scale(${scale})`);
+      closeIconGroup.classList.add("closeIconGroup");
+
+      const path = document.createElementNS(svgUrl, "path");
+      Object.entries({
+        d: "M18.364 5.636a1 1 0 0 1 0 1.414L13.414 12l4.95 4.95a1 1 0 0 1-1.414 1.414L12 13.414l-4.95 4.95a1 1 0 0 1-1.414-1.414L10.586 12l-4.95-4.95a1 1 0 0 1 1.414-1.414L12 10.586l4.95-4.95a1 1 0 0 1 1.414 0z",
+        fill: color
+      }).forEach(([k, v]) => path.setAttribute(k, v));
+
+      closeIconGroup.appendChild(path);
+      svg.appendChild(closeIconGroup);
     } else {
-      // Otherwise, render the progress indicator with a gradient-filled inner circle.
-      const gradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
-      gradient.setAttribute("id", `gradient-${randomString}`);
-      gradient.setAttribute("gradientTransform", "rotate(90)");
-      gradient.innerHTML = `
-      <stop offset="0%" stop-color="transparent" />
-      <stop offset="${100 - percentage}%" stop-color="transparent" />
-      <stop offset="${100 - percentage}%" stop-color="${color}" />
-      <stop offset="100%" stop-color="${color}" />
-    `;
+      const defs = document.createElementNS(svgUrl, "defs");
+      defs.classList.add("defs");
 
-      const innerCircle = `<circle cx="${size / 2}" cy="${size / 2}" r="${radius}" fill="url(#gradient-${randomString})" stroke="none" stroke-width="${strokeWidth * 2}" fill-opacity="0.8" />`;
+      const clipPath = document.createElementNS(svgUrl, "clipPath");
+      clipPath.setAttribute("id", `clipInner-${randomString}`);
+      clipPath.classList.add("clipPath");
 
-      svg.innerHTML = outerCircle + innerCircle;
-      svg.prepend(gradient); // Ensure the gradient is defined within the SVG.
+      const clipRect = document.createElementNS(svgUrl, "rect");
+      Object.entries({
+        x: center - radius, y: center - radius, width: diameter, height: 0, transform: `rotate(180, ${center}, ${center})`
+      }).forEach(([k, v]) => clipRect.setAttribute(k, v));
+      clipRect.classList.add("clipRect");
+
+      const animate = document.createElementNS(svgUrl, "animate");
+      Object.entries({
+        attributeName: "height", from: 0, to: diameter * (percentage / 100), begin: "indefinite", dur: "1s", fill: "freeze"
+      }).forEach(([k, v]) => animate.setAttribute(k, v));
+      animate.classList.add("animateProfileProgress");
+
+      clipRect.appendChild(animate);
+      clipPath.appendChild(clipRect);
+      defs.appendChild(clipPath);
+      svg.appendChild(defs);
+
+      const outerCircle = document.createElementNS(svgUrl, "circle");
+      Object.entries({
+        cx: center, cy: center, r: radius, fill: "none", stroke: color, "stroke-width": strokeWidth
+      }).forEach(([k, v]) => outerCircle.setAttribute(k, v));
+      outerCircle.classList.add("outerCircle");
+      svg.appendChild(outerCircle);
+
+      const innerCircle = document.createElementNS(svgUrl, "circle");
+      Object.entries({
+        cx: center, cy: center, r: radius, fill: color, "clip-path": `url(#clipInner-${randomString})`
+      }).forEach(([k, v]) => innerCircle.setAttribute(k, v));
+      innerCircle.classList.add("innerCircle");
+      svg.appendChild(innerCircle);
     }
 
-    // Return the complete SVG markup as a string.
     return svg.outerHTML;
   }
 
@@ -3110,6 +3138,11 @@
     let circularProgress = createCircularProgress(calculatePercentage(bestSpeed), rankColor, isRevoked);
     // Use circular progress element for profile navigation from new chat user list
     newProfileElement.innerHTML = circularProgress;
+    // Start animation after element is in DOM
+    setTimeout(() => {
+      const animateElement = newProfileElement.querySelector('.animateProfileProgress');
+      if (animateElement) animateElement.beginElement();
+    }, 10);
     // Add event listener click with Hold Ctrl Key to open profile into iframe
     newProfileElement.addEventListener('click', function (event) {
       event.preventDefault();

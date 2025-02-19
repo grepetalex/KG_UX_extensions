@@ -3013,7 +3013,15 @@
 
       const animate = document.createElementNS(svgUrl, "animate");
       Object.entries({
-        attributeName: "height", from: 0, to: diameter * (percentage / 100), begin: "indefinite", dur: "1s", fill: "freeze"
+        attributeName: "height",
+        from: 0,
+        to: diameter * (percentage / 100),
+        begin: "indefinite",
+        dur: "1s",
+        fill: "freeze",
+        calcMode: "spline",
+        keySplines: "0.4 0 0.2 1", // Fast start, smooth stop
+        keyTimes: "0;1"
       }).forEach(([k, v]) => animate.setAttribute(k, v));
       animate.classList.add("animateProfileProgress");
 

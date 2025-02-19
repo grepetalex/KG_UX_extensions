@@ -17,12 +17,48 @@
 
   // Global styles
   const empowermentStyles = `
+    /* chat length popup on field type with dynamic movement horizontally */
+    .length-field-popup {
+      position: absolute;
+      font: bold 12px Montserrat;
+      bottom: 40px;
+      transition: left 100ms ease-out;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2px 4px;
+      margin: 2px;
+      opacity: 0;
+    }
+
+    .bounce-in {
+      animation: bounceIn 500ms forwards;
+    }
+
+    @keyframes bounceIn {
+      0% { transform: translateY(0); opacity: 0; }
+      50% { transform: translateY(-10px); opacity: 1; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+
+    .bounce-out {
+      animation: bounceOut 500ms forwards;
+    }
+
+    @keyframes bounceOut {
+      0% { transform: translateY(0); opacity: 1; }
+      50% { transform: translateY(-10px); opacity: 1; }
+      100% { transform: translateY(0); opacity: 0; }
+    }
+
     /* catalogs panel && personal messages panel messages anchors color */
     .chat-logs-panel .message-text a,
     .cached-messages-panel .message-text a {
       color: burlywood !important;
       transition: color 0.15s ease-in-out;
     }
+
     .chat-logs-panel .message-text a:hover,
     .cached-messages-panel .message-text a:hover {
       color: lightgoldenrodyellow !important;
@@ -628,7 +664,9 @@
     // Set layout styles
     staticChatNotification.style.padding = '8px';
     staticChatNotification.style.display = 'inline-flex';
-    staticChatNotification.style.margin = '4px 2px';
+    staticChatNotification.style.flex = 'auto';
+    staticChatNotification.style.justifyContent = 'center';
+    staticChatNotification.style.margin = '4px';
     staticChatNotification.style.fontSize = '1em';
     staticChatNotification.style.alignItems = 'center';
     staticChatNotification.style.setProperty('border-radius', '4px', 'important');
@@ -2189,7 +2227,8 @@
         const actionLogContainerStyles = {
           position: 'fixed',
           opacity: '0',
-          padding: '12px',
+          padding: '8px',
+          gap: '4px',
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
@@ -2198,7 +2237,9 @@
           scrollbarWidth: 'none',
           overflowX: 'hidden',
           display: 'flex',
-          flexDirection: 'column',
+          minWidth: '30vw',
+          maxWidth: '50vw',
+          flexWrap: 'wrap',
           backgroundColor: '#111111',
           border: '3px dashed #212121'
         };
@@ -9383,37 +9424,18 @@
   // Select the input element and length popup container using the helper function
   const { inputField: chatField, lengthPopupContainer } = retrieveChatElementsByRoomType();
 
-  // Create a style element for animations
-  const lengthPopupAnimations = document.createElement('style');
-  lengthPopupAnimations.classList.add('length-popup-animations');
-  lengthPopupAnimations.textContent = `
-    @keyframes bounceIn {
-      0% { transform: translateY(0); opacity: 0; }
-      50% { transform: translateY(-10px); opacity: 1; }
-      100% { transform: translateY(0); opacity: 1; }
-    }
-    @keyframes bounceOut {
-      0% { transform: translateY(0); opacity: 1; }
-      50% { transform: translateY(-10px); opacity: 1; }
-      100% { transform: translateY(0); opacity: 0; }
-    }
-    .length-field-popup {
-      position: absolute; font: bold 12px Montserrat; bottom: 40px; height: 20px;
-      display: flex; align-items: center; justify-content: center; padding: 2px 4px; margin: 2px;
-      line-height: 20px; opacity: 0;
-    }`;
-
-  document.head.appendChild(lengthPopupAnimations);
-
   const lengthPopup = document.createElement('div');
   lengthPopup.className = 'length-field-popup';
+
   lengthPopupContainer.appendChild(lengthPopup);
 
-  // Rename the timeout variable to be more descriptive
-  let hidePopupTimeout;
+  // Initialize once at startup
+  const textMeasurementCanvas = document.createElement('canvas');
+  const textMeasurementContext = textMeasurementCanvas.getContext('2d');
 
-  // Track the previous input length
+  let isPopupVisible = false;
   let previousLength = 0;
+  let hidePopupTimeout;
 
   // Function to update the color of the length popup
   function updateLengthPopupColor(length) {
@@ -9453,70 +9475,60 @@
     lengthPopup.style.color = textColor;
   }
 
-  // Function to show the length popup with updated color and arrow direction
-  function showLengthPopup(length) {
+  // Then use them in your measurement function
+  function updatePopupMetrics(text) {
+    // Get current font from input field
+    const computedStyle = getComputedStyle(chatField);
+    textMeasurementContext.font = `${computedStyle.fontWeight} ${computedStyle.fontSize} ${computedStyle.fontFamily}`;
+
+    // Measure text
+    const textWidth = textMeasurementContext.measureText(text).width;
+
+    // Calculate position
+    const newLeft = chatField.offsetLeft + textWidth + 5;
+    const maxLeft = chatField.offsetLeft + chatField.offsetWidth - lengthPopup.offsetWidth;
+    lengthPopup.style.left = `${Math.min(newLeft, maxLeft)}px`;
+  }
+
+  // Only update content/position without animation
+  function updateLengthPopup(length) {
     let displayText;
 
-    // Check if a symbol is added (→) or removed (←)
-    if (length > previousLength) {
-      displayText = `${length} 🡆`; // Typing: Right arrow after the length
-    } else if (length < previousLength) {
-      displayText = `🡄 ${length}`; // Deleting: Left arrow before the length
-    } else {
-      displayText = `${length}`; // No change: No arrows
-    }
+    displayText = length > previousLength ? `${length} 🡆` :
+      length < previousLength ? `🡄 ${length}` :
+        `${length}`;
 
-    lengthPopup.textContent = displayText; // Display the length and arrow
-    lengthPopup.style.opacity = '1'; // Ensure it's visible
-    updateLengthPopupColor(length); // Update the text color based on length
-    lengthPopup.style.animation = 'bounceIn 0.5s forwards'; // Apply bounce-in animation
-
-    // Update the previous length
+    lengthPopup.textContent = displayText;
+    updateLengthPopupColor(length);
     previousLength = length;
   }
 
-  function hideLengthPopup() {
-    lengthPopup.style.animation = 'bounceOut 0.5s forwards';
-    setTimeout(() => {
-      lengthPopup.style.opacity = '0';
-    }, 500);
+  function togglePopup(show) {
+    if (isPopupVisible === show) return;
+    lengthPopup.classList.toggle('bounce-in', show);
+    lengthPopup.classList.toggle('bounce-out', !show);
+    isPopupVisible = show;
+    if (!show) setTimeout(() => lengthPopup.classList.remove('bounce-out'), 500);
   }
 
-  // Event listener for input
-  chatField.addEventListener('input', function () {
+  function resetPopup() {
+    updateLengthPopup(0);
+    Object.assign(lengthPopup.style, { left: '0px', color: 'hsl(200, 20%, 50%)' });
+  }
+
+  chatField.addEventListener('input', () => {
     clearTimeout(hidePopupTimeout);
-
-    const length = chatField.value.length;
-    showLengthPopup(length); // Show the length popup with updated length and arrow
-
-    // Calculate position of the popup
-    const fieldTextWidthCalculator = document.createElement('span');
-    fieldTextWidthCalculator.style.visibility = 'hidden';
-    fieldTextWidthCalculator.style.whiteSpace = 'nowrap';
-    fieldTextWidthCalculator.style.font = getComputedStyle(chatField).font;
-    fieldTextWidthCalculator.textContent = chatField.value;
-    document.body.appendChild(fieldTextWidthCalculator);
-
-    const inputWidth = fieldTextWidthCalculator.offsetWidth;
-    const newLeft = chatField.offsetLeft + inputWidth + 5;
-    const maxLeft = chatField.offsetLeft + chatField.offsetWidth - lengthPopup.offsetWidth;
-    lengthPopup.style.left = `${Math.min(newLeft, maxLeft)}px`;
-
-    document.body.removeChild(fieldTextWidthCalculator);
-
-    // Reset the timeout for hiding the popup
-    hidePopupTimeout = setTimeout(hideLengthPopup, 1000);
+    updateLengthPopup(chatField.value.length);
+    updatePopupMetrics(chatField.value);
+    togglePopup(true);
+    hidePopupTimeout = setTimeout(() => togglePopup(false), 1000);
   });
 
-  // Event listener for keydown (Enter key)
-  chatField.addEventListener('keydown', function (event) {
-    if (event.key === 'Enter') {
-      showLengthPopup(0);
-      lengthPopup.style.left = '0px';
-      lengthPopup.style.color = 'hsl(200, 20%, 50%)'; // Light Blue
-      // Reset the timeout for hiding the popup
-      hidePopupTimeout = setTimeout(hideLengthPopup, 1000);
-    }
+  chatField.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    resetPopup();
+    togglePopup(true);
+    hidePopupTimeout = setTimeout(() => togglePopup(false), 1000);
   });
 
   // CHAT POPUP INDICATOR LENGTH (END)
@@ -9788,24 +9800,30 @@
     wipeDeletedMessages();
   }
 
-  // Function to remove from localStorage deleted messages values what are not anymore matching the chat message
-  // And also make messages in the chat to be invisible only for whose what are matching the localStorage message
   function wipeDeletedMessages() {
-    const messages = document.querySelectorAll('.messages-content div p');
-    // Retrieve the stored deleted messages array
+    // Retrieve and parse the stored deleted messages
     const deletedMessages = JSON.parse(localStorage.getItem('deletedChatMessagesContent') || '[]');
-    // Remove any deleted messages from the array that no longer exist in the chat messages container
-    const newDeletedMessages = deletedMessages.filter(content => {
-      return Array.from(messages).some(message => getMessageContent(message) === content);
+
+    // If there are no deleted messages in localStorage, return early
+    if (deletedMessages.length === 0) return;
+
+    const messages = document.querySelectorAll('.messages-content div p');
+    // Convert the deleted messages into a Set for faster lookup
+    const deletedMessagesSet = new Set(deletedMessages);
+
+    // Collect the current messages content into an array for easy comparison
+    const currentMessagesContent = Array.from(messages).map(message => getMessageContent(message));
+
+    // Filter out the deleted messages that no longer exist in the current messages
+    const newDeletedMessages = deletedMessages.filter(content => currentMessagesContent.includes(content));
+
+    // Hide messages in the chat that match the deleted messages
+    messages.forEach(message => {
+      if (deletedMessagesSet.has(getMessageContent(message))) {
+        message.style.display = 'none';
+      }
     });
-    // Remove messages from the chat that match the deleted messages in localStorage
-    deletedMessages.forEach(deletedMessage => {
-      messages.forEach(message => {
-        if (getMessageContent(message) === deletedMessage) {
-          message.style.display = 'none';
-        }
-      });
-    });
+
     // Store the updated deleted messages array in localStorage
     localStorage.setItem('deletedChatMessagesContent', JSON.stringify(newDeletedMessages));
   } // wipeDeletedMessages END
@@ -9835,8 +9853,8 @@
         toggleButton.innerText = 'Hidden';
         // Initial styles for the Hidden button
         assignHiddenButtonStyle(toggleButton);
-        toggleButton.style.transition = 'all 0.3s';
-        toggleButton.style.filter = 'brightness(1)';
+        toggleButton.style.transition = 'filter 300ms';
+        toggleButton.style.filter = 'hue-rotate(0) brightness(1)';
         let backupTextContent = toggleButton.textContent;
 
         // Set the hover styles
@@ -9844,9 +9862,9 @@
           if (isCtrlKeyPressed) {
             backupTextContent = toggleButton.textContent;
             toggleButton.textContent = 'Restore';
-            toggleButton.style.filter = 'grayscale(1) brightness(2)';
+            toggleButton.style.filter = 'hue-rotate(180deg) brightness(2)';
           } else {
-            toggleButton.style.filter = 'grayscale(0) brightness(2)';
+            toggleButton.style.filter = 'hue-rotate(0) brightness(2)';
           }
         });
 
@@ -9862,7 +9880,7 @@
         messagesContainer.appendChild(toggleButton);
       }
     }
-  }
+  } // createToggleButton END
 
   // Function to toggle messages display state from "NONE" to "BLOCK" and reverse
   function toggleHiddenMessages() {
@@ -9943,7 +9961,7 @@
 
     }
 
-  } // toggleHiddenMessages function END
+  } // toggleHiddenMessages END
 
   // Icon for the disabled chat button
   const iconDenied = `<svg xmlns="${svgUrl}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgb(255, 100, 100)" stroke-width="2"
@@ -9953,60 +9971,76 @@
       </svg>`;
 
 
-
   // CHAT SWITCHER
 
   const currentLocationIncludes = part => window.location.href.includes(part);
 
   if (currentLocationIncludes('gamelist')) {
-    // Define the text patterns to check for in the chat field’s value.
-    const blockedChatMessage = 'Вы не можете отправлять сообщения';
-    const lostConnectionMessage = 'Связь с сервером потеряна';
+    // Timeout settings.
     const extraTimeout = 5000;
     const minimalTimeout = 1000;
 
-    // Helper function to dynamically retrieve the current chat elements
+    // Define system messages.
+    const blockedChatMessage = 'Вы не можете отправлять сообщения';
+    const lostConnectionMessage = 'Связь с сервером потеряна';
+
+    // Helper function to dynamically retrieve the current chat elements.
     const getChatElements = () => ({
       chatField: document.querySelector('.chat .text'),
       chatSend: document.querySelector('.chat .send')
     });
 
+    // Function to extract a system message from the chat field's value.
+    // Returns the message string if found, or null otherwise.
+    function getChatSystemMessage(chatField) {
+      if (!chatField) return null;
+      const value = chatField.value;
+      if (value.includes(blockedChatMessage)) return blockedChatMessage;
+      if (value.includes(lostConnectionMessage)) return lostConnectionMessage;
+      return null;
+    }
+
     // Function to handle changes when the chat field is disabled.
     function handleChatStateChange(timeout, chatField, chatSend) {
-      const chatFieldValue = chatField.value;
-
       if (chatField.disabled) {
-        if (chatFieldValue.includes(blockedChatMessage)) {
+        const systemMessage = getChatSystemMessage(chatField);
+        if (systemMessage === blockedChatMessage) {
           // Re-enable the chat field and send button, and update their styles.
           chatField.disabled = chatSend.disabled = false;
           chatSend.style.setProperty('background-color', 'rgb(160, 35, 35)', 'important');
-          chatSend.style.setProperty('background-image', `url("data:image/svg+xml,${encodeURIComponent(iconDenied)}")`, 'important');
+          chatSend.style.setProperty(
+            'background-image',
+            `url("data:image/svg+xml,${encodeURIComponent(iconDenied)}")`,
+            'important'
+          );
           chatSend.style.setProperty('background-repeat', 'no-repeat', 'important');
           chatSend.style.setProperty('background-position', 'center', 'important');
           chatSend.style.setProperty('color', 'transparent', 'important');
           chatField.value = null;
           console.log('Chat field was blocked, re-enabled.');
-        } else if (chatFieldValue.includes(lostConnectionMessage)) {
+        } else if (systemMessage === lostConnectionMessage) {
           // Schedule a reload using timeout.
           console.log('Lost connection, reloading...');
-          setTimeout(() => { window.location.reload(); }, timeout);
+          setTimeout(() => {
+            window.location.reload();
+          }, timeout);
         }
       }
     }
 
-    // Create a MutationObserver to watch for attribute changes
+    // Create a MutationObserver to watch for attribute changes.
     const observer = new MutationObserver(() => {
-      // Get updated chat elements
+      // Get updated chat elements.
       const { chatField, chatSend } = getChatElements();
-      // Handle the change when the 'disabled' attribute is modified
+      // Handle the change when the 'disabled' attribute is modified.
       handleChatStateChange(extraTimeout, chatField, chatSend);
     });
 
-    // Get the chat field element
+    // Get the chat field element.
     const { chatField: chatInputText } = getChatElements();
-    // Start observing the chatField for changes to the 'disabled' attribute
-    if (chatInputText) observer.observe(chatInputText, { attributes: true, attributeFilter: ['disabled'] });
-
+    // Start observing the chatField for changes to the 'disabled' attribute.
+    if (chatInputText)
+      observer.observe(chatInputText, { attributes: true, attributeFilter: ['disabled'] });
 
     // Compact visibilitychange event: When the document becomes visible,
     // set a shorter timeout duration and check the chat state.
@@ -10266,10 +10300,18 @@
     if (inputField) {
       // Restore the input value
       inputField.value = localStorage.getItem('inputBackup') || '';
-      // Backup on input with debounce
-      inputField.addEventListener('input', debounce(() => localStorage.setItem('inputBackup', inputField.value), 250));
+
+      // Backup on input with debounce, but only if there's no system message.
+      inputField.addEventListener('input', debounce(() => {
+        if (!getChatSystemMessage(inputField)) {
+          localStorage.setItem('inputBackup', inputField.value);
+        }
+      }, 250));
+
       // Clear local storage on Enter
-      inputField.addEventListener('keydown', (event) => { if (event.key === 'Enter') localStorage.removeItem('inputBackup'); });
+      inputField.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') localStorage.removeItem('inputBackup');
+      });
     }
   }
 

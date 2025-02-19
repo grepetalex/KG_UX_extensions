@@ -325,8 +325,6 @@ async function parseUserRegistrations(startId) {
   firstPageLoad = false;
 }
 
-parseUserRegistrations(); // Start the parsing after page load
-
 // Global reference for the event listener
 let clickOutsideListener;
 let spaceKeyListener;
@@ -632,9 +630,9 @@ function createInputContainer(parentContainer, targetContainer) {
   };
 
   // Function to stop parsing
-  const stopParsing = () => {
+  function stopParsingProcess() {
     stopParsing = true;
-  };
+  }
 
   // Function to toggle the manual parsing flag
   const toggleManualParsing = () => {
@@ -646,7 +644,7 @@ function createInputContainer(parentContainer, targetContainer) {
   parseButton.addEventListener('click', startParsing);
 
   // Add click event listener to the stop button
-  stopButton.addEventListener('click', stopParsing);
+  stopButton.addEventListener('click', stopParsingProcess);
 
   // Add keypress event listener to the input to start parsing on Enter key
   startIdInput.addEventListener('keypress', (event) => {

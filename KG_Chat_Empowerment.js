@@ -390,32 +390,62 @@
     }
   });
 
-  // Converts text to speech using the Web Speech API.
+  // Helper function to clean text (extracted from original Web Speech API implementation)
+  function cleanText(text) {
+    return text
+      .replace(/_/g, '-') // Replace underscores with hyphens
+      .replace(/https?:\/\/([a-zA-Z0-9\-\.]+)(\/[^\s]*)?/g, (_, p1) => p1) // Replace URLs with domains
+      .split(' ').map(word => word.replace(/\d+/g, '')).filter(Boolean).join(' ').trim(); // Clean digits and format
+  }
+
+  // Split text into language blocks (Russian vs. English) based on per-word detection.
+  const detectLanguageBlocks = text =>
+    text.split(/\s+/).reduce((blocks, word) => {
+      const lang = /[А-Яа-яЁё]/.test(word) ? 'ru' : 'en';
+      if (blocks.length && blocks[blocks.length - 1].lang === lang) {
+        blocks[blocks.length - 1].text += ' ' + word;
+      } else {
+        blocks.push({ lang, text: word });
+      }
+      return blocks;
+    }, []);
+
+  // Fallback: Web Speech API TTS
+  async function webTextToSpeech(text, voiceSpeed = voiceSpeed) {
+    const { synth, utterance, voice } = await awaitVoices;
+    Object.assign(utterance, { text, rate: voiceSpeed, volume: voiceVolume, pitch: voicePitch, voice });
+    return new Promise(resolve => { utterance.onend = resolve; synth.speak(utterance); });
+  }
+
+  // Main TTS function: plays each language block in order.
   async function textToSpeech(text, voiceSpeed = voiceSpeed) {
-    return new Promise(async (resolve) => {
-      // Wait for the voices to be loaded asynchronously
-      const { synth, utterance, voice } = await awaitVoices;
 
-      const cleanedMessage = text
-        .replace(/_/g, '-') // Replace underscores with hyphens
-        .replace(/https?:\/\/([a-zA-Z0-9\-\.]+)(\/[^\s]*)?/g, (_, p1) => p1) // Replace URLs with domains
-        .split(' ').map(word => word.replace(/\d+/g, '')).filter(Boolean).join(' ').trim(); // Clean digits and format
+    const shouldUseGoogleTTS = shouldEnableSetting('sound', 'gTTS');
 
-      // Set utterance properties, such as text to be spoken, rate, volume, pitch, and voice
-      Object.assign(utterance, {
-        text: cleanedMessage, // Cleaned message to be spoken
-        rate: voiceSpeed, // Speed at which the speech will be delivered
-        volume: voiceVolume, // Volume level of the speech
-        pitch: voicePitch, // Pitch of the speech
-        voice: voice // The selected voice for the utterance
-      });
-
-      // Speak the utterance using the Web Speech synthesis engine
-      synth.speak(utterance);
-
-      // Resolve the promise once the speech finishes
-      utterance.onend = resolve; // Trigger resolve to indicate completion
-    });
+    // If Google TTS is enabled, use it. Otherwise, fallback to Web Speech API.
+    if (shouldUseGoogleTTS) {
+      const blocks = detectLanguageBlocks(cleanText(text));
+      try {
+        for (const { lang, text } of blocks) {
+          await new Promise((resolve, reject) => {
+            fetch(`http://127.0.0.1:5000/speak?text=${encodeURIComponent(text)}&lang=${lang}`)
+              .then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.arrayBuffer(); })
+              .then(buffer => {
+                const audio = new Audio(URL.createObjectURL(new Blob([buffer], { type: 'audio/mp3' })));
+                audio.onended = resolve;
+                audio.onerror = reject;
+                audio.play();
+              })
+              .catch(reject);
+          });
+        }
+      } catch (error) {
+        console.error("Server TTS failed:", error);
+      }
+    } else {
+      // If Google TTS isn't enabled, fallback to Web Speech API
+      await webTextToSpeech(text, voiceSpeed);
+    }
   }
 
   const verbs = {
@@ -430,7 +460,7 @@
 
   // Handles user entering and leaving actions
   function userAction(user, actionType, userGender) {
-    const shouldPlayAction = shouldEnableSetting('beep', 'presence');
+    const shouldPlayAction = shouldEnableSetting('sound', 'presence');
     // If neither beep and voice is enabled, exit early.
     if (!shouldPlayAction) return;
 
@@ -568,8 +598,9 @@
         static: 'showChatStaticNotifications',
         dynamic: 'showGlobalDynamicNotifications'
       },
-      beep: {
-        presence: 'enableBeepOnChatJoinLeave'
+      sound: {
+        presence: 'enableBeepOnChatJoinLeave',
+        gTTS: 'switchToGoogleTTSEngine'
       }
     };
 
@@ -9359,6 +9390,11 @@
           name: 'enabledBeepOnChatJoinLeave',
           description: '🔊 Play a beep sound and speak feedback when the user enters or leaves the chat',
           image: 'https://i.imgur.com/6PXFIES.jpeg'
+        },
+        {
+          name: 'switchToGoogleTTSEngine',
+          description: '🔊 Switch to google TTS engine if available',
+          image: 'https://i.imgur.com/0H94LII.jpeg'
         }
       ];
 

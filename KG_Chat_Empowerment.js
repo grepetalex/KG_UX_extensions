@@ -101,21 +101,6 @@
       90% { transform: translateX(-1px); }
       100% { transform: translateX(0); }
     }
-
-    .jump-effect {
-      animation: jump 500ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    }
-
-    @keyframes jump {
-      0% { transform: translate(0%, 0%); }
-      20% { transform: translate(0%, -60%); animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94); }
-      40% { transform: translate(0%, 15%); animation-timing-function: cubic-bezier(0.55, 0.085, 0.68, 0.53); }
-      60% { transform: translate(0%, -20%); }
-      75% { transform: translate(0%, 8%); }
-      85% { transform: translate(0%, -10%); }
-      92% { transform: translate(0%, 4%); }
-      100% { transform: translate(0%, 0%); }
-    }
   `;
 
   const boxShadow = `
@@ -5073,12 +5058,31 @@
     }, 500);
   }
 
-  // Helper function to add jump effect
-  function addJumpEffect(element) {
-    element.classList.add('jump-effect');
-    setTimeout(() => {
-      element.classList.remove('jump-effect');
-    }, 500);
+  function addJumpEffect(element, initialTranslateX = 0, initialTranslateY = 0) {
+    // Define keyframes with specified percentages, scale effect, and calc for Y translation
+    const keyframes = [
+      { transform: `translate(${initialTranslateX}%, calc(${initialTranslateY}%)) scale(1)` }, // 0%
+      { transform: `translate(${initialTranslateX}%, calc(${initialTranslateY}% - 60%)) scale(1.1)` }, // 20%
+      { transform: `translate(${initialTranslateX}%, calc(${initialTranslateY}% + 15%)) scale(1)` }, // 40%
+      { transform: `translate(${initialTranslateX}%, calc(${initialTranslateY}% - 20%)) scale(1.05)` }, // 60%
+      { transform: `translate(${initialTranslateX}%, calc(${initialTranslateY}% + 8%)) scale(1)` }, // 75%
+      { transform: `translate(${initialTranslateX}%, calc(${initialTranslateY}% - 10%)) scale(1.05)` }, // 85%
+      { transform: `translate(${initialTranslateX}%, calc(${initialTranslateY}% + 4%)) scale(1)` }, // 92%
+      { transform: `translate(${initialTranslateX}%, calc(${initialTranslateY}%)) scale(1)` } // 100%
+    ];
+
+    // Animation options
+    const options = {
+      duration: 500, // Total animation duration in ms (adjust as needed)
+      easing: 'ease', // Smooth easing between keyframes
+      iterations: 1 // Play once
+    };
+
+    // Start the animation
+    const animation = element.animate(keyframes, options);
+
+    // Optional: Return a promise that resolves when animation completes
+    return animation.finished;
   }
 
   // Helper function to add shake effect
@@ -6253,7 +6257,7 @@
     // Event listener to copy the text content of the messages container
     copyPersonalMessagesButton.addEventListener('click', () => {
       addJumpEffect(copyPersonalMessagesButton, 0, 0);
-      const textContent = Array.from(document.querySelector('.messages-container-wrapper').children)
+      const textContent = Array.from(document.querySelector('.messages-container').children)
         .filter(node => {
           const style = window.getComputedStyle(node);
           // Ignore hidden messages with contentVisibility 'hidden' or display 'none'
@@ -6267,7 +6271,7 @@
       // Check if there's content to copy
       if (textContent.trim()) {
         navigator.clipboard.writeText(textContent)
-          .then(() => addJumpEffect(copyPersonalMessagesButton, 0, 0)) // Apply jump effect on success
+          .then(() => addJumpEffect(copyPersonalMessagesButton, 0, 0))
           .catch(console.error);
       } else {
         alert('No messages to copy.');
@@ -6690,7 +6694,7 @@
       newCount++;
       localStorage.setItem('newMessagesCount', newCount);
       addPulseEffect(newCountElement); // Apply pulse effect for new messages
-      addJumpEffect(newCountElement); // Apply jump effect for new messages
+      addJumpEffect(newCountElement, 50, 50); // Apply jump effect for new messages
     }
 
     // Update counts in the UI

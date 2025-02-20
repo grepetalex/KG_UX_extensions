@@ -419,8 +419,13 @@
 
   // Main TTS function: plays each language block in order.
   async function textToSpeech(text, voiceSpeed = voiceSpeed) {
-
     const shouldUseGoogleTTS = shouldEnableSetting('sound', 'gTTS');
+
+    // Remove space before ? ! . , : ; @
+    text = text.replace(/\s(?=[?!,.:;@])/g, '');  // Remove space before ? ! . , : ; @
+
+    // Remove all other symbols completely
+    text = text.replace(/[-"#$%&'()*+\/<=>[\\\]^_`{|}~]/g, ''); // Remove all other symbols
 
     // If Google TTS is enabled, use it. Otherwise, fallback to Web Speech API.
     if (shouldUseGoogleTTS) {
@@ -431,7 +436,17 @@
             fetch(`http://127.0.0.1:5000/speak?text=${encodeURIComponent(text)}&lang=${lang}`)
               .then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.arrayBuffer(); })
               .then(buffer => {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 const audio = new Audio(URL.createObjectURL(new Blob([buffer], { type: 'audio/mp3' })));
+                const source = audioContext.createMediaElementSource(audio);
+                const gainNode = audioContext.createGain();
+
+                gainNode.gain.value = 2.0; // Boost volume
+
+                // Connect the audio source to the gain node and the gain node to the destination (speakers)
+                source.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
                 audio.onended = resolve;
                 audio.onerror = reject;
                 audio.play();

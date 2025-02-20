@@ -3745,79 +3745,109 @@
     return text.replace(pattern, replaceUsername);
   }
 
-  // Function to highlight mention words based on the specified container type
   function highlightMentionWords(containerType = 'generalMessages') {
-    // Define a mapping for container types to their respective selectors and message elements
     const containerSelectors = {
-      generalMessages: { container: '.messages-content div', messageElement: 'p' }, // For general chat
-      chatlogsMessages: { container: '.chat-logs-container', messageElement: '.message-text' }, // For chat logs
-      personalMessages: { container: '.messages-container-wrapper', messageElement: '.message-text' } // For personal messages panel
+      generalMessages: {
+        container: '.messages-content div',
+        messageElement: 'p',
+        exclude: ['.time', '.username'] // Add exclusion list
+      },
+      chatlogsMessages: {
+        container: '.chat-logs-container',
+        messageElement: '.message-text'
+      },
+      personalMessages: {
+        container: '.messages-container',
+        messageElement: '.message-text'
+      }
     };
 
-    // Get the container and message element details based on the passed containerType
-    const { container: containerSelector, messageElement: messageSelector } = containerSelectors[containerType];
+    const config = containerSelectors[containerType];
+    if (!config) {
+      console.error('Invalid container type');
+      return;
+    }
 
-    // If a valid container selector exists, process the messages
-    if (containerSelector) {
-      const containers = document.querySelectorAll(containerSelector); // Get all containers of the specified type
+    const containers = document.querySelectorAll(config.container);
+    const globalProcessed = new WeakSet();
 
-      // Loop through each container
-      containers.forEach((container) => {
-        // Get all the message elements from the current container
-        const messages = container.querySelectorAll(messageSelector);
+    containers.forEach((container) => {
+      const messages = container.querySelectorAll(config.messageElement);
 
-        // Loop through each chat message element
-        messages.forEach((message) => {
-          // Loop through each text node inside the message element
-          Array.from(message.childNodes).forEach((node) => {
-            if (node.nodeType === Node.TEXT_NODE) {
-              // Split the text node content into words
-              const regex = /[\s]+|[^\s\wа-яА-ЯёЁ]+|[\wа-яА-ЯёЁ]+/g;
-              const words = node.textContent.match(regex); // Split using the regex
+      messages.forEach((message) => {
+        const processingQueue = [
+          ...message.querySelectorAll('.private'),
+          ...message.querySelectorAll('.system-message'),
+          message
+        ];
 
-              // Create a new fragment to hold the new nodes
-              const fragment = document.createDocumentFragment();
+        processingQueue.forEach((element) => {
+          const walker = document.createTreeWalker(
+            element,
+            NodeFilter.SHOW_TEXT,
+            {
+              acceptNode: (node) => {
+                // Skip processed nodes and protected elements
+                if (globalProcessed.has(node)) return NodeFilter.FILTER_SKIP;
 
-              // Loop through each word in the text node
-              words.forEach((word) => {
-                // Check if the word is included in the "mentionKeywords" array (case insensitive)
-                if (mentionKeywords.map(alias => alias.toLowerCase()).includes(word.toLowerCase())) {
-                  // Create a new <span> element with the mention class
-                  const mentionHighlight = document.createElement('span');
-                  mentionHighlight.classList.add('mention');
-                  mentionHighlight.textContent = word;
-                  mentionHighlight.style.display = 'inline-flex';
-                  mentionHighlight.style.color = '#83cf40'; // Green color
-                  mentionHighlight.style.fontFamily = 'Roboto Mono, monospace';
-                  mentionHighlight.style.fontWeight = 'bold';
-
-                  // Append the new <span> element to the fragment
-                  fragment.appendChild(mentionHighlight);
-                } else {
-                  // Check if the word is already inside a mention span
-                  const span = document.createElement('span');
-                  span.innerHTML = word;
-                  if (span.querySelector('.mention')) {
-                    // If it is, simply append the word to the fragment
-                    fragment.appendChild(word);
-                  } else {
-                    // If it isn't, create a new text node with the word
-                    const textNode = document.createTextNode(word);
-
-                    // Append the new text node to the fragment
-                    fragment.appendChild(textNode);
-                  }
+                // Check if node is inside excluded elements
+                const parent = node.parentElement;
+                if (parent.closest('.mention, .time, .username')) {
+                  return NodeFilter.FILTER_SKIP;
                 }
-              });
 
-              // Replace the original text node with the new fragment
-              node.parentNode.replaceChild(fragment, node);
+                // Additional exclusion for generalMessages
+                if (containerType === 'generalMessages' && parent.closest(config.exclude.join(','))) {
+                  return NodeFilter.FILTER_SKIP;
+                }
+
+                return NodeFilter.FILTER_ACCEPT;
+              }
+            },
+            false
+          );
+
+          const nodes = [];
+          let currentNode;
+          while ((currentNode = walker.nextNode())) {
+            nodes.push(currentNode);
+          }
+
+          nodes.forEach((node) => {
+            if (!globalProcessed.has(node)) {
+              processNode(node);
+              globalProcessed.add(node);
             }
           });
         });
       });
-    } else {
-      console.error('Invalid container type specified');
+    });
+
+    function processNode(node) {
+      const regex = /[\s]+|[^\s\wа-яА-ЯёЁ]+|[\wа-яА-ЯёЁ]+/g;
+      const words = node.textContent.match(regex);
+      if (!words) return;
+
+      const fragment = document.createDocumentFragment();
+
+      words.forEach((word) => {
+        if (mentionKeywords.map(alias => alias.toLowerCase()).includes(word.toLowerCase())) {
+          const mentionSpan = document.createElement('span');
+          mentionSpan.className = 'mention';
+          mentionSpan.textContent = word;
+          Object.assign(mentionSpan.style, {
+            display: 'inline-flex',
+            color: '#83cf40',
+            fontFamily: 'Roboto Mono, monospace',
+            fontWeight: 'bold'
+          });
+          fragment.appendChild(mentionSpan);
+        } else {
+          fragment.appendChild(document.createTextNode(word));
+        }
+      });
+
+      node.parentNode.replaceChild(fragment, node);
     }
   }
 
@@ -3891,136 +3921,94 @@
     return finalColor;
   }
 
-  // Function to get the cleaned text content of the latest message with username prefix
   function getLatestMessageData() {
-    // Select the last <p> element specifically
     const messageElement = document.querySelector('.messages-content div p:last-of-type');
-    // Return null if no message found
     if (!messageElement) return null;
 
-    // Helper function to check if a node is a text node
-    const isTextNode = (node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== '';
-    // Helper function to check if a node is an img (emoticon)
-    const isImageNode = (node) => node.nodeName === 'IMG' && node.getAttribute('title');
-    // Helper function to check if a node is an anchor (link)
-    const isAnchorNode = (node) => node.nodeName === 'A' && node.getAttribute('href');
-
-    // Function to collect message parts (text + emoticons + links) from any container
-    const collectMessageParts = (container) =>
-      [...container.childNodes]
+    // Inline helper: collects text parts from a container's child nodes.
+    const collectMessageParts = container =>
+      Array.from(container.childNodes)
         .map(node =>
-          isTextNode(node) ? node.textContent.trim() :
-            isImageNode(node) ? node.getAttribute('title') :
-              isAnchorNode(node) ? node.getAttribute('href') : ''
+          node.nodeType === Node.TEXT_NODE && node.textContent.trim() ? node.textContent.trim() :
+            node.nodeName === 'IMG' && node.getAttribute('title') ? node.getAttribute('title') :
+              node.nodeName === 'A' && node.getAttribute('href') ? node.getAttribute('href') : ''
         )
-        .filter(Boolean); // Remove empty strings
+        .filter(Boolean);
 
-    // Initialize variables for message texts
-    let commonMessageText = '';
-    let privateMessageText = '';
-    let systemMessageText = '';
-    const systemUsername = 'SYSTEM'; // Default system username
+    // 1. Extract common message text.
+    let finalMessageText = collectMessageParts(messageElement).join(' ').trim();
+    let messageType = "common"; // Default message type
 
-    // Process common message
-    const commonMessageParts = collectMessageParts(messageElement);
-    commonMessageText = commonMessageParts.join(' ').trim(); // Final common message text
-
-    // Process private message
+    // 2. Check for private messages
     const privateMessageContainer = messageElement.querySelector('.room.private');
     if (privateMessageContainer && privateMessageContainer.textContent.includes('[шепчет вам]')) {
       const privateMessageElement = messageElement.querySelector('span.private');
       if (privateMessageElement) {
-        const privateMessageParts = collectMessageParts(privateMessageElement);
-        privateMessageText = privateMessageParts.join(' ').trim(); // Final private message
+        finalMessageText = collectMessageParts(privateMessageElement).join(' ').trim();
+        messageType = "private";
       }
     }
 
-    // Process system message
+    // 3. Check for system messages
     const systemMessageElement = messageElement.querySelector('.system-message');
     if (systemMessageElement) {
-      const systemMessageParts = collectMessageParts(systemMessageElement);
-      // Join system message parts into final systemMessageText
-      systemMessageText = systemMessageParts.join(' ').trim(); // Final system message
-      // Clear <Клавобот> from systemMessageText
+      let systemMessageText = collectMessageParts(systemMessageElement).join(' ').trim();
       systemMessageText = systemMessageText.replace(/<Клавобот>\s*/g, '');
+      finalMessageText = systemMessageText;
+      messageType = "system";
     }
 
-    // Retrieve or initialize personalMessages from localStorage
-    const personalMessages = JSON.parse(localStorage.getItem('personalMessages')) || {};
+    // 4. If still "common" and it mentions the user, mark as "mention".
+    if (messageType === "common" && isMentionForMe(finalMessageText)) {
+      messageType = "mention";
+    }
 
-    // Helper to get the current date in YYYY-MM-DD format
+    // Process localStorage: retrieve or initialize personalMessages.
+    const personalMessages = JSON.parse(localStorage.getItem('personalMessages')) || {};
     const getCurrentDate = () => new Date().toLocaleDateString('en-CA');
 
-    // Helper function to handle messages
-    const handleMessage = (messageType, messageText) => {
-      const time = messageElement.querySelector('.time')?.textContent || 'N/A';
-      const usernameElement = messageElement.querySelector('.username span[data-user]');
-      const userId = usernameElement ? usernameElement.getAttribute('data-user') : null;
-      const username = usernameElement ? usernameElement.textContent : systemUsername;
-      const usernameColor = usernameElement ? usernameElement.parentElement.style.color : 'rgb(180, 180, 180)';
-      const normalizedColor = normalizeUsernameColor(usernameColor);
+    // Extract message metadata.
+    const time = messageElement.querySelector('.time')?.textContent || 'N/A';
+    const usernameDataElement = messageElement.querySelector('.username span[data-user]');
+    const userId = usernameDataElement ? usernameDataElement.getAttribute('data-user') : null;
+    const extractedUsername = usernameDataElement ? usernameDataElement.textContent : 'SYSTEM';
+    const usernameColor = usernameDataElement ? usernameDataElement.parentElement.style.color : 'rgb(180,180,180)';
+    const normalizedColor = normalizeUsernameColor(usernameColor);
+    const messageKey = `${time}_${extractedUsername}`;
 
-      // Create a unique key based on the time and username to avoid collisions
-      const messageKey = `${time}_${username}`;
+    // Check if the message type is "mention" or "private", and if the username is not in the ignore list
+    const shouldSaveMessage = (
+      messageType === "mention" ||
+      messageType === "private"
+    ) && !ignored.includes(extractedUsername);
 
-      // Store the message data in personalMessages with the new order
+    // If the condition is met, save the message to localStorage
+    if (shouldSaveMessage) {
       personalMessages[messageKey] = {
         time,
         date: getCurrentDate(),
-        username,
+        username: extractedUsername,
         usernameColor: normalizedColor,
-        message: messageText,
+        message: finalMessageText,
         type: messageType,
         userId
       };
-
-      // Save to localStorage only if the user is not in the ignored
-      if (!ignored.includes(username)) {
-        localStorage.setItem('personalMessages', JSON.stringify(personalMessages));
-      }
-    };
-
-    // Check if the message contains a mention for the current user
-    const usernameElement = messageElement.querySelector('.username');
-    let usernameText = (usernameElement && usernameElement.textContent)
-      ? usernameElement.textContent.replace(/</g, '').replace(/>/g, '')
-      : systemUsername; // Default to systemUsername if not found
-
-    let usernamePrefix = ''; // Initialize usernamePrefix
-
-    // Determine the final message text based on the availability of common, private, or system messages
-    let finalMessageText = commonMessageText; // Start with the common message
-
-    if (privateMessageText) {
-      finalMessageText = `${privateMessageText}`; // If it's a private message
-      handleMessage('private', finalMessageText);
-    } else if (systemMessageText && isMentionForMe(systemMessageText)) {
-      finalMessageText = `${systemMessageText}`; // If there's a system message with a mention
-      handleMessage('system', finalMessageText);
+      localStorage.setItem('personalMessages', JSON.stringify(personalMessages));
     }
 
-    // Handle mentions
-    if (isMentionForMe(finalMessageText)) {
-      isMention = true;
-      usernamePrefix = `${replaceWithPronunciation(usernameText)} обращается: `; // Use usernameText directly
-      handleMessage('mention', finalMessageText); // Pass 'mention' and the original final message text
-      highlightMentionWords();
-    } else if (usernameText !== lastUsername) {
-      isMention = false;
-      usernamePrefix = `${replaceWithPronunciation(usernameText)} пишет: `; // Use usernameText directly
-    }
+    // Extract username (defaulting to "SYSTEM") and build prefix.
+    const usernameContainer = messageElement.querySelector('.username');
+    const usernameText = usernameContainer ? usernameContainer.textContent.replace(/[<>]/g, '') : 'SYSTEM';
 
-    lastUsername = usernameText; // Update the last seen username
+    highlightMentionWords(); // Apply highlight for all message types
 
-    // Combine the username prefix and the final message text
-    const messageWithPronunciation = `${usernamePrefix}${replaceWithPronunciation(finalMessageText)}`;
+    let prefix = (messageType === "mention" || messageType === "private")
+      ? `${replaceWithPronunciation(usernameText)} обращается: `
+      : (usernameText !== lastUsername ? `${replaceWithPronunciation(usernameText)} пишет: ` : "");
+    lastUsername = usernameText;
 
-    // Return all relevant message data including the system message
-    return {
-      modifiedMessageText: messageWithPronunciation || systemMessageText, // If messageWithPronunciation is null, assign systemMessageText
-      originalMessageText: finalMessageText || systemMessageText, // If finalMessageText is null, assign systemMessageText
-      usernameText: usernameText // Always return usernameText
-    };
+    const messageText = prefix + replaceWithPronunciation(finalMessageText);
+    return { messageText, usernameText };
   }
 
   // Prevent the "readNewMessages" function from being called multiple times until all messages in the set have been read
@@ -4813,27 +4801,26 @@
    * @param {string} mode - The mode of operation; either 'one' to process a single username or 'all' to process multiple.
    */
   function normalizeAndResetUsernames(usernameElements, mode) {
-    // Exit if usernameElements is null or undefined
-    if (!usernameElements) return console.error("usernameElements is null or undefined.");
+    if (!usernameElements) return; // Skip processing if undefined or null
 
     if (mode === 'one') {
-      // Directly process the single username element
-      const userSpan = usernameElements.querySelector('span[data-user]'); // Get the span[data-user] inside the .username element
-      const computedColor = getComputedStyle(usernameElements).color; // Get the computed color of the usernameElement
-      const normalizedColor = normalizeUsernameColor(computedColor); // Normalize the color
-      usernameElements.style.setProperty('color', normalizedColor, 'important'); // Apply the normalized color to usernameElement
-      userSpan.style.setProperty('filter', 'invert(0)', 'important'); // Reset the filter for userSpan
+      // Process a single username element.
+      const userSpan = usernameElements.querySelector('span[data-user]');
+      if (!userSpan) return; // Skip processing if child span is missing
+      const computedColor = getComputedStyle(usernameElements).color;
+      const normalizedColor = normalizeUsernameColor(computedColor);
+      usernameElements.style.setProperty('color', normalizedColor, 'important');
+      userSpan.style.setProperty('filter', 'invert(0)', 'important');
     } else if (mode === 'all') {
-      // Process all username elements within the context of the provided NodeList
-      const elementsToProcess = Array.from(usernameElements); // Convert NodeList to an array
-      elementsToProcess.forEach(usernameElement => {
-        const userSpan = usernameElement.querySelector('span[data-user]'); // Get the span[data-user] inside the .username element
-        if (!userSpan) return; // Exit if userSpan does not exist
-
-        const computedColor = getComputedStyle(usernameElement).color; // Get the computed color of the usernameElement
-        const normalizedColor = normalizeUsernameColor(computedColor); // Normalize the color
-        usernameElement.style.setProperty('color', normalizedColor, 'important'); // Apply the normalized color to usernameElement
-        userSpan.style.setProperty('filter', 'invert(0)', 'important'); // Reset the filter for userSpan
+      // Process all username elements using forEach with return (which acts like continue)
+      Array.from(usernameElements).forEach(usernameElement => {
+        if (!usernameElement) return; // Skip this iteration if the element is falsy
+        const userSpan = usernameElement.querySelector('span[data-user]');
+        if (!userSpan) return; // Skip if child span is missing
+        const computedColor = getComputedStyle(usernameElement).color;
+        const normalizedColor = normalizeUsernameColor(computedColor);
+        usernameElement.style.setProperty('color', normalizedColor, 'important');
+        userSpan.style.setProperty('filter', 'invert(0)', 'important');
       });
     } else {
       console.error("Invalid mode. Use 'one' or 'all'.");
@@ -4861,175 +4848,129 @@
         for (let node of mutation.addedNodes) {
           if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'P') {
             const singleUsernameElement = node.querySelector('.username'); // Get a single username element
-            normalizeAndResetUsernames(singleUsernameElement, 'one'); // Process the single username element
+            if (singleUsernameElement) normalizeAndResetUsernames(singleUsernameElement, 'one'); // Process the single username element
 
-            // Get previous message from localStorage
-            let previousMessageText = localStorage.getItem('previousMessageText');
+            // Retrieve the previous message text from localStorage
+            const previousMessageText = localStorage.getItem('previousMessageText');
 
-            // Get the latest message data
-            let latestMessageData = getLatestMessageData();
+            // Get the latest message data (returns only messageText and usernameText)
+            const latestMessageData = getLatestMessageData();
+            const currentMessageText = latestMessageData?.messageText || null;
+            const currentMessageUsername = latestMessageData?.usernameText || null;
 
-            // Get the modified and original actual messages of the user who sent it
-            let actualModifiedMessageText = latestMessageData?.modifiedMessageText || null;
-            let actualOriginalMessageText = latestMessageData?.originalMessageText || null;
-            // Get the actual username of the user who sent the latest message
-            let latestMessageUsername = latestMessageData?.usernameText || null;
+            // Initialize or update the user's message array in the map for similarity checks
+            messagesForSimilarityCheck.set(
+              currentMessageUsername,
+              messagesForSimilarityCheck.get(currentMessageUsername) || []
+            );
+            const userMessages = messagesForSimilarityCheck.get(currentMessageUsername);
 
-            // Initialize the user's message array if it doesn't exist
-            messagesForSimilarityCheck.set(latestMessageUsername, messagesForSimilarityCheck.get(latestMessageUsername) || []);
-
-            // Get the user's messages
-            const userMessages = messagesForSimilarityCheck.get(latestMessageUsername);
-
-            // Check if the new message is similar to any existing message in the user's message array
+            // Check if the new message is similar to any existing message
             const isSimilarMessage = userMessages.some(msg => {
-              const messageSimilarity = similarity(actualOriginalMessageText, msg); // Store similarity value in a constant
+              const messageSimilarity = similarity(currentMessageText, msg);
               return messageSimilarity > similarityThreshold;
             });
 
-            // If the message is similar, set filter opacity and blur
+            // If the message is similar, apply filter styles
             if (isSimilarMessage) {
               node.style.filter = 'opacity(0.3) blur(1px)';
             } else {
-              // Add the new message to the user's message array and update the map
-              userMessages.push(actualOriginalMessageText); // Push the new message into the user's message array
-              messagesForSimilarityCheck.set(latestMessageUsername, userMessages); // Update the map with the latest messages for the user
+              // Otherwise, update the user's message array
+              userMessages.push(currentMessageText);
+              messagesForSimilarityCheck.set(currentMessageUsername, userMessages);
 
-              // Prepare the sessionMessages object to store chat messages in the desired format
-              let sessionMessages = JSON.parse(localStorage.getItem('sessionChatMessages')) || {}; // Retrieve existing session messages or initialize an empty object
+              // Prepare session messages object for localStorage
+              let sessionMessages = JSON.parse(localStorage.getItem('sessionChatMessages')) || {};
+              sessionMessages[currentMessageUsername] = sessionMessages[currentMessageUsername] || [];
+              sessionMessages[currentMessageUsername].push(currentMessageText);
 
-              // Ensure there's an entry for the current user in sessionMessages
-              sessionMessages[latestMessageUsername] = sessionMessages[latestMessageUsername] || []; // Create an array if the username doesn't exist
-
-              // Add the new message to the user's array in sessionMessages
-              sessionMessages[latestMessageUsername].push(actualOriginalMessageText); // Append the new message to the user's message array
-
-              // Check if the number of messages for the user exceeds the maximum allowed
+              // If the number of messages exceeds the maximum, remove the user’s messages
               if (userMessages.length > maxMessagesPerUser) {
-                messagesForSimilarityCheck.delete(latestMessageUsername); // Remove the user from the messagesForSimilarityCheck map
-                delete sessionMessages[latestMessageUsername]; // Delete the user's messages from sessionMessages
+                messagesForSimilarityCheck.delete(currentMessageUsername);
+                delete sessionMessages[currentMessageUsername];
               }
-
-              // Save the updated session messages back to localStorage to persist changes
-              localStorage.setItem('sessionChatMessages', JSON.stringify(sessionMessages)); // Update localStorage with the new sessionMessages
+              localStorage.setItem('sessionChatMessages', JSON.stringify(sessionMessages));
             }
 
             // Convert Cyrillic username to Latin
-            const latinUsername = convertRussianUsernameToLatin(latestMessageUsername);
+            const latinUsername = convertRussianUsernameToLatin(currentMessageUsername);
 
-            // Detect and handle the ban message (play sound if detected)
-            if (isBanMessage(actualModifiedMessageText)) {
-              console.log('Ban message detected:', actualModifiedMessageText);
-              playSound(); // Play the Mario Game Over sound
+            // Check for a ban message and play sound if detected
+            if (isBanMessage(currentMessageText)) {
+              console.log('Ban message detected:', currentMessageText);
+              playSound();
             }
 
-            // Check if the username is in the ignored
-            if (latestMessageUsername && ignored.includes(latestMessageUsername)) {
+            // Hide message if the username is in the ignored list
+            if (currentMessageUsername && ignored.includes(currentMessageUsername)) {
               node.classList.add('ignored-user', latinUsername);
-              node.style.display = 'none'; // Hide the message
-              continue; // Skip the rest of the processing for this message
+              node.style.display = 'none';
+              continue;
             }
 
-            // Get the sound switcher element and check which option is selected
+            // Get sound switcher and message mode elements
             const soundSwitcher = document.querySelector('#voice, #beep, #silence');
             const isVoice = soundSwitcher && soundSwitcher.id === 'voice';
             const isBeep = soundSwitcher && soundSwitcher.id === 'beep';
-
-            // Get the message mode element and check which option is selected
             const messageMode = document.querySelector('#every-message, #mention-message');
             const isEveryMessageMode = messageMode && messageMode.id === 'every-message';
             const isMentionMessageMode = messageMode && messageMode.id === 'mention-message';
 
-            // Define the constant for the private message check
+            // Check if the message contains a private indicator
             const privateMessageIndicator = '[шепчет вам]';
-            // Check if the message element contains a private message
             const privateMessageContainer = node.querySelector('.room.private');
             const isPrivateMessage = privateMessageContainer && privateMessageContainer.textContent.includes(privateMessageIndicator);
 
-            // If mode is voice, speak the new message and update the latest message content in local storage
-            if (isVoice && isInitialized && actualModifiedMessageText && actualModifiedMessageText !== previousMessageText) {
-              // Update localStorage key "previousMessageText"
-              localStorage.setItem('previousMessageText', actualModifiedMessageText);
-
-              // Do not read personal messages. Only unique other people's messages.
-              if (latestMessageUsername && !latestMessageUsername.includes(myNickname)) {
-
-                // Read all messages in every-message mode
+            // If voice mode is enabled and the message is new, trigger text-to-speech
+            if (isVoice && isInitialized && currentMessageText && currentMessageText !== previousMessageText) {
+              localStorage.setItem('previousMessageText', currentMessageText);
+              if (currentMessageUsername && !currentMessageUsername.includes(myNickname)) {
                 if (isEveryMessageMode) {
                   console.log('Triggered Voice: Every message mode');
-                  addNewMessage(actualModifiedMessageText);
-                }
-                // Read mention messages only in mention-message mode
-                else if (isMentionMessageMode && isMention) {
+                  addNewMessage(currentMessageText);
+                } else if (isMentionMessageMode && isMention) {
                   console.log('Triggered Voice: Mention message mode');
-                  addNewMessage(actualModifiedMessageText);
-                }
-                // Read when private messages is addressed to you
-                else if (isPrivateMessage) {
+                  addNewMessage(currentMessageText);
+                } else if (isPrivateMessage) {
                   console.log('Triggered Voice: Private message');
-                  addNewMessage(actualModifiedMessageText);
-                }
-                else {
+                  addNewMessage(currentMessageText);
+                } else {
                   console.log('No matching condition for Voice Mode');
                 }
-
               }
             }
 
-            // If mode is beep, play the beep sound for the new message
-            if (isBeep && isInitialized && actualModifiedMessageText && actualModifiedMessageText !== previousMessageText) {
-
-              // Update localStorage key "previousMessageText"
-              localStorage.setItem('previousMessageText', actualModifiedMessageText);
-
-              // Do not read personal messages. Only unique other people's messages.
-              if (latestMessageUsername && !latestMessageUsername.includes(myNickname)) {
-
-                // Beep all messages in every-message mode
+            // If beep mode is enabled and the message is new, play beep sound
+            if (isBeep && isInitialized && currentMessageText && currentMessageText !== previousMessageText) {
+              localStorage.setItem('previousMessageText', currentMessageText);
+              if (currentMessageUsername && !currentMessageUsername.includes(myNickname)) {
                 if (isEveryMessageMode) {
                   console.log('Triggered Beep: Every message mode');
                   const frequenciesToPlay = isMention ? mentionMessageFrequencies : usualMessageFrequencies;
                   playBeep(frequenciesToPlay, beepVolume);
-                }
-                // Beep mention messages only in mention-message mode
-                else if (isMentionMessageMode && isMention) {
+                } else if (isMentionMessageMode && isMention) {
                   console.log('Triggered Beep: Mention message mode');
-                  const frequenciesToPlay = mentionMessageFrequencies;
-                  playBeep(frequenciesToPlay, beepVolume);
-                }
-                // Beep when private messages are addressed to you
-                else if (isPrivateMessage) {
+                  playBeep(mentionMessageFrequencies, beepVolume);
+                } else if (isPrivateMessage) {
                   console.log('Triggered Beep: Private message');
-                  const frequenciesToPlay = mentionMessageFrequencies;
-                  playBeep(frequenciesToPlay, beepVolume);
-                }
-                else {
+                  playBeep(mentionMessageFrequencies, beepVolume);
+                } else {
                   console.log('No matching condition for Beep Mode');
                 }
-
-                // Reset mention flag if it was true
                 if (isMention) isMention = false;
               }
             }
 
+            // If the page is initialized, perform various UI updates and processing
             if (isInitialized) {
-              // Attach contextmenu event listener for messages deletion
               attachEventsToMessages();
-              // Convert YouTube links to visible iframe containers
-              convertVideoLinksToPlayer('generalMessages'); // For general chat
-              // Convert image links to visible image containers
+              convertVideoLinksToPlayer('generalMessages');
               convertImageLinksToImage('generalMessages');
-              // Decodes links within the general messages section.
               processEncodedLinks('generalMessages');
-              // Call the function to apply the chat message grouping
               applyChatMessageGrouping();
-              // Call the function to scroll to the bottom of the chat
               scrollMessagesToBottom();
-              // Call the banSpammer function to track and handle potential spam messages
               banSpammer();
-              // Call the function to show the latest popup message
               showPopupMessage();
-              // Call the function to update the total and new message count display
               updatePersonalMessageCounts();
             }
           }

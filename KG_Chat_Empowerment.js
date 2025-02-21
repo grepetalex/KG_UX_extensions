@@ -494,9 +494,9 @@
   const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
   async function purgeStaticChatNotifications(
-    removalDelay = 120,
+    removalDelay = 250,
     scrollDuration = 1000,
-    animationDuration = 80
+    animationDuration = 200
   ) {
     const chat = document.querySelector(".messages-content");
     if (!chat) return;
@@ -515,14 +515,14 @@
         await sleep(removalDelay);
       }
 
-      // Animate removal
       Object.assign(el.style, {
         transition: [
-          `opacity ${animationDuration / 1000}s cubic-bezier(0.83, 0, 0.17, 1)`,
-          `transform ${animationDuration / 1000}s cubic-bezier(0.83, 0, 0.17, 1)`
-        ].join(', '),
+          `opacity ${animationDuration / 1000}s cubic-bezier(.3,.1,1,.1)`,
+          `transform ${animationDuration / 1000}s cubic-bezier(0,.7,.3,0.95)`
+        ].join(','),
         opacity: 0,
-        transform: 'translateX(1em)'
+        transformOrigin: 'left',
+        transform: 'translateX(18em) skewX(-20deg)'
       });
 
       // Wait for animation to complete

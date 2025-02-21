@@ -8945,11 +8945,9 @@
 
       containers.forEach(selector => {
         const container = document.querySelector(selector);
-        // Find the .add-setting-button if it exists
+        if (container) container.replaceChildren(); // Clear the container
+
         const addButton = container.querySelector('.add-setting-button');
-        if (container) {
-          container.innerHTML = ''; // Clear the container
-        }
         // Re-add the .add-setting-button if it was found
         addButton && container.appendChild(addButton);
       });

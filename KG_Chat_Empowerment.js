@@ -8939,7 +8939,8 @@
         '.settings-mention-container',
         '.settings-replacement-container',
         '.settings-moderator-container',
-        '.settings-ignored-container'
+        '.settings-ignored-container',
+        '.settings-toggle-container'
       ];
 
       containers.forEach(selector => {
@@ -9025,12 +9026,37 @@
       element.style.color = 'burlywood';
       element.style.backgroundColor = 'rgba(222, 184, 135, 0.1)';
       element.style.width = 'fit-content';
-      element.style.margin = '2em 1em 1em';
+      element.style.margin = '0 0 1em';
       element.style.padding = '0.4em 0.8em';
-      element.style.textAlign = 'center';
       element.style.setProperty('border-radius', '0.4em', 'important');
       element.style.left = '50%';
       element.style.transform = 'translateX(-50%)';
+    }
+
+    // Helper function to assign styles to hide elements
+    function assignHideElementStyles(element) {
+      element.style.position = 'relative';
+      element.style.font = '1em Montserrat';
+      element.style.color = 'lightgreen';
+      element.style.backgroundColor = 'rgba(222, 184, 135, 0.1)';
+      element.style.margin = '0 0 3em 0';
+      element.style.padding = '0.4em 0.8em';
+      element.style.setProperty('border-radius', '0.4em', 'important');
+      element.style.left = '50%';
+      element.style.transform = 'translateX(-50%)';
+      element.style.cursor = 'pointer';
+      element.style.transition = 'background-color 0.3s ease';
+      element.style.border = 'none';
+
+      // Hover effect
+      element.addEventListener('mouseenter', () => {
+        element.style.backgroundColor = 'rgba(222, 184, 135, 0.1)';
+      });
+
+      // Restore original style when mouse leaves
+      element.addEventListener('mouseleave', () => {
+        element.style.backgroundColor = 'rgba(255, 219, 173, 0.1)';
+      });
     }
 
     // Array of settings types with corresponding emoji
@@ -9060,7 +9086,6 @@
       settingsContainer.appendChild(description);
       settingsContainer.appendChild(container);
     });
-
 
     // Append the settings content container to the settings panel
     settingsPanel.appendChild(settingsContainer);
@@ -9211,6 +9236,32 @@
       }
     }
 
+    // Function to create a spoiler container (as provided)
+    function createSpoilerContainer(contentElement, options = {}) {
+      const container = document.createElement('div');
+      container.classList.add("settings-spoiler");
+      const toggleButton = document.createElement('button');
+
+      toggleButton.textContent = options.showText || 'Show Content';
+
+      contentElement.style.display = 'none';
+      // Apply hide element styles when hiding content
+      assignHideElementStyles(toggleButton);
+
+      toggleButton.addEventListener('click', () => {
+        const isHidden = contentElement.style.display === 'none';
+        contentElement.style.display = isHidden ? 'flex' : 'none';
+        toggleButton.textContent = isHidden
+          ? (options.hideText || 'Hide Content')
+          : (options.showText || 'Show Content');
+      });
+
+      container.appendChild(toggleButton);
+      container.appendChild(contentElement);
+
+      return container;
+    }
+
     // Function to create a tracked item (with gender select)
     function createTrackedItem(user) {
       const item = createContainer('tracked', 'flex');
@@ -9355,7 +9406,6 @@
       return item; // Return the created toggle item
     }
 
-    // Populate settings dynamically
     function populateSettings() {
       const containers = {
         usersToTrack: '.settings-tracked-container',
@@ -9366,41 +9416,70 @@
       };
 
       const creators = {
-        usersToTrack: createTrackedItem,
-        mentionKeywords: createMentionItem,
-        usernameReplacements: createReplacementItem,
-        moderator: createModeratorItem,
-        ignored: createIgnoredItem
+        usersToTrack: { name: 'tracked', createItem: createTrackedItem },
+        mentionKeywords: { name: 'mention', createItem: createMentionItem },
+        usernameReplacements: { name: 'replacement', createItem: createReplacementItem },
+        moderator: { name: 'moderator', createItem: createModeratorItem },
+        ignored: { name: 'ignored', createItem: createIgnoredItem }
       };
 
       const data = getSettingsData();
 
       Object.entries(data).forEach(([key, items]) => {
         const container = document.querySelector(containers[key]);
-        if (!container) return; // Skip if the container is null
+        if (!container) return;
+
+        // Apply styling to the container
         container.style.width = '100%';
         container.style.display = 'flex';
         container.style.flexWrap = 'wrap';
         container.style.alignItems = 'start';
         container.style.flexDirection = 'column';
 
-        // Apply specific styles for mention and ignored containers
         if (key === 'mentionKeywords' || key === 'moderator' || key === 'ignored') {
           container.style.flexDirection = 'row';
         }
 
-        // Create and append existing items
-        items.forEach(item => container.appendChild(creators[key](item)));
+        // Clear existing items and add buttons, but ensure the add button is not removed
+        const existingAddButton = container.querySelector('.add-button');
+        while (container.firstChild) {
+          if (container.firstChild !== existingAddButton) {
+            container.removeChild(container.firstChild);
+          } else {
+            break;
+          }
+        }
 
-        // Create and append the add button with the appropriate creator
-        const addButton = createAddButton(containers[key], creators[key]);
+        // Populate items
+        items.forEach(item => container.appendChild(creators[key].createItem(item)));
+
+        const addButton = createAddButton(containers[key], creators[key].createItem);
         container.appendChild(addButton);
+
+        // Check if already wrapped in a spoiler
+        const isAlreadyWrapped = container.closest('.settings-spoiler') !== null;
+
+        if (!isAlreadyWrapped) {
+          const parent = container.parentNode;
+          if (parent) {
+            const index = Array.from(parent.childNodes).indexOf(container);
+            parent.removeChild(container);
+            const spoiler = createSpoilerContainer(container, {
+              showText: `Show ${creators[key].name} settings`,
+              hideText: `Hide ${creators[key].name} settings`
+            });
+            spoiler.classList.add('settings-spoiler-wrapper');
+            if (index >= parent.childNodes.length) {
+              parent.appendChild(spoiler);
+            } else {
+              parent.insertBefore(spoiler, parent.childNodes[index]);
+            }
+          }
+        }
       });
 
-      // Retrieve the toggle settings from localStorage
+      // Process toggle settings separately
       const storedToggleSettings = JSON.parse(localStorage.getItem('toggle')) || [];
-
-      // Create and append toggle items directly for the toggle settings
       const toggleContainer = document.querySelector('.settings-toggle-container');
       const toggleSettings = [
         {
@@ -9425,27 +9504,24 @@
         }
       ];
 
-      // Create and append toggle items directly
       toggleSettings.forEach(toggle => {
-        // Find the stored setting for the current toggle or default to 'yes'
         const storedSetting = storedToggleSettings.find(item => item.name === toggle.name);
-        const optionValue = storedSetting ? storedSetting.option : 'yes'; // Default to 'yes' if not set
-        const toggleItem = createToggleItem(toggle, toggle.name, optionValue); // Pass the toggle and name
-        toggleContainer.appendChild(toggleItem); // Append the toggle item to the container
+        const optionValue = storedSetting ? storedSetting.option : 'yes';
+        const toggleItem = createToggleItem(toggle, toggle.name, optionValue);
+        toggleContainer.appendChild(toggleItem);
       });
-
     }
 
     // Function to create an "Add" button for dynamic item creation
     function createAddButton(containerSelector, itemCreator) {
-      const addButton = document.createElement('div');
       const middleWord = containerSelector.split('-')[1]; // Extract key type (e.g., tracked, mention)
       const existingButton = document.querySelector(`.add-${middleWord}-item`); // Check if the button already exists
+      // If the button exists, remove it
+      if (existingButton) existingButton.remove();
 
-      if (existingButton) return existingButton; // Return the existing button if it exists
-
+      const addButton = document.createElement('div');
       // Set class, content, and style for the button
-      addButton.className = `add-setting-button add-${middleWord}-item`;
+      addButton.className = `add-button add-setting-button add-${middleWord}-item`;
       addButton.innerHTML = addSVG; // Add SVG icon to the button
       styleButton(addButton, '#d190ee', '#502f6b', false); // Style the button
       addButton.style.margin = '0.4em';

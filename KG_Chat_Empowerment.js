@@ -17,6 +17,11 @@
 
   // Global styles
   const empowermentStyles = `
+    /* input error indication */
+    .input-error {
+      transition: background-color 300ms ease-in-out;
+      background-color: #6b2f2f !important;
+    }
     /* chat length popup on field type with dynamic movement horizontally */
     .length-field-popup {
       position: absolute;
@@ -192,16 +197,19 @@
     ? KG_Chat_Empowerment.voiceSettings.voicePitch
     : defaultVoicePitch; // Default value if KG_Chat_Empowerment.voiceSettings.voicePitch is null
 
+  // Define the base URL for user profiles
+  const profileBaseUrl = 'https://klavogonki.ru/u/#/';
+
   // Define the users to track and notify with popup and audio
   let usersToTrack = [
     { name: 'Даниэль', gender: 'Male', pronunciation: 'Даниэль', state: 'thawed' }
   ];
 
-  // Define the base URL for user profiles
-  const profileBaseUrl = 'https://klavogonki.ru/u/#/';
-
   // Notify if someone addresses me using these aliases (case-insensitive)
   let mentionKeywords = [];
+
+  // Define username replacements for pronunciation
+  let usernameReplacements = [];
 
   // Define a list of moderator whose new user nicknames in the chat list should have a shield icon.
   let moderator = [];
@@ -215,18 +223,18 @@
   // Check and load settings from localStorage if available and not empty
   const storedUsersToTrack = JSON.parse(localStorage.getItem('usersToTrack')) || [];
   const storedMentionKeywords = JSON.parse(localStorage.getItem('mentionKeywords')) || [];
+  const storedUsernameReplacements = JSON.parse(localStorage.getItem('usernameReplacements')) || [];
   const storedModerators = JSON.parse(localStorage.getItem('moderator')) || [];
   const storedIgnored = JSON.parse(localStorage.getItem('ignored')) || [];
 
-  // Replace usersToTrack with stored value if it exists and is not empty
+  // Replace values with stored ones if they exist and are not empty
   usersToTrack = storedUsersToTrack?.length ? storedUsersToTrack : usersToTrack;
-  // Replace mentionKeywords with stored value if it exists and is not empty
   mentionKeywords = storedMentionKeywords?.length ? storedMentionKeywords : mentionKeywords;
-  mentionKeywords.push(myNickname); // Actual nickname
-  // Replace moderator with stored value if it exists and is not empty
+  usernameReplacements = storedUsernameReplacements?.length ? storedUsernameReplacements : usernameReplacements;
   moderator = storedModerators?.length ? storedModerators : moderator;
-  // Replace ignored with stored value if it exists and is not empty
   ignored = storedIgnored?.length ? storedIgnored : ignored;
+
+  mentionKeywords.push(myNickname); // Actual nickname
 
   // Key Events: CTRL and ALT
 
@@ -375,12 +383,14 @@
     }
   });
 
-  // Helper function to clean text (extracted from original Web Speech API implementation)
   function cleanText(text) {
     return text
-      .replace(/_/g, '-') // Replace underscores with hyphens
-      .replace(/https?:\/\/([a-zA-Z0-9\-\.]+)(\/[^\s]*)?/g, (_, p1) => p1) // Replace URLs with domains
-      .split(' ').map(word => word.replace(/\d+/g, '')).filter(Boolean).join(' ').trim(); // Clean digits and format
+      // Replace all underscores with hyphens
+      .replace(/_/g, '-')
+      // Replace URLs with just the domain name, removing "https://", "http://", and "www."
+      .replace(/https?:\/\/(?:www\.)?([a-zA-Z0-9\-\.]+)(\/[^\s]*)?/g, (_, p1) => p1)
+      // Remove extra spaces and format text
+      .split(' ').filter(Boolean).join(' ').trim();
   }
 
   // Split text into language blocks (Russian vs. English) based on per-word detection.
@@ -3715,19 +3725,27 @@
     return mentionKeywords.some(keyword => messageLowercase.includes(keyword.toLowerCase()));
   }
 
-  // Function to replace username mentions with their respective pronunciations
   function replaceWithPronunciation(text) {
-    if (text === null) {
-      return text;
-    }
+    if (text === null) return text;
 
-    const replaceUsername = (username) => {
-      const user = usersToTrack.find(user => user.name === username);
-      return user ? user.pronunciation : username;
-    }
+    // Combine all usernames that need replacement
+    const allUsernames = [
+      ...usersToTrack.map(user => user.name),
+      ...usernameReplacements.map(replacement => replacement.original)
+    ];
 
-    const pattern = new RegExp(usersToTrack.map(user => user.name).join('|'), 'g');
-    return text.replace(pattern, replaceUsername);
+    // Create a pattern to match any character that is part of a word (including Cyrillic characters).
+    const pattern = new RegExp(`(${allUsernames.join('|')})`, 'gu');
+
+    return text.replace(pattern, (matched) => {
+      // Priority 1: Check username replacements
+      const replacement = usernameReplacements.find(r => r.original === matched);
+      if (replacement) return replacement.replacement;
+
+      // Priority 2: Check tracked user pronunciations
+      const trackedUser = usersToTrack.find(user => user.name === matched);
+      return trackedUser?.pronunciation || matched;
+    });
   }
 
   function highlightMentionWords(containerType = 'generalMessages') {
@@ -4578,36 +4596,22 @@
       const time = latestMessage.querySelector('.time');
       const username = latestMessage.querySelector('.username');
 
-      // Get all nodes and concatenate their values
       const nodes = Array.from(latestMessage.childNodes);
       const elements = nodes.map(node => {
-        // Handle plain text nodes
         if (node.nodeType === Node.TEXT_NODE) {
-          return { type: 'text', value: node.nodeValue.trim() };
-        }
-
-        // Handle element nodes
-        else if (node.nodeType === Node.ELEMENT_NODE) {
-          // Handle private <a> element (with lock emoji for <a>)
+          return { type: 'text', value: node.nodeValue.replace(/ /g, '\u00A0') }; // Replace spaces with Unicode non-breaking space
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
           if (node.tagName.toLowerCase() === 'a' && node.classList.contains('private')) {
-            return { type: 'text', value: '📢\u00A0' }; // Non-breaking space after lock emoji
+            return { type: 'text', value: '📢\u00A0' };
           }
-
-          // Handle private <span> element (no lock emoji for <span>)
           if (node.tagName.toLowerCase() === 'span' && node.classList.contains('private')) {
-            return { type: 'text', value: node.textContent.trim() };
+            return { type: 'text', value: node.textContent.replace(/ /g, '\u00A0') };
           }
-
-          // Handle <img> element
           if (node.tagName.toLowerCase() === 'img') {
-            const imgTitle = node.getAttribute('title');
-            return { type: 'img', title: imgTitle };
+            return { type: 'img', title: node.getAttribute('title') };
           }
-
-          // Handle regular <a> element (without 'private' class)
           if (node.tagName.toLowerCase() === 'a') {
-            const anchorHref = node.getAttribute('href');
-            return { type: 'anchor', href: anchorHref };
+            return { type: 'anchor', href: node.getAttribute('href') };
           }
         }
       }).filter(Boolean);
@@ -8111,7 +8115,6 @@
     }
   }
 
-  // Function to download settings as a JSON file
   function handleDownloadSettings(settingsData) {
     if (!settingsData || typeof settingsData !== 'object') {
       console.error('Invalid settings data for download.');
@@ -8120,21 +8123,25 @@
     }
 
     try {
-      // Define constants for indentation sizes within the function
-      const tabSize2 = '  '; // 2 spaces
-      const tabSize4 = '    '; // 4 spaces
+      const tabSize2 = '  ';
+      const tabSize4 = '    ';
 
-      // Convert 'usersToTrack' to single-line entries with proper indentation
+      // Format usersToTrack
       const usersToTrackFormatted = settingsData.usersToTrack
-        .map((user) => `${tabSize4}${JSON.stringify(user)}`) // Use defined const for indentation
-        .join(',\n'); // Join with a new line for better formatting
+        .map((user) => `${tabSize4}${JSON.stringify(user)}`)
+        .join(',\n');
 
-      // Convert 'toggle' to formatted entries with proper indentation
+      // Format username replacements
+      const replacementsFormatted = settingsData.usernameReplacements
+        ?.map(replacement => `${tabSize4}${JSON.stringify(replacement)}`)
+        .join(',\n') || '';
+
+      // Format toggle settings
       const toggleFormatted = settingsData.toggle
-        .map(toggle => `${tabSize4}${JSON.stringify(toggle)}`) // Format each toggle item
-        .join(',\n'); // Join with a new line for better formatting
+        .map(toggle => `${tabSize4}${JSON.stringify(toggle)}`)
+        .join(',\n');
 
-      // Build the JSON structure with appropriate formatting using string concatenation
+      // Build JSON structure
       const jsonData = '{\n' +
         `${tabSize2}"usersToTrack": [\n` +
         `${usersToTrackFormatted}\n` +
@@ -8142,35 +8149,34 @@
         `${tabSize2}"mentionKeywords": [\n` +
         `${settingsData.mentionKeywords.map(keyword => `${tabSize4}"${keyword}"`).join(',\n')}\n` +
         `${tabSize2}],\n` +
-        `${tabSize2}"moderator": [\n` + // Added moderator
+        `${tabSize2}"usernameReplacements": [\n` + // Added replacements section
+        `${replacementsFormatted}\n` +
+        `${tabSize2}],\n` +
+        `${tabSize2}"moderator": [\n` +
         `${settingsData.moderator.map(moderator => `${tabSize4}"${moderator}"`).join(',\n')}\n` +
         `${tabSize2}],\n` +
         `${tabSize2}"ignored": [\n` +
         `${settingsData.ignored.map(user => `${tabSize4}"${user}"`).join(',\n')}\n` +
         `${tabSize2}],\n` +
-        `${tabSize2}"toggle": [\n` + // Added toggle
+        `${tabSize2}"toggle": [\n` +
         `${toggleFormatted}\n` +
         `${tabSize2}]\n` +
         '}';
 
-      // Generate a filename with the current date (YYYY-MM-DD)
+      // Generate filename
       const currentDate = new Intl.DateTimeFormat('en-CA').format(new Date());
       const filename = `KG_Chat_Empowerment_Settings_${currentDate}.json`;
 
-      // Create a Blob from the JSON string and prepare it for download
+      // Create and trigger download
       const blob = new Blob([jsonData], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
-
-      // Create a temporary link to trigger the download
       const tempLink = document.createElement('a');
       tempLink.href = url;
       tempLink.download = filename;
-      document.body.appendChild(tempLink); // Append link to body
-
-      tempLink.click(); // Trigger download
-      document.body.removeChild(tempLink); // Clean up link
-
-      URL.revokeObjectURL(url); // Clean up the Blob URL
+      document.body.appendChild(tempLink);
+      tempLink.click();
+      document.body.removeChild(tempLink);
+      URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error exporting settings:', error);
       alert('Failed to export settings. Please try again.');
@@ -8182,6 +8188,7 @@
     // Retrieve data from localStorage using the appropriate keys
     const usersToTrack = JSON.parse(localStorage.getItem('usersToTrack')) || [];
     const mentionKeywords = JSON.parse(localStorage.getItem('mentionKeywords')) || [];
+    const usernameReplacements = JSON.parse(localStorage.getItem('usernameReplacements')) || [];
     const moderator = JSON.parse(localStorage.getItem('moderator')) || [];
     const ignored = JSON.parse(localStorage.getItem('ignored')) || [];
     const toggle = JSON.parse(localStorage.getItem('toggle')) || [];
@@ -8190,6 +8197,7 @@
     const settingsData = {
       usersToTrack: usersToTrack,
       mentionKeywords: mentionKeywords,
+      usernameReplacements: usernameReplacements,
       moderator: moderator,
       ignored: ignored,
       toggle: toggle
@@ -8259,6 +8267,7 @@
   function saveSettingsToLocalStorage() {
     localStorage.setItem('usersToTrack', JSON.stringify(usersToTrack));
     localStorage.setItem('mentionKeywords', JSON.stringify(mentionKeywords));
+    localStorage.setItem('usernameReplacements', JSON.stringify(usernameReplacements));
     localStorage.setItem('moderator', JSON.stringify(moderator));
     localStorage.setItem('ignored', JSON.stringify(ignored));
     localStorage.setItem('toggle', JSON.stringify(toggle));
@@ -8268,20 +8277,29 @@
   function processUploadedSettings({
     usersToTrack: u = [],
     mentionKeywords: mk = [],
+    usernameReplacements: ur = [],
     moderator: md = [],
     ignored: i = [],
     toggle: t = []
   }) {
-    // Ensure the uploaded values are valid arrays or default to the existing ones
+    // Ensure the uploaded values are valid arrays
     usersToTrack = Array.isArray(u) ? u : usersToTrack;
     mentionKeywords = Array.isArray(mk) ? mk : mentionKeywords;
+    usernameReplacements = Array.isArray(ur) ? ur : usernameReplacements;
     moderator = Array.isArray(md) ? md : moderator;
     ignored = Array.isArray(i) ? i : ignored;
     toggle = Array.isArray(t) ? t : toggle;
 
     // Save to localStorage after applying the settings
     saveSettingsToLocalStorage();
-    console.log('Uploaded settings applied:', { usersToTrack, mentionKeywords, moderator, ignored, toggle });
+    console.log('Uploaded settings applied:', {
+      usersToTrack,
+      mentionKeywords,
+      usernameReplacements, // Added to log
+      moderator,
+      ignored,
+      toggle
+    });
   }
 
   // Inline SVG source for the "x" icon (close button)
@@ -8736,6 +8754,7 @@
         const currentValues = {
           usersToTrack: [],
           mentionKeywords: [],
+          usernameReplacements: [],
           moderator: [],
           ignored: [],
           toggle: []
@@ -8763,11 +8782,39 @@
           });
         });
 
+        // Create a set of tracked usernames (case-insensitive)
+        const trackedNames = new Set(
+          currentValues.usersToTrack.map(user => user.name.toLowerCase())
+        );
+
         // Process mention items
         container.querySelectorAll('.settings-mention-container .mention-item').forEach(item => {
           const mentionField = item.querySelector('.mention-field');
           const mentionValue = mentionField ? mentionField.value.trim() : '';
           currentValues.mentionKeywords.push(mentionValue);
+        });
+
+        // Process replacement items
+        container.querySelectorAll('.settings-replacement-container .replacement-item').forEach(item => {
+          const originalField = item.querySelector('.replacement-original-field');
+          const replacementField = item.querySelector('.replacement-field');
+          const originalValue = originalField ? originalField.value.trim() : '';
+          const replacementValue = replacementField ? replacementField.value.trim() : '';
+
+          // If the original value exists in tracked users, prevent creating a new replacement item.
+          if (trackedNames.has(originalValue.toLowerCase())) {
+            // Optionally, mark the field as invalid to notify the user.
+            originalField.classList.add('input-error');
+            addShakeEffect(originalField);
+            return; // Skip pushing this replacement item.
+          } else {
+            originalField.classList.remove('input-error');
+          }
+
+          currentValues.usernameReplacements.push({
+            original: originalValue,
+            replacement: replacementValue
+          });
         });
 
         // Process moderator
@@ -8890,6 +8937,7 @@
       const containers = [
         '.settings-tracked-container',
         '.settings-mention-container',
+        '.settings-replacement-container',
         '.settings-moderator-container',
         '.settings-ignored-container'
       ];
@@ -8989,6 +9037,7 @@
     const settingsTypes = [
       { type: 'tracked', emoji: '👀' },
       { type: 'mention', emoji: '📢' },
+      { type: 'replacement', emoji: '♻️' },
       { type: 'moderator', emoji: '⚔️' },
       { type: 'ignored', emoji: '🛑' },
       { type: 'toggle', emoji: '🔘' }
@@ -9210,6 +9259,20 @@
       return item;
     }
 
+    // Function to create a username replacement item for text to speech API
+    function createReplacementItem(replacement = { original: '', replacement: '' }) {
+      const item = createContainer('replacement');
+      const originalInput = createInput('replacement-original', replacement.original, 'Original username');
+      const replacementInput = createInput('replacement', replacement.replacement, 'Replacement name');
+      const removeButton = createRemoveButton('replacement', item);
+
+      item.appendChild(originalInput);
+      item.appendChild(replacementInput);
+      item.appendChild(removeButton);
+
+      return item;
+    }
+
     // Function to create a moderator item
     function createModeratorItem(moderator) {
       const item = createContainer('moderator');
@@ -9297,6 +9360,7 @@
       const containers = {
         usersToTrack: '.settings-tracked-container',
         mentionKeywords: '.settings-mention-container',
+        usernameReplacements: '.settings-replacement-container',
         moderator: '.settings-moderator-container',
         ignored: '.settings-ignored-container'
       };
@@ -9304,6 +9368,7 @@
       const creators = {
         usersToTrack: createTrackedItem,
         mentionKeywords: createMentionItem,
+        usernameReplacements: createReplacementItem,
         moderator: createModeratorItem,
         ignored: createIgnoredItem
       };
@@ -9314,12 +9379,14 @@
         const container = document.querySelector(containers[key]);
         if (!container) return; // Skip if the container is null
         container.style.width = '100%';
+        container.style.display = 'flex';
+        container.style.flexWrap = 'wrap';
+        container.style.alignItems = 'start';
+        container.style.flexDirection = 'column';
 
         // Apply specific styles for mention and ignored containers
         if (key === 'mentionKeywords' || key === 'moderator' || key === 'ignored') {
-          container.style.display = 'inline-flex';
-          container.style.flexWrap = 'wrap';
-          container.style.alignItems = 'center';
+          container.style.flexDirection = 'row';
         }
 
         // Create and append existing items

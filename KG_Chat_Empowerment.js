@@ -389,6 +389,10 @@
       .replace(/_/g, '-')
       // Replace URLs with just the domain name, removing "https://", "http://", and "www."
       .replace(/https?:\/\/(?:www\.)?([a-zA-Z0-9\-\.]+)(\/[^\s]*)?/g, (_, p1) => p1)
+      // Remove space before punctuation characters ? ! . , : ; @
+      .replace(/\s(?=[?!,.:;@])/g, '')
+      // Remove all other symbols completely
+      .replace(/[-"#$%&'()*+\/<=>[\\\]^_`{|}~]/g, '')
       // Remove extra spaces and format text
       .split(' ').filter(Boolean).join(' ').trim();
   }
@@ -415,16 +419,12 @@
   // Main TTS function: plays each language block in order.
   async function textToSpeech(text, voiceSpeed = voiceSpeed) {
     const shouldUseGoogleTTS = shouldEnableSetting('sound', 'gTTS');
-
-    // Remove space before ? ! . , : ; @
-    text = text.replace(/\s(?=[?!,.:;@])/g, '');  // Remove space before ? ! . , : ; @
-
-    // Remove all other symbols completely
-    text = text.replace(/[-"#$%&'()*+\/<=>[\\\]^_`{|}~]/g, ''); // Remove all other symbols
+    // Clean the text using the new cleanText function
+    const cleanedText = cleanText(text);
 
     // If Google TTS is enabled, use it. Otherwise, fallback to Web Speech API.
     if (shouldUseGoogleTTS) {
-      const blocks = detectLanguageBlocks(cleanText(text));
+      const blocks = detectLanguageBlocks(cleanedText);
       try {
         for (const { lang, text } of blocks) {
           await new Promise((resolve, reject) => {

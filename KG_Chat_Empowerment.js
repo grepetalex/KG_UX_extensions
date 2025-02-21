@@ -400,7 +400,7 @@
   // Split text into language blocks (Russian vs. English) based on per-word detection.
   const detectLanguageBlocks = text =>
     text.split(/\s+/).reduce((blocks, word) => {
-      const lang = /[А-Яа-яЁё]/.test(word) ? 'ru' : 'en';
+      const lang = /[А-Яа-яЁё0-9]/.test(word) ? 'ru' : 'en';
       if (blocks.length && blocks[blocks.length - 1].lang === lang) {
         blocks[blocks.length - 1].text += ' ' + word;
       } else {
@@ -490,85 +490,63 @@
     return `hsl(${hue},${saturation}%,${lightness}%)`;
   }
 
-  // Function to purge chat user actions with a smooth step-by-step animation
-  // Parameters:
-  //   - delayBetweenAnimations: Delay between each animation step (default: 300ms)
-  //   - smoothScrollDuration: Duration of smooth scrolling (default: 500ms)
-  function purgeStaticChatNotifications(delayBetweenAnimations = 300, smoothScrollDuration = 500) {
-    // Get all elements with the class .static-chat-notification
-    const staticChatNotifications = Array.from(document.querySelectorAll('.static-chat-notification')).reverse();
+  // Helper for pausing execution
+  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-    // Get the chat container
-    const chatContainer = document.querySelector(".messages-content");
+  async function purgeStaticChatNotifications(
+    removalDelay = 120,
+    scrollDuration = 1000,
+    animationDuration = 80
+  ) {
+    const chat = document.querySelector(".messages-content");
+    if (!chat) return;
+    const elements = [...document.querySelectorAll('.static-chat-notification')].reverse();
 
-    // Return early if the chat container does not exist
-    if (!chatContainer) return;
+    for (const el of elements) {
+      const needsScroll = !isVisibleInContainer(el, chat);
 
-    // Function to check if an element is visible in the viewport
-    function isElementVisible(element) {
-      const rect = element.getBoundingClientRect();
-      return (
-        rect.top >= 0 &&
-        rect.left >= 0 &&
-        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-        rect.right <= (window.innerWidth || document.documentElement.clientWidth)
-      );
-    }
+      if (needsScroll) {
+        // Smooth scroll to element
+        chat.style.scrollBehavior = 'smooth';
+        chat.scrollTop = el.offsetTop - chat.offsetTop - chat.clientHeight / 2;
+        await sleep(scrollDuration);
 
-    // Function to apply the animation to an element
-    async function animateOut(element, index) {
-      // Calculate the delay for each element
-      const delay = index * delayBetweenAnimations;
-
-      // Apply opacity and translation animation with delay
-      await new Promise(resolve => setTimeout(resolve, delay));
-      element.style.transition = `opacity ${delayBetweenAnimations / 1000}s cubic-bezier(0.83, 0, 0.17, 1), transform ${delayBetweenAnimations / 1000}s cubic-bezier(0.83, 0, 0.17, 1)`;
-      element.style.opacity = 0;
-      element.style.transform = `translateX(1em)`;
-
-      // After the animation duration, remove the element
-      await new Promise(resolve => setTimeout(resolve, delayBetweenAnimations));
-      element.remove();
-
-      // Check if the next notification is visible
-      const nextIndex = index + 1;
-      const nextElement = staticChatNotifications[nextIndex];
-
-      if (nextElement) {
-        // Use await to ensure element is visible before scrolling
-        if (!isElementVisible(nextElement)) {
-          await scrollToNextElement(nextElement, chatContainer, smoothScrollDuration);
-        }
-        // Remove the next element after scrolling or if already visible
-        nextElement.remove();
-      } else {
-        // If last element, smooth scroll back to the bottom
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-        await new Promise(resolve => setTimeout(resolve, smoothScrollDuration));
-        chatContainer.style.scrollBehavior = 'auto';
-        const containers = document.querySelectorAll('.static-chat-notifications-container');
-        containers.forEach(container => container.remove());
+        // Wait removal delay only after scrolling
+        await sleep(removalDelay);
       }
+
+      // Animate removal
+      Object.assign(el.style, {
+        transition: [
+          `opacity ${animationDuration / 1000}s cubic-bezier(0.83, 0, 0.17, 1)`,
+          `transform ${animationDuration / 1000}s cubic-bezier(0.83, 0, 0.17, 1)`
+        ].join(', '),
+        opacity: 0,
+        transform: 'translateX(1em)'
+      });
+
+      // Wait for animation to complete
+      await sleep(animationDuration);
+      el.remove();
+
+      // Standard delay between elements
+      await sleep(removalDelay);
     }
 
-    // Function to handle smooth scrolling to the next element
-    async function scrollToNextElement(nextElement, chatContainer, smoothScrollDuration) {
-      const closestContainer = nextElement.closest('.static-chat-notifications-container');
-      const containerHeight = closestContainer ? closestContainer.offsetHeight : 0;
-      const extraSpace = 200;
+    // Final scroll to bottom
+    chat.style.scrollBehavior = 'smooth';
+    chat.scrollTop = chat.scrollHeight;
+    await sleep(scrollDuration);
+    chat.style.scrollBehavior = 'auto';
+  }
 
-      const distanceToTop = nextElement.offsetTop - chatContainer.offsetTop - containerHeight - extraSpace;
-      chatContainer.style.scrollBehavior = 'smooth';
-      chatContainer.scrollTop = distanceToTop;
-
-      // Wait for smooth scroll animation to finish
-      await new Promise(resolve => setTimeout(resolve, smoothScrollDuration));
-    }
-
-    // Use forEach on the reversed array and apply animations
-    staticChatNotifications.forEach((element, index) => {
-      animateOut(element, index);
-    });
+  function isVisibleInContainer(el, container) {
+    const containerRect = container.getBoundingClientRect();
+    const elRect = el.getBoundingClientRect();
+    return (
+      elRect.top >= containerRect.top &&
+      elRect.bottom <= containerRect.bottom
+    );
   }
 
   // Constants for SVG icon properties
@@ -682,7 +660,7 @@
 
     // Add double-click listener to purge notifications
     staticChatNotification.addEventListener('dblclick', () => {
-      purgeStaticChatNotifications(150, 100);
+      purgeStaticChatNotifications();
     });
 
     // Insert the user, icon, and time info

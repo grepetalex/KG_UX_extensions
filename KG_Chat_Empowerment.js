@@ -9050,12 +9050,12 @@
 
       // Hover effect
       element.addEventListener('mouseenter', () => {
-        element.style.backgroundColor = 'rgba(222, 184, 135, 0.1)';
+        element.style.backgroundColor = 'rgba(222, 184, 135, 0.25)';
       });
 
       // Restore original style when mouse leaves
       element.addEventListener('mouseleave', () => {
-        element.style.backgroundColor = 'rgba(255, 219, 173, 0.1)';
+        element.style.backgroundColor = 'rgba(222, 184, 135, 0.1)';
       });
     }
 

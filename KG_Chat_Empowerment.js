@@ -3561,7 +3561,9 @@
             animateUserCount(newUsers.size, userCountElement);
           }
           newUsers.forEach((value, key) => userMap.set(key, value));
-          isInitialObservation = false; // Mark the initial observation as complete
+          setTimeout(() => {
+            isInitialObservation = false; // Mark the initial observation as complete
+          }, 2000); // After a small delay
           return; // Skip processing for initial load
         }
 

@@ -6739,6 +6739,9 @@
     // Append the messages container to the cached messages panel
     cachedMessagesPanel.appendChild(messagesContainer);
 
+    // Append the cached messages panel to the body
+    document.body.appendChild(cachedMessagesPanel);
+
     // Create and append scroll buttons
     const {
       scrollButtonsContainer,
@@ -6775,9 +6778,6 @@
         button.style.filter = 'brightness(1)'; // Reset to original brightness
       });
     });
-
-    // Append the cached messages panel to the body
-    document.body.appendChild(cachedMessagesPanel);
 
     // Fade in the cached messages panel
     triggerTargetElement(cachedMessagesPanel, 'show');

@@ -385,14 +385,14 @@
 
   function cleanText(text) {
     return text
-      // Replace all underscores with hyphens
-      .replace(/_/g, '-')
+      // Replace all hyphens (- U+002D), minus signs (− U+2212), and underscores (_) with spaces
+      .replace(/[-−_]/g, ' ')
       // Replace URLs with just the domain name, removing "https://", "http://", and "www."
       .replace(/https?:\/\/(?:www\.)?([a-zA-Z0-9\-\.]+)(\/[^\s]*)?/g, (_, p1) => p1)
       // Remove space before punctuation characters ? ! . , : ; @
       .replace(/\s(?=[?!,.:;@])/g, '')
       // Remove all other symbols completely
-      .replace(/[-"#$%&'()*+\/<=>[\\\]^_`{|}~]/g, '')
+      .replace(/["#$%&'()*+\/<=>[\\\]^`{|}~]/g, '')
       // Remove extra spaces and format text
       .split(' ').filter(Boolean).join(' ').trim();
   }
@@ -494,12 +494,17 @@
   const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
   async function purgeStaticChatNotifications(
-    removalDelay = 250,
-    scrollDuration = 1000,
-    animationDuration = 200
+    removalDelay = 40,
+    scrollDuration = 600,
+    animationDuration = 140
   ) {
     const chat = document.querySelector(".messages-content");
     if (!chat) return;
+
+    // Save original scroll behavior and set to smooth once
+    const originalScrollBehavior = chat.style.scrollBehavior;
+    chat.style.scrollBehavior = 'smooth';
+
     const elements = [...document.querySelectorAll('.static-chat-notification')].reverse();
 
     for (const el of elements) {
@@ -507,12 +512,8 @@
 
       if (needsScroll) {
         // Smooth scroll to element
-        chat.style.scrollBehavior = 'smooth';
         chat.scrollTop = el.offsetTop - chat.offsetTop - chat.clientHeight / 2;
         await sleep(scrollDuration);
-
-        // Wait removal delay only after scrolling
-        await sleep(removalDelay);
       }
 
       Object.assign(el.style, {
@@ -525,7 +526,7 @@
         transform: 'translateX(18em) skewX(-20deg)'
       });
 
-      // Wait for animation to complete
+      // Wait for animation to complete before removal
       await sleep(animationDuration);
       el.remove();
 
@@ -533,11 +534,15 @@
       await sleep(removalDelay);
     }
 
-    // Final scroll to bottom
-    chat.style.scrollBehavior = 'smooth';
-    chat.scrollTop = chat.scrollHeight;
-    await sleep(scrollDuration);
-    chat.style.scrollBehavior = 'auto';
+    // Final scroll to bottom only if needed
+    const isAtBottom = chat.scrollHeight - chat.scrollTop <= chat.clientHeight;
+    if (!isAtBottom) {
+      chat.scrollTop = chat.scrollHeight;
+      await sleep(scrollDuration);
+    }
+
+    // Restore original scroll behavior
+    chat.style.scrollBehavior = originalScrollBehavior;
   }
 
   function isVisibleInContainer(el, container) {

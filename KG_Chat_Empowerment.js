@@ -262,6 +262,122 @@
     })
   );
 
+  // SCROLL BUTTONS
+
+  // Helper function to apply common styles to a scroll button
+  function applyScrollButtonStyles(button) {
+    button.style.width = '48px';
+    button.style.height = '48px';
+    button.style.display = 'flex';
+    button.style.justifyContent = 'center';
+    button.style.alignItems = 'center';
+    button.style.cursor = 'pointer';
+    button.style.setProperty('border-radius', '0.2em', 'important');
+    button.style.backgroundColor = '#282b2f';
+    button.style.margin = '0.5em 0';
+    button.style.filter = 'brightness(1)';
+    button.style.transition = 'filter 0.3s ease';
+  }
+
+  // Global function to update button opacity using a single configuration object
+  function updateScrollButtonOpacity({ container, buttons }) {
+    const tolerance = 3,
+      isAtTop = container.scrollTop === 0,
+      isAtBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - tolerance;
+    [buttons.fullScrollUpButton, buttons.partialScrollUpButton].forEach(button => {
+      button.style.opacity = isAtTop ? '0.3' : '1';
+      button.style.pointerEvents = isAtTop ? 'none' : 'auto';
+    });
+    [buttons.fullScrollDownButton, buttons.partialScrollDownButton].forEach(button => {
+      button.style.opacity = isAtBottom ? '0.3' : '1';
+      button.style.pointerEvents = isAtBottom ? 'none' : 'auto';
+    });
+  }
+
+  // New function to update the visibility of the scroll buttons container
+  function updateScrollButtonsVisibility({ container, scrollButtonsContainer }) {
+    // If the container is scrollable, show the buttons container; otherwise, hide it.
+    if (container.scrollHeight > container.clientHeight) {
+      scrollButtonsContainer.style.display = 'flex';
+    } else {
+      scrollButtonsContainer.style.display = 'none';
+    }
+  }
+
+  function createScrollButtons(container) {
+    // Create container for the scroll buttons
+    const scrollButtonsContainer = document.createElement('div');
+    scrollButtonsContainer.className = 'scroll-buttons-container';
+    scrollButtonsContainer.style.display = 'flex';
+    scrollButtonsContainer.style.justifyContent = 'center';
+    scrollButtonsContainer.style.gridArea = 'scroll';
+    scrollButtonsContainer.style.flexDirection = 'column';
+    scrollButtonsContainer.style.height = 'calc(100% - 1em)';
+    scrollButtonsContainer.style.padding = '1em';
+
+    // Create each scroll button
+    const fullScrollUpButton = document.createElement('div');
+    fullScrollUpButton.innerHTML = chevronsUpSVG;
+    applyScrollButtonStyles(fullScrollUpButton);
+    fullScrollUpButton.title = 'Scroll Up (Full)';
+    scrollButtonsContainer.appendChild(fullScrollUpButton);
+
+    const partialScrollUpButton = document.createElement('div');
+    partialScrollUpButton.innerHTML = chevronUpSVG;
+    applyScrollButtonStyles(partialScrollUpButton);
+    partialScrollUpButton.title = 'Scroll Up (Partial)';
+    scrollButtonsContainer.appendChild(partialScrollUpButton);
+
+    const partialScrollDownButton = document.createElement('div');
+    partialScrollDownButton.innerHTML = chevronDownSVG;
+    applyScrollButtonStyles(partialScrollDownButton);
+    partialScrollDownButton.title = 'Scroll Down (Partial)';
+    scrollButtonsContainer.appendChild(partialScrollDownButton);
+
+    const fullScrollDownButton = document.createElement('div');
+    fullScrollDownButton.innerHTML = chevronsDownSVG;
+    applyScrollButtonStyles(fullScrollDownButton);
+    fullScrollDownButton.title = 'Scroll Down (Full)';
+    scrollButtonsContainer.appendChild(fullScrollDownButton);
+
+    // Bundle buttons into an object for easy reference
+    const buttons = {
+      fullScrollUpButton: fullScrollUpButton,
+      partialScrollUpButton: partialScrollUpButton,
+      partialScrollDownButton: partialScrollDownButton,
+      fullScrollDownButton: fullScrollDownButton
+    };
+
+    // Generic function to scroll the container
+    function scrollContainer(direction, isFullScroll) {
+      const scrollAmount = isFullScroll ? container.scrollHeight : container.clientHeight;
+      container.scrollBy({
+        top: direction === 'up' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+      updateScrollButtonOpacity({ container: container, buttons: buttons });
+    }
+
+    // Attach click events
+    fullScrollUpButton.addEventListener('click', () => scrollContainer('up', true));
+    partialScrollUpButton.addEventListener('click', () => scrollContainer('up', false));
+    partialScrollDownButton.addEventListener('click', () => scrollContainer('down', false));
+    fullScrollDownButton.addEventListener('click', () => scrollContainer('down', true));
+
+    // Initial update of opacity and container visibility
+    updateScrollButtonOpacity({ container, buttons });
+    updateScrollButtonsVisibility({ container, scrollButtonsContainer });
+
+    // Update on scroll
+    container.addEventListener('scroll', () => {
+      updateScrollButtonOpacity({ container, buttons });
+      updateScrollButtonsVisibility({ container, scrollButtonsContainer });
+    });
+
+    // Return an object containing the scroll buttons container and each individual button
+    return { scrollButtonsContainer, ...buttons };
+  }
+
   // SOUND NOTIFICATION
 
   // Function to create the audio context and return a Promise that resolves when the context is ready
@@ -523,7 +639,7 @@
         ].join(','),
         opacity: 0,
         transformOrigin: 'left',
-        transform: 'translateX(18em) skewX(-20deg)'
+        transform: 'translateX(8em) skewX(-20deg)'
       });
 
       // Wait for animation to complete before removal
@@ -663,10 +779,12 @@
     const actionIcon = createActionIcon(iconType);
     const staticChatNotification = document.createElement('div');
 
-    // Add double-click listener to purge notifications
-    staticChatNotification.addEventListener('dblclick', () => {
-      purgeStaticChatNotifications();
-    });
+    // Add double-click listener to purge notifications only if generalChat selector
+    if (containerType === 'generalChat') {
+      staticChatNotification.addEventListener('dblclick', () => {
+        purgeStaticChatNotifications();
+      });
+    }
 
     // Insert the user, icon, and time info
     staticChatNotification.innerHTML = `${user} ${actionIcon.outerHTML} ${time}`;
@@ -1583,6 +1701,12 @@
     cachedUsersPanel.style.width = '80vw';
     cachedUsersPanel.style.height = '80vh';
     cachedUsersPanel.style.zIndex = '999';
+    cachedUsersPanel.style.display = 'grid';
+    cachedUsersPanel.style.gridTemplateColumns = '1fr';
+    cachedUsersPanel.style.gridTemplateRows = 'min-content';
+    cachedUsersPanel.style.gridTemplateAreas = `
+      "header header"
+      "cache scroll"`;
 
     // Define the event handler function for the cache panel
     panelsEvents.handleCacheKeydown = (event) => { // Assign the function to the object
@@ -1603,6 +1727,7 @@
     panelHeaderContainer.style.flexDirection = 'row';
     panelHeaderContainer.style.justifyContent = 'space-between';
     panelHeaderContainer.style.padding = '0.6em';
+    panelHeaderContainer.style.gridArea = 'header';
 
     // Create a container div with class 'drop-time'
     const dropTime = document.createElement('div');
@@ -2024,22 +2149,6 @@
       hideCachePanel();
     });
 
-    // Create an array containing the buttons we want to apply the events to
-    const buttons = [clearCacheButton, closePanelButton];
-
-    // Iterate through each button in the array
-    buttons.forEach(button => {
-      // Add a mouseover event listener to change the button's brightness on hover
-      button.addEventListener('mouseover', () => {
-        button.style.filter = 'brightness(0.8)'; // Dim the button
-      });
-
-      // Add a mouseout event listener to reset the button's brightness when not hovered
-      button.addEventListener('mouseout', () => {
-        button.style.filter = 'brightness(1)'; // Reset to original brightness
-      });
-    });
-
     // Append the close button to the panel header container
     panelControlButtons.appendChild(closePanelButton);
 
@@ -2053,8 +2162,9 @@
     // Set grid layout properties
     fetchedUsersContainer.style.display = 'grid'; // Use grid layout
     fetchedUsersContainer.style.gridTemplateRows = '1fr 1fr'; // Stack two rows for new and old users
-    fetchedUsersContainer.style.height = 'calc(100% - (64px + 0.6em))'; // Set height for main container
+    fetchedUsersContainer.style.height = 'calc(100% - 0.5em)'; // Set height for main container
     fetchedUsersContainer.style.overflowY = 'auto'; // Enable vertical scrolling if needed
+    fetchedUsersContainer.style.gridArea = 'cache';
 
     // Function to create a user container with common styles
     function createUserContainer(className) {
@@ -2064,9 +2174,9 @@
       // Add common CSS styles for grid layout and centering
       userContainer.style.display = 'grid';
       // userContainer.style.gridAutoFlow = 'dense'; // Allows items to fill empty spaces
-      userContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(210px, 1fr))'; // Responsive columns
+      userContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(220px, 1fr))'; // Responsive columns
       userContainer.style.gap = '12px'; // Space between items
-      userContainer.style.padding = '24px';
+      userContainer.style.padding = '1em';
       userContainer.style.height = 'fit-content';
 
       return userContainer;
@@ -2469,9 +2579,42 @@
     cachedUsersPanel.appendChild(panelHeaderContainer);
     // Append the fetched-users container to the cached-users-panel
     cachedUsersPanel.appendChild(fetchedUsersContainer);
-
     // Append the cached-users-panel to the body
     document.body.appendChild(cachedUsersPanel);
+
+    // Create and append scroll buttons
+    const {
+      scrollButtonsContainer,
+      fullScrollUpButton,
+      partialScrollUpButton,
+      partialScrollDownButton,
+      fullScrollDownButton
+    } = createScrollButtons(fetchedUsersContainer);
+    cachedUsersPanel.appendChild(scrollButtonsContainer);
+
+    // Create an array containing the buttons we want to apply the events to
+    const buttons = [
+      cachePanelSearchMode,
+      clearCacheButton,
+      closePanelButton,
+      fullScrollUpButton,
+      partialScrollUpButton,
+      partialScrollDownButton,
+      fullScrollDownButton
+    ];
+
+    // Iterate through each button in the array
+    buttons.forEach(button => {
+      // Add a mouseover event listener to change the button's brightness on hover
+      button.addEventListener('mouseover', () => {
+        button.style.filter = 'brightness(0.8)'; // Dim the button
+      });
+
+      // Add a mouseout event listener to reset the button's brightness when not hovered
+      button.addEventListener('mouseout', () => {
+        button.style.filter = 'brightness(1)'; // Reset to original brightness
+      });
+    });
 
     // Fade in the cached users panel
     triggerTargetElement(cachedUsersPanel, 'show');
@@ -6041,6 +6184,12 @@
     cachedMessagesPanel.style.height = '80vh';
     cachedMessagesPanel.style.zIndex = '999';
     cachedMessagesPanel.style.minWidth = '1000px';
+    cachedMessagesPanel.style.display = 'grid';
+    cachedMessagesPanel.style.gridTemplateColumns = '1fr';
+    cachedMessagesPanel.style.gridTemplateRows = 'min-content';
+    cachedMessagesPanel.style.gridTemplateAreas = `
+      "header header"
+      "messages scroll"`;
 
     // Create a container div for the panel header
     const panelHeaderContainer = document.createElement('div');
@@ -6049,6 +6198,7 @@
     panelHeaderContainer.style.flexDirection = 'row';
     panelHeaderContainer.style.justifyContent = 'flex-end'; // Aligns to the right
     panelHeaderContainer.style.padding = '0.6em';
+    panelHeaderContainer.style.gridArea = 'header';
 
     // Create the search input container and append it to the panel header
     const messagesSearchContainer = document.createElement('div');
@@ -6313,22 +6463,6 @@
       triggerDimmingElement('hide');
     });
 
-    // Create an array containing the buttons we want to apply the events to
-    const buttons = [saveMessagesButton, importMessagesButton, exportMessagesButton, clearCacheButton, closePanelButton];
-
-    // Iterate through each button in the array
-    buttons.forEach(button => {
-      // Add a mouseover event listener to change the button's brightness on hover
-      button.addEventListener('mouseover', () => {
-        button.style.filter = 'brightness(0.8)'; // Dim the button
-      });
-
-      // Add a mouseout event listener to reset the button's brightness when not hovered
-      button.addEventListener('mouseout', () => {
-        button.style.filter = 'brightness(1)'; // Reset to original brightness
-      });
-    });
-
     // Append the search container to the panel header container
     panelHeaderContainer.appendChild(messagesSearchContainer);
 
@@ -6349,9 +6483,10 @@
     // Create a container for the messages
     const messagesContainer = document.createElement('div');
     messagesContainer.className = 'messages-container';
-    messagesContainer.style.overflowY = 'auto'; // Enable scrolling for messages
-    messagesContainer.style.height = 'calc(100% - 70px)'; // Adjust height considering header
+    messagesContainer.style.overflowY = 'auto';
+    messagesContainer.style.height = 'calc(100% - 0.5em)';
     messagesContainer.style.padding = '1em';
+    messagesContainer.style.gridArea = 'messages';
 
     function attachMutationObserver() {
       // Set up MutationObserver to monitor removal of child elements
@@ -6603,6 +6738,43 @@
 
     // Append the messages container to the cached messages panel
     cachedMessagesPanel.appendChild(messagesContainer);
+
+    // Create and append scroll buttons
+    const {
+      scrollButtonsContainer,
+      fullScrollUpButton,
+      partialScrollUpButton,
+      partialScrollDownButton,
+      fullScrollDownButton
+    } = createScrollButtons(messagesContainer);
+    cachedMessagesPanel.appendChild(scrollButtonsContainer);
+
+    // Create an array containing the buttons we want to apply the events to
+    const buttons = [
+      saveMessagesButton,
+      importMessagesButton,
+      exportMessagesButton,
+      copyPersonalMessagesButton,
+      clearCacheButton,
+      closePanelButton,
+      fullScrollUpButton,
+      partialScrollUpButton,
+      partialScrollDownButton,
+      fullScrollDownButton
+    ];
+
+    // Iterate through each button in the array
+    buttons.forEach(button => {
+      // Add a mouseover event listener to change the button's brightness on hover
+      button.addEventListener('mouseover', () => {
+        button.style.filter = 'brightness(0.8)'; // Dim the button
+      });
+
+      // Add a mouseout event listener to reset the button's brightness when not hovered
+      button.addEventListener('mouseout', () => {
+        button.style.filter = 'brightness(1)'; // Reset to original brightness
+      });
+    });
 
     // Append the cached messages panel to the body
     document.body.appendChild(cachedMessagesPanel);
@@ -6981,13 +7153,11 @@
     chatLogsPanel.style.zIndex = '999';
     chatLogsPanel.style.minWidth = '1000px';
     chatLogsPanel.style.display = 'grid';
-    chatLogsPanel.style.flexDirection = 'column';
     chatLogsPanel.style.gridTemplateColumns = '1fr';
     chatLogsPanel.style.gridTemplateRows = 'min-content';
     chatLogsPanel.style.gridTemplateAreas = `
       "header header header"
-      "messages scroll-buttons users"
-    `;
+      "messages scroll users"`;
 
     // Create a container div for the panel header
     const panelHeaderContainer = document.createElement('div');
@@ -7097,21 +7267,6 @@
       button.style.cursor = 'pointer';
       button.style.setProperty('border-radius', '0.2em', 'important');
       button.style.margin = margin; // Set margin using the provided value
-      button.style.filter = 'brightness(1)';
-      button.style.transition = 'filter 0.3s ease';
-    }
-
-    // Helper function to apply common styles to a scroll button
-    function applyScrollButtonStyles(button) {
-      button.style.width = '48px';
-      button.style.height = '48px';
-      button.style.display = 'flex';
-      button.style.justifyContent = 'center';
-      button.style.alignItems = 'center';
-      button.style.cursor = 'pointer';
-      button.style.setProperty('border-radius', '0.2em', 'important');
-      button.style.backgroundColor = '#282b2f';
-      button.style.margin = '0.5em 0';
       button.style.filter = 'brightness(1)';
       button.style.transition = 'filter 0.3s ease';
     }
@@ -7541,98 +7696,25 @@
     const chatLogsContainer = document.createElement('div');
     chatLogsContainer.className = 'chat-logs-container';
     chatLogsContainer.style.overflowY = 'auto';
-    chatLogsContainer.style.height = 'calc(100% - 1em)';
+    chatLogsContainer.style.height = 'calc(100% - 0.5em)';
     chatLogsContainer.style.padding = '1em';
     chatLogsContainer.style.display = 'flex';
     chatLogsContainer.style.gridArea = 'messages';
     chatLogsContainer.style.flexDirection = 'column';
 
-    // Create a container for the chat logs scroll buttons
-    const scrollButtonsContainer = document.createElement('div');
-    scrollButtonsContainer.className = 'scroll-buttons-container';
-    scrollButtonsContainer.style.display = 'flex';
-    scrollButtonsContainer.style.justifyContent = 'center';
-    scrollButtonsContainer.style.gridArea = 'scroll-buttons';
-    scrollButtonsContainer.style.flexDirection = 'column';
-    scrollButtonsContainer.style.height = 'calc(100% - 1em)';
-    scrollButtonsContainer.style.padding = '1em';
-
-    // Function to scroll the chat logs
-    function scrollChatLogs(direction, isFullScroll) {
-      if (chatLogsContainer) {
-        const scrollAmount = isFullScroll ? chatLogsContainer.scrollHeight : chatLogsContainer.clientHeight;
-
-        if (direction === 'up') {
-          chatLogsContainer.scrollBy({ top: -scrollAmount, behavior: 'smooth' });
-        } else if (direction === 'down') {
-          chatLogsContainer.scrollBy({ top: scrollAmount, behavior: 'smooth' });
-        }
-
-        // Update button opacity after scrolling
-        updateScrollButtonOpacity();
-      }
-    }
-
-    // Compact function to update scroll button styles based on scroll position
-    function updateScrollButtonOpacity() {
-      if (chatLogsContainer) {
-        const tolerance = 3; // Account for minor discrepancies
-        const isAtTop = chatLogsContainer.scrollTop === 0;
-        const isAtBottom = chatLogsContainer.scrollTop + chatLogsContainer.clientHeight >= chatLogsContainer.scrollHeight - tolerance;
-
-        // Helper to set opacity and pointer-events
-        const setButtonState = (button, condition) => {
-          button.style.opacity = condition ? '0.3' : '1';
-          button.style.pointerEvents = condition ? 'none' : 'auto';
-        };
-
-        // Apply state to buttons
-        [fullScrollUpButton, partialScrollUpButton].forEach(btn => setButtonState(btn, isAtTop));
-        [fullScrollDownButton, partialScrollDownButton].forEach(btn => setButtonState(btn, isAtBottom));
-      }
-    }
-
-    // Create the "Full Scroll Up" button (chevrons)
-    const fullScrollUpButton = document.createElement('div');
-    fullScrollUpButton.innerHTML = chevronsUpSVG;
-    applyScrollButtonStyles(fullScrollUpButton);
-    fullScrollUpButton.title = 'Scroll Up (Full)';
-    fullScrollUpButton.addEventListener('click', () => scrollChatLogs('up', true)); // Full scroll up
-    scrollButtonsContainer.appendChild(fullScrollUpButton);
-
-    // Create the "Partial Scroll Up" button (single chevron)
-    const partialScrollUpButton = document.createElement('div');
-    partialScrollUpButton.innerHTML = chevronUpSVG;
-    applyScrollButtonStyles(partialScrollUpButton);
-    partialScrollUpButton.title = 'Scroll Up (Partial)';
-    partialScrollUpButton.addEventListener('click', () => scrollChatLogs('up', false)); // Single scroll up
-    scrollButtonsContainer.appendChild(partialScrollUpButton);
-
-    // Create the "Partial Scroll Down" button (single chevron)
-    const partialScrollDownButton = document.createElement('div');
-    partialScrollDownButton.innerHTML = chevronDownSVG;
-    applyScrollButtonStyles(partialScrollDownButton);
-    partialScrollDownButton.title = 'Scroll Down (Partial)';
-    partialScrollDownButton.addEventListener('click', () => scrollChatLogs('down', false)); // Single scroll down
-    scrollButtonsContainer.appendChild(partialScrollDownButton);
-
-    // Create the "Full Scroll Down" button (chevrons)
-    const fullScrollDownButton = document.createElement('div');
-    fullScrollDownButton.innerHTML = chevronsDownSVG;
-    applyScrollButtonStyles(fullScrollDownButton);
-    fullScrollDownButton.title = 'Scroll Down (Full)';
-    fullScrollDownButton.addEventListener('click', () => scrollChatLogs('down', true)); // Full scroll down
-    scrollButtonsContainer.appendChild(fullScrollDownButton);
-
-    // Initial check for button opacity
-    updateScrollButtonOpacity();
-
-    // Listen for scroll events to dynamically update button opacity
-    chatLogsContainer.addEventListener('scroll', updateScrollButtonOpacity);
 
     // Append the header and chat logs container to the chat logs panel
     chatLogsPanel.appendChild(panelHeaderContainer);
     chatLogsPanel.appendChild(chatLogsContainer);
+
+    // Create and append scroll buttons
+    const {
+      scrollButtonsContainer,
+      fullScrollUpButton,
+      partialScrollUpButton,
+      partialScrollDownButton,
+      fullScrollDownButton
+    } = createScrollButtons(chatLogsContainer);
     chatLogsPanel.appendChild(scrollButtonsContainer);
 
     // Compact array of buttons with optional exclusions
@@ -8064,7 +8146,7 @@
   // CREATE CHAT LOGS BUTTON (END)
 
 
-  // CREATE PANEL GRAPHICAL SETTINGS BUTTON (START)
+  // CREATE PANEL GRAPHICAL SETTINGS (START)
 
   // Global function to handle file input and process uploaded settings
   async function handleUploadSettings(event) {
@@ -8644,6 +8726,12 @@
     settingsPanel.style.height = '80vh';
     settingsPanel.style.zIndex = '999';
     settingsPanel.style.minWidth = '1000px';
+    settingsPanel.style.display = 'grid';
+    settingsPanel.style.gridTemplateColumns = '1fr';
+    settingsPanel.style.gridTemplateRows = 'min-content';
+    settingsPanel.style.gridTemplateAreas = `
+      "header header"
+      "settings scroll"`;
 
     // Define the event handler function for settings panel
     panelsEvents.handleSettingsKeydown = (event) => { // Assign the function to the object
@@ -8664,6 +8752,7 @@
     panelHeaderContainer.style.flexDirection = 'row';
     panelHeaderContainer.style.justifyContent = 'flex-end'; // Aligns to the right
     panelHeaderContainer.style.padding = '0.6em';
+    panelHeaderContainer.style.gridArea = 'header';
 
     // Helper function to apply common styles to a button
     function applyHeaderButtonStyles(button, backgroundColor, margin = '0 0.5em') {
@@ -8961,27 +9050,6 @@
       handleDownloadSettings(settingsData); // Pass the retrieved settings data to the download function
     });
 
-    // Create an array containing the buttons we want to apply the events to
-    const buttons = [
-      clearCacheButton,
-      closePanelButton,
-      importSettingsButton,
-      exportSettingsButton
-    ];
-
-    // Iterate through each button in the array
-    buttons.forEach(button => {
-      // Add a mouseover event listener to change the button's brightness on hover
-      button.addEventListener('mouseover', () => {
-        button.style.filter = 'brightness(0.8)'; // Dim the button
-      });
-
-      // Add a mouseout event listener to reset the button's brightness when not hovered
-      button.addEventListener('mouseout', () => {
-        button.style.filter = 'brightness(1)'; // Reset to original brightness
-      });
-    });
-
     // Append the buttons to the panel header container
     panelHeaderContainer.appendChild(saveSettingsButton);
     panelHeaderContainer.appendChild(importSettingsButton);
@@ -8999,8 +9067,9 @@
     const settingsContainer = document.createElement('div');
     settingsContainer.className = 'settings-content-container';
     settingsContainer.style.overflowY = 'auto'; // Enable scrolling for settings content
-    settingsContainer.style.height = 'calc(100% - 70px)'; // Adjust height considering header
+    settingsContainer.style.height = 'calc(100% - 0.5em)'; // Adjust height considering header
     settingsContainer.style.padding = '1em';
+    settingsContainer.style.gridArea = 'settings';
 
     // Helper function to assign styles to description elements
     function assignDescriptionStyles(element) {
@@ -9545,6 +9614,41 @@
       return addButton; // Return the created button
     }
 
+    // Create and append scroll buttons
+    const {
+      scrollButtonsContainer,
+      fullScrollUpButton,
+      partialScrollUpButton,
+      partialScrollDownButton,
+      fullScrollDownButton
+    } = createScrollButtons(settingsContainer);
+    settingsPanel.appendChild(scrollButtonsContainer);
+
+    // Create an array containing the buttons we want to apply the events to
+    const buttons = [
+      clearCacheButton,
+      closePanelButton,
+      importSettingsButton,
+      exportSettingsButton,
+      fullScrollUpButton,
+      partialScrollUpButton,
+      partialScrollDownButton,
+      fullScrollDownButton
+    ];
+
+    // Iterate through each button in the array
+    buttons.forEach(button => {
+      // Add a mouseover event listener to change the button's brightness on hover
+      button.addEventListener('mouseover', () => {
+        button.style.filter = 'brightness(0.8)'; // Dim the button
+      });
+
+      // Add a mouseout event listener to reset the button's brightness when not hovered
+      button.addEventListener('mouseout', () => {
+        button.style.filter = 'brightness(1)'; // Reset to original brightness
+      });
+    });
+
     // Append the settings panel to the body
     document.body.appendChild(settingsPanel);
 
@@ -9559,7 +9663,7 @@
     triggerDimmingElement('show');
   }
 
-  // CREATE PANEL GRAPHICAL SETTINGS BUTTON (END)
+  // CREATE PANEL GRAPHICAL SETTINGS (END)
 
 
   // Function to retrieve the chat input field and length popup container based on the current URL

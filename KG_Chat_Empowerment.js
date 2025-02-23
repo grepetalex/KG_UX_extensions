@@ -931,6 +931,10 @@
   const imageExtensionEmoji = '📸'; // Emoji for the image extension
   const videoExtensionEmoji = '🎥'; // Emoji for video extension
   const webDomainEmoji = '🖥️'; // Emoji for the web domain
+  const untrustedEoji = '💀️️';
+
+  // List of allowed image extensions
+  const allowedImageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 
   // List of trusted domains
   const trustedDomains = [
@@ -946,103 +950,95 @@
   ];
 
   /**
-   * Checks if a given URL's domain is trusted.
+   * Checks if a given URL has an allowed image extension.
    * @param {string} url - The URL to check.
-   * @returns {{isTrusted: boolean, domain: string, isValid: boolean}} - Result and the extracted domain.
+   * @returns {{allowed: boolean, extension: string}} - If the extension is allowed and its type.
    */
-  function isTrustedDomain(url) {
-    let isValid = true; // Assume URL is valid initially
-    let domain = '';
+  function isAllowedImageExtension(url) {
+    // Shared extension extraction logic
+    const getExtension = (str) =>
+      (str.match(/\.([^?#.]+)(?:[?#]|$)/i)?.[1]?.toLowerCase() || '');
 
     try {
-      // Parse the URL
-      const parsedURL = new URL(url);
-      // Split the lowercase hostname into parts
-      const hostnameParts = parsedURL.hostname.toLowerCase().split('.');
-      // Get the last two parts of the hostname if there are more than two, otherwise, use all parts
-      const lastTwoHostnameParts = hostnameParts.length > 2 ? hostnameParts.slice(-2) : hostnameParts;
-      // Join the last two parts to form the domain
-      domain = lastTwoHostnameParts.join('.');
-      // Check if the domain is trusted
-      const isTrusted = trustedDomains.includes(domain);
-
-      // Return an object with the result, the domain, and the validity of the URL
-      return { isTrusted, domain, isValid };
+      const extension = getExtension(url);
+      return {
+        allowed: allowedImageExtensions.includes(extension),
+        extension
+      };
     } catch (error) {
-      // If an error occurs, the URL is invalid
-      isValid = false;
-      return { isTrusted: false, domain: '', isValid };
+      console.error("Error in isAllowedImageExtension:", error.message);
+      return {
+        allowed: false,
+        extension: getExtension(String(url)) // Handle non-string URLs
+      };
     }
   }
 
   /**
-   * Function to check if a given URL has an allowed image extension
-   * @param {string} url - The URL to check
-   * @returns {Object} - An object with properties 'allowed' (boolean), 'extension' (string), and 'valid' (boolean)
+   * Checks if a given URL belongs to a trusted domain.
+   * @param {string} url - The URL to check.
+   * @returns {{isTrusted: boolean, domain: string}} - Whether the domain is trusted and the extracted domain.
    */
-  function isAllowedImageExtension(url) {
-    let valid = true; // Assume URL is valid initially
-
+  function isTrustedDomain(url) {
     try {
-      // Use URL API to get pathname
-      const extensionMatch = new URL(url).pathname.match(/\.([^.]+)$/);
-      // Extract the file extension from the pathname (if any)
-      const extension = extensionMatch ? extensionMatch[1].toLowerCase() : '';
-      // List of allowed image file extensions
-      const allowedImageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-      // Check if the extracted extension is in the list of allowed extensions
-      const allowed = allowedImageExtensions.includes(extension);
-      // Return an object with the result, the extracted extension, and the validity of the URL
-      return { valid, allowed, extension };
+      const parsedURL = new URL(url);
+      const hostnameParts = parsedURL.hostname.toLowerCase().split('.');
+      const domain = hostnameParts.length > 2 ? hostnameParts.slice(-2).join('.') : parsedURL.hostname;
+      return { isTrusted: trustedDomains.includes(domain), domain };
     } catch (error) {
-      // If an error occurs, the URL is invalid
-      valid = false;
-      return { valid, allowed: false, extension: '' };
+      console.error("Error in isTrustedDomain:", error.message);
+      return { isTrusted: false, domain: url }; // Return original URL as domain in case of error
     }
   }
 
   function convertImageLinksToImage(containerType) {
-    // Define a mapping for container types to their respective selectors
     const containerSelectors = {
       generalMessages: ".messages-content div",
       chatlogsMessages: ".chat-logs-container",
       personalMessages: ".messages-container-wrapper"
-    };
+    }
 
-    // Get the container element based on the provided containerType
     const container = document.querySelector(containerSelectors[containerType]);
-    if (!container) return; // Exit if the container doesn't exist
+    if (!container) return;
 
-    // Select all unprocessed links within the container
     const links = container.querySelectorAll("a:not(.skipped):not(.processed-image)");
-    if (!links.length) return; // Exit if no links are found
+    if (!links.length) return;
 
     links.forEach(link => {
-      if (!link.href || !link.href.startsWith("http")) return; // Skip invalid links
+      if (!link.href || !link.href.startsWith("http")) return;
 
-      // Check if the link has an allowed image extension
       const { allowed, extension } = isAllowedImageExtension(link.href);
-      // Check if the link is from a trusted domain
-      const { isTrusted, domain } = isTrustedDomain(link.href);
-
-      // Skip processing if the link doesn't meet the criteria
-      if (!isTrusted) {
-        link.classList.add("skipped");
-        return;
-      }
-
-      // Skip processing if the link has not allowed image extension
       if (!allowed) return;
 
-      // Mark the link as processed
-      link.classList.add("processed-image", "media");
-      link.textContent = `${imageExtensionEmoji} Image (${extension.toUpperCase()}) ${webDomainEmoji} Hostname (${domain})`;
+      // Add class media if allowed image extenstion
+      link.classList.add("media");
+
+      const { isTrusted, domain } = isTrustedDomain(link.href);
       link.title = isValidEncodedURL(link.href) ? decodeURL(link.href) : link.href;
 
-      // Prevent duplicate thumbnails
-      if (link.nextSibling?.classList?.contains("thumbnail")) return;
+      // Handle untrusted domains
+      if (!isTrusted) {
+        link.classList.add("skipped");
+        link.textContent = `${imageExtensionEmoji} Image (${extension.toUpperCase()}) ${webDomainEmoji} Hostname (${domain}) ${untrustedEoji} Untrusted`;
 
-      // Create a thumbnail container
+        // Directly handle the image loading on link click
+        link.addEventListener("click", e => {
+          if (!link.classList.contains("processed-image")) {
+            e.preventDefault(); // Prevent default behavior only if not processed yet
+            link.classList.remove("skipped");
+            link.classList.add("processed-image");
+            createThumbnail(link, true); // Force thumbnail creation
+          }
+        })
+      } else {
+        link.textContent = `${imageExtensionEmoji} Image (${extension.toUpperCase()}) ${webDomainEmoji} Hostname (${domain})`;
+        link.classList.add("processed-image");
+        // Create thumbnail for trusted links directly
+        createThumbnail(link, false);
+      }
+    })
+
+    function createThumbnail(link, isUntrusted) {
       const thumbnail = document.createElement("div");
       Object.assign(thumbnail.style, {
         border: "none",
@@ -1055,45 +1051,48 @@
         padding: "2px",
         margin: "6px",
         overflowY: "auto"
-      });
+      })
       thumbnail.classList.add("thumbnail");
 
-      // Create an image element for the thumbnail
       const img = document.createElement("img");
       img.src = link.href;
       img.style.maxHeight = "100%";
       img.style.maxWidth = "100%";
       img.style.backgroundColor = "transparent";
 
-      // Handle successful image load
       img.onload = () => {
-        if (!isTrustedDomain(link.href)) return;
-
-        // Append the image to the thumbnail container
         thumbnail.appendChild(img);
         link.parentNode.insertBefore(thumbnail, link.nextSibling);
         thumbnailLinks.push({ link, imgSrc: link.href });
-
-        // Scroll to the bottom of the messages container
         scrollMessagesToBottom(containerType);
-      };
+      }
 
-      // Handle image loading failure
       img.onerror = () => {
         console.error("Failed to load image:", link.href);
         link.classList.add("skipped");
-      };
+      }
 
-      // Add a click event to enlarge the image
+      // Only show thumbnail on click for untrusted domains
+      if (isUntrusted) {
+        // Check if thumbnail already created, avoid creating again
+        if (!link.querySelector(".thumbnail")) {
+          link.addEventListener("click", e => {
+            // Only create thumbnail once
+            if (!link.querySelector(".thumbnail")) {
+              thumbnail.appendChild(img); // Add image to thumbnail on user confirmation
+              link.parentNode.insertBefore(thumbnail, link.nextSibling);
+            }
+          })
+        }
+      } else {
+        // Show the thumbnail directly for trusted domains
+        thumbnail.appendChild(img);
+        link.parentNode.insertBefore(thumbnail, link.nextSibling);
+      }
+
       thumbnail.addEventListener("click", e => {
-        e.preventDefault();
         e.stopPropagation();
 
-        // Reset bigImage and currentImageIndex when a thumbnail is clicked
-        bigImage = null;
-        currentImageIndex = thumbnailLinks.findIndex(item => item.imgSrc === link.href);
-
-        // Create and display the big image
         bigImage = createBigImage(img.src);
         Object.assign(bigImage.style, {
           top: "50%",
@@ -1103,12 +1102,11 @@
           opacity: "0",
           zIndex: "999",
           transformOrigin: "center center"
-        });
-
+        })
         triggerTargetElement(bigImage, "show");
         triggerDimmingElement("show");
-      });
-    });
+      })
+    }
   }
 
   // Object to store event handlers for big image
@@ -1117,13 +1115,13 @@
   function addBigImageEventListeners() {
     Object.entries(bigImageEvents).forEach(([event, handler]) => {
       document.addEventListener(event, handler);
-    });
+    })
   }
 
   function removeBigImageEventListeners() {
     Object.entries(bigImageEvents).forEach(([event, handler]) => {
       document.removeEventListener(event, handler);
-    });
+    })
   }
 
   // Function to create a big image with a dimming layer
@@ -1146,7 +1144,7 @@
       }
       // Remove all event listeners
       removeBigImageEventListeners();
-    };
+    }
 
     // Close when clicking outside the big image
     bigImageEvents.unfocusedClick = function (event) {
@@ -1154,7 +1152,7 @@
         bigImage.remove(); // Directly remove the image from the DOM
         removeBigImageEventListeners(); // Clean up event listeners
       }
-    };
+    }
 
     document.addEventListener('click', bigImageEvents.unfocusedClick);
 
@@ -1168,7 +1166,7 @@
       } else if (event.code === 'ArrowRight') {
         navigateImages(1);
       }
-    };
+    }
 
     document.addEventListener('keydown', bigImageEvents.keydown);
 
@@ -1295,6 +1293,34 @@
     }
   }
 
+  // List of allowed video extensions
+  const allowedVideoExtensions = ['mp4', 'webm', 'ogg', 'mov', 'avi'];
+
+  /**
+   * Checks if a given URL has an allowed video extension.
+   * @param {string} url - The URL to check.
+   * @returns {{allowed: boolean, extension: string}} - Indicates if the extension is allowed and returns the extension.
+   */
+  function isAllowedVideoExtension(url) {
+    // Shared extension extraction logic
+    const getExtension = (str) =>
+      (str.match(/\.([^?#.]+)(?:[?#]|$)/i)?.[1]?.toLowerCase() || '');
+
+    try {
+      const extension = getExtension(url);
+      return {
+        allowed: allowedVideoExtensions.includes(extension),
+        extension
+      };
+    } catch (error) {
+      console.error("Error in isAllowedVideoExtension:", error.message);
+      return {
+        allowed: false,
+        extension: getExtension(String(url)) // Handle non-string URLs
+      };
+    }
+  }
+
   function convertVideoLinksToPlayer(containerType) {
     // Define container selectors for different message types
     const containerSelectors = {
@@ -1322,24 +1348,42 @@
       const url = link.href;
       if (!url) return;
 
-      // Check if the link's href includes trusted domain
+      // Get video details using our helper function
+      const videoInfo = getVideoInfo(url);
+      if (!videoInfo) return;
+
+      // Add media class if youtube or video
+      link.classList.add("media");
+
+      // Check if the link's href includes a trusted domain
       const { isTrusted, domain } = isTrustedDomain(url);
 
-      // Skip processing if the link doesn't meet the criteria
+      // For untrusted domains, add classes and update text before waiting for a click
       if (!isTrusted) {
         link.classList.add("skipped");
+        link.textContent = `${videoExtensionEmoji} ${videoInfo.videoType} ${webDomainEmoji} Hostname (${domain}) ${untrustedEoji} Untrusted`;
+        link.addEventListener("click", e => {
+          if (!link.classList.contains("processed-video")) {
+            e.preventDefault();
+            link.classList.remove("skipped");
+            processVideoLink(link, url, domain, videoInfo);
+          }
+        });
         return;
       }
 
-      // Check if the link is a YouTube video
-      const youtubeMatch = url.match(/(?:shorts\/|live\/|watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
-      // Check if the link is an MP4 video
-      const mp4Match = url.match(/\.mp4(\?.*)?(#.*)?/i);
+      // For trusted links, process immediately
+      processVideoLink(link, url, domain, videoInfo);
+    });
 
-      if (!youtubeMatch && !mp4Match) return;
+    function processVideoLink(link, url, domain, videoInfo) {
+      const { youtubeMatch, videoType, videoId } = videoInfo;
+      // Use the helper function to check for allowed video extensions
+      const videoCheck = isAllowedVideoExtension(url);
+      if (!youtubeMatch && !videoCheck.allowed) return;
 
-      // Mark the link as processed
-      link.classList.add("processed-video", "media");
+      // Add media and processed-video classes (if not already added)
+      link.classList.add("processed-video");
 
       // Create a wrapper div for better structure
       const wrapper = document.createElement('div');
@@ -1351,7 +1395,7 @@
         marginBottom: '10px'
       });
 
-      // Create an appropriate embed element (iframe for YouTube, video for MP4)
+      // Create an appropriate embed element (iframe for YouTube, video for allowed formats)
       let embedElement = document.createElement(youtubeMatch ? 'iframe' : 'video');
       Object.assign(embedElement.style, {
         display: 'flex',
@@ -1360,35 +1404,48 @@
       });
 
       if (youtubeMatch) {
-        // Extract video ID and determine YouTube video type
-        const videoId = youtubeMatch[1];
-        const youtubeType = url.includes('shorts/') ? 'Shorts' :
-          url.includes('live/') ? 'Live' :
-            url.includes('watch?v=') ? 'Watch' :
-              url.includes('youtu.be/') ? 'Share' : 'YouTube';
-
-        // Update link text for YouTube videos
-        link.textContent = `${videoExtensionEmoji} ${youtubeType} ${webDomainEmoji} Hostname (${domain})`;
+        // Update link text and set YouTube embed
+        link.textContent = `${videoExtensionEmoji} ${videoType} ${webDomainEmoji} Hostname (${domain})`;
         embedElement.src = `https://www.youtube.com/embed/${videoId}`;
         embedElement.allowFullscreen = true;
       } else {
         // Update link text for MP4 videos
-        link.textContent = `${videoExtensionEmoji} Video (MP4) ${webDomainEmoji} Hostname (${domain})`;
+        link.textContent = `${videoExtensionEmoji} ${videoType} ${webDomainEmoji} Hostname (${domain})`;
         embedElement.src = url;
         embedElement.controls = true;
       }
 
-      // Set link attributes
+      // Set link attributes and insert elements
       link.title = isValidEncodedURL(url) ? decodeURL(url) : url;
       link.style.display = 'inline-flex';
-
-      // Insert wrapper before the link and append elements
       link.parentNode.insertBefore(wrapper, link);
       wrapper.append(link, embedElement);
-    });
 
-    // Scroll to the bottom of the container after processing links
-    scrollMessagesToBottom(containerType);
+      // Scroll to the bottom of the container after processing links
+      scrollMessagesToBottom(containerType);
+    }
+
+    // Helper function to get video information based on the URL
+    function getVideoInfo(url) {
+      const youtubeMatch = url.match(/(?:shorts\/|live\/|watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
+
+      if (youtubeMatch) {
+        const videoId = youtubeMatch[1];
+        const videoType = url.includes('shorts/') ? 'Shorts' :
+          url.includes('live/') ? 'Live' :
+            url.includes('watch?v=') ? 'Watch' :
+              url.includes('youtu.be/') ? 'Share' : 'YouTube';
+        return { youtubeMatch: true, videoId, videoType };
+      }
+
+      // Check if it's an MP4 or other video format
+      const extension = url.split('.').pop().toLowerCase();
+      if (allowedVideoExtensions.includes(extension)) {
+        return { youtubeMatch: false, videoType: `Video (${extension.toUpperCase()})` };
+      }
+
+      return false; // Return false if no match
+    }
   }
 
   // Function to check if a URL is valid and contains encoded characters
@@ -5081,8 +5138,8 @@
             // If the page is initialized, perform various UI updates and processing
             if (isInitialized) {
               attachEventsToMessages();
-              convertVideoLinksToPlayer('generalMessages');
               convertImageLinksToImage('generalMessages');
+              convertVideoLinksToPlayer('generalMessages');
               processEncodedLinks('generalMessages');
               applyChatMessageGrouping();
               scrollMessagesToBottom();
@@ -5176,6 +5233,19 @@
     class="feather feather-message-circle">
     <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
   </svg>`;
+  // Icon for untrusted link conversion
+  const downloadCloudSVG = `
+    <svg xmlns="${svgUrl}" width="${iconSize - 8}" height="${iconSize - 8}" viewBox="0 0 24 24" fill="none" stroke="lightsteelblue" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-loader">
+      <line x1="12" y1="2" x2="12" y2="6"></line>
+      <line x1="12" y1="18" x2="12" y2="22"></line>
+      <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+      <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+      <line x1="2" y1="12" x2="6" y2="12"></line>
+      <line x1="18" y1="12" x2="22" y2="12"></line>
+      <line x1="4.93" y1="19.07" x2="7.76" y2="16.24">
+      </line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+    </svg>
+  `;
 
   // Declare variables for the sound switcher button and its icon
   let soundSwitcher, soundSwitcherIcon;
@@ -6703,9 +6773,8 @@
       });
 
       requestAnimationFrame(() => {
-        convertVideoLinksToPlayer('personalMessages');
-        // Convert image links to clickable thumbnail previews and embed YouTube videos as iframes for personal messages
         convertImageLinksToImage('personalMessages');
+        convertVideoLinksToPlayer('personalMessages');
         processEncodedLinks('personalMessages'); // Decodes links within the personal messages section.
         highlightMentionWords('personalMessages');
         messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll after next repaint
@@ -7819,9 +7888,11 @@
         messageContainer.style.padding = '0.2em'; // Set padding for the message container
         messageContainer.style.display = 'inline-flex';
         messageContainer.style.cursor = 'pointer'; // Set cursor to pointer on hover for click effect
-        messageContainer.style.alignItems = 'center'; // Align items to center
+        messageContainer.style.alignItems = 'start'; // Align items to center
         // Attach click event to scroll the chat logs container to the middle of the parent container on LMB click
-        messageContainer.addEventListener('click', async () => {
+        messageContainer.addEventListener('click', async (event) => {
+          // If the clicked element or one of its parents is an anchor, exit early.
+          if (event.target.closest('a')) return;
           // Call toggleMessagesVisibility to show all messages and scroll when a message is clicked on visibleMentionMessages is true
           if (visibleMessages) await toggleMessagesVisibility();
           chatlogsSearchInput.value.length > 0 && (chatlogsSearchInput.value = '');
@@ -7929,8 +8000,8 @@
       renderActiveUsers(usernameMessageCountMap, chatLogsPanel, chatlogsSearchInput);
 
       requestAnimationFrame(() => {
-        convertVideoLinksToPlayer('chatlogsMessages');
         convertImageLinksToImage('chatlogsMessages');
+        convertVideoLinksToPlayer('chatlogsMessages');
         processEncodedLinks('chatlogsMessages'); // Decodes links within the chat logs section.
         highlightMentionWords('chatlogsMessages');
         chatLogsContainer.scrollTop = chatLogsContainer.scrollHeight; // Scroll to the very bottom
@@ -10598,10 +10669,10 @@
         waitForChatObserver.disconnect();
         // Remove ignored users' messages if the page is not initialized
         removeIgnoredUserMessages();
-        // Convert YouTube links to visible iframe containers
-        convertVideoLinksToPlayer('generalMessages'); // For general chat
         // Convert image links to visible image containers
         convertImageLinksToImage('generalMessages');
+        // Convert YouTube links to visible iframe containers
+        convertVideoLinksToPlayer('generalMessages'); // For general chat
         // Decodes links within the general messages section.
         processEncodedLinks('generalMessages');
         // Restore chat tab from localStorage

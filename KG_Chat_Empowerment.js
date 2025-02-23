@@ -262,6 +262,18 @@
     })
   );
 
+  // Variable to store the last focused input or textarea element  
+  let lastFocusedInput = null;
+
+  // Event listener to track when an input field or textarea gains focus  
+  document.addEventListener("focusin", (e) => {
+    // Check if the focused element is an input field or a textarea  
+    if (e.target.matches("textarea, input.text")) {
+      // Store the reference to the currently focused input or textarea  
+      lastFocusedInput = e.target;
+    }
+  });
+
   // SCROLL BUTTONS
 
   // Helper function to apply common styles to a scroll button
@@ -1654,62 +1666,104 @@
     'Новичок': '#AFAFAF' // Grey
   };
 
-  // Load a given URL into the iframe.
+  // Tracks the last focused textarea within the iframe to manage input interactions
+  let lastFocusedIframeTextarea = null;
+
+  // Creates and manages an iframe modal for profile content
   const loadProfileIntoIframe = (url) => {
+    // Create iframe element and configure basic attributes
     const profileIframe = document.createElement('iframe');
     profileIframe.classList.add('profile-iframe-container');
     profileIframe.src = url;
-    profileIframe.style.border = 'none';
-    profileIframe.style.display = 'flex';
-    profileIframe.style.position = 'fixed';
-    profileIframe.style.zIndex = '999';
-    profileIframe.style.width = '75vw';
-    profileIframe.style.minWidth = '1000px';
-    profileIframe.style.height = '80vh';
-    profileIframe.style.top = '48.5vh';
-    profileIframe.style.left = '50vw';
-    profileIframe.style.transform = 'translate(-50%, -50%)';
-    profileIframe.style.setProperty('box-shadow', '0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)', 'important');
-    profileIframe.style.setProperty('border-radius', '0.6em', 'important');
 
+    // Apply positioning and dimensional styles (non-commented per request)
+    Object.assign(profileIframe.style, {
+      border: 'none',
+      display: 'flex',
+      position: 'fixed',
+      zIndex: '999',
+      width: '75vw',
+      minWidth: '1000px',
+      height: '80vh',
+      top: '48.5vh',
+      left: '50vw',
+      transform: 'translate(-50%, -50%)'
+    });
+
+    // Add shadow and border-radius with !important priority
+    profileIframe.style.setProperty('box-shadow', '0 4px 6px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08)', 'important');
+    profileIframe.style.setProperty('border-radius', '0.6em', 'important');
     document.body.appendChild(profileIframe);
 
+    // Cleanup function for removing the iframe and event listeners
     const removeIframe = () => {
       profileIframe.remove();
       document.removeEventListener('keydown', handleEvents);
       document.removeEventListener('mousedown', handleEvents);
     };
 
+    // Unified event handler for closure interactions
     const handleEvents = (event) => {
-      const isSpaceKey = event.type === 'keydown' && event.code === 'Space';
-      const isClickOutside = event.type === 'mousedown' && !profileIframe.contains(event.target);
-
-      if (isSpaceKey || isClickOutside) {
-        if (isSpaceKey) event.preventDefault(); // Prevent scroll only for space key.
-        removeIframe(); // Call the remove function once.
+      // Spacebar handling: prevent default closure when textarea is focused
+      if (event.type === 'keydown' && event.code === 'Space') {
+        if (lastFocusedIframeTextarea) {
+          event.stopPropagation();
+          return;
+        }
+        event.preventDefault();
+        removeIframe();
+      }
+      // Close iframe when clicking outside
+      if (event.type === 'mousedown' && !profileIframe.contains(event.target)) {
+        removeIframe();
       }
     };
 
+    // Attach global event listeners for closure triggers
     document.addEventListener('keydown', handleEvents);
     document.addEventListener('mousedown', handleEvents);
 
+    // Configure iframe content interactions after load
     profileIframe.onload = () => {
-      profileIframe.contentWindow.addEventListener('keydown', handleEvents);
-      profileIframe.contentWindow.addEventListener('dblclick', removeIframe);
+      try {
+        const iframeWindow = profileIframe.contentWindow;
+        const iframeDoc = iframeWindow.document;
 
-      const observer = new MutationObserver((mutations) => {
-        if (mutations.some(mutation =>
-          Array.from(mutation.removedNodes).some(node =>
-            node.nodeType === Node.ELEMENT_NODE &&
-            (node.classList.contains('dimming-background') || node.classList.contains('cached-users-panel'))
-          )
-        )) {
-          removeIframe();
-          observer.disconnect();
-        }
-      });
+        // Track focused textareas within iframe
+        iframeDoc.addEventListener('focusin', (e) => {
+          if (e.target.tagName === 'TEXTAREA') {
+            lastFocusedIframeTextarea = e.target;
+          }
+        });
 
-      observer.observe(document.body, { childList: true, subtree: true });
+        // Clear textarea focus tracking when leaving input
+        iframeDoc.addEventListener('focusout', () => {
+          setTimeout(() => {  // Delay to check new active element
+            if (!iframeDoc.activeElement || iframeDoc.activeElement.tagName !== 'TEXTAREA') {
+              lastFocusedIframeTextarea = null;
+            }
+          }, 0);
+        });
+
+        // Attach internal iframe closure triggers
+        iframeWindow.addEventListener('keydown', handleEvents);
+        iframeWindow.addEventListener('dblclick', removeIframe);
+
+        // Monitor DOM changes for automatic closure conditions
+        new MutationObserver((mutations, observer) => {
+          // Close iframe when specific UI elements are removed
+          if (mutations.some(m => [...m.removedNodes].some(n =>
+            n.nodeType === 1 && (n.classList.contains('dimming-background') || n.classList.contains('cached-users-panel'))
+          ))) {
+            removeIframe();
+            observer.disconnect();
+          }
+        }).observe(document.body, { childList: true, subtree: true });
+
+      } catch (error) {
+        // Handle cross-origin policy restrictions
+        console.warn("Unable to access iframe contents:", error);
+      }
     };
   };
 

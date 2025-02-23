@@ -745,6 +745,202 @@
     });
   }
 
+  function getUserChatDuration(username, actionTime) {
+    // Retrieve stored user data and find the target user by login
+    const user = Object.values(JSON.parse(localStorage.getItem('fetchedUsers') || '[]'))
+      .find(u => u?.login === username);
+    if (!user) return `User "${username}" not found`;
+
+    const actionLog = user.actionLog || [];
+    const current = actionLog.find(entry => entry.timestamp === actionTime);
+    if (!current) return `Action not found at ${actionTime}`;
+
+    const actionIndex = actionLog.indexOf(current);
+    if (actionIndex === 0) return `${username}'s first action was entering the chat`;
+
+    // Find the most recent action before the current one that has a different type
+    const prev = actionLog.slice(0, actionIndex).reverse().find(a => a.type !== current.type);
+    if (!prev) return `No valid previous action found for ${actionTime}`;
+
+    // Calculate the duration between the two timestamps
+    const duration = calculateDuration(prev.timestamp, current.timestamp);
+    return current.type === 'leave'
+      ? `${username} stayed in chat for ${duration}`
+      : `${username} was absent for ${duration}`;
+  }
+
+  function calculateDuration(start, end) {
+    const toSeconds = t => t.split(':').reduce((acc, val, i) =>
+      acc + val * [3600, 60, 1][i], 0); // Convert HH:MM:SS to total seconds
+
+    const diff = Math.abs(toSeconds(end) - toSeconds(start)); // Get absolute difference in seconds
+
+    return [
+      Math.floor(diff / 3600), // Hours
+      Math.floor((diff % 3600) / 60), // Minutes
+      diff % 60 // Seconds
+    ].map(n => n.toString().padStart(2, '0')).join(':'); // Format as HH:MM:SS
+  }
+
+  // let titleInstance = null;
+  // let titleTimeout = null;
+  // let isTitleVisible = false;
+
+  // // Shared mousemove handler
+  // const titleMousemoveHandler = (e) => {
+  //   if (titleInstance) {
+  //     titleInstance.style.left = `${e.clientX + 12}px`;
+  //     titleInstance.style.top = `${e.clientY + 12}px`;
+  //   }
+  // };
+
+  // function createCustomTitle(element, title) {
+  //   // Check if element already has event listeners
+  //   if (element.classList.contains('events-included')) return;
+  //   // Mark element as having listeners
+  //   element.classList.add('events-included');
+
+  //   // Create title element if missing
+  //   titleInstance ||= (() => {
+  //     const titleElement = document.createElement('div');
+  //     titleElement.classList.add("tooltip");
+  //     Object.assign(titleElement.style, {
+  //       position: 'fixed',
+  //       background: 'rgb(22, 22, 22)',
+  //       color: 'rgb(222, 222, 222)',
+  //       padding: '0.5em',
+  //       zIndex: 1200,
+  //       fontSize: '0.9em',
+  //       pointerEvents: 'none',
+  //       whiteSpace: 'nowrap',
+  //       opacity: 0,
+  //       transition: 'opacity 0.1s',
+  //       display: 'none',
+  //       left: 0,
+  //       top: 0,
+  //     });
+  //     titleElement.style.setProperty('border-radius', '0.2em', 'important');
+  //     titleElement.style.setProperty('box-shadow', boxShadow, 'important');
+  //     document.body.appendChild(titleElement);
+  //     return titleElement;
+  //   })();
+
+  //   const showTitle = (e) => {
+  //     isTitleVisible = true;
+  //     clearTimeout(titleTimeout);
+  //     titleInstance.textContent = title;
+  //     titleInstance.style.display = 'flex';
+  //     titleInstance.style.opacity = '1';
+  //     titleMousemoveHandler(e);
+
+  //     // Add document mousemove listener only once
+  //     document.addEventListener('mousemove', titleMousemoveHandler);
+  //   };
+
+  //   const hideTitle = () => {
+  //     isTitleVisible = false;
+  //     clearTimeout(titleTimeout);
+  //     titleTimeout = setTimeout(() => {
+  //       titleInstance.style.opacity = '0';
+  //       setTimeout(() => {
+  //         if (!isTitleVisible) {
+  //           titleInstance.style.display = 'none';
+  //           // Remove document mousemove listener
+  //           document.removeEventListener('mousemove', titleMousemoveHandler);
+  //         }
+  //       }, 50);
+  //     }, 100);
+  //   };
+
+  //   // Element event listeners
+  //   element.addEventListener('mouseenter', showTitle);
+  //   element.addEventListener('mouseleave', hideTitle);
+  // }
+
+
+  let titleInstance = null;
+  let titleHideTimeout = null;
+  let titleShowTimeout = null;
+  let isTitleVisible = false;
+  let isTooltipShown = false;
+
+  const titleMousemoveHandler = (e) => {
+    if (titleInstance) {
+      titleInstance.style.left = `${e.clientX + 12}px`;
+      titleInstance.style.top = `${e.clientY + 12}px`;
+    }
+  };
+
+  function createCustomTitle(element, title) {
+    if (element.classList.contains('events-included')) return;
+    element.classList.add('events-included');
+
+    titleInstance ||= (() => {
+      const titleElement = document.createElement('div');
+      titleElement.classList.add("tooltip");
+      Object.assign(titleElement.style, {
+        position: 'fixed',
+        background: 'rgb(22, 22, 22)',
+        color: 'rgb(222, 222, 222)',
+        padding: '0.5em',
+        zIndex: 1200,
+        fontSize: '0.9em',
+        pointerEvents: 'none',
+        whiteSpace: 'nowrap',
+        opacity: 0,
+        transition: 'opacity 0.1s',
+        display: 'none',
+        left: 0,
+        top: 0
+      });
+      titleElement.style.setProperty('border', '1px solid rgb(60, 60, 60)', 'important');
+      titleElement.style.setProperty('border-radius', '4px', 'important');
+      titleElement.style.setProperty('box-shadow', '0 2px 5px rgba(0,0,0,0.3)', 'important');
+      document.body.appendChild(titleElement);
+      return titleElement;
+    })();
+
+    const showTitle = (e) => {
+      isTitleVisible = true;
+      clearTimeout(titleShowTimeout);
+      clearTimeout(titleHideTimeout);
+      titleInstance.textContent = title;
+
+      // Start tracking position immediately
+      document.addEventListener('mousemove', titleMousemoveHandler);
+      titleMousemoveHandler(e);
+
+      if (!isTooltipShown) {
+        titleShowTimeout = setTimeout(() => {
+          titleInstance.style.display = 'flex';
+          titleInstance.style.opacity = '1';
+          isTooltipShown = true;
+        }, 300);
+      }
+    };
+
+    const hideTitle = () => {
+      isTitleVisible = false;
+      clearTimeout(titleShowTimeout);
+      titleShowTimeout = null;
+
+      clearTimeout(titleHideTimeout);
+      titleHideTimeout = setTimeout(() => {
+        titleInstance.style.opacity = '0';
+        isTooltipShown = false;
+        setTimeout(() => {
+          if (!isTitleVisible) {
+            titleInstance.style.display = 'none';
+            document.removeEventListener('mousemove', titleMousemoveHandler);
+          }
+        }, 50);
+      }, 100);
+    };
+
+    element.addEventListener('mouseenter', showTitle);
+    element.addEventListener('mouseleave', hideTitle);
+  }
+
   // Timeout before the dynamicChatNotification should be removed
   const dynamicChatNotificationTimeout = 5000;
   // Set the initial top distance for the first dynamicChatNotification
@@ -783,24 +979,45 @@
       return;
     }
 
+    // Add a class to the container based on the container type
     staticNotificationsContainer.classList.add(
-      containerType === 'generalChat' ? 'static-chat-notifications-container' : 'static-cache-notifications-container'
+      containerType === 'generalChat'
+        ? 'static-chat-notifications-container'
+        : 'static-cache-notifications-container'
     );
 
     // Create the action icon based on the iconType provided
-    const actionIcon = createActionIcon(iconType);
     const staticChatNotification = document.createElement('div');
+    staticChatNotification.classList.add('static-chat-notification');
 
-    // Add double-click listener to purge notifications only if generalChat selector
+    // Add double-click listener to purge notifications only if using the generalChat container
     if (containerType === 'generalChat') {
       staticChatNotification.addEventListener('dblclick', () => {
         purgeStaticChatNotifications();
       });
     }
 
-    // Insert the user, icon, and time info
-    staticChatNotification.innerHTML = `${user} ${actionIcon.outerHTML} ${time}`;
-    staticChatNotification.classList.add('static-chat-notification');
+    // Create the user element
+    const userElement = document.createElement('span');
+    userElement.classList.add("action-user");
+    userElement.textContent = user;
+
+    // Create the action icon based on the iconType provided
+    const actionIcon = createActionIcon(iconType);
+
+    // Create the time element
+    const timeElement = document.createElement('span');
+    timeElement.classList.add("action-time");
+    timeElement.textContent = time;
+
+    // Append elements in order: user span, action icon, time span
+    staticChatNotification.appendChild(userElement);
+    staticChatNotification.appendChild(actionIcon);
+    staticChatNotification.appendChild(timeElement);
+
+    // Store username and time as data attributes for easy access later
+    staticChatNotification.dataset.username = user;
+    staticChatNotification.dataset.time = time;
 
     // Style based on presence
     if (presence) {
@@ -816,6 +1033,7 @@
     }
 
     // Set layout styles
+    staticChatNotification.style.cursor = 'default';
     staticChatNotification.style.padding = '8px';
     staticChatNotification.style.display = 'inline-flex';
     staticChatNotification.style.flex = 'auto';
@@ -827,6 +1045,17 @@
 
     // Append the notification to the selected container
     staticNotificationsContainer.appendChild(staticChatNotification);
+
+    // Use the custom tooltip when the user enters the static notification
+    staticChatNotification.addEventListener('mouseover', () => {
+      // Use dataset to get the username and time from the static notification
+      const usernameData = staticChatNotification.dataset.username;
+      const timeData = staticChatNotification.dataset.time;
+      // Get the user chat duration and pass it to the custom tooltip
+      const title = getUserChatDuration(usernameData, timeData);
+      // Create and display the custom tooltip
+      createCustomTitle(staticChatNotification, title);
+    });
   }
 
   // Function to create and animate a dynamic notification
@@ -836,26 +1065,51 @@
     if (!dynamicChatNotificationsContainer) {
       dynamicChatNotificationsContainer = document.createElement('div');
       dynamicChatNotificationsContainer.classList.add('dynamic-chat-notifications-container');
-      dynamicChatNotificationsContainer.style.pointerEvents = 'none';
-      dynamicChatNotificationsContainer.style.position = 'fixed';
-      dynamicChatNotificationsContainer.style.display = 'flex';
-      dynamicChatNotificationsContainer.style.flexDirection = 'column';
-      dynamicChatNotificationsContainer.style.top = '0';
-      dynamicChatNotificationsContainer.style.bottom = '0';
-      dynamicChatNotificationsContainer.style.left = '0';
-      dynamicChatNotificationsContainer.style.right = '0';
-      dynamicChatNotificationsContainer.style.paddingTop = dynamicChatNotificationTopOffset + 'px';
+
+      Object.assign(dynamicChatNotificationsContainer.style, {
+        zIndex: '1000',
+        width: '0',
+        position: 'fixed',
+        display: 'flex',
+        flexDirection: 'column',
+        top: '0',
+        bottom: '0',
+        left: '0',
+        right: '0',
+        paddingTop: dynamicChatNotificationTopOffset + 'px',
+      });
+
       document.body.appendChild(dynamicChatNotificationsContainer);
     }
 
-    const actionIcon = createActionIcon(iconType);
+    // Create the notification element
     const dynamicChatNotification = document.createElement('div');
     dynamicChatNotification.classList.add('dynamic-chat-notification');
 
-    // Insert the user, icon, and time info
-    dynamicChatNotification.insertAdjacentHTML('beforeend', `${user}${actionIcon.outerHTML}${time}`);
+    // Create user element
+    const userElement = document.createElement('span');
+    userElement.classList.add("action-user");
+    userElement.textContent = user;
+
+    // Create the action icon based on the iconType provided
+    const actionIcon = createActionIcon(iconType);
+
+    // Create time element
+    const timeElement = document.createElement('span');
+    timeElement.classList.add("action-time");
+    timeElement.textContent = time;
+
+    // Append elements in order: user span, action icon, time span
+    dynamicChatNotification.appendChild(userElement);
+    dynamicChatNotification.appendChild(actionIcon);
+    dynamicChatNotification.appendChild(timeElement);
+
+    // Store username and time as data attributes for easy access later
+    dynamicChatNotification.dataset.username = user;
+    dynamicChatNotification.dataset.time = time;
 
     // Set initial styles and position (off-screen)
+    dynamicChatNotification.style.cursor = 'default';
     dynamicChatNotification.style.position = 'relative';
     dynamicChatNotification.style.alignItems = 'center';
     dynamicChatNotification.style.width = 'fit-content';
@@ -882,6 +1136,17 @@
 
     // Append to the container
     dynamicChatNotificationsContainer.appendChild(dynamicChatNotification);
+
+    // Use the custom tooltip when the user enters the static notification
+    dynamicChatNotification.addEventListener('mouseover', () => {
+      // Use dataset to get the username and time from the static notification
+      const usernameData = dynamicChatNotification.dataset.username;
+      const timeData = dynamicChatNotification.dataset.time;
+      // Get the user chat duration and pass it to the custom tooltip
+      const title = getUserChatDuration(usernameData, timeData);
+      // Create and display the custom tooltip
+      createCustomTitle(dynamicChatNotification, title);
+    });
 
     // Animate: slide in, then slide out and remove
     setTimeout(() => {
@@ -3418,7 +3683,8 @@
 
     const newProfileElement = document.createElement('a');
     newProfileElement.classList.add('profile');
-    newProfileElement.title = `${mainTitle} - ${bestSpeed}`;
+    const title = `${mainTitle} - ${bestSpeed}`;
+    createCustomTitle(newProfileElement, title);
     newProfileElement.target = '_blank';
     newProfileElement.href = `/profile/${userId}/`;
     let circularProgress = createCircularProgress(calculatePercentage(bestSpeed), rankColor, isRevoked);

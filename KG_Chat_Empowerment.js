@@ -5401,12 +5401,14 @@
   const iconSize = 28;
   const svgUrl = "http://www.w3.org/2000/svg";
 
-  // Icons for sound switcher button
-  const iconSilenceStrokeColor = 'hsl(355, 80%, 65%)'; // red
-  const iconBeepStrokeColor = 'hsl(55, 80%, 65%)'; // yellow
-  const iconVoiceStrokeColor = 'hsl(80, 80%, 40%)'; // green
+
+
+
 
   // Button SVG icons "silence", "beep", "voice" representation
+  const iconSilenceStrokeColor = "hsl(355, 80%, 65%)";
+  const iconBeepStrokeColor = "hsl(55, 80%, 65%)";
+  const iconVoiceStrokeColor = "hsl(80, 80%, 40%)";
   const iconSoundSilence = `<svg xmlns="${svgUrl}" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconSilenceStrokeColor}" stroke-width="${iconStrokeWidth}" stroke-linecap="round" stroke-linejoin="round">
       <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
       <line x1="23" y1="9" x2="17" y2="15"></line>
@@ -5425,37 +5427,47 @@
 
   // Icons for message mode button
   // Button SVG icons "every", "mention" representation
-  const iconModeEvery = `<svg xmlns="${svgUrl}" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="hsl(100, 50%, 50%)" stroke-width="${iconStrokeWidth}" stroke-linecap="round" stroke-linejoin="round">
+  const iconModeEveryStrokeColor = "hsl(100, 50%, 50%)";
+  const iconModeEvery = `<svg xmlns="${svgUrl}" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconModeEveryStrokeColor}" stroke-width="${iconStrokeWidth}" stroke-linecap="round" stroke-linejoin="round">
       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
       <circle cx="9" cy="7" r="4"></circle>
       <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
       <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
       </svg>`;
-  const iconModeMention = `<svg xmlns="${svgUrl}" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="hsl(180, 60%, 50%)" stroke-width="${iconStrokeWidth}" stroke-linecap="round" stroke-linejoin="round">
+
+  const iconModeMentionStrokeColor = "hsl(180, 60%, 50%)";
+  const iconModeMention = `<svg xmlns="${svgUrl}" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconModeMentionStrokeColor}" stroke-width="${iconStrokeWidth}" stroke-linecap="round" stroke-linejoin="round">
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
       <circle cx="12" cy="7" r="4"></circle>
       </svg>`;
+
   // Icon for the out of range value
   const iconRangeisOut = `<svg xmlns="${svgUrl}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
       stroke-linecap="round" stroke-linejoin="round" class="feather feather-slash">
       <circle cx="12" cy="12" r="10"></circle>
       <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
       </svg>`;
+
   // Icon for userlistCache
-  const iconUserlistCache = `<svg xmlns="${svgUrl}" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="#b4d583" stroke-width="${iconStrokeWidth}"
+  const iconUserlistCacheStrokeColor = "rgb(180, 213, 131)";
+  const iconUserlistCache = `<svg xmlns="${svgUrl}" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconUserlistCacheStrokeColor}" stroke-width="${iconStrokeWidth}"
       stroke-linecap="round" stroke-linejoin="round" class="feather feather-database">
       <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
       <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
       <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
       </svg>`;
+
   // Icon for personal messages
-  const iconPersonalMessages = `<svg xmlns="${svgUrl}" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="#ffa07a" stroke-width="${iconStrokeWidth}"
+  const iconPersonalMessagesStrokeColor = "rgb(255, 160, 122)";
+  const iconPersonalMessages = `<svg xmlns="${svgUrl}" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconPersonalMessagesStrokeColor}" stroke-width="${iconStrokeWidth}"
       stroke-linecap="round" stroke-linejoin="round" class="feather feather-mail">
       <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
       <polyline points="22,6 12,13 2,6"></polyline>
       </svg>`;
+
   // Icon for media messages
-  const iconMediaMessages = `<svg xmlns="${svgUrl}" width="${iconSize - 4}" height="${iconSize - 4}" viewBox="0 0 24 24" fill="none" stroke="#71c4c4" stroke-width="${iconStrokeWidth}" stroke-linecap="round" stroke-linejoin="round" class="feather feather-film">
+  const iconMediaMessagesStrokeColor = "rgb(113, 196, 196)";
+  const iconMediaMessages = `<svg xmlns="${svgUrl}" width="${iconSize - 4}" height="${iconSize - 4}" viewBox="0 0 24 24" fill="none" stroke="${iconMediaMessagesStrokeColor}" stroke-width="${iconStrokeWidth}" stroke-linecap="round" stroke-linejoin="round" class="feather feather-film">
       <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
       <line x1="7" y1="2" x2="7" y2="22"></line>
       <line x1="17" y1="2" x2="17" y2="22"></line>
@@ -5465,12 +5477,23 @@
       <line x1="17" y1="17" x2="22" y2="17"></line>
       <line x1="17" y1="7" x2="22" y2="7"></line>
   </svg>`;
+
   // Icon for chat logs
+  const iconChatLogsStrokeColor = "rgb(100, 149, 237)";
   const iconChatLogs = `<svg xmlns="${svgUrl}" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none"
-    stroke="cornflowerblue" stroke-width="${iconStrokeWidth}" stroke-linecap="round" stroke-linejoin="round"
+    stroke="${iconChatLogsStrokeColor}" stroke-width="${iconStrokeWidth}" stroke-linecap="round" stroke-linejoin="round"
     class="feather feather-message-circle">
     <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
   </svg>`;
+
+
+  // Icon for the disabled chat button
+  const iconDeniedStrokeColor = "rgb(255, 100, 100)";
+  const iconDenied = `<svg xmlns="${svgUrl}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${iconDeniedStrokeColor}" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round" class="feather feather-slash">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+      </svg>`;
 
   // Declare variables for the sound switcher button and its icon
   let soundSwitcher, soundSwitcherIcon;
@@ -10525,14 +10548,6 @@
     }
 
   } // toggleHiddenMessages END
-
-  // Icon for the disabled chat button
-  const iconDenied = `<svg xmlns="${svgUrl}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgb(255, 100, 100)" stroke-width="2"
-      stroke-linecap="round" stroke-linejoin="round" class="feather feather-slash">
-      <circle cx="12" cy="12" r="10"></circle>
-      <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
-      </svg>`;
-
 
   // CHAT SWITCHER
 

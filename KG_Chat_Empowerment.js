@@ -5399,24 +5399,25 @@
 
   const iconStrokeWidth = 1.8;
   const iconSize = 28;
-  const iconSilenceStroke = 'hsl(355, 80%, 65%)'; // red
-  const iconBeepStroke = 'hsl(55, 80%, 65%)'; // yellow
-  const iconVoiceStroke = 'hsl(80, 80%, 40%)'; // green
   const svgUrl = "http://www.w3.org/2000/svg";
 
   // Icons for sound switcher button
+  const iconSilenceStrokeColor = 'hsl(355, 80%, 65%)'; // red
+  const iconBeepStrokeColor = 'hsl(55, 80%, 65%)'; // yellow
+  const iconVoiceStrokeColor = 'hsl(80, 80%, 40%)'; // green
+
   // Button SVG icons "silence", "beep", "voice" representation
-  const iconSoundSilence = `<svg xmlns="${svgUrl}" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconSilenceStroke}" stroke-width="${iconStrokeWidth}" stroke-linecap="round" stroke-linejoin="round">
+  const iconSoundSilence = `<svg xmlns="${svgUrl}" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconSilenceStrokeColor}" stroke-width="${iconStrokeWidth}" stroke-linecap="round" stroke-linejoin="round">
       <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
       <line x1="23" y1="9" x2="17" y2="15"></line>
       <line x1="17" y1="9" x2="23" y2="15"></line>
       </svg>`;
-  const iconSoundBeep = `<svg xmlns="${svgUrl}" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconBeepStroke}" stroke-width="${iconStrokeWidth}" stroke-linecap="round" stroke-linejoin="round">
+  const iconSoundBeep = `<svg xmlns="${svgUrl}" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconBeepStrokeColor}" stroke-width="${iconStrokeWidth}" stroke-linecap="round" stroke-linejoin="round">
       <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
       <path d="M19.07 4.93a10 10 0 0 1 0 14.14" opacity="0.3"></path>
       <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
       </svg>`;
-  const iconSoundVoice = `<svg xmlns="${svgUrl}" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconVoiceStroke}" stroke-width="${iconStrokeWidth}" stroke-linecap="round" stroke-linejoin="round">
+  const iconSoundVoice = `<svg xmlns="${svgUrl}" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconVoiceStrokeColor}" stroke-width="${iconStrokeWidth}" stroke-linecap="round" stroke-linejoin="round">
       <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
       <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
       <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
@@ -5470,19 +5471,6 @@
     class="feather feather-message-circle">
     <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
   </svg>`;
-  // Icon for untrusted link conversion
-  const downloadCloudSVG = `
-    <svg xmlns="${svgUrl}" width="${iconSize - 8}" height="${iconSize - 8}" viewBox="0 0 24 24" fill="none" stroke="lightsteelblue" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-loader">
-      <line x1="12" y1="2" x2="12" y2="6"></line>
-      <line x1="12" y1="18" x2="12" y2="22"></line>
-      <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
-      <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
-      <line x1="2" y1="12" x2="6" y2="12"></line>
-      <line x1="18" y1="12" x2="22" y2="12"></line>
-      <line x1="4.93" y1="19.07" x2="7.76" y2="16.24">
-      </line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
-    </svg>
-  `;
 
   // Declare variables for the sound switcher button and its icon
   let soundSwitcher, soundSwitcherIcon;

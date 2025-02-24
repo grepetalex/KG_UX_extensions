@@ -737,24 +737,24 @@
     // Retrieve stored user data and find the target user by login
     const user = Object.values(JSON.parse(localStorage.getItem('fetchedUsers') || '[]'))
       .find(u => u?.login === username);
-    if (!user) return `User "${username}" not found`;
+    if (!user) return `❌ User "${username}" not found`;
 
     const actionLog = user.actionLog || [];
     const current = actionLog.find(entry => entry.timestamp === actionTime);
     if (!current) return `Action not found at ${actionTime}`;
 
     const actionIndex = actionLog.indexOf(current);
-    if (actionIndex === 0) return `${username}'s first action was entering the chat`;
+    if (actionIndex === 0) return `🙌 ${username}'s first action`;
 
     // Find the most recent action before the current one that has a different type
     const prev = actionLog.slice(0, actionIndex).reverse().find(a => a.type !== current.type);
-    if (!prev) return `No valid previous action found for ${actionTime}`;
+    if (!prev) return `❌ No valid previous action found for ${actionTime}`;
 
     // Calculate the duration between the two timestamps
     const duration = calculateDuration(prev.timestamp, current.timestamp);
     return current.type === 'leave'
-      ? `${username} stayed in chat for ${duration}`
-      : `${username} was absent for ${duration}`;
+      ? `🛑 ${username} stayed in chat for ${duration}`
+      : `✅ ${username} was absent for ${duration}`;
   }
 
   function calculateDuration(start, end) {
@@ -3308,45 +3308,28 @@
     return timeComponents.filter(Boolean).join(' '); // Filter out empty strings and join components
   }
 
-  // Function to get rank color based on status title
-  function getRankColor(mainTitle) {
-    const statusColors = {
-      'Экстракибер': '#06B4E9', // Light Blue
-      'Кибергонщик': '#5681ff', // Medium Blue
-      'Супермен': '#B543F5', // Purple
-      'Маньяк': '#DA0543', // Red
-      'Гонщик': '#FF8C00', // Orange
-      'Профи': '#C1AA00', // Yellow
-      'Таксист': '#2DAB4F', // Green
-      'Любитель': '#61B5B3', // Light Cyan
-      'Новичок': '#AFAFAF' // Grey
+  // Function to get rank information (class, color, and icon) based on status title in English
+  function getRankInfo(mainTitle) {
+    const statusData = {
+      'Экстракибер': { class: 'extra', icon: '🚀', color: '#06B4E9' },
+      'Кибергонщик': { class: 'cyber', icon: '🤖', color: '#5681ff' },
+      'Супермен': { class: 'superman', icon: '👊', color: '#B543F5' },
+      'Маньяк': { class: 'maniac', icon: '🔪', color: '#DA0543' },
+      'Гонщик': { class: 'racer', icon: '🚦', color: '#FF8C00' },
+      'Профи': { class: 'profi', icon: '️💼️', color: '#C1AA00' },
+      'Таксист': { class: 'driver', icon: '🚖️', color: '#2DAB4F' },
+      'Любитель': { class: 'amateur', icon: '🍆️', color: '#61B5B3' },
+      'Новичок': { class: 'newbie', icon: '🐥', color: '#AFAFAF' }
     };
 
-    return statusColors[mainTitle] || '#000000'; // Default to black color if status title not found
-  }
+    const defaultData = { class: 'unknown', icon: '❓', color: '#000000' };
+    const rankInfo = statusData[mainTitle] || defaultData;
 
-  // Function to get rank class based on status title in English
-  function getRankClass(mainTitle) {
-    const statusClasses = {
-      'Экстракибер': 'extra',
-      'Кибергонщик': 'cyber',
-      'Супермен': 'superman',
-      'Маньяк': 'maniac',
-      'Гонщик': 'racer',
-      'Профи': 'profi',
-      'Таксист': 'driver',
-      'Любитель': 'amateur',
-      'Новичок': 'newbie'
-    };
-
-    const defaultClass = 'unknown';
-    const rankClass = statusClasses[mainTitle] || defaultClass;
-
-    if (rankClass === defaultClass) {
-      console.log(`Class not found for status title: ${mainTitle}. Using default class: ${defaultClass}`);
+    if (rankInfo.class === defaultData.class) {
+      console.log(`Class not found for status title: ${mainTitle}. Using default class: ${defaultData.class}`);
     }
 
-    return rankClass;
+    return rankInfo;
   }
 
   // Function to handle private message
@@ -3580,7 +3563,12 @@
     const bigAvatarUrl = avatarTimestamp !== '00' ? `/storage/avatars/${userId}_big.png?updated=${avatarTimestamp}` : '';
 
     const newUserElement = document.createElement('div');
-    const rankClass = getRankClass(mainTitle);
+    // Get rank information (class, color, icon)
+    const rankInfo = getRankInfo(mainTitle);
+    const rankClass = rankInfo.class;  // Rank class
+    const rankColor = rankInfo.color;  // Rank color
+    const rankIcon = rankInfo.icon;    // Rank icon (emoji)
+
     newUserElement.classList.add(`user${userId}`, rankClass); // Assign the rank class
 
     const newAvatarElement = document.createElement('div');
@@ -3603,12 +3591,11 @@
     newNameElement.dataset.user = userId;
     newNameElement.textContent = userName;
 
-    const rankColor = getRankColor(mainTitle);
     newNameElement.style.setProperty('color', rankColor, 'important');
 
     const newProfileElement = document.createElement('a');
     newProfileElement.classList.add('profile');
-    const title = `${mainTitle} - ${bestSpeed}`;
+    const title = `${rankIcon} ${mainTitle} - ${bestSpeed}`;
     createCustomTooltip(newProfileElement, title);
     newProfileElement.target = '_blank';
     newProfileElement.href = `/profile/${userId}/`;
@@ -3788,12 +3775,15 @@
               }
             }
 
+            // Get the rank info from getRankInfo, which now returns an object with class, color, and icon
+            const { class: rankClass } = getRankInfo(mainTitle);  // Destructure the returned object to get the rank class
+
             // Check if the user with the same ID already exists in the corresponding rank group
-            const existingUserElement = rankSubparents[getRankClass(mainTitle)].querySelector(`.user${userId}`);
+            const existingUserElement = rankSubparents[rankClass].querySelector(`.user${userId}`);
             if (!existingUserElement) {
               const newUserElement = createUserChatElement(userId, mainTitle, userName, bestSpeed, userElement.classList.contains('revoked'));
               // Add the user to the corresponding rank group
-              rankSubparents[getRankClass(mainTitle)].appendChild(newUserElement);
+              rankSubparents[rankClass].appendChild(newUserElement);
               // Make sure the mutation observer for the new users changed flag to false to make it work
               if (!isInitialObservation) addShakeEffect(newUserElement); // Add shake effect on entered users
             }

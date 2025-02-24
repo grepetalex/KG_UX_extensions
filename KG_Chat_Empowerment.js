@@ -782,27 +782,58 @@
     ].map(n => n.toString().padStart(2, '0')).join(':'); // Format as HH:MM:SS
   }
 
-  let titleInstance = null;
-  let titleHideTimeout = null;
-  let titleShowTimeout = null;
-  let isTitleVisible = false;
+  let tooltipInstance = null;
+  let tooltipHideTimeout = null;
+  let tooltipShowTimeout = null;
+  let isTooltipVisible = false;
   let isTooltipShown = false;
+  let currentElement = null;
 
-  const titleMousemoveHandler = (e) => {
-    if (titleInstance) {
-      titleInstance.style.left = `${e.clientX + 12}px`;
-      titleInstance.style.top = `${e.clientY + 12}px`;
+  const tooltipMousemoveHandler = (e) => {
+    if (tooltipInstance) {
+      tooltipInstance.style.left = `${e.clientX + 12}px`;
+      tooltipInstance.style.top = `${e.clientY + 12}px`;
     }
   };
 
-  function createCustomTitle(element, title) {
+  // Global hide function
+  const hideTooltip = () => {
+    isTooltipVisible = false;
+    currentElement = null;
+    clearTimeout(tooltipShowTimeout);
+    tooltipShowTimeout = null;
+
+    clearTimeout(tooltipHideTimeout);
+    tooltipHideTimeout = setTimeout(() => {
+      if (tooltipInstance) {
+        tooltipInstance.style.opacity = '0';
+        isTooltipShown = false;
+        setTimeout(() => {
+          if (!isTooltipVisible && tooltipInstance) {
+            tooltipInstance.style.display = 'none';
+            document.removeEventListener('mousemove', tooltipMousemoveHandler);
+          }
+        }, 50);
+      }
+    }, 100);
+  };
+
+  // MutationObserver to check element removal
+  const observer = new MutationObserver(() => {
+    if (currentElement && !document.contains(currentElement)) {
+      hideTooltip();
+    }
+  });
+  observer.observe(document, { childList: true, subtree: true });
+
+  function createCustomTooltip(element, tooltipText) {
     if (element.classList.contains('events-included')) return;
     element.classList.add('events-included');
 
-    titleInstance ||= (() => {
-      const titleElement = document.createElement('div');
-      titleElement.classList.add("tooltip");
-      Object.assign(titleElement.style, {
+    tooltipInstance ||= (() => {
+      const tooltipElement = document.createElement('div');
+      tooltipElement.classList.add("tooltip");
+      Object.assign(tooltipElement.style, {
         position: 'fixed',
         background: 'rgb(22, 22, 22)',
         color: 'rgb(222, 222, 222)',
@@ -817,52 +848,34 @@
         left: 0,
         top: 0
       });
-      titleElement.style.setProperty('border', '1px solid rgb(60, 60, 60)', 'important');
-      titleElement.style.setProperty('border-radius', '4px', 'important');
-      titleElement.style.setProperty('box-shadow', '0 2px 5px rgba(0,0,0,0.3)', 'important');
-      document.body.appendChild(titleElement);
-      return titleElement;
+      tooltipElement.style.setProperty('border', '1px solid rgb(60, 60, 60)', 'important');
+      tooltipElement.style.setProperty('border-radius', '4px', 'important');
+      tooltipElement.style.setProperty('box-shadow', '0 2px 5px rgba(0,0,0,0.3)', 'important');
+      document.body.appendChild(tooltipElement);
+      return tooltipElement;
     })();
 
-    const showTitle = (e) => {
-      isTitleVisible = true;
-      clearTimeout(titleShowTimeout);
-      clearTimeout(titleHideTimeout);
-      titleInstance.textContent = title;
+    const showTooltip = (e) => {
+      isTooltipVisible = true;
+      currentElement = element;
+      clearTimeout(tooltipShowTimeout);
+      clearTimeout(tooltipHideTimeout);
+      tooltipInstance.textContent = tooltipText;
 
-      // Start tracking position immediately
-      document.addEventListener('mousemove', titleMousemoveHandler);
-      titleMousemoveHandler(e);
+      document.addEventListener('mousemove', tooltipMousemoveHandler);
+      tooltipMousemoveHandler(e);
 
       if (!isTooltipShown) {
-        titleShowTimeout = setTimeout(() => {
-          titleInstance.style.display = 'flex';
-          titleInstance.style.opacity = '1';
+        tooltipShowTimeout = setTimeout(() => {
+          tooltipInstance.style.display = 'flex';
+          tooltipInstance.style.opacity = '1';
           isTooltipShown = true;
         }, 300);
       }
     };
 
-    const hideTitle = () => {
-      isTitleVisible = false;
-      clearTimeout(titleShowTimeout);
-      titleShowTimeout = null;
-
-      clearTimeout(titleHideTimeout);
-      titleHideTimeout = setTimeout(() => {
-        titleInstance.style.opacity = '0';
-        isTooltipShown = false;
-        setTimeout(() => {
-          if (!isTitleVisible) {
-            titleInstance.style.display = 'none';
-            document.removeEventListener('mousemove', titleMousemoveHandler);
-          }
-        }, 50);
-      }, 100);
-    };
-
-    element.addEventListener('mouseenter', showTitle);
-    element.addEventListener('mouseleave', hideTitle);
+    element.addEventListener('mouseenter', showTooltip);
+    element.addEventListener('mouseleave', hideTooltip);
   }
 
   // Timeout before the dynamicChatNotification should be removed
@@ -978,7 +991,7 @@
       // Get the user chat duration and pass it to the custom tooltip
       const title = getUserChatDuration(usernameData, timeData);
       // Create and display the custom tooltip
-      createCustomTitle(staticChatNotification, title);
+      createCustomTooltip(staticChatNotification, title);
     });
   }
 
@@ -1069,7 +1082,7 @@
       // Get the user chat duration and pass it to the custom tooltip
       const title = getUserChatDuration(usernameData, timeData);
       // Create and display the custom tooltip
-      createCustomTitle(dynamicChatNotification, title);
+      createCustomTooltip(dynamicChatNotification, title);
     });
 
     // Animate: slide in, then slide out and remove
@@ -3608,7 +3621,7 @@
     const newProfileElement = document.createElement('a');
     newProfileElement.classList.add('profile');
     const title = `${mainTitle} - ${bestSpeed}`;
-    createCustomTitle(newProfileElement, title);
+    createCustomTooltip(newProfileElement, title);
     newProfileElement.target = '_blank';
     newProfileElement.href = `/profile/${userId}/`;
     let circularProgress = createCircularProgress(calculatePercentage(bestSpeed), rankColor, isRevoked);

@@ -262,18 +262,6 @@
     })
   );
 
-  // Variable to store the last focused input or textarea element  
-  let lastFocusedInput = null;
-
-  // Event listener to track when an input field or textarea gains focus  
-  document.addEventListener("focusin", (e) => {
-    // Check if the focused element is an input field or a textarea  
-    if (e.target.matches("textarea, input.text")) {
-      // Store the reference to the currently focused input or textarea  
-      lastFocusedInput = e.target;
-    }
-  });
-
   // SCROLL BUTTONS
 
   // Helper function to apply common styles to a scroll button
@@ -870,7 +858,7 @@
           tooltipInstance.style.display = 'flex';
           tooltipInstance.style.opacity = '1';
           isTooltipShown = true;
-        }, 300);
+        }, 600);
       }
     };
 

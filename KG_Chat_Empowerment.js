@@ -791,8 +791,8 @@
 
   const tooltipMousemoveHandler = (e) => {
     if (tooltipInstance) {
-      tooltipInstance.style.left = `${e.clientX + 12}px`;
-      tooltipInstance.style.top = `${e.clientY + 12}px`;
+      tooltipInstance.style.left = `${e.clientX + 0}px`;
+      tooltipInstance.style.top = `${e.clientY + 18}px`;
     }
   };
 

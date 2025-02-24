@@ -959,6 +959,7 @@
 
     // Set layout styles
     staticChatNotification.style.cursor = 'default';
+    staticChatNotification.style.whiteSpace = 'nowrap';
     staticChatNotification.style.padding = '8px';
     staticChatNotification.style.display = 'inline-flex';
     staticChatNotification.style.flex = 'auto';
@@ -1035,6 +1036,7 @@
 
     // Set initial styles and position (off-screen)
     dynamicChatNotification.style.cursor = 'default';
+    dynamicChatNotification.style.whiteSpace = 'nowrap';
     dynamicChatNotification.style.position = 'relative';
     dynamicChatNotification.style.alignItems = 'center';
     dynamicChatNotification.style.width = 'fit-content';

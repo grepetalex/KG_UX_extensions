@@ -3317,7 +3317,7 @@
       'Кибергонщик': { class: 'cyber', icon: '🤖', color: '#5681ff' },
       'Супермен': { class: 'superman', icon: '👊', color: '#B543F5' },
       'Маньяк': { class: 'maniac', icon: '🔪', color: '#DA0543' },
-      'Гонщик': { class: 'racer', icon: '🚦', color: '#FF8C00' },
+      'Гонщик': { class: 'racer', icon: '⚡️️', color: '#FF8C00' },
       'Профи': { class: 'profi', icon: '️💼️', color: '#C1AA00' },
       'Таксист': { class: 'driver', icon: '🚖️', color: '#2DAB4F' },
       'Любитель': { class: 'amateur', icon: '🍆️', color: '#61B5B3' },

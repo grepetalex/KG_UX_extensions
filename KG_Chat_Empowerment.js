@@ -675,14 +675,14 @@
   const iconSize = 28;
 
   // SVG icon for entering
-  const enterIconStrokeColor = "currentColor";
-  const enterIcon = `
+  const enterSVGStrokeColor = "currentColor";
+  const enterSVG = `
   <svg xmlns="${svgUrl}"
       width="${iconSize - 12}"
       height="${iconSize - 12}"
       viewBox="0 0 24 24"
       fill="none"
-      stroke="${enterIconStrokeColor}"
+      stroke="${enterSVGStrokeColor}"
       stroke-width="${iconStrokeWidth}"
       stroke-linecap="round" stroke-linejoin="round" class="icon-enter icon-feather icon-log-in">
     <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
@@ -691,14 +691,14 @@
   </svg>`;
 
   // SVG icon for leaving
-  const leaveIconStrokeColor = "currentColor";
-  const leaveIcon = `
+  const leaveSVGStrokeColor = "currentColor";
+  const leaveSVG = `
   <svg xmlns="${svgUrl}"
       width="${iconSize - 12}"
       height="${iconSize - 12}"
       viewBox="0 0 24 24"
       fill="none"
-      stroke="${leaveIconStrokeColor}" stroke-width="${iconStrokeWidth}"
+      stroke="${leaveSVGStrokeColor}" stroke-width="${iconStrokeWidth}"
       stroke-linecap="round" stroke-linejoin="round" class="icon-leave icon-feather icon-log-out">
     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
     <polyline points="16 17 21 12 16 7"></polyline>
@@ -768,14 +768,14 @@
   </svg>`;
 
   // SVG markup for a clock icon
-  const closeSVGStrokeColor = "currentColor";
+  const clockSVGStrokeColor = "currentColor";
   const clockSVG = `
   <svg xmlns="${svgUrl}"
        width="${iconSize - 12}"
        height="${iconSize - 12}"
        viewBox="0 0 24 24"
        fill="none"
-       stroke="${closeSVGStrokeColor}"
+       stroke="${clockSVGStrokeColor}"
        stroke-width="${iconStrokeWidth}"
        stroke-linecap="round" stroke-linejoin="round" class="feather feather-clock">
     <circle cx="12" cy="12" r="10"></circle>
@@ -812,16 +812,16 @@
   </svg>`;
 
   // Button SVG icons "silence", "beep", "voice" representation
-  const iconSilenceStrokeColor = "hsl(355, 80%, 65%)";
-  const iconBeepStrokeColor = "hsl(55, 80%, 65%)";
-  const iconVoiceStrokeColor = "hsl(80, 80%, 40%)";
-  const iconSoundSilence = `
+  const silenceSVGStrokeColor = "hsl(355, 80%, 65%)";
+  const beepSVGStrokeColor = "hsl(55, 80%, 65%)";
+  const voiceSVGStrokeColor = "hsl(80, 80%, 40%)";
+  const silenceSVG = `
   <svg xmlns="${svgUrl}"
       width="${iconSize}"
       height="${iconSize}"
       viewBox="0 0 24 24"
       fill="none"
-      stroke="${iconSilenceStrokeColor}"
+      stroke="${silenceSVGStrokeColor}"
       stroke-width="${iconStrokeWidth}"
       stroke-linecap="round" stroke-linejoin="round">
     <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
@@ -829,13 +829,13 @@
     <line x1="17" y1="9" x2="23" y2="15"></line>
   </svg>`;
 
-  const iconSoundBeep = `
+  const beepSVG = `
   <svg xmlns="${svgUrl}"
       width="${iconSize}"
       height="${iconSize}"
       viewBox="0 0 24 24"
       fill="none"
-      stroke="${iconBeepStrokeColor}"
+      stroke="${beepSVGStrokeColor}"
       stroke-width="${iconStrokeWidth}"
       stroke-linecap="round" stroke-linejoin="round">
     <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
@@ -843,13 +843,13 @@
     <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
   </svg>`;
 
-  const iconSoundVoice = `
+  const voiceSVG = `
   <svg xmlns="${svgUrl}"
       width="${iconSize}"
       height="${iconSize}"
       viewBox="0 0 24 24"
       fill="none"
-      stroke="${iconVoiceStrokeColor}"
+      stroke="${voiceSVGStrokeColor}"
       stroke-width="${iconStrokeWidth}"
       stroke-linecap="round" stroke-linejoin="round">
     <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
@@ -859,14 +859,14 @@
 
   // Icons for message mode button
   // Button SVG icons "every", "mention" representation
-  const iconModeEveryStrokeColor = "hsl(100, 50%, 50%)";
+  const modeEverySVGStrokeColor = "hsl(100, 50%, 50%)";
   const iconModeEvery = `
   <svg xmlns="${svgUrl}"
       width="${iconSize}"
       height="${iconSize}"
       viewBox="0 0 24 24"
       fill="none"
-      stroke="${iconModeEveryStrokeColor}"
+      stroke="${modeEverySVGStrokeColor}"
       stroke-width="${iconStrokeWidth}"
       stroke-linecap="round" stroke-linejoin="round">
     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -875,14 +875,14 @@
     <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
   </svg>`;
 
-  const iconModeMentionStrokeColor = "hsl(180, 60%, 50%)";
-  const iconModeMention = `
+  const modeMentionSVGStrokeColor = "hsl(180, 60%, 50%)";
+  const modeMentionSVG = `
   <svg xmlns="${svgUrl}"
       width="${iconSize}"
       height="${iconSize}"
       viewBox="0 0 24 24"
       fill="none"
-      stroke="${iconModeMentionStrokeColor}"
+      stroke="${modeMentionSVGStrokeColor}"
       stroke-width="${iconStrokeWidth}"
       stroke-linecap="round" stroke-linejoin="round">
     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -890,14 +890,14 @@
   </svg>`;
 
   // Icon for the out of range value
-  const iconRangeisOutStrokeColor = "currentColor";
+  const rangeisOutSVGStrokeColor = "currentColor";
   const iconRangeisOut = `
   <svg xmlns="${svgUrl}"
       width="${iconSize - 12}"
       height="${iconSize - 12}"
       viewBox="0 0 24 24"
       fill="none"
-      stroke="${iconRangeisOutStrokeColor}"
+      stroke="${rangeisOutSVGStrokeColor}"
       stroke-width="${iconStrokeWidth}"
       stroke-linecap="round" stroke-linejoin="round" class="feather feather-slash">
     <circle cx="12" cy="12" r="10"></circle>
@@ -905,14 +905,14 @@
   </svg>`;
 
   // Icon for userlistCache
-  const iconUserlistCacheStrokeColor = "rgb(180, 213, 131)";
-  const iconUserlistCache = `
+  const userlistCacheSVGStrokeColor = "rgb(180, 213, 131)";
+  const userlistCacheSVG = `
   <svg xmlns="${svgUrl}"
       width="${iconSize}"
       height="${iconSize}"
       viewBox="0 0 24 24"
       fill="none"
-      stroke="${iconUserlistCacheStrokeColor}"
+      stroke="${userlistCacheSVGStrokeColor}"
       stroke-width="${iconStrokeWidth}"
       stroke-linecap="round" stroke-linejoin="round" class="feather feather-database">
     <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
@@ -921,14 +921,14 @@
   </svg>`;
 
   // Icon for personal messages
-  const iconPersonalMessagesStrokeColor = "rgb(255, 160, 122)";
-  const iconPersonalMessages = `
+  const personalMessagesSVGStrokeColor = "rgb(255, 160, 122)";
+  const personalMessagesSVG = `
   <svg xmlns="${svgUrl}"
       width="${iconSize}"
       height="${iconSize}"
       viewBox="0 0 24 24"
       fill="none"
-      stroke="${iconPersonalMessagesStrokeColor}"
+      stroke="${personalMessagesSVGStrokeColor}"
       stroke-width="${iconStrokeWidth}"
       stroke-linecap="round" stroke-linejoin="round" class="feather feather-mail">
     <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
@@ -936,14 +936,14 @@
   </svg>`;
 
   // Icon for chat logs
-  const iconChatLogsStrokeColor = "rgb(100, 149, 237)";
-  const iconChatLogs = `
+  const chatLogsSVGStrokeColor = "rgb(100, 149, 237)";
+  const chatLogsSVG = `
   <svg xmlns="${svgUrl}"
       width="${iconSize}"
       height="${iconSize}"
       viewBox="0 0 24 24"
       fill="none"
-      stroke="${iconChatLogsStrokeColor}"
+      stroke="${chatLogsSVGStrokeColor}"
       stroke-width="${iconStrokeWidth}"
       stroke-linecap="round" stroke-linejoin="round" class="feather feather-message-circle">
       <path 
@@ -954,14 +954,14 @@
   </svg>`;
 
   // Icon for media messages
-  const iconMediaMessagesStrokeColor = "rgb(113, 196, 196)";
-  const iconMediaMessages = `
+  const mediaMessagesSVGStrokeColor = "rgb(113, 196, 196)";
+  const mediaMessagesSVG = `
   <svg xmlns="${svgUrl}"
       width="${iconSize - 4}"
       height="${iconSize - 4}"
       viewBox="0 0 24 24"
       fill="none"
-      stroke="${iconMediaMessagesStrokeColor}"
+      stroke="${mediaMessagesSVGStrokeColor}"
       stroke-width="${iconStrokeWidth}"
       stroke-linecap="round" stroke-linejoin="round" class="feather feather-film">
     <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
@@ -975,14 +975,14 @@
   </svg>`;
 
   // Icon for the disabled chat button
-  const iconDeniedStrokeColor = "rgb(255, 100, 100)";
-  const iconDenied = `
+  const deniedSVGStrokeColor = "rgb(255, 100, 100)";
+  const deniedSVG = `
   <svg xmlns="${svgUrl}"
       width="${iconSize - 12}"
       height="${iconSize - 12}"
       viewBox="0 0 24 24"
       fill="none"
-      stroke="${iconDeniedStrokeColor}"
+      stroke="${deniedSVGStrokeColor}"
       stroke-width="${iconStrokeWidth}"
       stroke-linecap="round" stroke-linejoin="round" class="feather feather-slash">
     <circle cx="12" cy="12" r="10"></circle>
@@ -990,14 +990,14 @@
   </svg>`;
 
   // Inline SVG source for the settings icon
-  const settingsIconStrokeColor = "rgb(255, 228, 196)";
-  const settingsIcon = `
+  const settingsSVGStrokeColor = "rgb(255, 228, 196)";
+  const settingsSVG = `
   <svg xmlns="${svgUrl}"
       width="${iconSize - 4}"
       height="${iconSize - 4}"
       viewBox="0 0 24 24"
       fill="none"
-      stroke="${settingsIconStrokeColor}"
+      stroke="${settingsSVGStrokeColor}"
       stroke-width="${iconStrokeWidth}"
       stroke-linecap="round" stroke-linejoin="round" class="feather feather-sliders">
     <line x1="4" y1="21" x2="4" y2="14"></line>
@@ -1012,14 +1012,14 @@
   </svg>`;
 
   // Inline SVG source for the "x" icon (close button)
-  const closeSVGStrokeColorY = "rgb(144, 238, 144)";
+  const closeSVGStrokeColor = "rgb(144, 238, 144)";
   const closeSVG = `
   <svg xmlns="${svgUrl}"
       width="${iconSize - 4}"
       height="${iconSize - 4}"
       viewBox="0 0 24 24"
       fill="none"
-      stroke="${closeSVGStrokeColorY}"
+      stroke="${closeSVGStrokeColor}"
       stroke-width="${iconStrokeWidth}"
       stroke-linecap="round" stroke-linejoin="round" class="feather feather-x">
     <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -1028,7 +1028,6 @@
 
   // Inline SVG source for the "chevrons up" icon
   const chevronsSVGStrokeColor = "rgb(211, 211, 211)";
-
   const chevronsUpSVG = `
   <svg xmlns="${svgUrl}"
       width="${iconSize - 4}"
@@ -1049,7 +1048,7 @@
       height="${iconSize - 4}"
       viewBox="0 0 24 24"
       fill="none"
-      stroke="${chevronsSVGStrokeColor}y"
+      stroke="${chevronsSVGStrokeColor}"
       stroke-width="${iconStrokeWidth}"
       stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-up">
     <polyline points="18 15 12 9 6 15"></polyline>
@@ -3347,7 +3346,7 @@
                 if (typeof action !== "object" || action === null) continue;
                 const { type, timestamp } = action;
                 const userAction = userData?.login || "Unknown User";
-                const actionIconType = type === 'enter' ? enterIcon : leaveIcon;
+                const actionIconType = type === 'enter' ? enterSVG : leaveSVG;
                 const userPresence = type === 'enter';
                 // Use IIFE to capture the current value of shouldProcessActionLog
                 ((currentShouldProcess) => {
@@ -4582,7 +4581,7 @@
           const userGender = getUserGender(userName);
           const isTracked = usersToTrack.some(u => u.name === userName && u.state === 'thawed');
 
-          showUserAction(userName, actionType === "enter" ? enterIcon : leaveIcon, actionType === "enter");
+          showUserAction(userName, actionType === "enter" ? enterSVG : leaveSVG, actionType === "enter");
           refreshUserList(userName, actionType);
           logUserAction(userId, actionType);
 
@@ -6063,13 +6062,13 @@
   function updateSoundSwitcherIcon() {
     switch (soundSwitcher.id) {
       case 'silence':
-        soundSwitcherIcon.innerHTML = iconSoundSilence;
+        soundSwitcherIcon.innerHTML = silenceSVG;
         break;
       case 'beep':
-        soundSwitcherIcon.innerHTML = iconSoundBeep;
+        soundSwitcherIcon.innerHTML = beepSVG;
         break;
       case 'voice':
-        soundSwitcherIcon.innerHTML = iconSoundVoice;
+        soundSwitcherIcon.innerHTML = voiceSVG;
         break;
     }
   } updateSoundSwitcherIcon();
@@ -6467,7 +6466,7 @@
         messageModeIcon.innerHTML = iconModeEvery;
         break;
       case 'mention-message':
-        messageModeIcon.innerHTML = iconModeMention;
+        messageModeIcon.innerHTML = modeMentionSVG;
         break;
     }
   } updateMessageModeIcon();
@@ -6493,7 +6492,7 @@
     showUserListCacheButton.style.zIndex = '3';
 
     // Add data base icon to the button
-    showUserListCacheButton.innerHTML = iconUserlistCache;
+    showUserListCacheButton.innerHTML = userlistCacheSVG;
 
     // Create the small indicator for user count
     const cacheUserCount = document.createElement('div');
@@ -6570,7 +6569,7 @@
     // Add personal messages-specific styles
     showPersonalMessagesButton.style.position = 'relative';
     showPersonalMessagesButton.style.zIndex = '2';
-    showPersonalMessagesButton.innerHTML = iconPersonalMessages; // Add icon
+    showPersonalMessagesButton.innerHTML = personalMessagesSVG; // Add icon
 
     // Create the small indicator for all message count
     const allMessageIndicator = createMessageCountIndicator('total-message-count', '#fa8072');
@@ -7624,7 +7623,7 @@
 
     showChatLogsButton.style.position = 'relative';
     showChatLogsButton.style.zIndex = '1';
-    showChatLogsButton.innerHTML = iconChatLogs; // Add icon
+    showChatLogsButton.innerHTML = chatLogsSVG; // Add icon
 
     showChatLogsButton.title = 'Show Chat Logs';
 
@@ -8059,7 +8058,7 @@
     const toggleMentionMessages = document.createElement('div');
     toggleMentionMessages.className = 'toggle-mention-messages';
     // Set the inner HTML of the toggle component with a suitable SVG or text
-    toggleMentionMessages.innerHTML = iconPersonalMessages;
+    toggleMentionMessages.innerHTML = personalMessagesSVG;
     toggleMentionMessages.title = 'Toggle Mention Messages';
     // Apply common styles to the component
     applyHeaderButtonStyles(toggleMentionMessages, 'saddlebrown');
@@ -8107,7 +8106,7 @@
     const toggleMediaMessages = document.createElement('div');
     toggleMediaMessages.className = 'toggle-media-messages';
     // Set the inner HTML of the toggle component with a suitable SVG or text
-    toggleMediaMessages.innerHTML = iconMediaMessages;
+    toggleMediaMessages.innerHTML = mediaMessagesSVG;
     toggleMediaMessages.title = 'Toggle Media Messages';
     // Apply common styles to the component
     applyHeaderButtonStyles(toggleMediaMessages, 'darkslategray');
@@ -9029,7 +9028,7 @@
     showSettingsButton.style.position = 'relative';
 
     // Add settings icon to the button (use the SVG icon you provided)
-    showSettingsButton.innerHTML = settingsIcon;
+    showSettingsButton.innerHTML = settingsSVG;
 
     // Create a hidden file input for uploading settings
     const importFileInput = document.createElement('input');
@@ -10669,7 +10668,7 @@
           chatSend.style.setProperty('background-color', 'rgb(160, 35, 35)', 'important');
           chatSend.style.setProperty(
             'background-image',
-            `url("data:image/svg+xml,${encodeURIComponent(iconDenied)}")`,
+            `url("data:image/svg+xml,${encodeURIComponent(deniedSVG)}")`,
             'important'
           );
           chatSend.style.setProperty('background-repeat', 'no-repeat', 'important');

@@ -499,13 +499,12 @@
     }
   });
 
-  function cleanText(text) {
+  async function cleanText(text) {
     return text
       // Replace all hyphens (- U+002D), minus signs (− U+2212), and underscores (_) with spaces
       .replace(/[-−_]/g, ' ')
       // Replace URLs with just the domain name, removing "https://", "http://", and "www."
-      .replace(/https?:\/\/(?:www\.)?([a-zA-Z0-9\-\.]+)(\/[^\s]*)?/g, (_, p1) => p1)
-      // Remove space before punctuation characters ? ! . , : ; @
+      .replace(/https?:\/\/(?:www\.)?([a-zA-Z0-9.-]+)(\/.*)?/g, (_, p1) => p1)
       .replace(/\s(?=[?!,.:;@])/g, '')
       // Remove all other symbols completely
       .replace(/["#$%&'()*+\/<=>[\\\]^`{|}~]/g, '')
@@ -535,8 +534,8 @@
   // Main TTS function: plays each language block in order.
   async function textToSpeech(text, voiceSpeed = voiceSpeed) {
     const shouldUseGoogleTTS = shouldEnableSetting('sound', 'gTTS');
-    // Clean the text using the new cleanText function
-    const cleanedText = cleanText(text);
+    // Clean the text using the new cleanText function asynchronously
+    const cleanedText = await cleanText(text);
 
     // If Google TTS is enabled, use it. Otherwise, fallback to Web Speech API.
     if (shouldUseGoogleTTS) {
@@ -5313,7 +5312,7 @@
       `${plusMinus}${multiplication}${division}${degreeSymbol}${notEqual}${lessThanOrEqual}${greaterThanOrEqual}` +
       `${infinity}${euroSymbol}${poundSymbol}${yenSymbol}${sectionSymbol}${bulletPoint}${ellipsis}${minus}${enDash}${emDash}` +
       `${leftArrow}${rightArrow}${upArrow}${downArrow}${half}${oneThird}${twoThirds}${summation}` +
-      `${acuteAccent}${emojiRanges}]+`, 'g'
+      `${acuteAccent}${emojiRanges}]+`, 'gu' // previous 'g'
     );
 
     const allowedChars = message.match(allowedCharsRegex);

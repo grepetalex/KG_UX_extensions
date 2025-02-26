@@ -859,7 +859,7 @@
   // Icons for message mode button
   // Button SVG icons "every", "mention" representation
   const modeEverySVGStrokeColor = "hsl(100, 50%, 50%)";
-  const iconModeEvery = `
+  const modeEverySVG = `
   <svg xmlns="${svgUrl}"
       width="${iconSize}"
       height="${iconSize}"
@@ -890,7 +890,7 @@
 
   // Icon for the out of range value
   const rangeisOutSVGStrokeColor = "currentColor";
-  const iconRangeisOut = `
+  const rangeisOutSVG = `
   <svg xmlns="${svgUrl}"
       width="${iconSize - 12}"
       height="${iconSize - 12}"
@@ -5186,7 +5186,7 @@
   // Call the function to apply chat message grouping
   applyChatMessageGrouping();
 
-  // Algorithm to check for similarity between two strings
+// Algorithm to check for similarity between two strings
   function similarity(s1, s2) {
     const [longer, shorter] = s1.length >= s2.length ? [s1, s2] : [s2, s1];
     const longerLength = longer.length;
@@ -5755,7 +5755,7 @@
     }
   }
 
-  // Create a mutation observer to watch for new messages being added
+// Create a mutation observer to watch for new messages being added
   const newMessagesObserver = new MutationObserver(mutations => {
     // If isInitialized is false, return without doing anything
     if (!isInitialized) {
@@ -5910,7 +5910,6 @@
   // Observe changes to the messages container element
   const messagesContainer = document.querySelector('.messages-content div');
   newMessagesObserver.observe(messagesContainer, { childList: true, subtree: true });
-
 
   // SOUND GRAPHICAL SWITCHER
 
@@ -6143,7 +6142,7 @@
       if (voiceSpeedInfo) {
         // Set the text content of voiceSpeed
         if (voiceSpeed <= minVoiceSpeed || voiceSpeed >= maxVoiceSpeed) {
-          voiceSpeedInfo.innerHTML = iconRangeisOut;
+          voiceSpeedInfo.innerHTML = rangeisOutSVG;
         } else {
           voiceSpeedInfo.innerHTML = `SPEED ${Number(voiceSpeed).toFixed(1)}`;
         }
@@ -6239,7 +6238,7 @@
       if (voicePitchInfo) {
         // Set the text content of voicePitch
         if (voicePitch <= minVoicePitch || voicePitch >= maxVoicePitch) {
-          voicePitchInfo.innerHTML = iconRangeisOut;
+          voicePitchInfo.innerHTML = rangeisOutSVG;
         } else {
           voicePitchInfo.innerHTML = `PITCH ${voicePitch.toFixed(1)}`;
         }
@@ -6462,7 +6461,7 @@
   function updateMessageModeIcon() {
     switch (messageMode.id) {
       case 'every-message':
-        messageModeIcon.innerHTML = iconModeEvery;
+        messageModeIcon.innerHTML = modeEverySVG;
         break;
       case 'mention-message':
         messageModeIcon.innerHTML = modeMentionSVG;

@@ -380,14 +380,16 @@
     }
   }
 
-  function onMouseUp(e) {
-    if (e.ctrlKey && e.button === 0 && e.target.matches("textarea, input.text")) {
-      e.preventDefault();
-      toggleEmoticonsPopup();
-    }
-  }
-
   function onKeyDown(e) {
+    // Close popup if Ctrl+V is detected, assuming paste intention
+    if (e.code === 'KeyV' && e.ctrlKey) {
+      const popup = document.querySelector(".emoticons-popup");
+      if (popup) {
+        removeEmoticonsPopup();
+      }
+      return; // Allow the paste to proceed normally
+    }
+
     // Double semicolon handler using physical key code for layout independence
     if (e.code === 'Semicolon') {
       const now = Date.now();
@@ -414,6 +416,14 @@
       } else {
         state.lastSemicolonTime = now;
       }
+    }
+  }
+
+  function onMouseUp(e) {
+    // Check for ctrl+click on text inputs (textarea or input with class "text")
+    if (e.ctrlKey && e.button === 0 && e.target.matches("textarea, input.text")) {
+      e.preventDefault();
+      toggleEmoticonsPopup();
     }
   }
 

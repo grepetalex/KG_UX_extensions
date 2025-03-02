@@ -11,8 +11,24 @@
 // ==/UserScript==
 
 (function () {
+  // State management
+  const state = {
+    eventListeners: [],
+    activeCategory: localStorage.getItem("activeCategory") || "Boys",
+    isPopupCreated: false,
+    categoryHistory: [],
+    currentSortedEmoticons: [],
+    lastFocusedInput: null,
+    latestCategoryRequest: null,
+    lastSemicolonTime: 0,
+    lastUsedEmoticons: JSON.parse(localStorage.getItem("lastUsedEmoticons")) || {}
+  };
 
-  let eventListeners = [];
+  // Constants
+  const UI = {
+    borderRadius: '0.2em',
+    boxShadow: '0 8px 30px rgba(0, 0, 0, 0.12), 0 4px 6px rgba(0, 0, 0, 0.04), 0 2px 2px rgba(0, 0, 0, 0.08)'
+  };
 
   const categories = {
     Boys: [
@@ -268,42 +284,27 @@
   }
 
   const categoryEmojis = {
-    Boys: "😃",
-    Girls: "👩‍🦰",
-    Christmas: "🎄",
-    Inlove: "❤️",
-    Army: "🔫",
-    Halloween: "🎃",
-    Favourites: "🌟"
+    Boys: "😃", Girls: "👩‍🦰", Christmas: "🎄", Inlove: "❤️", Army: "🔫", Halloween: "🎃", Favourites: "🌟"
   };
 
-  let activeCategory = localStorage.getItem("activeCategory") || "Boys";
-  let isPopupCreated = false;
-  const categoryHistory = [];
-  let currentSortedEmoticons = [];
-  let lastFocusedInput = null;
-
-  const borderRadius = '0.2em';
-  const boxShadow = `
-    0 8px 30px rgba(0, 0, 0, 0.12),
-    0 4px 6px rgba(0, 0, 0, 0.04),
-    0 2px 2px rgba(0, 0, 0, 0.08)
-  `;
-
+  // Initialize state
   const bodyLightness = getLightness(window.getComputedStyle(document.body).backgroundColor);
-  const popupBackground = getAdjustedBackground("popupBackground");
-  const defaultButtonBackground = getAdjustedBackground("defaultButton");
-  const hoverButtonBackground = getAdjustedBackground("hoverButton");
-  const activeButtonBackground = getAdjustedBackground("activeButton");
-  const selectedButtonBackground = getAdjustedBackground("selectedButton");
+  const colors = {
+    popupBackground: getAdjustedBackground("popupBackground"),
+    defaultButton: getAdjustedBackground("defaultButton"),
+    hoverButton: getAdjustedBackground("hoverButton"),
+    activeButton: getAdjustedBackground("activeButton"),
+    selectedButton: getAdjustedBackground("selectedButton")
+  };
 
-  let lastUsedEmoticons = JSON.parse(localStorage.getItem("lastUsedEmoticons")) || {};
+  // Initialize last used emoticons
   Object.keys(categories).forEach(cat => {
-    if (!lastUsedEmoticons.hasOwnProperty(cat) || !categories[cat].includes(lastUsedEmoticons[cat])) {
-      lastUsedEmoticons[cat] = categories[cat][0] || '';
+    if (!state.lastUsedEmoticons.hasOwnProperty(cat) || !categories[cat].includes(state.lastUsedEmoticons[cat])) {
+      state.lastUsedEmoticons[cat] = categories[cat][0] || '';
     }
   });
 
+  // UI/Color utility functions
   function getLightness(color) {
     const match = color.match(/\d+/g);
     if (match && match.length === 3) {
@@ -317,59 +318,44 @@
 
   function getAdjustedBackground(type) {
     const adjustments = {
-      popupBackground: 10,
-      defaultButton: 15,
-      hoverButton: 25,
-      activeButton: 35,
-      selectedButton: 45,
+      popupBackground: 10, defaultButton: 15, hoverButton: 25, activeButton: 35, selectedButton: 45
     };
     const adjustment = adjustments[type] || 0;
-    const adjustedLightness =
-      bodyLightness < 50 ? bodyLightness + adjustment : bodyLightness - adjustment;
+    const adjustedLightness = bodyLightness < 50 ? bodyLightness + adjustment : bodyLightness - adjustment;
     return `hsl(0, 0%, ${adjustedLightness}%)`;
   }
 
+  // Data management functions
   function loadFavoriteEmoticons() {
     categories.Favourites = JSON.parse(localStorage.getItem("favoriteEmoticons")) || [];
   }
 
-  document.addEventListener("focusin", (e) => {
-    if (e.target.matches("textarea, input.text")) {
-      lastFocusedInput = e.target;
-    }
-  });
-
-  document.addEventListener("mouseup", (e) => {
-    if (e.ctrlKey && e.button === 0 && e.target.matches("textarea, input.text")) {
-      e.preventDefault();
-      toggleEmoticonsPopup();
-    }
-  });
-
-  document.addEventListener("keydown", (e) => {
-    if (e.ctrlKey && e.code === "Semicolon") {
-      e.preventDefault();
-      toggleEmoticonsPopup();
-    }
-  });
-
-  function closePopupOnKeydown(e) {
-    const popup = document.querySelector(".emoticons-popup");
-    const closeKeys = new Set(['Escape', ' ']);
-
-    if (popup && closeKeys.has(e.key)) {
-      e.preventDefault();
-      removeEmoticonsPopup();
-    }
+  function loadEmoticonUsageData() {
+    return JSON.parse(localStorage.getItem("emoticonUsageData")) || {};
   }
 
-  function closePopupOnClickOutside(e) {
-    const popup = document.querySelector(".emoticons-popup");
-    if (popup && !popup.contains(e.target)) {
-      removeEmoticonsPopup();
-    }
+  function saveEmoticonUsageData(data) {
+    localStorage.setItem("emoticonUsageData", JSON.stringify(data));
   }
 
+  function incrementEmoticonUsage(emoticon) {
+    const data = loadEmoticonUsageData();
+    data[state.activeCategory] = data[state.activeCategory] || {};
+    data[state.activeCategory][emoticon] = (data[state.activeCategory][emoticon] || 0) + 1;
+    saveEmoticonUsageData(data);
+  }
+
+  function getSortedEmoticons(category) {
+    const usage = loadEmoticonUsageData()[category] || {};
+    return categories[category].slice().sort((a, b) => (usage[b] || 0) - (usage[a] || 0));
+  }
+
+  function isEmoticonFavorite(emoticon) {
+    const fav = JSON.parse(localStorage.getItem("favoriteEmoticons")) || [];
+    return fav.includes(emoticon);
+  }
+
+  // Page context utility
   function getPageContext() {
     const path = window.location.pathname;
     const hash = window.location.hash;
@@ -387,16 +373,75 @@
     };
   }
 
+  // Event handlers
+  function onFocusIn(e) {
+    if (e.target.matches("textarea, input.text")) {
+      state.lastFocusedInput = e.target;
+    }
+  }
+
+  function onMouseUp(e) {
+    if (e.ctrlKey && e.button === 0 && e.target.matches("textarea, input.text")) {
+      e.preventDefault();
+      toggleEmoticonsPopup();
+    }
+  }
+
+  function onKeyDown(e) {
+    // Double semicolon handler using physical key code for layout independence
+    if (e.code === 'Semicolon') {
+      const now = Date.now();
+      if (now - state.lastSemicolonTime < 500) { // 500ms threshold for double press
+        e.preventDefault();
+
+        // Remove duplicated trailing character from the focused text field, if available
+        if (state.lastFocusedInput) {
+          let value = state.lastFocusedInput.value;
+          // If the last two characters are identical, remove them; otherwise remove one character
+          if (value.length >= 2 && value.slice(-1) === value.slice(-2, -1)) {
+            value = value.slice(0, -2);
+          } else if (value.length >= 1) {
+            value = value.slice(0, -1);
+          }
+          state.lastFocusedInput.value = value;
+          // Set the cursor at the end of the updated value
+          const pos = value.length;
+          state.lastFocusedInput.setSelectionRange(pos, pos);
+        }
+
+        toggleEmoticonsPopup();
+        state.lastSemicolonTime = 0; // Reset after triggering
+      } else {
+        state.lastSemicolonTime = now;
+      }
+    }
+  }
+
+  function closePopupOnKeydown(e) {
+    const popup = document.querySelector(".emoticons-popup");
+    // Close popup if the key is Escape or KeyQ (using e.code for layout independence)
+    if (popup && (e.code === 'Escape' || e.code === 'KeyQ')) {
+      e.preventDefault();
+      removeEmoticonsPopup();
+    }
+  }
+
+  function closePopupOnClickOutside(e) {
+    const popup = document.querySelector(".emoticons-popup");
+    if (popup && !popup.contains(e.target)) {
+      removeEmoticonsPopup();
+    }
+  }
+
+  // Core functions
   function getEmoticonCode(emoticon) {
     const { isForum } = getPageContext();
-    return isForum
-      ? `[img]https://klavogonki.ru/img/smilies/${emoticon}.gif[/img] `
-      : `:${emoticon}: `;
+    return isForum ? `[img]https://klavogonki.ru/img/smilies/${emoticon}.gif[/img] ` : `:${emoticon}: `;
   }
 
   function insertEmoticonCode(emoticon) {
     const context = getPageContext();
-    let targetInput = lastFocusedInput;
+    let targetInput = state.lastFocusedInput;
 
     if (!targetInput) {
       if (context.isForum) targetInput = document.getElementById('fast-reply_textarea');
@@ -405,10 +450,7 @@
 
       if (!targetInput) {
         const labels = {
-          isForum: "the forum",
-          isProfile: "the profile",
-          isGamelist: "general chat",
-          isGame: "game chat"
+          isForum: "the forum", isProfile: "the profile", isGamelist: "general chat", isGame: "game chat"
         };
         const detected = Object.entries(labels)
           .filter(([key]) => context[key])
@@ -418,35 +460,25 @@
         return;
       }
       targetInput.focus();
-      lastFocusedInput = targetInput;
+      state.lastFocusedInput = targetInput;
     }
 
     const code = getEmoticonCode(emoticon);
     const pos = targetInput.selectionStart || 0;
-    targetInput.value =
-      targetInput.value.slice(0, pos) + code + targetInput.value.slice(pos);
+    targetInput.value = targetInput.value.slice(0, pos) + code + targetInput.value.slice(pos);
     targetInput.setSelectionRange(pos + code.length, pos + code.length);
     targetInput.focus();
   }
 
+  // Event listeners cleanup
   function removeEventListeners() {
-    eventListeners.forEach(({ event, handler }) => {
+    state.eventListeners.forEach(({ event, handler }) => {
       document.removeEventListener(event, handler);
     });
-    eventListeners = [];
+    state.eventListeners = [];
   }
 
-  // Function to remove the emoticons popup
-  function removeEmoticonsPopup() {
-    const popup = document.querySelector(".emoticons-popup");
-    if (popup) {
-      removeEventListeners(); // Assuming this function is defined elsewhere
-      toggleContainerSmoothly(popup, "hide");
-      isPopupCreated = false;
-    }
-  }
-
-  // Function to show or hide a container smoothly
+  // Animation utilities
   function toggleContainerSmoothly(container, action) {
     if (action === "show") {
       document.body.appendChild(container);
@@ -455,27 +487,39 @@
       });
     } else {
       container.style.opacity = "0";
-      setTimeout(() => container.remove(), 500);
+      setTimeout(() => container.remove(), 300);
+    }
+  }
+
+  // Popup control
+  function removeEmoticonsPopup() {
+    const popup = document.querySelector(".emoticons-popup");
+    if (popup) {
+      removeEventListeners();
+      toggleContainerSmoothly(popup, "hide");
+      state.isPopupCreated = false;
     }
   }
 
   function toggleEmoticonsPopup() {
-    if (isPopupCreated) {
+    if (state.isPopupCreated) {
       removeEmoticonsPopup();
     } else {
       setTimeout(() => {
-        createEmoticonsPopup(activeCategory);
+        createEmoticonsPopup(state.activeCategory);
       }, 10);
     }
   }
 
+  // UI creation
   function createEmoticonsPopup(category) {
-    if (isPopupCreated) return;
+    if (state.isPopupCreated) return;
     loadFavoriteEmoticons();
+
     const popup = document.createElement("div");
     popup.className = "emoticons-popup";
     popup.style.setProperty('border-radius', '0.4em', 'important');
-    popup.style.setProperty('box-shadow', boxShadow, 'important');
+    popup.style.setProperty('box-shadow', UI.boxShadow, 'important');
     Object.assign(popup.style, {
       opacity: "0",
       transition: "opacity 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)",
@@ -483,7 +527,7 @@
       display: "grid",
       gridTemplateRows: "50px auto",
       gap: "10px",
-      backgroundColor: popupBackground,
+      backgroundColor: colors.popupBackground,
       padding: "10px",
       zIndex: "2000",
       top: "20vh",
@@ -503,53 +547,58 @@
       flexDirection: "row",
       justifyContent: "space-between"
     });
-    popup.appendChild(headerButtons);
 
-    const clearButton = document.createElement("button");
-    clearButton.classList.add('clear-button');
-    clearButton.title = "Clear usage data";
-    clearButton.innerHTML = "🗑️";
-    clearButton.style.setProperty('border-radius', borderRadius, 'important');
-    Object.assign(clearButton.style, {
-      border: "none",
-      background: "hsl(40deg 50% 15%)",
-      cursor: "pointer",
-      boxSizing: "border-box",
-      width: "50px",
-      height: "50px",
-      marginRight: "5px",
-      fontSize: "1.4em"
-    });
-    clearButton.addEventListener("click", () => {
-      if (confirm("Clear emoticon usage data?")) {
-        localStorage.removeItem("emoticonUsageData");
+    // Create buttons
+    const createBtn = (className, title, innerHTML, bgColor, clickHandler) => {
+      const btn = document.createElement("button");
+      btn.classList.add(className);
+      btn.title = title;
+      btn.innerHTML = innerHTML;
+      btn.style.setProperty('border-radius', UI.borderRadius, 'important');
+      Object.assign(btn.style, {
+        border: "none",
+        background: bgColor,
+        cursor: "pointer",
+        boxSizing: "border-box",
+        width: "50px",
+        height: "50px",
+        margin: "0 5px",
+        fontSize: "1.4em"
+      });
+      if (clickHandler) btn.addEventListener("click", clickHandler);
+      return btn;
+    };
+
+    const clearButton = createBtn(
+      'clear-button',
+      "Clear usage data",
+      "🗑️",
+      "hsl(40deg 50% 15%)",
+      () => {
+        if (confirm("Clear emoticon usage data?")) {
+          localStorage.removeItem("emoticonUsageData");
+        }
       }
-    });
+    );
 
-    const closeButton = document.createElement("button");
-    closeButton.classList.add('close-button');
-    closeButton.title = "Close emoticons panel";
-    closeButton.innerHTML = "❌";
-    closeButton.style.setProperty('border-radius', borderRadius, 'important');
-    Object.assign(closeButton.style, {
-      border: "none",
-      background: "hsl(0deg 50% 15%)",
-      cursor: "pointer",
-      boxSizing: "border-box",
-      width: "50px",
-      height: "50px",
-      marginLeft: "5px",
-      fontSize: "1.1em"
-    });
-    closeButton.addEventListener("click", removeEmoticonsPopup);
+    const closeButton = createBtn(
+      'close-button',
+      "Close emoticons panel (or press 'q')",
+      "❌",
+      "hsl(0deg 50% 15%)",
+      removeEmoticonsPopup
+    );
 
     headerButtons.appendChild(clearButton);
     headerButtons.appendChild(createCategoryContainer());
     headerButtons.appendChild(closeButton);
+    popup.appendChild(headerButtons);
+
     createEmoticonsContainer(category).then((container) => {
       popup.appendChild(container);
       requestAnimationFrame(updateEmoticonHighlight);
     });
+
     popup.addEventListener("dblclick", removeEmoticonsPopup);
 
     const eventListenersArray = [
@@ -560,13 +609,13 @@
     ];
 
     eventListenersArray.forEach(({ event, handler }) => {
-      eventListeners.push({ event, handler });
+      state.eventListeners.push({ event, handler });
       document.addEventListener(event, handler);
     });
 
     document.body.appendChild(popup);
     toggleContainerSmoothly(popup, "show");
-    isPopupCreated = true;
+    state.isPopupCreated = true;
   }
 
   function createCategoryContainer() {
@@ -584,35 +633,30 @@
         btn.innerHTML = categoryEmojis[cat];
         btn.dataset.category = cat;
         btn.title = cat;
-        btn.style.background = (cat === activeCategory ? activeButtonBackground : defaultButtonBackground);
-        btn.style.border = "none";
-        btn.style.cursor = "pointer";
-        btn.style.width = "50px";
-        btn.style.height = "50px";
-        btn.style.fontSize = "1.4em";
-        btn.style.margin = "0 5px";
-        btn.style.setProperty("border-radius", borderRadius, "important");
+        btn.style.setProperty("border-radius", UI.borderRadius, "important");
+        Object.assign(btn.style, {
+          background: (cat === state.activeCategory ? colors.activeButton : colors.defaultButton),
+          border: "none",
+          cursor: "pointer",
+          width: "50px",
+          height: "50px",
+          fontSize: "1.4em",
+          margin: "0 5px"
+        });
 
         // Special handling for "Favourites"
         if (cat === "Favourites") {
           if (categories.Favourites.length === 0) {
             btn.style.opacity = "0.5";
             btn.style.pointerEvents = "none";
-          } else {
-            btn.style.removeProperty("opacity");
-            btn.style.removeProperty("pointer-events");
           }
-          // Use an external function for the favorites click event
           btn.addEventListener("click", handleFavouritesClick);
         }
 
-        // Bind the click handler with the current category
-        btn.addEventListener("click", handleCategoryClick.bind(null, cat));
-        // Bind the mouseout handler with the current button and category
-        btn.addEventListener("mouseout", handleCategoryMouseOut.bind(null, btn, cat));
-        // Mouseover to change background
+        btn.addEventListener("click", (e) => handleCategoryClick(cat, e));
+        btn.addEventListener("mouseout", () => handleCategoryMouseOut(btn, cat));
         btn.addEventListener("mouseover", () => {
-          btn.style.background = hoverButtonBackground;
+          btn.style.background = colors.hoverButton;
         });
 
         container.appendChild(btn);
@@ -621,30 +665,29 @@
     return container;
   }
 
+  // Category handling
   function handleCategoryClick(cat, e) {
-    // Only change category if neither Shift nor Ctrl is pressed.
     if (!e.shiftKey && !e.ctrlKey) {
       changeActiveCategoryOnClick(cat);
     }
   }
 
   function handleCategoryMouseOut(btn, cat) {
-    btn.style.background = (cat === activeCategory ? activeButtonBackground : defaultButtonBackground);
+    btn.style.background = (cat === state.activeCategory ? colors.activeButton : colors.defaultButton);
     if (cat === "Favourites") {
       btn.style.opacity = categories.Favourites.length ? "" : "0.5";
     }
   }
 
   function handleFavouritesClick(e) {
-    // If ctrlKey is pressed, remove all favourites.
     if (e.ctrlKey) {
       localStorage.removeItem("favoriteEmoticons");
       categories.Favourites = [];
       updateEmoticonHighlight();
-      if (categoryHistory.length) {
-        activeCategory = categoryHistory.pop();
-        localStorage.setItem("activeCategory", activeCategory);
-        updateCategoryButtonsState(activeCategory);
+      if (state.categoryHistory.length) {
+        state.activeCategory = state.categoryHistory.pop();
+        localStorage.setItem("activeCategory", state.activeCategory);
+        updateCategoryButtonsState(state.activeCategory);
         updateEmoticonsContainer();
       }
     }
@@ -652,7 +695,7 @@
 
   function updateCategoryButtonsState(newCategory) {
     document.querySelectorAll(".category-buttons button").forEach((btn) => {
-      btn.style.background = btn.dataset.category === newCategory ? activeButtonBackground : defaultButtonBackground;
+      btn.style.background = btn.dataset.category === newCategory ? colors.activeButton : colors.defaultButton;
       if (btn.dataset.category === "Favourites") {
         if (categories.Favourites.length === 0) {
           btn.style.opacity = "0.5";
@@ -665,49 +708,42 @@
     });
   }
 
-  function loadEmoticonUsageData() {
-    return JSON.parse(localStorage.getItem("emoticonUsageData")) || {};
+  function changeActiveCategoryOnClick(newCategory) {
+    if (newCategory === "Favourites" && categories.Favourites.length === 0) return;
+    if (state.activeCategory !== "Favourites") {
+      state.categoryHistory.push(state.activeCategory);
+    }
+    state.activeCategory = newCategory;
+    localStorage.setItem("activeCategory", state.activeCategory);
+    state.currentSortedEmoticons = getSortedEmoticons(state.activeCategory);
+    updateCategoryButtonsState(state.activeCategory);
+    updateEmoticonsContainer();
   }
 
-  function saveEmoticonUsageData(data) {
-    localStorage.setItem("emoticonUsageData", JSON.stringify(data));
-  }
-
-  function incrementEmoticonUsage(emoticon) {
-    const data = loadEmoticonUsageData();
-    data[activeCategory] = data[activeCategory] || {};
-    data[activeCategory][emoticon] = (data[activeCategory][emoticon] || 0) + 1;
-    saveEmoticonUsageData(data);
-  }
-
-  function getSortedEmoticons(category) {
-    const usage = loadEmoticonUsageData()[category] || {};
-    return categories[category].slice().sort((a, b) => (usage[b] || 0) - (usage[a] || 0));
-  }
-
+  // Emoticon container creation
   async function createEmoticonsContainer(category) {
     const container = document.createElement("div");
     container.className = "emoticon-buttons";
 
-    currentSortedEmoticons = getSortedEmoticons(category);
+    state.currentSortedEmoticons = getSortedEmoticons(category);
 
     const promises = [];
-    currentSortedEmoticons.forEach((emoticon) => {
+    state.currentSortedEmoticons.forEach((emoticon) => {
       const btn = document.createElement("button");
       btn.classList.add('emoticon-button');
       const imgSrc = `/img/smilies/${emoticon}.gif`;
       btn.innerHTML = `<img src="${imgSrc}" alt="${emoticon}">`;
       btn.title = emoticon;
 
-      btn.style.setProperty('border-radius', borderRadius, 'important');
+      btn.style.setProperty('border-radius', UI.borderRadius, 'important');
       Object.assign(btn.style, {
         position: 'relative',
         border: "none",
         cursor: "pointer",
-        filter: emoticon === lastUsedEmoticons[activeCategory] ? "sepia(0.7)" : "none",
-        background: emoticon === lastUsedEmoticons[activeCategory]
-          ? selectedButtonBackground
-          : defaultButtonBackground
+        filter: emoticon === state.lastUsedEmoticons[state.activeCategory] ? "sepia(0.7)" : "none",
+        background: emoticon === state.lastUsedEmoticons[state.activeCategory]
+          ? colors.selectedButton
+          : colors.defaultButton
       });
 
       promises.push(new Promise(resolve => {
@@ -736,8 +772,8 @@
         } else {
           insertEmoticonCode(emoticon);
           incrementEmoticonUsage(emoticon);
-          lastUsedEmoticons[activeCategory] = emoticon;
-          localStorage.setItem("lastUsedEmoticons", JSON.stringify(lastUsedEmoticons));
+          state.lastUsedEmoticons[state.activeCategory] = emoticon;
+          localStorage.setItem("lastUsedEmoticons", JSON.stringify(state.lastUsedEmoticons));
           removeEmoticonsPopup();
         }
         updateEmoticonHighlight();
@@ -747,7 +783,7 @@
     });
 
     await Promise.all(promises);
-    const { maxImageWidth, maxImageHeight } = await calculateMaxImageDimensions(currentSortedEmoticons);
+    const { maxImageWidth, maxImageHeight } = await calculateMaxImageDimensions(state.currentSortedEmoticons);
     Object.assign(container.style, {
       display: "grid",
       gap: "10px",
@@ -777,18 +813,16 @@
     return { maxImageWidth: maxWidth, maxImageHeight: maxHeight };
   }
 
-  let latestCategoryRequest = null;
-
   function updateEmoticonsContainer() {
     const requestTimestamp = Date.now();
-    latestCategoryRequest = requestTimestamp;
+    state.latestCategoryRequest = requestTimestamp;
 
     // Remove all old containers
     document.querySelectorAll(".emoticon-buttons").forEach(container => container.remove());
 
-    createEmoticonsContainer(activeCategory).then((container) => {
+    createEmoticonsContainer(state.activeCategory).then((container) => {
       // Ensure this is still the latest request before appending
-      if (latestCategoryRequest !== requestTimestamp) return;
+      if (state.latestCategoryRequest !== requestTimestamp) return;
 
       const popup = document.querySelector(".emoticons-popup");
       if (popup) {
@@ -798,59 +832,22 @@
     });
   }
 
-  function isEmoticonFavorite(emoticon) {
-    const fav = JSON.parse(localStorage.getItem("favoriteEmoticons")) || [];
-    return fav.includes(emoticon);
-  }
-
-  function changeActiveCategoryOnClick(newCategory) {
-    if (newCategory === "Favourites" && categories.Favourites.length === 0) return;
-    if (activeCategory !== "Favourites") {
-      categoryHistory.push(activeCategory);
-    }
-    activeCategory = newCategory;
-    localStorage.setItem("activeCategory", activeCategory);
-    currentSortedEmoticons = getSortedEmoticons(activeCategory);
-    updateCategoryButtonsState(activeCategory);
-    updateEmoticonsContainer();
-  }
-
-  function switchEmoticonCategory(e) {
-    const emoticonPopup = document.querySelector(".emoticons-popup");
-    if (!emoticonPopup || (!["Tab", "KeyH", "KeyL"].includes(e.code) && !(e.code === "Tab" && e.shiftKey))) return;
-
-    e.preventDefault();
-    const keys = Object.keys(categories);
-    const favs = JSON.parse(localStorage.getItem("favoriteEmoticons")) || [];
-    const navKeys = favs.length === 0 ? keys.filter(key => key !== "Favourites") : keys;
-    let idx = navKeys.indexOf(activeCategory);
-    if (idx === -1) idx = 0;
-
-    let newIdx = ((e.code === "Tab" && !e.shiftKey) || e.code === "KeyL") && idx < navKeys.length - 1 ? idx + 1 :
-      ((e.code === "KeyH" || (e.code === "Tab" && e.shiftKey)) && idx > 0) ? idx - 1 : idx;
-    if (newIdx === idx) return;
-
-    const next = navKeys[newIdx];
-    currentSortedEmoticons = getSortedEmoticons(next);
-    localStorage.setItem("activeCategory", next);
-    changeActiveCategoryOnClick(next);
-  }
-
+  // Navigation and selection
   function updateEmoticonHighlight() {
     requestAnimationFrame(() => {
       const buttons = document.querySelectorAll(".emoticon-buttons button");
       buttons.forEach((btn) => {
         const emoticon = btn.title;
-        const isSelected = emoticon === lastUsedEmoticons[activeCategory];
+        const isSelected = emoticon === state.lastUsedEmoticons[state.activeCategory];
         if (isSelected) {
-          btn.style.background = selectedButtonBackground;
+          btn.style.background = colors.selectedButton;
           btn.style.filter = "sepia(0.7)";
         } else {
           btn.style.filter = "none";
-          if (activeCategory !== "Favourites" && isEmoticonFavorite(emoticon)) {
-            btn.style.background = activeButtonBackground;
+          if (state.activeCategory !== "Favourites" && isEmoticonFavorite(emoticon)) {
+            btn.style.background = colors.activeButton;
           } else {
-            btn.style.background = defaultButtonBackground;
+            btn.style.background = colors.defaultButton;
           }
         }
       });
@@ -858,16 +855,16 @@
   }
 
   function updateActiveEmoticon(direction) {
-    const currentIndex = currentSortedEmoticons.indexOf(lastUsedEmoticons[activeCategory]);
+    const currentIndex = state.currentSortedEmoticons.indexOf(state.lastUsedEmoticons[state.activeCategory]);
     let newIndex = currentIndex === -1 ? 0 : currentIndex + direction;
 
     // Handle wrapping
-    if (newIndex < 0) newIndex = currentSortedEmoticons.length - 1;
-    if (newIndex >= currentSortedEmoticons.length) newIndex = 0;
+    if (newIndex < 0) newIndex = state.currentSortedEmoticons.length - 1;
+    if (newIndex >= state.currentSortedEmoticons.length) newIndex = 0;
 
     // Update state
-    lastUsedEmoticons[activeCategory] = currentSortedEmoticons[newIndex];
-    localStorage.setItem("lastUsedEmoticons", JSON.stringify(lastUsedEmoticons));
+    state.lastUsedEmoticons[state.activeCategory] = state.currentSortedEmoticons[newIndex];
+    localStorage.setItem("lastUsedEmoticons", JSON.stringify(state.lastUsedEmoticons));
 
     // Update UI
     updateEmoticonHighlight();
@@ -875,7 +872,7 @@
 
   function navigateEmoticons(e) {
     const popup = document.querySelector(".emoticons-popup");
-    if (!popup || !currentSortedEmoticons || currentSortedEmoticons.length === 0) return;
+    if (!popup || !state.currentSortedEmoticons || state.currentSortedEmoticons.length === 0) return;
 
     const handledKeys = new Set(['Enter', 'Semicolon', 'ArrowLeft', 'KeyJ', 'ArrowRight', 'KeyK']);
     if (!handledKeys.has(e.code)) return;
@@ -883,8 +880,8 @@
     e.preventDefault();
 
     if (e.code === "Enter" || e.code === "Semicolon") {
-      const emoticon = lastUsedEmoticons[activeCategory];
-      if (emoticon && currentSortedEmoticons.includes(emoticon)) {
+      const emoticon = state.lastUsedEmoticons[state.activeCategory];
+      if (emoticon && state.currentSortedEmoticons.includes(emoticon)) {
         insertEmoticonCode(emoticon);
         incrementEmoticonUsage(emoticon);
         if (!e.shiftKey) removeEmoticonsPopup();
@@ -897,4 +894,30 @@
       updateActiveEmoticon(1); // Move right
     }
   }
+
+  function switchEmoticonCategory(e) {
+    const emoticonPopup = document.querySelector(".emoticons-popup");
+    if (!emoticonPopup || (!["Tab", "KeyH", "KeyL"].includes(e.code) && !(e.code === "Tab" && e.shiftKey))) return;
+
+    e.preventDefault();
+    const keys = Object.keys(categories);
+    const favs = JSON.parse(localStorage.getItem("favoriteEmoticons")) || [];
+    const navKeys = favs.length === 0 ? keys.filter(key => key !== "Favourites") : keys;
+    let idx = navKeys.indexOf(state.activeCategory);
+    if (idx === -1) idx = 0;
+
+    let newIdx = ((e.code === "Tab" && !e.shiftKey) || e.code === "KeyL") && idx < navKeys.length - 1 ? idx + 1 :
+      ((e.code === "KeyH" || (e.code === "Tab" && e.shiftKey)) && idx > 0) ? idx - 1 : idx;
+    if (newIdx === idx) return;
+
+    const next = navKeys[newIdx];
+    state.currentSortedEmoticons = getSortedEmoticons(next);
+    localStorage.setItem("activeCategory", next);
+    changeActiveCategoryOnClick(next);
+  }
+
+  // Set up main event listeners
+  document.addEventListener("focusin", onFocusIn);
+  document.addEventListener("mouseup", onMouseUp);
+  document.addEventListener("keydown", onKeyDown);
 })();

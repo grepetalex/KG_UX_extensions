@@ -11,7 +11,11 @@
     "url": "git+https://github.com/VimiummuimiV/KG_Goddies.git"
   },
   "keywords": [
-    "chat", "logging", "KG", "chatbot", "goodies"
+    "chat",
+    "logging",
+    "KG",
+    "chatbot",
+    "goodies"
   ],
   "author": "Patcher",
   "license": "ISC",
@@ -25,5 +29,9 @@
     "eslint": "^9.20.1",
     "eslint-plugin-react": "^7.37.4",
     "globals": "^15.15.0"
+  },
+  "dependencies": {
+    "@xmpp/client": "^0.13.4",
+    "@xmpp/debug": "^0.13.3"
   }
 }

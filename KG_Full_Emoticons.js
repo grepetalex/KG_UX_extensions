@@ -3,9 +3,7 @@
 // @namespace    http://klavogonki.ru/
 // @version      1.4
 // @description  Display a popup panel with every available emoticon on the site, remembering the last selected emoticon per category by name.
-// @match        *://klavogonki.ru/g*
-// @match        *://klavogonki.ru/forum/*
-// @match        *://klavogonki.ru/u/*
+// @match        *://klavogonki.ru/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=klavogonki.ru
 // @grant        none
 // ==/UserScript==
@@ -375,7 +373,7 @@
 
   // Event handlers
   function onFocusIn(e) {
-    if (e.target.matches("textarea, input.text")) {
+    if (e.target.matches("textarea, input.text, input#message-input")) {
       state.lastFocusedInput = e.target;
     }
   }
@@ -421,7 +419,7 @@
 
   function onMouseUp(e) {
     // Check for ctrl+click on text inputs (textarea or input with class "text")
-    if (e.ctrlKey && e.button === 0 && e.target.matches("textarea, input.text")) {
+    if (e.ctrlKey && e.button === 0 && e.target.matches("textarea, input.text, input#message-input")) {
       e.preventDefault();
       toggleEmoticonsPopup();
     }

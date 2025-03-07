@@ -299,13 +299,13 @@
             STATE.lastCursorPosition = selectionEnd;
           }
         } else {
-          // Do not restore focus if clicking these specified elements
-          const noFocusElements = ['input.text', '.userpanel .user-block .user-dropdown'];
-          for (let sel of noFocusElements) {
+            // Do not restore focus if clicking these specified elements
+            const allowedToFocus = ['input.text', '.userpanel .user-block .user-dropdown'];
+            for (let sel of allowedToFocus) {
             if (event.target.closest(sel)) {
               return;
             }
-          }
+            }
           ELEMENTS.inputElement.focus();
           ELEMENTS.inputElement.style.outline = 'none';
           ELEMENTS.inputElement.setSelectionRange(ELEMENTS.inputElement.value.length, ELEMENTS.inputElement.value.length);

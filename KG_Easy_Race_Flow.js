@@ -70,9 +70,9 @@
      * Update element cache with current DOM elements
      * @returns {boolean} Whether all required elements are available
      */
-    updateElements: function() {
+    updateElements: function () {
       let allPresent = true;
-      
+
       // Update each element in the cache
       for (const [key, selector] of Object.entries(CONFIG.selectors)) {
         ELEMENTS[key] = document.querySelector(selector);
@@ -80,7 +80,7 @@
           allPresent = false;
         }
       }
-      
+
       return allPresent;
     },
 
@@ -88,7 +88,7 @@
      * Creates a game link URL based on the current game settings
      * @returns {string} The constructed game link URL
      */
-    createGameLink: function() {
+    createGameLink: function () {
       const protocol = 'https';
       const hostname = 'klavogonki.ru';
       const pathname = '/create/';
@@ -115,7 +115,7 @@
      * @param {string} url - The URL to navigate to
      * @param {number} delay - Delay in milliseconds before navigation
      */
-    navigateTo: function(url, delay = CONFIG.timerDelay) {
+    navigateTo: function (url, delay = CONFIG.timerDelay) {
       setTimeout(() => {
         window.location.href = url;
       }, delay);
@@ -126,12 +126,12 @@
      * @param {string} color - HSL color value for the highlight
      * @param {number} opacity - Initial opacity of the highlight
      */
-    highlightInput: function(color, opacity = 0.95) {
+    highlightInput: function (color, opacity = 0.95) {
       if (!ELEMENTS.inputElement) return;
-      
+
       ELEMENTS.inputElement.style.transition = 'background 0.3s';
       ELEMENTS.inputElement.style.setProperty('background', `hsla(${color}, 100%, 50%, ${opacity})`, 'important');
-      
+
       if (CONFIG.persistentHighlight) {
         // Keep a light highlight to indicate the current mode
         setTimeout(() => {
@@ -150,7 +150,7 @@
      * @param {string} timeText - The racing time in MM:SS format
      * @returns {number} - Total seconds
      */
-    parseRacingTime: function(timeText) {
+    parseRacingTime: function (timeText) {
       const [minutes, seconds] = timeText.split(':').map(parseFloat);
       return minutes * 60 + seconds;
     }
@@ -161,9 +161,9 @@
     /**
      * Initialize the script
      */
-    init: function() {
+    init: function () {
       CORE.waitForElements();
-      
+
       // If checker is interrupted when loading page, set automaticChecker to false
       if (STATE.checkerInterrupted) {
         STATE.automaticChecker = false;
@@ -174,7 +174,7 @@
     /**
      * Wait for all required page elements to be available
      */
-    waitForElements: function() {
+    waitForElements: function () {
       // First attempt to get all elements
       if (HELPERS.updateElements()) {
         console.log('All necessary elements present. Starting the game.');
@@ -182,11 +182,11 @@
         CORE.setupGame();
         return;
       }
-      
+
       // Set up a mutation observer to wait for elements
       OBSERVERS.elementObserver = new MutationObserver(() => {
         if (STATE.elementsReady) return;
-        
+
         if (HELPERS.updateElements()) {
           console.log('All necessary elements present. Starting the game.');
           STATE.elementsReady = true;
@@ -194,32 +194,32 @@
           CORE.setupGame();
         }
       });
-      
+
       OBSERVERS.elementObserver.observe(document.body, { childList: true, subtree: true });
     },
 
     /**
      * Set up the game - initialize event listeners and observers
      */
-    setupGame: function() {
+    setupGame: function () {
       // Start the game
       if (typeof game !== 'undefined' && game.hostStart) {
         game.hostStart();
       }
-      
+
       // Set up cursor focus handling
       CORE.setupCursorFocus();
-      
+
       // Set up status observer for race state changes
       OBSERVERS.statusObserver = new MutationObserver(() => {
         CORE.checkRaceStatus();
       });
-      
+
       OBSERVERS.statusObserver.observe(ELEMENTS.statusInner, { childList: true, subtree: true });
-      
+
       // Set up key event listeners
       window.addEventListener('keydown', CORE.handleKeyDown);
-      
+
       // Apply initial color to input field based on saved state
       if (ELEMENTS.inputElement) {
         const color = STATE.checkerInterrupted ? '60' : '140'; // Yellow or Green
@@ -231,19 +231,19 @@
     /**
      * Set up cursor focus handling for the input element
      */
-    setupCursorFocus: function() {
-      if (!ELEMENTS.inputElement || ELEMENTS.inputElement.tagName !== 'INPUT' || 
-          ELEMENTS.inputElement.type !== 'text') return;
-      
+    setupCursorFocus: function () {
+      if (!ELEMENTS.inputElement || ELEMENTS.inputElement.tagName !== 'INPUT' ||
+        ELEMENTS.inputElement.type !== 'text') return;
+
       // Initialize lastCursorPosition
       STATE.lastCursorPosition = ELEMENTS.inputElement.value.length;
-      
+
       // Set up cursor observer
       OBSERVERS.cursorObserver = new MutationObserver(() => {
         if (document.activeElement === ELEMENTS.inputElement) {
           const selectionStart = ELEMENTS.inputElement.selectionStart;
           const selectionEnd = ELEMENTS.inputElement.selectionEnd;
-          
+
           if (selectionStart === selectionEnd) {
             ELEMENTS.inputElement.setSelectionRange(STATE.lastCursorPosition, STATE.lastCursorPosition);
           } else {
@@ -251,12 +251,12 @@
           }
         }
       });
-      
-      OBSERVERS.cursorObserver.observe(ELEMENTS.inputElement, { 
-        attributes: true, 
-        attributeFilter: ['value'] 
+
+      OBSERVERS.cursorObserver.observe(ELEMENTS.inputElement, {
+        attributes: true,
+        attributeFilter: ['value']
       });
-      
+
       // Set up error observer
       OBSERVERS.errorObserver = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
@@ -270,35 +270,42 @@
           }
         });
       });
-      
-      OBSERVERS.errorObserver.observe(ELEMENTS.inputElement, { 
-        attributes: true, 
-        attributeFilter: ['class'] 
+
+      OBSERVERS.errorObserver.observe(ELEMENTS.inputElement, {
+        attributes: true,
+        attributeFilter: ['class']
       });
-      
+
       // Set up focus events
       ELEMENTS.inputElement.addEventListener('focus', () => {
         STATE.lastCursorPosition = ELEMENTS.inputElement.value.length;
       });
-      
+
       ELEMENTS.inputElement.addEventListener('blur', () => {
         ELEMENTS.inputElement.setSelectionRange(ELEMENTS.inputElement.value.length, ELEMENTS.inputElement.value.length);
       });
-      
+
       // Handle click events
       document.addEventListener('click', (event) => {
         if (event.target === ELEMENTS.inputElement) return;
-        
+
         if (ELEMENTS.inputElement.contains(event.target)) {
           const selectionStart = ELEMENTS.inputElement.selectionStart;
           const selectionEnd = ELEMENTS.inputElement.selectionEnd;
-          
+
           if (selectionStart === selectionEnd) {
             ELEMENTS.inputElement.setSelectionRange(STATE.lastCursorPosition, STATE.lastCursorPosition);
           } else {
             STATE.lastCursorPosition = selectionEnd;
           }
         } else {
+          // Do not restore focus if clicking these specified elements
+          const noFocusElements = ['input.text', '.userpanel .user-block .user-dropdown'];
+          for (let sel of noFocusElements) {
+            if (event.target.closest(sel)) {
+              return;
+            }
+          }
           ELEMENTS.inputElement.focus();
           ELEMENTS.inputElement.style.outline = 'none';
           ELEMENTS.inputElement.setSelectionRange(ELEMENTS.inputElement.value.length, ELEMENTS.inputElement.value.length);
@@ -310,30 +317,30 @@
      * Handle keydown events for global shortcuts
      * @param {KeyboardEvent} event - The keyboard event
      */
-    handleKeyDown: function(event) {
+    handleKeyDown: function (event) {
       const { ctrl, key } = CONFIG.keyBindings.createNextRace;
       if (event.ctrlKey === ctrl && event.key === key) {
         console.log('Ctrl + Enter was pressed. Creating next race.');
         HELPERS.navigateTo(HELPERS.createGameLink());
         return;
       }
-      
+
       const gameListBinding = CONFIG.keyBindings.gameList;
       if (event.key === gameListBinding.key) {
         console.log('Esc was pressed. Moving on gamelist page.');
         HELPERS.navigateTo(URLS.gameList);
         return;
       }
-      
+
       const toggleBinding = CONFIG.keyBindings.toggleAutoChecker;
       if (event.shiftKey === toggleBinding.shift && event.key === toggleBinding.key) {
         STATE.checkerInterrupted = !STATE.checkerInterrupted;
         // Save state to localStorage
         localStorage.setItem('checkerInterrupted', STATE.checkerInterrupted);
-        
+
         console.log(`${STATE.checkerInterrupted ? 'Disabled' : 'Enabled'} automatic checker.`);
         HELPERS.highlightInput(STATE.checkerInterrupted ? '60' : '140'); // Yellow or Green
-        
+
         // If we're disabling the automatic checker, also disable automaticChecker
         // This ensures no automatic navigation happens even if user stops typing
         if (STATE.checkerInterrupted) {
@@ -343,7 +350,7 @@
         }
         return;
       }
-      
+
       // Reset automatic checker on any keypress, but only if checker is not interrupted
       if (!STATE.checkerInterrupted) {
         STATE.automaticChecker = false;
@@ -354,11 +361,11 @@
     /**
      * Reset the automatic checker after user activity
      */
-    resetAutoChecker: function() {
+    resetAutoChecker: function () {
       clearTimeout(STATE.timerId);
       STATE.autoCheckCount = 0;
       localStorage.setItem('autoCheckCount', STATE.autoCheckCount);
-      
+
       if (!STATE.checkerInterrupted) {
         STATE.timerId = setTimeout(() => {
           console.log('You stopped keydown action. Activating automatic checker.');
@@ -371,10 +378,10 @@
     /**
      * Check the current race status and take appropriate actions
      */
-    checkRaceStatus: function() {
+    checkRaceStatus: function () {
       // Ensure we have the necessary elements
       if (!ELEMENTS.racing || !ELEMENTS.finished || !ELEMENTS.racingTime) return;
-      
+
       setTimeout(() => {
         // Check for race end
         if (ELEMENTS.racing.style.display !== 'none' && ELEMENTS.finished.style.display !== 'none') {
@@ -387,20 +394,20 @@
           }
           return;
         }
-        
+
         // Check for inactive player during race
         if (ELEMENTS.racing.style.display !== 'none' && ELEMENTS.finished.style.display === 'none') {
           const totalSeconds = HELPERS.parseRacingTime(ELEMENTS.racingTime.textContent);
-          
+
           // Only perform automated actions if automatic checker is not interrupted
           if (totalSeconds >= CONFIG.startFromTimer && STATE.automaticChecker && STATE.replayOnce && !STATE.checkerInterrupted) {
             STATE.replayOnce = false;
-            
+
             if (STATE.autoCheckCount < CONFIG.maxSkipCount) {
               STATE.autoCheckCount++;
               localStorage.setItem('autoCheckCount', STATE.autoCheckCount);
               console.log('You were inactive after race started. Moving to the next race.');
-              
+
               // Navigate to next race with exponential backoff retry strategy
               CORE.navigateWithRetry();
             } else {
@@ -416,48 +423,48 @@
     /**
      * Navigate to the next race with exponential backoff retry strategy
      */
-    navigateWithRetry: function() {
+    navigateWithRetry: function () {
       // Don't attempt navigation if checker is interrupted
       if (STATE.checkerInterrupted) {
         console.log('Navigation cancelled - automatic checker is disabled.');
         return;
       }
-      
+
       HELPERS.navigateTo(HELPERS.createGameLink());
-      
+
       // Initialize retry strategy
       let currentRetryDelay = CONFIG.timerDelay;
       const maxRetryDelay = 60000; // 60 seconds
-      
+
       const doubleReplay = async () => {
         // Check if checker is still enabled before proceeding
         if (STATE.checkerInterrupted) {
           console.log('Retry cancelled - automatic checker is disabled.');
           return;
         }
-        
+
         await new Promise(resolve => setTimeout(resolve, currentRetryDelay));
         console.log(`Retrying in ${currentRetryDelay / 1000} seconds...`);
-        
+
         // Check again before navigating
         if (STATE.checkerInterrupted) {
           console.log('Navigation cancelled - automatic checker is disabled.');
           return;
         }
-        
+
         // Navigate to new game
         HELPERS.navigateTo(HELPERS.createGameLink(), 0);
-        
+
         // Exponentially increase delay with cap
         currentRetryDelay = Math.min(currentRetryDelay * 2, maxRetryDelay);
         console.log(`Next retry delay set to ${currentRetryDelay / 1000} seconds`);
-        
+
         // Schedule next retry only if checker is not interrupted
         if (!STATE.checkerInterrupted) {
           setTimeout(doubleReplay, currentRetryDelay);
         }
       };
-      
+
       // Start retry process after initial delay only if checker is not interrupted
       if (!STATE.checkerInterrupted) {
         setTimeout(doubleReplay, CONFIG.timerDelay);

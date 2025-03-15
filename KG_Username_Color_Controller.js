@@ -265,7 +265,4 @@
         childList: true,
         subtree: true
     });
-
-    // Add a small info to console
-    console.log(`KG Username Color Controller active with limits: Lightness=${COLOR_SETTINGS.MAX_LIGHTNESS}%, Saturation=${COLOR_SETTINGS.MAX_SATURATION}%`);
 })();

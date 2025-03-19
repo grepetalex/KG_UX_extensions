@@ -1,274 +1,277 @@
 // ==UserScript==
 // @name         KG_Better_Chatlogs
 // @namespace    https://klavogonki.ru
-// @version      0.1
-// @description  Restyle chatlogs for better looking and make it accessible from main menu 
-// @author       Puncher
-// @match        *://klavogonki.ru/*
+// @version      0.8
+// @description  Restyle chatlogs: remove brackets, convert font to span.username, remove unwanted timezone elements, group messages into .message-item wrapped in .messages-wrapper, wrap links, wrap time/username in an .info container, and add smooth hover transitions with responsive design. Now with SVG navigation icons.
+// @author       Patcher
+// @match        *://klavogonki.ru/chatlogs/*
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=klavogonki.ru
 // @grant        none
+// @run-at document-start
 // ==/UserScript==
 
 (function () {
-  // Enforce https protocol
-  function switchToHttps() {
-    if (window.location.protocol === "http:") {
-      setTimeout(() => {
-        document.title = `Switching to https protocol`;
-        setTimeout(() => {
-          window.location.protocol = "https:";
-        }, 1000);
-      }, 1000);
-    }
-  }
+  // Apply the background color immediately to prevent white flash
+  document.documentElement.style.setProperty('background-color', '#1e1e1e', 'important');
+  document.body.style.setProperty('background-color', '#1e1e1e', 'important');
 
-  // Function to add styling to the chatlogs page
-  function setChatlogsStyles() {
-    const chatLogsUrl = window.location.protocol + "//klavogonki.ru/chatlogs";
+  function run() {
+    const BASE_URL = location.protocol + "//klavogonki.ru",
+      CHATLOGS_URL = BASE_URL + "/chatlogs",
+      IS_HOME = location.href.startsWith(BASE_URL) && !location.href.startsWith(CHATLOGS_URL),
+      IS_CHAT = location.href.includes("/chatlogs/");
 
-    // Check if user is on the chatlogs page
-    if (window.location.href.startsWith(chatLogsUrl)) {
-      // Colorize nicknames on chatlogs page
-      function colorizeNicknames() {
-        // Set the font size for the entire page
-        document.body.style.fontSize = '22px';
+    const setStyle = (el, styles) =>
+      Object.entries(styles).forEach(([prop, val]) => el.style.setProperty(prop, val, 'important'));
 
-        // Get all font tags on the page
-        let fontTags = document.getElementsByTagName("font");
-        let colors = {};
+    const getCurrentChatlogsUrl = () => {
+      const now = new Date(), pad = n => String(n).padStart(2, '0');
+      return `${CHATLOGS_URL}/${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}.html`;
+    };
 
-        // Loop through each font tag
-        for (var i = 0; i < fontTags.length; i++) {
-          let text = fontTags[i].textContent;
-          if (!colors[text]) {
-            colors[text] = getRandomColor();
-          }
-          fontTags[i].setAttribute("style", "color: " + colors[text] + " !important");
-        }
+    // Wrap URLs into anchor tags (opens in a new tab)
+    const linkify = text =>
+      text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
 
-        // Get random color for the nickname
-        function getRandomColor() {
-          let h = Math.floor(Math.random() * 360); // random hue
-          let s = Math.floor(Math.random() * 20) + 80; // saturation between 80% and 100%
-          let l = 70; // static lightness value
-          return "hsl(" + h + "," + s + "%," + l + "%)";
-        }
-      }
-
-      // Beautify navigation on the chatlogs page
-      function beautifyNavigationButtons() {
-        // Reference for the navigation buttons wrapper
-        const chatlogsNavigationWrapper = document.querySelector('.logdate .w3c');
-
-        // Exit the function if chatlogsNavigationWrapper doesn't exist
-        if (!chatlogsNavigationWrapper) {
-          return;
-        }
-
-        chatlogsNavigationWrapper.style.position = 'fixed';
-        chatlogsNavigationWrapper.style.height = '80px';
-        chatlogsNavigationWrapper.style.width = '40px';
-        chatlogsNavigationWrapper.style.right = '30px';
-        chatlogsNavigationWrapper.style.top = '50vh';
-        chatlogsNavigationWrapper.style.transform = 'translateY(-50%)';
-        chatlogsNavigationWrapper.style.display = 'flex';
-        chatlogsNavigationWrapper.style.flexDirection = 'column';
-
-        // Remove the second button on the chatlogs page
-        const navigationButtons = chatlogsNavigationWrapper.querySelectorAll('.w3c a.nav');
-        navigationButtons[1].parentNode.removeChild(navigationButtons[1]);
-
-        // Style each navigation button
-        navigationButtons.forEach(button => {
-          button.style.display = 'flex';
-          button.style.justifyContent = 'center';
-          button.style.alignItems = 'center';
-          button.style.height = '40px';
-          button.style.width = '40px';
-          button.style.backgroundColor = '#808080';
-          button.style.transition = 'background-color 0.3s ease';
-          button.style.setProperty('color', '#1b1b1b', 'important');
-
-          // Change navigation button background color on hover
-          button.addEventListener('mouseenter', () => {
-            button.style.backgroundColor = '#a9a9a9';
-          });
-          button.addEventListener('mouseleave', () => {
-            button.style.backgroundColor = '#808080';
-          });
-        });
-
-        // References for the navigation buttons previous and forward
-        const previousChatlogsPage = chatlogsNavigationWrapper.querySelector('.w3c a.nav:first-child');
-        const forwardChatlogsPage = chatlogsNavigationWrapper.querySelector('.w3c a.nav:last-child');
-
-        previousChatlogsPage.style.setProperty('border-radius', '4px 4px 0 0', 'important');
-        forwardChatlogsPage.style.setProperty('border-radius', '0 0 4px 4px', 'important');
-
-        // Style each svg arrow and set their HTML content
-        const arrowUpSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-up">
-      <line x1="12" y1="19" x2="12" y2="5"></line>
-      <polyline points="5 12 12 5 19 12"></polyline>
-      </svg>`;
-
-        const arrowDownSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-down">
-      <line x1="12" y1="5" x2="12" y2="19"></line>
-      <polyline points="19 12 12 19 5 12"></polyline>
-      </svg>`;
-
-        // Assign svg arrows instead default font ugly arrows
-        previousChatlogsPage.innerHTML = arrowUpSvg;
-        forwardChatlogsPage.innerHTML = arrowDownSvg;
-      }
-
-      // Restyle home page link and position it near the navigation buttons
-      function beautifyHomePageButton() {
-
-        // Store link following to the home page
-        const exitChatlogs = document.querySelector('a[href="/"]');
-
-        // If exitChatlogs is null, return without doing anything
-        if (!exitChatlogs) {
-          return;
-        }
-
-        // Store svg house icon for the home page button instead textContent data
-        const homePageSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-home">
-        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-        <polyline points="9 22 9 12 15 12 15 22"></polyline>
-        </svg>`;
-
-        // Assign svg home icon to the home button
-        exitChatlogs.innerHTML = homePageSvg;
-
-        // Add styles to the exitChatlogs button
-        exitChatlogs.style.position = 'fixed';
-        exitChatlogs.style.right = '30px';
-        exitChatlogs.style.top = '50vh';
-        exitChatlogs.style.transform = 'translateY(-90px)'
-        exitChatlogs.style.height = '40px';
-        exitChatlogs.style.width = '40px';
-        exitChatlogs.style.display = 'flex';
-        exitChatlogs.style.justifyContent = 'center';
-        exitChatlogs.style.alignItems = 'center';
-        exitChatlogs.style.setProperty('border-radius', '4px', 'important');
-        exitChatlogs.style.setProperty('color', '#1b1b1b', 'important');
-        exitChatlogs.style.backgroundColor = '#808080';
-        exitChatlogs.style.transition = 'background-color 0.3s ease';
-
-        // Change the background color on mouse over and out
-        exitChatlogs.addEventListener('mouseenter', () => {
-          exitChatlogs.style.backgroundColor = '#a9a9a9';
-        });
-
-        exitChatlogs.addEventListener('mouseleave', () => {
-          exitChatlogs.style.backgroundColor = '#808080';
-        });
-
-      }
-
-      colorizeNicknames();
-      beautifyNavigationButtons();
-      beautifyHomePageButton();
-    }
-  }
-
-  const homePage = window.location.protocol + "//klavogonki.ru/";
-  const currentDate = new Date();
-  const currentYear = currentDate.getFullYear();
-  const currentMonth = ("0" + (currentDate.getMonth() + 1)).slice(-2);
-  const currentDay = ("0" + currentDate.getDate()).slice(-2);
-  const actualChatlogsLink = `https://klavogonki.ru/chatlogs/${currentYear}-${currentMonth}-${currentDay}.html`;
-
-  function setChatlogsLink() {
-    if (window.location.href.startsWith(homePage) && !window.location.href.startsWith(homePage + "chatlogs/")) {
-      const mainMenu = document.querySelector(".right .menu");
-      if (mainMenu) {
-        const chatlogsLink = document.createElement("a");
-        chatlogsLink.href = actualChatlogsLink;
-        chatlogsLink.textContent = "Chatlogs";
-        mainMenu.appendChild(chatlogsLink);
-      }
-    }
-  }
-
-  function preventUnexistentNavigation() {
-    // Get the chatlogs date from the URL using a regular expression
-    const chatlogsDateMatch = window.location.href.match(/\d{4}-\d{2}-\d{2}/);
-
-    if (chatlogsDateMatch) {
-      // Convert the chatlogs date to a Date object
-      const chatlogsDate = new Date(chatlogsDateMatch[0]);
-      const chatlogsDay = chatlogsDate.getDate();
-      const currentDay = currentDate.getDate();
-
-      // Compare the chatlogs day and current day numbers
-      if (chatlogsDay > currentDay) {
-        // If the chatlogs day number is greater, redirect to the latest actual chatlogs link
-        window.location.href = actualChatlogsLink;
-      }
-    }
-  }
-
-  // Define a function to remove unnecessary elements from the webpage
-  function removeUnnecessaryElements() {
-
-    // Remove validation links if they exist
-    const validatorLinks = document.querySelector('.legend');
-    if (validatorLinks) {
-      validatorLinks.remove();
-    }
-
-    // Find all elements with class "rc"
-    const rcElements = document.querySelectorAll('.rc');
-
-    // Loop through each "rc" element and remove the ones with specified text content
-    rcElements.forEach((element) => {
-      if (element.textContent.includes('Room Configuration') || element.textContent.includes('Room Occupants')) {
-        element.remove(); // Remove the "rc" element if it has the specified text content
-      }
-    });
-
-    // Remove element with class "roomtitle"
-    const roomTitleElement = document.querySelector('.roomtitle');
-    if (roomTitleElement) {
-      roomTitleElement.remove(); // Remove the element with class "roomtitle"
-    }
-
-    // Reference for the current date info header textContent
-    const chatlogsDateString = document.querySelector('.logdate');
-    if (chatlogsDateString) {
-      // Remove border and margin top of chatlogsDateString
-      chatlogsDateString.style.border = 'none';
-      chatlogsDateString.style.marginTop = '0px';
-
-      // Remove only text without removing all the elements inside the parent
-      chatlogsDateString.childNodes[0].nodeValue = '';
-    }
-
-    // Remove timezone text element
-    const chatlogsTimezone = document.querySelector('.ts');
-    if (chatlogsTimezone) {
-      chatlogsTimezone.remove(); // Remove the element with class "ts"
-    }
-
-    // Get the first two <br> tags in the content
-    const brTags = document.querySelectorAll('body br:nth-of-type(-n+2)');
-    if (brTags) {
-      // Remove two first useless br tags
-      brTags.forEach((br) => {
-        br.parentNode.removeChild(br);
+    const colorizeNicknames = () => {
+      setStyle(document.body, { 'font-size': '22px', 'font-family': 'Montserrat' });
+      const nicknameColors = {};
+      document.querySelectorAll("font.mn").forEach(el => {
+        const username = el.textContent.replace(/[<>]/g, '').trim(),
+          span = document.createElement('span');
+        span.className = 'username';
+        span.textContent = username;
+        if (el.getAttribute('style')) span.setAttribute('style', el.getAttribute('style'));
+        el.parentNode.replaceChild(span, el);
       });
-    }
+      document.querySelectorAll("span.username").forEach(el => {
+        if (!el.style.color) {
+          const nick = el.textContent;
+          if (!nicknameColors[nick]) {
+            const hue = Math.floor(Math.random() * 360),
+              sat = Math.floor(Math.random() * 20) + 80;
+            nicknameColors[nick] = `hsl(${hue}, ${sat}%, 70%)`;
+          }
+          el.style.setProperty('color', nicknameColors[nick], 'important');
+        }
+      });
+    };
 
+    const createSVG = (icon, data) =>
+      `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-${icon}">${data}</svg>`;
+
+    const beautifyNavigation = () => {
+      // Look for the nav wrapper (with class "w3c")
+      let navWrapper = document.querySelector('.logdate .w3c') || document.querySelector('a.nav')?.parentNode;
+      if (navWrapper) {
+        // Change class from "w3c" to "navigation"
+        navWrapper.classList.remove('w3c');
+        navWrapper.classList.add('navigation');
+
+        setStyle(navWrapper, {
+          'position': 'fixed',
+          'height': 'auto',
+          'width': 'auto',
+          'right': '0.5em',
+          'top': '50vh',
+          'transform': 'translateY(-50%)',
+          'display': 'flex',
+          'flex-direction': 'column',
+          'gap': '0.5em',
+          'z-index': '10000'
+        });
+
+        const navButtons = navWrapper.querySelectorAll('a.nav');
+        navButtons.forEach(btn => {
+          setStyle(btn, {
+            'display': 'flex',
+            'justify-content': 'center',
+            'align-items': 'center',
+            'height': '40px',
+            'width': '40px',
+            'background-color': '#808080',
+            'color': '#1b1b1b',
+            'transition': 'background-color 0.15s'
+          });
+          // Uniform border-radius for all buttons
+          btn.style.setProperty('border-radius', '4px', 'important');
+          btn.addEventListener('mouseenter', () => btn.style.setProperty('background-color', '#a9a9a9', 'important'));
+          btn.addEventListener('mouseleave', () => btn.style.setProperty('background-color', '#808080', 'important'));
+
+          // Set appropriate SVG icon and class based on button text or href
+          if (btn.getAttribute('href') === "./") {
+            // Home button
+            btn.innerHTML = createSVG('home', '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline>');
+            btn.classList.add('home');
+          } else if (btn.textContent === "<") {
+            // Backward button
+            btn.innerHTML = createSVG('arrow-left', '<line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline>');
+            btn.classList.add('backward');
+          } else if (btn.textContent === ">") {
+            // Forward button
+            btn.innerHTML = createSVG('arrow-right', '<line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline>');
+            btn.classList.add('forward');
+          }
+        });
+      } else {
+        // If no nav wrapper exists, create a dedicated home button.
+        let homeButton = document.querySelector('a.home-btn');
+        if (!homeButton) {
+          homeButton = document.createElement('a');
+          homeButton.href = "/";
+          homeButton.className = 'home-btn home';
+          document.body.appendChild(homeButton);
+        }
+        setStyle(homeButton, {
+          'position': 'fixed',
+          'right': '30px',
+          'top': '50vh',
+          'transform': 'translateY(-90px)',
+          'height': '40px',
+          'width': '40px',
+          'display': 'flex',
+          'justify-content': 'center',
+          'align-items': 'center',
+          'border-radius': '4px',
+          'color': '#1b1b1b',
+          'background-color': '#808080',
+          'transition': 'background-color 0.15s',
+          'z-index': '10000'
+        });
+        homeButton.addEventListener('mouseenter', () => homeButton.style.setProperty('background-color', '#a9a9a9', 'important'));
+        homeButton.addEventListener('mouseleave', () => homeButton.style.setProperty('background-color', '#808080', 'important'));
+        homeButton.innerHTML = createSVG('home', '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline>');
+      }
+    };
+
+    const addChatlogsLink = () => {
+      if (IS_HOME) {
+        const menu = document.querySelector(".right .menu");
+        if (menu) {
+          const a = document.createElement("a");
+          a.href = getCurrentChatlogsUrl();
+          a.textContent = "Chatlogs";
+          menu.appendChild(a);
+        }
+      }
+    };
+
+    const preventFutureNavigation = () => {
+      const match = location.href.match(/\d{4}-\d{2}-\d{2}/);
+      if (match) {
+        const chatDate = new Date(match[0]),
+          today = new Date();
+        chatDate.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
+        if (chatDate > today) location.href = getCurrentChatlogsUrl();
+      }
+    };
+
+    const removeElements = () => {
+      document.querySelector('.legend')?.remove();
+      document.querySelectorAll('.rc').forEach(el => {
+        const title = el.querySelector('.rct');
+        if (title && (title.textContent.includes('Room Configuration') || title.textContent.includes('Room Occupants')))
+          el.remove();
+      });
+      document.querySelector('.roomtitle')?.remove();
+      const dateElem = document.querySelector('.logdate');
+      if (dateElem) {
+        setStyle(dateElem, { 'border': 'none', 'margin-top': '0' });
+        dateElem.childNodes.forEach(n => { if (n.nodeType === Node.TEXT_NODE) n.nodeValue = ''; });
+      }
+      document.querySelectorAll('br').forEach(br => br.remove());
+      document.querySelectorAll('.ts').forEach(el => { if (/GMT/i.test(el.textContent)) el.remove(); });
+    };
+
+    const restructureMessages = () => {
+      const timeMarkers = Array.from(document.querySelectorAll('a.ts')).filter(el => !/GMT/i.test(el.textContent));
+      if (!timeMarkers.length) return;
+      const container = timeMarkers[0].parentNode;
+      // Detach navWrapper (if any) so it isn't cleared.
+      const navWrapper = container.querySelector('.w3c') || container.querySelector('.navigation');
+      if (navWrapper) navWrapper.remove();
+
+      const messagesWrapper = document.createElement('div');
+      messagesWrapper.className = 'messages-wrapper';
+      timeMarkers.forEach((current, i) => {
+        const next = timeMarkers[i + 1] || null,
+          messageItem = document.createElement('div');
+        messageItem.className = 'message-item';
+        // Create .info container for time and username.
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'info';
+        const timeText = current.textContent.replace(/[\[\]]/g, '').trim(),
+          newTime = document.createElement('time');
+        newTime.className = 'time';
+        newTime.textContent = timeText;
+        infoDiv.appendChild(newTime);
+        let usernameEl = null, messageParts = [];
+        for (let node = current.nextSibling; node && node !== next; node = node.nextSibling) {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            if (node.classList.contains('username')) {
+              usernameEl = node.cloneNode(true);
+            } else {
+              const txt = node.textContent.trim();
+              if (txt) messageParts.push(txt);
+            }
+          } else if (node.nodeType === Node.TEXT_NODE) {
+            const txt = node.textContent.trim();
+            if (txt) messageParts.push(txt);
+          }
+        }
+        if (usernameEl) infoDiv.appendChild(usernameEl);
+        messageItem.appendChild(infoDiv);
+        const pMessage = document.createElement('p');
+        pMessage.className = 'message';
+        pMessage.innerHTML = linkify(messageParts.join(' '));
+        messageItem.appendChild(pMessage);
+        messagesWrapper.appendChild(messageItem);
+      });
+      // Clear container and reinsert detached navWrapper (if any)
+      container.innerHTML = '';
+      if (navWrapper) container.appendChild(navWrapper);
+      container.appendChild(messagesWrapper);
+    };
+
+    const injectCustomStyles = () => {
+      const style = document.createElement('style');
+      style.textContent = `
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+        html { background-color: #1e1e1e !important; }
+        body { background-color: #1e1e1e !important; }
+        .time { color: #666 !important; transition: color 0.2s !important; font-size: 0.8em !important; }
+        .username { }
+        .info { display: flex !important; align-items: center !important; gap: 10px !important; margin-right: 10px !important; }
+        .message { color: #deb887 !important; margin: 0 !important; }
+        a { color: #82B32A !important; }
+        a:hover { color: #95cc30 !important; }
+        .message-item { margin-bottom: 10px !important; display: flex !important; flex-direction: row !important; }
+        .messages-wrapper { display: flex !important; flex-direction: column !important; }
+        @media (max-width: 768px) {
+          .message-item { flex-direction: column !important; }
+        }
+      `;
+      document.head.appendChild(style);
+    };
+
+    const enhanceChatlogs = () => {
+      if (!IS_CHAT) return;
+      colorizeNicknames();
+      beautifyNavigation();
+      removeElements();
+      restructureMessages();
+      preventFutureNavigation();
+    };
+
+    const init = () => {
+      injectCustomStyles();
+      if (IS_CHAT) enhanceChatlogs();
+      addChatlogsLink();
+    };
+
+    init();
   }
 
-  if (window.location.href.includes("/chatlogs/")) {
-    preventUnexistentNavigation(); // Prevents the user from navigating to non-existent chat logs
-    removeUnnecessaryElements(); // Remove all the garbage
-    setChatlogsStyles(); // Restyles the chat logs page by setting new styles to various elements on the page
-  }
-
-  switchToHttps(); // Switch from http to https protocol
-  setChatlogsLink(); // Add additional link to chatlogs in the main menu for the fastest accessibility
-
+  run();
 })();

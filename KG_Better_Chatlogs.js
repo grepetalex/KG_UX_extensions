@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_Better_Chatlogs
 // @namespace    https://klavogonki.ru
-// @version      0.9
+// @version      1.0.0
 // @description  Restyle chatlogs: remove brackets, convert font to span.username, remove unwanted timezone elements, group messages into .message-item wrapped in .messages-wrapper, wrap links, wrap time/username in an .info container, and add smooth hover transitions with responsive design. Now with SVG navigation icons.
 // @author       Patcher
 // @match        *://klavogonki.ru/chatlogs/*
@@ -33,7 +33,7 @@
       text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
 
     const colorizeNicknames = () => {
-      setStyle(document.body, { 'font-size': '22px', 'font-family': 'Montserrat' });
+      setStyle(document.body, { 'font-size': '1em', 'font-family': 'Montserrat' });
       const nicknameColors = {};
       document.querySelectorAll("font.mn").forEach(el => {
         const username = el.textContent.replace(/[<>]/g, '').trim(),

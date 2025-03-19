@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_Better_Chatlogs
 // @namespace    https://klavogonki.ru
-// @version      1.0.6
+// @version      1.0.7
 // @description  Restyle chatlogs: remove brackets, convert font to span.username, remove unwanted timezone elements, group messages into .message-item wrapped in .messages-wrapper, wrap links, wrap time/username in an .info container, and add smooth hover transitions with responsive design. Now with SVG navigation icons and tablet optimization.
 // @author       Patcher
 // @match        *://klavogonki.ru/*
@@ -395,20 +395,47 @@
         @import url('https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap');
 
         .emoji-adjuster { font-size: 22px !important; }
-        .time { color: #666 !important; transition: color 0.2s !important; font-size: 0.8em !important; }
-        .username { }
-        .info { display: flex !important; align-items: center !important; gap: 10px !important; margin-right: 10px !important; }
-        .message { color: #deb887 !important; margin: 0 !important; }
+
+        .time {
+          color: #666 !important;
+          transition: color 0.2s !important;
+          font-size: 0.8em !important;
+          font-variant-numeric: tabular-nums !important;
+        }
+
+        .info {
+          display: flex !important;
+          align-items: center !important;
+          gap: 10px !important;
+          margin-right: 10px !important;
+        }
+
+        .message {
+          color: #deb887 !important;
+          margin: 0 !important;
+        }
+
         a { color: #82B32A !important; }
         a:hover { color: #95cc30 !important; }
-        .message-item { margin-bottom: 10px !important; display: flex !important; flex-direction: row !important; }
-        .messages-wrapper { display: flex !important; flex-direction: column !important; }
+
+        .message-item {
+          margin-bottom: 10px !important;
+          display: flex !important;
+          flex-direction: row !important;
+        }
+
+        .messages-wrapper {
+          display: flex !important;
+          flex-direction: column !important;
+        }
+
         @media (max-width: 768px) {
           .message-item { flex-direction: column !important; }
         }
+
         @media (max-width: 1024px) {
           body {
-            padding-bottom: 50px !important; /* Add padding for tablet view to prevent content from being hidden behind bottom navigation */
+            padding-bottom: 50px !important;
           }
         }
       `;

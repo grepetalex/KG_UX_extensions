@@ -29,8 +29,43 @@
     };
 
     // Wrap URLs into anchor tags (opens in a new tab)
-    const linkify = text =>
-      text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
+    const linkify = (text, maxUrlLength = 50) => {
+      return text.replace(/(https?:\/\/[^\s]+)/g, (match) => {
+        // Preserve the full URL in the href
+        const fullUrl = match;
+
+        // Create a display version with potential truncation
+        let displayUrl = match;
+        if (displayUrl.length > maxUrlLength) {
+          // Extract domain part
+          const urlObj = new URL(fullUrl);
+          const domain = urlObj.hostname;
+
+          // Get path portion without query parameters
+          const path = urlObj.pathname;
+
+          // Calculate how many characters we can display from the path
+          const remainingChars = maxUrlLength - domain.length - 5; // 5 for "://", "..." and some buffer
+
+          if (remainingChars > 10) {
+            // Show beginning and end of path with ellipsis in the middle
+            const firstPart = path.slice(0, remainingChars / 3);
+            const lastPart = path.slice(-remainingChars / 3);
+            displayUrl = `${urlObj.protocol}//${domain}${firstPart}...${lastPart}`;
+          } else {
+            // Just show domain with ellipsis
+            displayUrl = `${urlObj.protocol}//${domain}/...`;
+          }
+
+          // If there are query parameters, indicate this
+          if (urlObj.search) {
+            displayUrl += '?...';
+          }
+        }
+
+        return `<a href="${fullUrl}" target="_blank" title="${fullUrl}">${displayUrl}</a>`;
+      });
+    };
 
     const colorizeNicknames = () => {
       setStyle(document.body, { 'font-size': '1em', 'font-family': 'Montserrat' });

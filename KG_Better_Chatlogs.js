@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         KG_Better_Chatlogs
 // @namespace    https://klavogonki.ru
-// @version      1.0.1
-// @description  Restyle chatlogs: remove brackets, convert font to span.username, remove unwanted timezone elements, group messages into .message-item wrapped in .messages-wrapper, wrap links, wrap time/username in an .info container, and add smooth hover transitions with responsive design. Now with SVG navigation icons.
+// @version      1.0.3
+// @description  Restyle chatlogs: remove brackets, convert font to span.username, remove unwanted timezone elements, group messages into .message-item wrapped in .messages-wrapper, wrap links, wrap time/username in an .info container, and add smooth hover transitions with responsive design. Now with SVG navigation icons and tablet optimization.
 // @author       Patcher
 // @match        *://klavogonki.ru/chatlogs/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=klavogonki.ru
@@ -102,6 +102,7 @@
         navWrapper.classList.remove('w3c');
         navWrapper.classList.add('navigation');
 
+        // Default desktop styles - will be overridden by media query for tablets
         setStyle(navWrapper, {
           'position': 'fixed',
           'height': 'auto',
@@ -114,6 +115,37 @@
           'gap': '0.5em',
           'z-index': '10000'
         });
+        
+        // Handle tablet responsive layout with JavaScript
+        const checkTabletWidth = () => {
+          if (window.innerWidth <= 1024) { // Tablet breakpoint
+            setStyle(navWrapper, {
+              'width': '100%',
+              'right': '0',
+              'bottom': '0.5em',
+              'top': 'auto',
+              'transform': 'none',
+              'flex-direction': 'row',
+              'justify-content': 'center',
+              'gap': '0.5em'
+            });
+          } else {
+            setStyle(navWrapper, {
+              'width': 'auto',
+              'right': '0.5em',
+              'top': '50vh',
+              'bottom': 'auto',
+              'transform': 'translateY(-50%)',
+              'flex-direction': 'column',
+              'justify-content': 'flex-start',
+              'gap': '0.5em'
+            });
+          }
+        };
+        
+        // Initial check and listen for resize events
+        checkTabletWidth();
+        window.addEventListener('resize', checkTabletWidth);
 
         const navButtons = navWrapper.querySelectorAll('a.nav');
         navButtons.forEach(btn => {
@@ -156,10 +188,12 @@
           homeButton.className = 'home-btn home';
           document.body.appendChild(homeButton);
         }
+        
+        // Default position for desktop
         setStyle(homeButton, {
           'position': 'fixed',
           'right': '30px',
-          'top': '50vh',
+          'bottom': '50vh',
           'transform': 'translateY(-90px)',
           'height': '40px',
           'width': '40px',
@@ -172,6 +206,30 @@
           'transition': 'background-color 0.15s',
           'z-index': '10000'
         });
+        
+        // Handle tablet responsive layout for standalone home button
+        const checkTabletWidthForHome = () => {
+          if (window.innerWidth <= 1024) { // Tablet breakpoint
+            setStyle(homeButton, {
+              'right': 'auto',
+              'bottom': '0.5em',
+              'left': '50%',
+              'transform': 'translateX(-50%)'
+            });
+          } else {
+            setStyle(homeButton, {
+              'right': '30px',
+              'bottom': '50vh',
+              'left': 'auto',
+              'transform': 'translateY(-90px)'
+            });
+          }
+        };
+        
+        // Initial check and listen for resize events
+        checkTabletWidthForHome();
+        window.addEventListener('resize', checkTabletWidthForHome);
+        
         homeButton.addEventListener('mouseenter', () => homeButton.style.setProperty('background-color', '#a9a9a9', 'important'));
         homeButton.addEventListener('mouseleave', () => homeButton.style.setProperty('background-color', '#808080', 'important'));
         homeButton.innerHTML = createSVG('home', '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline>');
@@ -275,7 +333,9 @@
       style.textContent = `
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
         html { background-color: #1e1e1e !important; }
-        body { background-color: #1e1e1e !important; }
+        body { 
+          background-color: #1e1e1e !important; 
+        }
         .time { color: #666 !important; transition: color 0.2s !important; font-size: 0.8em !important; }
         .username { }
         .info { display: flex !important; align-items: center !important; gap: 10px !important; margin-right: 10px !important; }
@@ -286,6 +346,11 @@
         .messages-wrapper { display: flex !important; flex-direction: column !important; }
         @media (max-width: 768px) {
           .message-item { flex-direction: column !important; }
+        }
+        @media (max-width: 1024px) {
+          body {
+            padding-bottom: 50px !important; /* Add padding for tablet view to prevent content from being hidden behind bottom navigation */
+          }
         }
       `;
       document.head.appendChild(style);

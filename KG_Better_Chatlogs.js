@@ -1,24 +1,27 @@
 // ==UserScript==
 // @name         KG_Better_Chatlogs
 // @namespace    https://klavogonki.ru
-// @version      1.0.3
+// @version      1.0.4
 // @description  Restyle chatlogs: remove brackets, convert font to span.username, remove unwanted timezone elements, group messages into .message-item wrapped in .messages-wrapper, wrap links, wrap time/username in an .info container, and add smooth hover transitions with responsive design. Now with SVG navigation icons and tablet optimization.
 // @author       Patcher
-// @match        *://klavogonki.ru/chatlogs/*
+// @match        *://klavogonki.ru/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=klavogonki.ru
 // @grant        none
 // ==/UserScript==
 
 (function () {
-  // Apply the background color immediately to prevent white flash
-  document.documentElement.style.setProperty('background-color', '#1e1e1e', 'important');
-  document.body.style.setProperty('background-color', '#1e1e1e', 'important');
 
   function run() {
     const BASE_URL = location.protocol + "//klavogonki.ru",
       CHATLOGS_URL = BASE_URL + "/chatlogs",
-      IS_HOME = location.href.startsWith(BASE_URL) && !location.href.startsWith(CHATLOGS_URL),
+      IS_HOME = location.pathname === "/" || location.pathname === "",
       IS_CHAT = location.href.includes("/chatlogs/");
+
+    if (IS_CHAT) {
+      // Apply the background color immediately to prevent white flash
+      document.documentElement.style.setProperty('background-color', '#1e1e1e', 'important');
+      document.body.style.setProperty('background-color', '#1e1e1e', 'important');
+    }
 
     const setStyle = (el, styles) =>
       Object.entries(styles).forEach(([prop, val]) => el.style.setProperty(prop, val, 'important'));
@@ -108,14 +111,14 @@
           'height': 'auto',
           'width': 'auto',
           'right': '0.5em',
-          'top': '50vh',
-          'transform': 'translateY(-50%)',
+          'bottom': '50vh',
+          'transform': 'translateY(50%)',
           'display': 'flex',
           'flex-direction': 'column',
           'gap': '0.5em',
           'z-index': '10000'
         });
-        
+
         // Handle tablet responsive layout with JavaScript
         const checkTabletWidth = () => {
           if (window.innerWidth <= 1024) { // Tablet breakpoint
@@ -123,7 +126,6 @@
               'width': '100%',
               'right': '0',
               'bottom': '0.5em',
-              'top': 'auto',
               'transform': 'none',
               'flex-direction': 'row',
               'justify-content': 'center',
@@ -133,16 +135,15 @@
             setStyle(navWrapper, {
               'width': 'auto',
               'right': '0.5em',
-              'top': '50vh',
-              'bottom': 'auto',
-              'transform': 'translateY(-50%)',
+              'bottom': '50vh',
+              'transform': 'translateY(50%)',
               'flex-direction': 'column',
               'justify-content': 'flex-start',
               'gap': '0.5em'
             });
           }
         };
-        
+
         // Initial check and listen for resize events
         checkTabletWidth();
         window.addEventListener('resize', checkTabletWidth);
@@ -166,7 +167,8 @@
 
           // Set appropriate SVG icon and class based on button text or href
           if (btn.getAttribute('href') === "./") {
-            // Home button
+            // Home button - fix to go to BASE_URL instead of chatlogs
+            btn.href = BASE_URL;
             btn.innerHTML = createSVG('home', '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline>');
             btn.classList.add('home');
           } else if (btn.textContent === "<") {
@@ -184,11 +186,11 @@
         let homeButton = document.querySelector('a.home-btn');
         if (!homeButton) {
           homeButton = document.createElement('a');
-          homeButton.href = "/";
+          homeButton.href = BASE_URL; // Fix to go to BASE_URL instead of chatlogs
           homeButton.className = 'home-btn home';
           document.body.appendChild(homeButton);
         }
-        
+
         // Default position for desktop
         setStyle(homeButton, {
           'position': 'fixed',
@@ -206,7 +208,7 @@
           'transition': 'background-color 0.15s',
           'z-index': '10000'
         });
-        
+
         // Handle tablet responsive layout for standalone home button
         const checkTabletWidthForHome = () => {
           if (window.innerWidth <= 1024) { // Tablet breakpoint
@@ -225,11 +227,11 @@
             });
           }
         };
-        
+
         // Initial check and listen for resize events
         checkTabletWidthForHome();
         window.addEventListener('resize', checkTabletWidthForHome);
-        
+
         homeButton.addEventListener('mouseenter', () => homeButton.style.setProperty('background-color', '#a9a9a9', 'important'));
         homeButton.addEventListener('mouseleave', () => homeButton.style.setProperty('background-color', '#808080', 'important'));
         homeButton.innerHTML = createSVG('home', '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline>');
@@ -240,10 +242,19 @@
       if (IS_HOME) {
         const menu = document.querySelector(".right .menu");
         if (menu) {
-          const a = document.createElement("a");
-          a.href = getCurrentChatlogsUrl();
-          a.textContent = "Chatlogs";
-          menu.appendChild(a);
+          // Check if the link already exists
+          const existingLink = Array.from(menu.querySelectorAll('a')).find(a =>
+            a.textContent === "Chatlogs" || a.href.includes("/chatlogs/"));
+
+          if (!existingLink) {
+            const a = document.createElement("a");
+            a.href = getCurrentChatlogsUrl();
+            a.textContent = "Chatlogs";
+            menu.appendChild(a);
+            console.log("Added Chatlogs link to menu");
+          }
+        } else {
+          console.log("Menu not found");
         }
       }
     };
@@ -332,10 +343,6 @@
       const style = document.createElement('style');
       style.textContent = `
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
-        html { background-color: #1e1e1e !important; }
-        body { 
-          background-color: #1e1e1e !important; 
-        }
         .time { color: #666 !important; transition: color 0.2s !important; font-size: 0.8em !important; }
         .username { }
         .info { display: flex !important; align-items: center !important; gap: 10px !important; margin-right: 10px !important; }
@@ -375,4 +382,5 @@
   }
 
   run();
+
 })();

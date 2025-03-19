@@ -288,23 +288,21 @@
     };
 
     const addChatlogsLink = () => {
-      if (IS_HOME) {
-        const menu = document.querySelector(".right .menu");
-        if (menu) {
-          // Check if the link already exists
-          const existingLink = Array.from(menu.querySelectorAll('a')).find(a =>
-            a.textContent === "Chatlogs" || a.href.includes("/chatlogs/"));
+      const menu = document.querySelector(".right .menu");
+      if (menu) {
+        // Check if the link already exists
+        const existingLink = Array.from(menu.querySelectorAll('a')).find(a =>
+          a.textContent === "Chatlogs" || a.href.includes("/chatlogs/"));
 
-          if (!existingLink) {
-            const a = document.createElement("a");
-            a.href = getCurrentChatlogsUrl();
-            a.textContent = "Chatlogs";
-            menu.appendChild(a);
-            console.log("Added Chatlogs link to menu");
-          }
-        } else {
-          console.log("Menu not found");
+        if (!existingLink) {
+          const a = document.createElement("a");
+          a.href = getCurrentChatlogsUrl();
+          a.textContent = "Chatlogs";
+          menu.appendChild(a);
+          console.log("Added Chatlogs link to menu");
         }
+      } else {
+        console.log("Menu not found");
       }
     };
 

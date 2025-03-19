@@ -31,47 +31,96 @@
       return `${CHATLOGS_URL}/${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}.html`;
     };
 
-    // Wrap URLs into anchor tags (opens in a new tab)
-    const linkify = (text, maxUrlLength = 50) => {
-      return text.replace(/(https?:\/\/[^\s]+)/g, (match) => {
-        // Preserve the full URL in the href
-        const fullUrl = match;
+    // Helper: Check if a URL is encoded
+    const isEncodedURL = url => {
+      try {
+        return decodeURIComponent(url) !== url;
+      } catch (e) {
+        return false;
+      }
+    };
 
-        // Create a display version with potential truncation
-        let displayUrl = match;
-        if (displayUrl.length > maxUrlLength) {
-          // Extract domain part
-          const urlObj = new URL(fullUrl);
-          const domain = urlObj.hostname;
+    // Helper: Decode URL safely
+    const decodeURL = url => {
+      try {
+        return decodeURIComponent(url);
+      } catch (e) {
+        return url;
+      }
+    };
 
-          // Get path portion without query parameters
-          const path = urlObj.pathname;
-
-          // Calculate how many characters we can display from the path
-          const remainingChars = maxUrlLength - domain.length - 5; // 5 for "://", "..." and some buffer
-
-          if (remainingChars > 10) {
-            // Show beginning and end of path with ellipsis in the middle
-            const firstPart = path.slice(0, remainingChars / 3);
-            const lastPart = path.slice(-remainingChars / 3);
-            displayUrl = `${urlObj.protocol}//${domain}${firstPart}...${lastPart}`;
-          } else {
-            // Just show domain with ellipsis
-            displayUrl = `${urlObj.protocol}//${domain}/...`;
-          }
-
-          // If there are query parameters, indicate this
-          if (urlObj.search) {
-            displayUrl += '?...';
-          }
+    // Helper: Shorten URL display text similar to linkify
+    const shortenUrl = (url, maxUrlLength = 50) => {
+      if (url.length <= maxUrlLength) {
+        return url;
+      }
+      try {
+        const urlObj = new URL(url);
+        const domain = urlObj.hostname;
+        const protocol = urlObj.protocol;
+        const path = urlObj.pathname;
+        // Calculate available characters after protocol and domain with some buffer for "://"
+        const remainingChars = maxUrlLength - domain.length - protocol.length - 2;
+        let displayUrl;
+        if (remainingChars > 10) {
+          // Show beginning and end of path with ellipsis in the middle
+          const partLength = Math.floor(remainingChars / 3);
+          const firstPart = path.slice(0, partLength);
+          const lastPart = path.slice(-partLength);
+          displayUrl = `${protocol}//${domain}${firstPart}...${lastPart}`;
+        } else {
+          // If not enough room, just show domain with ellipsis
+          displayUrl = `${protocol}//${domain}/...`;
         }
+        // Append indicator if there are query parameters
+        if (urlObj.search) {
+          displayUrl += '?...';
+        }
+        return displayUrl;
+      } catch (e) {
+        return url;
+      }
+    };
 
-        return `<a href="${fullUrl}" target="_blank" title="${fullUrl}">${displayUrl}</a>`;
+    const parseMessageText = text => {
+      let i = 0, urls = [];
+      // Extract URLs and replace them with placeholders
+      text = text.replace(
+        /(\b(https?|ftp):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig,
+        m => {
+          urls.push(m);
+          return `___URL${i++}___`;
+        }
+      );
+
+      // Replace emoticons wrapped in colons with an <img> tag.
+      // Use BASE_URL to build the correct image URL: BASE_URL + "/img/smilies/" + name + ".gif"
+      text = text.replace(/:(\w+):/g, (_, name) =>
+        `<img src="${BASE_URL}/img/smilies/${name}.gif" alt="${name}" class="emoji">`
+      )
+        // Retain proper emoji presentation by wrapping each emoji in a span with the "emoji-adjuster" class.
+        .replace(/(\p{Emoji_Presentation}|\p{Emoji}\uFE0F)/gu, '<span class="emoji-adjuster">$&</span>');
+
+      // Convert each URL placeholder back into a clickable anchor tag,
+      // using the decoded URL and a shortened display text for improved readability.
+      urls.forEach((url, idx) => {
+        let finalUrl = url;
+        if (isEncodedURL(url)) {
+          finalUrl = decodeURL(url);
+        }
+        const displayUrl = shortenUrl(finalUrl, 50);
+        const anchor = `<a href="${finalUrl}" target="_blank" rel="noopener noreferrer">${displayUrl}</a>`;
+        text = text.replace(`___URL${idx}___`, anchor);
       });
+
+      return text;
     };
 
     const colorizeNicknames = () => {
-      setStyle(document.body, { 'font-size': '1em', 'font-family': 'Montserrat' });
+      setStyle(document.body, {
+        'font-size': '1em',
+        'font-family': 'Montserrat, "Noto Color Emoji", sans-serif'
+      });
       const nicknameColors = {};
       document.querySelectorAll("font.mn").forEach(el => {
         const username = el.textContent.replace(/[<>]/g, '').trim(),
@@ -325,10 +374,10 @@
         }
         if (usernameEl) infoDiv.appendChild(usernameEl);
         messageItem.appendChild(infoDiv);
-        const pMessage = document.createElement('p');
-        pMessage.className = 'message';
-        pMessage.innerHTML = linkify(messageParts.join(' '));
-        messageItem.appendChild(pMessage);
+        const message = document.createElement('p');
+        message.className = 'message';
+        message.innerHTML = parseMessageText(messageParts.join(' '));
+        messageItem.appendChild(message);
         messagesWrapper.appendChild(messageItem);
       });
       // Clear container and reinsert detached navWrapper (if any)
@@ -343,6 +392,9 @@
       const style = document.createElement('style');
       style.textContent = `
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap');
+
+        .emoji-adjuster { font-size: 22px !important; }
         .time { color: #666 !important; transition: color 0.2s !important; font-size: 0.8em !important; }
         .username { }
         .info { display: flex !important; align-items: center !important; gap: 10px !important; margin-right: 10px !important; }

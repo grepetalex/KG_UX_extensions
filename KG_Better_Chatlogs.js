@@ -7,7 +7,6 @@
 // @match        *://klavogonki.ru/chatlogs/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=klavogonki.ru
 // @grant        none
-// @run-at document-start
 // ==/UserScript==
 
 (function () {

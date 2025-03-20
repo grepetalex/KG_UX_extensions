@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         KG_Better_Chatlogs
 // @namespace    https://klavogonki.ru
-// @version      1.0.7
-// @description  Restyle chatlogs: remove brackets, convert font to span.username, remove unwanted timezone elements, group messages into .message-item wrapped in .messages-wrapper, wrap links, wrap time/username in an .info container, and add smooth hover transitions with responsive design. Now with SVG navigation icons and tablet optimization.
+// @version      1.0.8
+// @description  Restyle chatlogs: remove brackets, convert font to span.username, remove unwanted timezone elements, group messages into .message-item wrapped in .chatlogs-messages-wrapper, wrap links, wrap time/username in an .info container, and add smooth hover transitions with responsive design. Now with SVG navigation icons and tablet optimization.
 // @author       Patcher
 // @match        *://klavogonki.ru/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=klavogonki.ru
@@ -343,7 +343,7 @@
       if (navWrapper) navWrapper.remove();
 
       const messagesWrapper = document.createElement('div');
-      messagesWrapper.className = 'messages-wrapper';
+      messagesWrapper.className = 'chatlogs-messages-wrapper';
       timeMarkers.forEach((current, i) => {
         const next = timeMarkers[i + 1] || null,
           messageItem = document.createElement('div');
@@ -401,47 +401,47 @@
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap');
 
-        .emoji-adjuster { font-size: 22px !important; }
+        .chatlogs-messages-wrapper .emoji-adjuster { font-size: 22px !important; }
 
-        .time {
+        .chatlogs-messages-wrapper .time {
           color: #666 !important;
           transition: color 0.2s !important;
           font-size: 0.8em !important;
           font-variant-numeric: tabular-nums !important;
         }
 
-        .info {
+        .chatlogs-messages-wrapper .info {
           display: flex !important;
           align-items: center !important;
           gap: 10px !important;
           margin-right: 10px !important;
         }
 
-        .message {
+        .chatlogs-messages-wrapper .message {
           color: #deb887 !important;
           margin: 0 !important;
         }
 
-        a { color: #82B32A !important; }
-        a:hover { color: #95cc30 !important; }
+        .chatlogs-messages-wrapper a { color: #82B32A !important; }
+        .chatlogs-messages-wrapper a:hover { color: #95cc30 !important; }
 
-        .message-item {
+        .chatlogs-messages-wrapper .message-item {
           margin-bottom: 10px !important;
           display: flex !important;
           flex-direction: row !important;
         }
 
-        .messages-wrapper {
+        .chatlogs-messages-wrapper {
           display: flex !important;
           flex-direction: column !important;
         }
 
         @media (max-width: 768px) {
-          .message-item { flex-direction: column !important; }
+          .chatlogs-messages-wrapper .message-item { flex-direction: column !important; }
         }
 
         @media (max-width: 1024px) {
-          body {
+          body .chatlogs-messages-wrapper {
             padding-bottom: 50px !important;
           }
         }

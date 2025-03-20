@@ -385,10 +385,19 @@
     };
 
     const injectCustomStyles = () => {
-      document.head.insertAdjacentHTML('beforeend', '<meta name="viewport" content="width=device-width, initial-scale=1.0">');
+      // Check and insert meta viewport if not already present.
+      if (!document.querySelector('meta[name="viewport"]')) {
+        document.head.insertAdjacentHTML(
+          'beforeend',
+          '<meta name="viewport" content="width=device-width, initial-scale=1.0">'
+        );
+      }
 
-      const style = document.createElement('style');
-      style.textContent = `
+      // Check if our custom style is already injected.
+      if (!document.getElementById('custom-chatlogs-styles')) {
+        const style = document.createElement('style');
+        style.id = 'custom-chatlogs-styles';
+        style.textContent = `
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap');
 
@@ -437,7 +446,8 @@
           }
         }
       `;
-      document.head.appendChild(style);
+        document.head.appendChild(style);
+      }
     };
 
     const enhanceChatlogs = () => {

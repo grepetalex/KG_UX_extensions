@@ -773,11 +773,28 @@
           : colors.defaultButton
       });
 
+      // Preload the image
       promises.push(new Promise(resolve => {
         const img = new Image();
         img.onload = resolve;
         img.src = imgSrc;
       }));
+
+      // Mouseover: change background to hover color
+      btn.addEventListener("mouseover", () => {
+        btn.style.background = colors.hoverButton;
+      });
+
+      // Mouseout: reset background based on state
+      btn.addEventListener("mouseout", () => {
+        if (emoticon === state.lastUsedEmoticons[state.activeCategory]) {
+          btn.style.background = colors.selectedButton;
+        } else if (state.activeCategory !== "Favourites" && isEmoticonFavorite(emoticon)) {
+          btn.style.background = colors.activeButton;
+        } else {
+          btn.style.background = colors.defaultButton;
+        }
+      });
 
       btn.addEventListener("click", (e) => {
         e.stopPropagation();

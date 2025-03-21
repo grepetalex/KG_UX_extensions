@@ -34,8 +34,8 @@
         state.lastKeyTimes[targetKey] = now;
       }
     } else {
-      // If another key is pressed, reset the timing for the target key
-      state.lastKeyTimes[targetKey] = 0;
+      // Reset the timing for the target key using dot notation
+      state.lastKeyTimes.Semicolon = 0;
     }
   }
 
@@ -425,8 +425,8 @@
         toggleEmoticonsPopup();
       });
     } else {
-      // For keys other than Semicolon, reset its double press timer
-      state.lastKeyTimes['Semicolon'] = 0;
+      // Reset the semicolon double press timer
+      state.lastKeyTimes.Semicolon = 0;
     }
   }
 

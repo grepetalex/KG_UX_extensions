@@ -454,10 +454,16 @@
     }
   }
 
-  // Core functions
   function getEmoticonCode(emoticon) {
     const { isForum } = getPageContext();
-    return isForum ? `[img]https://klavogonki.ru/img/smilies/${emoticon}.gif[/img] ` : `:${emoticon}: `;
+    // Check if there is a focused element and if it is a textarea
+    if (isForum && state.lastFocusedInput && state.lastFocusedInput.tagName.toLowerCase() === "textarea") {
+      // Use bbcode format for textarea on forum pages
+      return `[img]https://klavogonki.ru/img/smilies/${emoticon}.gif[/img] `;
+    } else {
+      // Otherwise, use the colon-based format
+      return `:${emoticon}: `;
+    }
   }
 
   function insertEmoticonCode(emoticon) {

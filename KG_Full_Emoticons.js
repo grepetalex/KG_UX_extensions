@@ -18,9 +18,26 @@
     currentSortedEmoticons: [],
     lastFocusedInput: null,
     latestCategoryRequest: null,
-    lastSemicolonTime: 0,
+    lastKeyTimes: {},
     lastUsedEmoticons: JSON.parse(localStorage.getItem("lastUsedEmoticons")) || {}
   };
+
+  // Helper function to handle double key presses
+  function handleDoubleKeyPress(e, targetKey, threshold, callback) {
+    const now = Date.now();
+    if (e.code === targetKey) {
+      if (now - (state.lastKeyTimes[targetKey] || 0) < threshold) {
+        e.preventDefault();
+        callback();
+        state.lastKeyTimes[targetKey] = 0; // Reset after triggering
+      } else {
+        state.lastKeyTimes[targetKey] = now;
+      }
+    } else {
+      // If another key is pressed, reset the timing for the target key
+      state.lastKeyTimes[targetKey] = 0;
+    }
+  }
 
   // Constants
   const UI = {
@@ -297,7 +314,7 @@
 
   // Initialize last used emoticons
   Object.keys(categories).forEach(cat => {
-    if (!state.lastUsedEmoticons.hasOwnProperty(cat) || !categories[cat].includes(state.lastUsedEmoticons[cat])) {
+    if (!Object.prototype.hasOwnProperty.call(state.lastUsedEmoticons, cat) || !categories[cat].includes(state.lastUsedEmoticons[cat])) {
       state.lastUsedEmoticons[cat] = categories[cat][0] || '';
     }
   });
@@ -388,12 +405,9 @@
       return; // Allow the paste to proceed normally
     }
 
-    // Double semicolon handler using physical key code for layout independence
+    // Use the helper function for detecting a double semicolon press
     if (e.code === 'Semicolon') {
-      const now = Date.now();
-      if (now - state.lastSemicolonTime < 500) { // 500ms threshold for double press
-        e.preventDefault();
-
+      handleDoubleKeyPress(e, 'Semicolon', 500, function () {
         // Remove duplicated trailing character from the focused text field, if available
         if (state.lastFocusedInput) {
           let value = state.lastFocusedInput.value;
@@ -408,12 +422,11 @@
           const pos = value.length;
           state.lastFocusedInput.setSelectionRange(pos, pos);
         }
-
         toggleEmoticonsPopup();
-        state.lastSemicolonTime = 0; // Reset after triggering
-      } else {
-        state.lastSemicolonTime = now;
-      }
+      });
+    } else {
+      // For keys other than Semicolon, reset its double press timer
+      state.lastKeyTimes['Semicolon'] = 0;
     }
   }
 
@@ -635,7 +648,7 @@
     });
 
     for (let cat in categories) {
-      if (categories.hasOwnProperty(cat)) {
+      if (Object.prototype.hasOwnProperty.call(categories, cat)) {
         const btn = document.createElement("button");
         btn.classList.add("category-button");
         btn.innerHTML = categoryEmojis[cat];

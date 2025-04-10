@@ -58,7 +58,12 @@
       if (videoInfo && videoInfo.youtubeMatch) {
         const metadata = await fetchYouTubeMetadata(videoInfo.videoId);
         link.classList.add('processed-youtube-link');
-        link.innerHTML = `${emojis.type} [${videoInfo.videoType}] ${emojis.channel} ${metadata.channel} - ${emojis.title} ${metadata.title}`;
+        link.innerHTML = [
+          `${emojis.youtube} YouTube`,
+          `${emojis.type} [${videoInfo.videoType}]`,
+          `${emojis.channel} ${metadata.channel}`,
+          `${emojis.title} ${metadata.title}`
+        ].join(' - ');
       } else if (videoInfo && videoInfo.youtubeMatch === false) {
         link.classList.add('processed-youtube-link'); // Mark as processed to skip in future
       }

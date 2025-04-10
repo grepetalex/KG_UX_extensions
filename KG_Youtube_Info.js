@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_Youtube_Info
 // @namespace    https://klavogonki.ru/
-// @version      2025-04-10
+// @version      0.0.1
 // @description  Set additional information about YouTube videos in the chat as Youtube channel name and video title
 // @author       Patcher
 // @match        *://klavogonki.ru/gamelist/
@@ -12,6 +12,7 @@
 (function () {
   'use strict';
 
+  // Emoji definitions for YouTube links
   const emojis = {
     youtube: '▶️',
     channel: '📺',
@@ -30,7 +31,6 @@
             url.includes('youtu.be/') ? 'Share' : 'YouTube';
       return { youtubeMatch: true, videoId, videoType };
     }
-
     return { youtubeMatch: false };
   }
 
@@ -40,42 +40,37 @@
     try {
       const response = await fetch(oembedUrl);
       const data = await response.json();
-      const title = data.title || 'Title not found';
-      const channel = data.author_name || 'Channel not found';
-      return { title, channel };
+      return {
+        title: data.title || 'Title not found',
+        channel: data.author_name || 'Channel not found'
+      };
     } catch (error) {
       console.error('Error fetching YouTube metadata:', error);
       return { title: 'Error', channel: 'Error' };
     }
   }
 
-  // Function to get chat elements
+  // Processes YouTube links in the chat messages
+  async function processYouTubeLinks(container) {
+    const links = container.querySelectorAll('a:not(.processed-youtube-link)');
+    for (const link of links) {
+      const videoInfo = getVideoInfo(link.href);
+      if (videoInfo && videoInfo.youtubeMatch) {
+        const metadata = await fetchYouTubeMetadata(videoInfo.videoId);
+        link.classList.add('processed-youtube-link');
+        link.innerHTML = `${emojis.type} [${videoInfo.videoType}] ${emojis.channel} ${metadata.channel} - ${emojis.title} ${metadata.title}`;
+      } else if (videoInfo && videoInfo.youtubeMatch === false) {
+        link.classList.add('processed-youtube-link'); // Mark as processed to skip in future
+      }
+    }
+  }
+
+  // Get chat elements from the page
   function getChatElements() {
     const messagesContainer = document.querySelector('.messages-content');
     if (!messagesContainer) return null;
     const messages = messagesContainer.querySelectorAll('p');
     return { messagesContainer, messages };
-  }
-
-  // Process YouTube links in a given container
-  async function processYouTubeLinks(container) {
-    const links = container.querySelectorAll('a:not(.processed-youtube-link)');
-    for (const link of links) {
-      const videoInfo = getVideoInfo(link.href);
-      if (!videoInfo) continue;
-
-      link.classList.add('processed-youtube-link');
-      let newContent = `${emojis.youtube} YouTube ${emojis.type} [${videoInfo.videoType}]`;
-      
-      if (videoInfo.youtubeMatch) {
-        const metadata = await fetchYouTubeMetadata(videoInfo.videoId);
-        newContent += ` ${emojis.channel} ${metadata.channel} - ${emojis.title} ${metadata.title}`;
-      } else {
-        newContent += ` ${link.innerHTML}`;
-      }
-      
-      link.innerHTML = newContent;
-    }
   }
 
   // Observe new messages and process YouTube links
@@ -84,23 +79,27 @@
     if (!chatElements) return;
 
     const { messagesContainer } = chatElements;
-    const observer = new MutationObserver(() => {
-      processYouTubeLinks(messagesContainer);
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.type === 'childList') {
+          mutation.addedNodes.forEach((node) => {
+            if (node.nodeName === 'P') { // Only process new <p> tags
+              processYouTubeLinks(node);
+            }
+          });
+        }
+      }
     });
 
-    observer.observe(messagesContainer, { childList: true, subtree: true });
+    observer.observe(messagesContainer, { childList: true, subtree: true }); // Changed subtree to true to capture nested <p> tags
   }
 
-  // Initial processing of all links
   function initialize() {
     const chatElements = getChatElements();
     if (!chatElements) return;
 
-    const { messagesContainer } = chatElements;
-    processYouTubeLinks(messagesContainer);
     observeMessages();
   }
 
-  // Start the script
   initialize();
 })();

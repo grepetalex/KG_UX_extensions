@@ -1873,6 +1873,17 @@
         border-right: 1px solid var(--middlegray) !important;
     }
 
+    .userpanel .user-block .daily-task,
+    .userpanel #change_theme,
+    .userpanel #change_theme img {
+        width: 50px !important;
+        height: 44px !important;
+    }
+
+    .userpanel #change_theme {
+        border-right: 1px solid var(--middlegray) !important;
+    }
+
     /* daily not done img */
     .userpanel .user-block .daily-task .icon[src*="active"] {
         box-sizing: border-box;

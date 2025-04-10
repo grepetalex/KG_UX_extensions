@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_Youtube_Info
 // @namespace    https://klavogonki.ru/
-// @version      0.0.1
+// @version      0.0.2
 // @description  Set additional information about YouTube videos in the chat as Youtube channel name and video title
 // @author       Patcher
 // @match        *://klavogonki.ru/gamelist/

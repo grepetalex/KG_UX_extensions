@@ -14,7 +14,6 @@
   function run() {
     const BASE_URL = location.protocol + "//klavogonki.ru",
       CHATLOGS_URL = BASE_URL + "/chatlogs",
-      IS_HOME = location.pathname === "/" || location.pathname === "",
       IS_CHAT = location.href.includes("/chatlogs/");
 
     if (IS_CHAT) {
@@ -385,11 +384,11 @@
     };
 
     const injectCustomStyles = () => {
-      // Check and insert meta viewport if not already present.
-      if (!document.querySelector('meta[name="viewport"]')) {
+      // Check and insert meta viewport if not already present, but only on chatlogs page
+      if (IS_CHAT && !document.querySelector('meta[name="viewport"]')) {
         document.head.insertAdjacentHTML(
           'beforeend',
-          '<meta name="viewport" content="width=device-width, initial-scale=1.0">'
+          '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">'
         );
       }
 

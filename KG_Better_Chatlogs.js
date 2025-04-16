@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         KG_Better_Chatlogs
 // @namespace    https://klavogonki.ru
-// @version      1.0.9
-// @description  Restyle chatlogs: remove brackets, convert font to span.username, remove unwanted timezone elements, group messages into .message-item wrapped in .chatlogs-messages-wrapper, wrap links, wrap time/username in an .info container, and add smooth hover transitions with responsive design. Now with SVG navigation icons and tablet optimization.
+// @version      1.1.0
+// @description  Restyle chatlogs: remove brackets, convert font to span.username, remove unwanted timezone elements, group messages into .message-item wrapped in .chatlogs-messages-wrapper, wrap links, wrap time/username in an .info container, add smooth hover transitions with responsive design, and filter out messages from ignored users.
 // @author       Patcher
 // @match        *://klavogonki.ru/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=klavogonki.ru
@@ -15,6 +15,20 @@
     const BASE_URL = location.protocol + "//klavogonki.ru",
       CHATLOGS_URL = BASE_URL + "/chatlogs",
       IS_CHAT = location.href.includes("/chatlogs/");
+    
+    // Get ignored users from local storage
+    const getIgnoredUsers = () => {
+      try {
+        const ignoredJSON = localStorage.getItem('ignored');
+        return ignoredJSON ? JSON.parse(ignoredJSON) : [];
+      } catch (e) {
+        console.error("Error retrieving ignored users:", e);
+        return [];
+      }
+    };
+    
+    // Get the list of ignored users once to avoid repeated localStorage access
+    const ignoredUsers = getIgnoredUsers();
 
     if (IS_CHAT) {
       // Apply the background color immediately to prevent white flash
@@ -343,10 +357,33 @@
 
       const messagesWrapper = document.createElement('div');
       messagesWrapper.className = 'chatlogs-messages-wrapper';
+      
+      // Counter to track filtered messages
+      let filteredCount = 0;
+      
       timeMarkers.forEach((current, i) => {
-        const next = timeMarkers[i + 1] || null,
-          messageItem = document.createElement('div');
+        const next = timeMarkers[i + 1] || null;
+        let usernameEl = null, username = "";
+        let messageParts = [];
+        
+        // First pass - extract username to check if it's ignored
+        for (let node = current.nextSibling; node && node !== next; node = node.nextSibling) {
+          if (node.nodeType === Node.ELEMENT_NODE && node.classList.contains('username')) {
+            username = node.textContent.trim();
+            break;
+          }
+        }
+        
+        // Check if the username is in the ignored list
+        if (ignoredUsers.includes(username)) {
+          filteredCount++;
+          return; // Skip this message
+        }
+        
+        // If not ignored, proceed with creating the message item
+        const messageItem = document.createElement('div');
         messageItem.className = 'message-item';
+        
         // Create .info container for time and username.
         const infoDiv = document.createElement('div');
         infoDiv.className = 'info';
@@ -355,7 +392,8 @@
         newTime.className = 'time';
         newTime.textContent = timeText;
         infoDiv.appendChild(newTime);
-        let usernameEl = null, messageParts = [];
+        
+        // Second pass - collect all message parts
         for (let node = current.nextSibling; node && node !== next; node = node.nextSibling) {
           if (node.nodeType === Node.ELEMENT_NODE) {
             if (node.classList.contains('username')) {
@@ -369,6 +407,7 @@
             if (txt) messageParts.push(txt);
           }
         }
+        
         if (usernameEl) infoDiv.appendChild(usernameEl);
         messageItem.appendChild(infoDiv);
         const message = document.createElement('p');
@@ -377,6 +416,12 @@
         messageItem.appendChild(message);
         messagesWrapper.appendChild(messageItem);
       });
+      
+      // Log the number of filtered messages
+      if (filteredCount > 0) {
+        console.log(`Filtered ${filteredCount} messages from ignored users`);
+      }
+      
       // Clear container and reinsert detached navWrapper (if any)
       container.innerHTML = '';
       if (navWrapper) container.appendChild(navWrapper);

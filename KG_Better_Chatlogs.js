@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_Better_Chatlogs
 // @namespace    https://klavogonki.ru
-// @version      1.1.0
+// @version      1.1.1
 // @description  Restyle chatlogs: remove brackets, convert font to span.username, remove unwanted timezone elements, group messages into .message-item wrapped in .chatlogs-messages-wrapper, wrap links, wrap time/username in an .info container, add smooth hover transitions with responsive design, and filter out messages from ignored users.
 // @author       Patcher
 // @match        *://klavogonki.ru/*
@@ -15,7 +15,7 @@
     const BASE_URL = location.protocol + "//klavogonki.ru",
       CHATLOGS_URL = BASE_URL + "/chatlogs",
       IS_CHAT = location.href.includes("/chatlogs/");
-    
+
     // Get ignored users from local storage
     const getIgnoredUsers = () => {
       try {
@@ -26,7 +26,7 @@
         return [];
       }
     };
-    
+
     // Get the list of ignored users once to avoid repeated localStorage access
     const ignoredUsers = getIgnoredUsers();
 
@@ -357,15 +357,16 @@
 
       const messagesWrapper = document.createElement('div');
       messagesWrapper.className = 'chatlogs-messages-wrapper';
-      
-      // Counter to track filtered messages
-      let filteredCount = 0;
-      
+
+      // Replace filteredCount with two counters:
+      let skippedSenderCount = 0;
+      let skippedAddressedCount = 0;
+
       timeMarkers.forEach((current, i) => {
         const next = timeMarkers[i + 1] || null;
         let usernameEl = null, username = "";
         let messageParts = [];
-        
+
         // First pass - extract username to check if it's ignored
         for (let node = current.nextSibling; node && node !== next; node = node.nextSibling) {
           if (node.nodeType === Node.ELEMENT_NODE && node.classList.contains('username')) {
@@ -373,26 +374,26 @@
             break;
           }
         }
-        
-        // Check if the username is in the ignored list
+
+        // Skip if the sender is ignored
         if (ignoredUsers.includes(username)) {
-          filteredCount++;
-          return; // Skip this message
+          skippedSenderCount++;
+          return;
         }
-        
-        // If not ignored, proceed with creating the message item
+
+        // Create the container for this message
         const messageItem = document.createElement('div');
         messageItem.className = 'message-item';
-        
-        // Create .info container for time and username.
+
+        // Build the .info (time + username)
         const infoDiv = document.createElement('div');
         infoDiv.className = 'info';
-        const timeText = current.textContent.replace(/[\[\]]/g, '').trim(),
-          newTime = document.createElement('time');
+        const timeText = current.textContent.replace(/[\[\]]/g, '').trim();
+        const newTime = document.createElement('time');
         newTime.className = 'time';
         newTime.textContent = timeText;
         infoDiv.appendChild(newTime);
-        
+
         // Second pass - collect all message parts
         for (let node = current.nextSibling; node && node !== next; node = node.nextSibling) {
           if (node.nodeType === Node.ELEMENT_NODE) {
@@ -407,21 +408,35 @@
             if (txt) messageParts.push(txt);
           }
         }
-        
+
+        // If the text starts with "IgnoredUser," drop it
+        const fullText = messageParts.join(' ');
+        const addressMatch = /^([^,\s]+),/.exec(fullText);
+        if (addressMatch && ignoredUsers.includes(addressMatch[1])) {
+          skippedAddressedCount++;
+          return;
+        }
+
+        // Append username if present
         if (usernameEl) infoDiv.appendChild(usernameEl);
         messageItem.appendChild(infoDiv);
+
         const message = document.createElement('p');
         message.className = 'message';
-        message.innerHTML = parseMessageText(messageParts.join(' '));
+        message.innerHTML = parseMessageText(fullText);
         messageItem.appendChild(message);
+
         messagesWrapper.appendChild(messageItem);
       });
-      
-      // Log the number of filtered messages
-      if (filteredCount > 0) {
-        console.log(`Filtered ${filteredCount} messages from ignored users`);
+
+      // New logging:
+      if (skippedSenderCount > 0) {
+        console.log(`Skipped ${skippedSenderCount} messages from ignored users`);
       }
-      
+      if (skippedAddressedCount > 0) {
+        console.log(`Skipped ${skippedAddressedCount} addressed messages to ignored users`);
+      }
+
       // Clear container and reinsert detached navWrapper (if any)
       container.innerHTML = '';
       if (navWrapper) container.appendChild(navWrapper);

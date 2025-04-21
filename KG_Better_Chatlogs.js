@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_Better_Chatlogs
 // @namespace    https://klavogonki.ru
-// @version      1.1.1
+// @version      1.1.2
 // @description  Restyle chatlogs: remove brackets, convert font to span.username, remove unwanted timezone elements, group messages into .message-item wrapped in .chatlogs-messages-wrapper, wrap links, wrap time/username in an .info container, add smooth hover transitions with responsive design, and filter out messages from ignored users.
 // @author       Patcher
 // @match        *://klavogonki.ru/*
@@ -477,7 +477,7 @@
         }
 
         .chatlogs-messages-wrapper .message {
-          color: #deb887 !important;
+          color: #cdb398 !important;
           margin: 0 !important;
         }
 

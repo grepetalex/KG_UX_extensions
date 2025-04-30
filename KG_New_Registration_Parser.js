@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_New_Registration_Parser
 // @namespace    http://tampermonkey.net/
-// @version      1.0.1 
+// @version      1.0.2 
 // @description  Let's have a look at this sun of a beach
 // @author       Patcher
 // @match        *://klavogonki.ru/gamelist/
@@ -75,7 +75,7 @@ const loadProfileIntoIframe = (url) => {
   profileIframe.style.opacity = '0'; // Initially hidden
   profileIframe.style.transition = 'opacity 0.3s ease-in-out'; // Smooth transition for visibility
   profileIframe.style.setProperty('box-shadow', '0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)', 'important');
-  profileIframe.style.setProperty('border-radius', '0.6em', 'important');
+  profileIframe.style.setProperty('border-radius', '0.4em', 'important');
 
   document.body.appendChild(profileIframe);
 
@@ -367,7 +367,7 @@ function createUserProfileContainer(userData) {
     userProfileWrapper.style.overflowX = 'hidden';
 
     // Apply border-radius with !important using setProperty
-    userProfileWrapper.style.setProperty('border-radius', '8px', 'important');
+    userProfileWrapper.style.setProperty('border-radius', '0.4em', 'important');
 
     // Append the wrapper to the document body
     document.body.appendChild(userProfileWrapper);
@@ -473,8 +473,8 @@ function createUserProfileContainer(userData) {
 
     // Add mouseover event for scaling and border-radius
     avatarElement.addEventListener('mouseover', () => {
-      avatarElement.style.transform = 'scale(5)'; // Scale to 5x size
-      avatarElement.style.setProperty('border-radius', '4px', 'important'); // Apply border-radius 4px with !important
+      avatarElement.style.transform = 'scale(4)';
+      avatarElement.style.setProperty('border-radius', '2px', 'important'); // Apply border-radius 4px with !important
       avatarElement.style.zIndex = '10';
     });
 
@@ -581,6 +581,7 @@ function createInputContainer(parentContainer, targetContainer) {
   startIdInput.style.marginRight = '10px';
   startIdInput.style.border = 'none';
   startIdInput.style.padding = '8px';
+  startIdInput.style.setProperty('border-radius', '0.4em', 'important');
   startIdInput.style.flex = '1';
   startIdInput.style.boxSizing = 'border-box';
   inputContainer.appendChild(startIdInput);
@@ -589,6 +590,7 @@ function createInputContainer(parentContainer, targetContainer) {
   const parseButton = document.createElement('button');
   parseButton.textContent = 'Parse';
   parseButton.style.padding = '10px 20px';
+  parseButton.style.setProperty('border-radius', '0.4em', 'important');
   parseButton.style.marginRight = '10px';
   parseButton.style.border = 'none';
   parseButton.style.backgroundColor = '#4CAF50';
@@ -603,6 +605,7 @@ function createInputContainer(parentContainer, targetContainer) {
   const stopButton = document.createElement('button');
   stopButton.textContent = 'Abort';
   stopButton.style.padding = '10px 20px';
+  stopButton.style.setProperty('border-radius', '0.4em', 'important');
   stopButton.style.border = 'none';
   stopButton.style.backgroundColor = '#d55555';
   stopButton.style.color = '#1b1b1b';

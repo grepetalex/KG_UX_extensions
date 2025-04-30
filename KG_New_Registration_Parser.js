@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_New_Registration_Parser
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0 
+// @version      1.0.1 
 // @description  Let's have a look at this sun of a beach
 // @author       Patcher
 // @match        *://klavogonki.ru/gamelist/
@@ -72,13 +72,23 @@ const loadProfileIntoIframe = (url) => {
   profileIframe.style.top = '48.5vh';
   profileIframe.style.left = '50vw';
   profileIframe.style.transform = 'translate(-50%, -50%)';
+  profileIframe.style.opacity = '0'; // Initially hidden
+  profileIframe.style.transition = 'opacity 0.3s ease-in-out'; // Smooth transition for visibility
   profileIframe.style.setProperty('box-shadow', '0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)', 'important');
   profileIframe.style.setProperty('border-radius', '0.6em', 'important');
 
   document.body.appendChild(profileIframe);
 
+  // Make the iframe visible after appending it to the DOM
+  requestAnimationFrame(() => {
+    profileIframe.style.opacity = '1';
+  });
+
   const removeIframe = () => {
-    profileIframe.remove();
+    profileIframe.style.opacity = '0'; // Fade out before removal
+    profileIframe.addEventListener('transitionend', () => {
+      profileIframe.remove();
+    }, { once: true });
     document.removeEventListener('keydown', handleEvents);
     document.removeEventListener('mousedown', handleEvents);
   };
@@ -205,16 +215,15 @@ function copyContainerText(container) {
 }
 
 async function parseUserRegistrations(startId) {
-  // Reset the stopParsing before starting the parsing process
+  const MAX_NON_EXISTING_TRIES = 100; // Maximum number of non-existing user tries
+  let nonExistingTries = 0; // Counter for non-existing user tries
+
   stopParsing = false;
-  // If startId is not provided, check the saved lastParsedId in localStorage
   const savedData = getUserRegistrationsData();
   if (!startId) {
-    const lastParsedId = getLastParsedId(); // Get the last parsed ID from localStorage
-
-    // If lastParsedId exists, start from it; otherwise, start from the last ID + 1
+    const lastParsedId = getLastParsedId();
     if (lastParsedId) {
-      startId = Number(lastParsedId) + 1; // Start from the next ID after the last parsed one
+      startId = Number(lastParsedId) + 1;
     } else if (savedData.length === 0) {
       while (true) {
         const input = prompt("Enter the starting user ID:");
@@ -229,31 +238,28 @@ async function parseUserRegistrations(startId) {
         alert("Please enter a valid number greater than or equal to 1.");
       }
     } else {
-      startId = Number(savedData[savedData.length - 1].id) + 1; // Start from the last ID + 1
+      startId = Number(savedData[savedData.length - 1].id) + 1;
     }
   }
 
   console.log(`Starting to parse from user ID: ${startId}`);
 
-  // Get saved data and IDs already processed
-  const processedIds = new Set(savedData.map(item => item.id)); // Using ID to ensure unique entries
+  const processedIds = new Set(savedData.map(item => item.id));
 
-  // Check if the starting ID already exists in localStorage, if so stop the process
   if (processedIds.has(startId)) {
     console.log(`User ID ${startId} already exists in localStorage, stopping the parsing process.`);
-    return; // Stop the process immediately if startId exists
+    return;
   }
 
   let currentId = startId;
+  let latestSuccessfulId = null; // Track the latest successful user ID
 
   while (true) {
-    // Check if the current ID already exists in localStorage, if so stop the process
     if (processedIds.has(currentId)) {
       console.log(`User ID ${currentId} already exists in localStorage, stopping the parsing process.`);
-      break; // Stop the process completely
+      break;
     }
 
-    // Check if stopParsing is set to true
     if (stopParsing) {
       console.log('Parsing process stopped by user.');
       break;
@@ -279,49 +285,39 @@ async function parseUserRegistrations(startId) {
 
       const userData = { id: currentId, login, rank, registeredDate, avatar, avatarTimestamp };
 
-      // Add user data to localStorage only if not already present
       savedData.push(userData);
-
-      // Call the function to create the profile container when valid user data is available
       createUserProfileContainer(userData);
 
-      // Add highlight animation to the registered item if not manual parsing and not the first page load
       if (!manualParsing && !firstPageLoad) {
-        // Get the last registered-item inside registered-data container
         const registeredItem = document.getElementById('registered-data').lastChild;
         addHighlightAnimation(registeredItem);
       }
 
-      // Update processedIds after adding new data to avoid duplicate entries in the future
       processedIds.add(currentId);
+      latestSuccessfulId = currentId; // Update the latest successful user ID
 
-      // Increment the ID by 1 after a successful fetch (ensure it's an integer)
-      currentId = Number(currentId) + 1; // Ensure currentId is treated as a number
+      nonExistingTries = 0; // Reset the counter on successful fetch
+      currentId = Number(currentId) + 1;
     } catch (error) {
       console.log(`Failed to fetch data for ID ${currentId}:`, error.message);
-      if (!manualParsing) {
-        console.log(`Stopping the automatic parsing process due to an error.`);
+      nonExistingTries++;
+
+      if (nonExistingTries >= MAX_NON_EXISTING_TRIES) {
+        console.log(`Reached maximum non-existing user tries (${MAX_NON_EXISTING_TRIES}). Stopping the parsing process.`);
         break;
-      } else {
-        console.log(`Continuing to fetch data for ID ${currentId + 1}.`);
-        currentId = Number(currentId) + 1; // Increment the ID by 1 and continue
       }
+
+      currentId = Number(currentId) + 1;
     }
   }
 
-  // Sort saved data by ID in ascending order after the process is complete
   savedData.sort((a, b) => a.id - b.id);
-
-  // Update localStorage with sorted data
   saveUserRegistrationsData(savedData);
 
-  // Update the lastParsedId key in localStorage with the ID of the last processed user if not manual parsing
-  if (!manualParsing) {
-    saveLastParsedId(currentId - 1); // Save the ID of the last processed user
+  if (latestSuccessfulId !== null && !manualParsing) {
+    saveLastParsedId(latestSuccessfulId); // Save only the latest successful user ID
   }
   console.log(`Parsing process completed.`);
-
-  // Set firstPageLoad to false after the initial parsing process is completed
   firstPageLoad = false;
 }
 

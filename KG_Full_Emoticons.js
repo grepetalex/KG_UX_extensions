@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_Full_Emoticons
 // @namespace    http://klavogonki.ru/
-// @version      1.5
+// @version      1.6
 // @description  Display a popup panel with every available emoticon on the site, remembering the last selected emoticon per category by name.
 // @match        *://klavogonki.ru/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=klavogonki.ru
@@ -35,7 +35,8 @@
       }
     } else {
       // Reset the timing for the target key using dot notation
-      state.lastKeyTimes.Semicolon = 0;
+      // state.lastKeyTimes.Semicolon = 0;
+      state.lastKeyTimes[targetKey] = 0;
     }
   }
 
@@ -405,9 +406,9 @@
       return; // Allow the paste to proceed normally
     }
 
-    // Use the helper function for detecting a double semicolon press
-    if (e.code === 'Semicolon') {
-      handleDoubleKeyPress(e, 'Semicolon', 500, function () {
+    // Use the helper function for detecting a double [targetKey] press
+    if (e.code === 'KeyQ') {
+      handleDoubleKeyPress(e, 'KeyQ', 500, function () {
         // Remove duplicated trailing character from the focused text field, if available
         if (state.lastFocusedInput) {
           let value = state.lastFocusedInput.value;
@@ -425,8 +426,8 @@
         toggleEmoticonsPopup();
       });
     } else {
-      // Reset the semicolon double press timer
-      state.lastKeyTimes.Semicolon = 0;
+      // Reset the [targetKey] double‑press timer
+      state.lastKeyTimes['KeyQ'] = 0;
     }
   }
 

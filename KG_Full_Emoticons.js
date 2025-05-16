@@ -562,7 +562,7 @@
       left: "50vw",
       transform: "translateX(-50%)",
       maxWidth: "50vw",
-      minWidth: "630px",
+      minWidth: "300px",
       width: "50vw",
       maxHeight: "50vh",
       overflow: "hidden"

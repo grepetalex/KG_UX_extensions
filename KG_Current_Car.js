@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_User_Car
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
+// @version      1.0.1
 // @description  Display latest selected car preview everywhere; update storage only on own profile and auto-sync on background and class changes
 // @author       Patcher
 // @include      http://klavogonki.ru/*
@@ -10,12 +10,12 @@
 // @grant        none
 // ==/UserScript==
 
-(function() {
+(function () {
   'use strict';
 
-  const STORAGE_HTML_KEY   = 'KGUserCarHTML';
-  const CONTAINER_ID       = 'car-container';
-  const PREVIEW_ID         = 'car-preview';
+  const STORAGE_HTML_KEY = 'KGUserCarHTML';
+  const CONTAINER_ID = 'car-container';
+  const PREVIEW_ID = 'car-preview';
 
   /**
    * Render or update the outer container and inner preview.
@@ -28,17 +28,27 @@
       outer.id = CONTAINER_ID;
       Object.assign(outer.style, {
         position: 'fixed',
-        top: '160px',
-        right: '20px',
+        top: '125px',
+        right: '25px',
         padding: '1em',
-        borderRadius: '0.5em',
-        background: '#fff',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-        boxSizing: 'border-box',
-        zIndex: '9999'
+        boxSizing: 'border-box'
       });
       document.documentElement.appendChild(outer);
     }
+
+    // Get background color and set adaptive border using color-mix
+    const bgColor = getComputedStyle(document.body).backgroundColor;
+
+    const [r, g, b] = bgColor.match(/\d+/g).map(Number);
+    const l = (Math.max(r, g, b) + Math.min(r, g, b)) / 2;
+    const borderColor = l > 127 ? '#e6e6e6' : '#2f2f2f';
+
+    // Use color-mix to darken or lighten the background color for the border
+    outer.style.setProperty('border', `2px solid ${borderColor}`, 'important');
+    outer.style.setProperty('border-radius', '0.5em', 'important');
+    outer.style.setProperty('box-shadow', `rgba(0, 0, 0, 0.4) 0px 1px 6px`, 'important');
+    outer.style.backgroundColor = bgColor;
+
     let preview = document.getElementById(PREVIEW_ID);
     if (!preview) {
       preview = document.createElement('div');

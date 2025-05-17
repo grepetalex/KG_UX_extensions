@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         KG_User_Car
 // @namespace    http://tampermonkey.net/
-// @version      1.0.2
-// @description  Display latest selected car preview everywhere; update storage only on own profile and auto-sync on background and class changes
+// @version      1.0.3
+// @description  Display latest selected car preview everywhere with draggable container; update storage only on own profile and auto-sync on background and class changes
 // @author       Patcher
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=klavogonki.ru
 // @include      *://klavogonki.ru/*
@@ -16,6 +16,84 @@
   const STORAGE_HTML_KEY = 'KGUserCarHTML';
   const CONTAINER_ID = 'car-container';
   const PREVIEW_ID = 'car-preview';
+  const POSITION_STORAGE_KEY = 'KGUserCarPosition';
+
+  // Default position
+  const DEFAULT_POSITION = { top: '50px', right: '5px' };
+
+  /**
+   * Load saved position or use default
+   */
+  function getStoredPosition() {
+    const stored = localStorage.getItem(POSITION_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : DEFAULT_POSITION;
+  }
+
+  /**
+   * Save position to localStorage
+   */
+  function savePosition(position) {
+    localStorage.setItem(POSITION_STORAGE_KEY, JSON.stringify(position));
+  }
+
+  /**
+   * Make element draggable
+   */
+  function makeDraggable(element) {
+    let isDragging = false;
+    let offsetX, offsetY;
+
+    // Add cursor style to indicate draggable
+    element.style.cursor = 'move';
+
+    element.addEventListener('mousedown', function(e) {
+      // Only handle left click
+      if (e.button !== 0) return;
+      
+      isDragging = true;
+      const rect = element.getBoundingClientRect();
+      
+      // Calculate offset from click position to element edges
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+      
+      // Prevent text selection during drag
+      e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', function(e) {
+      if (!isDragging) return;
+      
+      // Calculate new position
+      const x = e.clientX - offsetX;
+      const y = e.clientY - offsetY;
+      
+      // Set position with fixed positioning
+      element.style.left = x + 'px';
+      element.style.right = 'auto';
+      element.style.top = y + 'px';
+      
+      // Ensure container stays visible
+      if (parseInt(element.style.left) < 0) element.style.left = '0px';
+      if (parseInt(element.style.top) < 0) element.style.top = '0px';
+      if (parseInt(element.style.left) > window.innerWidth - 50) element.style.left = (window.innerWidth - 50) + 'px';
+      if (parseInt(element.style.top) > window.innerHeight - 50) element.style.top = (window.innerHeight - 50) + 'px';
+    });
+
+    document.addEventListener('mouseup', function() {
+      if (!isDragging) return;
+      
+      isDragging = false;
+      
+      // Save the new position
+      const position = {
+        top: element.style.top,
+        left: element.style.left,
+        right: 'auto'
+      };
+      savePosition(position);
+    });
+  }
 
   /**
    * Render or update the outer container and inner preview.
@@ -23,17 +101,23 @@
    */
   function renderPreviewClone(clone) {
     let outer = document.getElementById(CONTAINER_ID);
+    const position = getStoredPosition();
+    
     if (!outer) {
       outer = document.createElement('div');
       outer.id = CONTAINER_ID;
+      
+      // Apply position from storage or default
       Object.assign(outer.style, {
         position: 'fixed',
-        top: '50px',
-        right: '5px',
         padding: '1em',
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
+        zIndex: '9999',
+        ...position
       });
+      
       document.documentElement.appendChild(outer);
+      makeDraggable(outer);
     }
 
     // Get background color and set adaptive border using color-mix

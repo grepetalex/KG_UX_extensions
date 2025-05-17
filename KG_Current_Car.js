@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         KG_User_Car
 // @namespace    http://tampermonkey.net/
-// @version      1.0.1
+// @version      1.0.2
 // @description  Display latest selected car preview everywhere; update storage only on own profile and auto-sync on background and class changes
 // @author       Patcher
-// @include      http://klavogonki.ru/*
-// @include      https://klavogonki.ru/*
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=klavogonki.ru
+// @include      *://klavogonki.ru/*
 // @run-at       document-start
 // @grant        none
 // ==/UserScript==
@@ -28,8 +28,8 @@
       outer.id = CONTAINER_ID;
       Object.assign(outer.style, {
         position: 'fixed',
-        top: '125px',
-        right: '25px',
+        top: '50px',
+        right: '5px',
         padding: '1em',
         boxSizing: 'border-box'
       });

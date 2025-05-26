@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_Wide_Typeblock
 // @namespace    http://tampermonkey.net/
-// @version      1.0.7 
+// @version      1.0.8 
 // @description  try to take over the world!
 // @author       Patcher
 // @match        *://klavogonki.ru/g/?gmid=*
@@ -172,6 +172,12 @@
 
       #typetext {
           color: #a2aebb !important;
+      }
+        
+      #typetext img {
+          width: 100% !important;
+          height: auto !important;
+          border-radius: 14px !important;
       }
 
       #typetext #typefocus {

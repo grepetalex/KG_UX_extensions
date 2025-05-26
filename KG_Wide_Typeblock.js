@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_Wide_Typeblock
 // @namespace    http://tampermonkey.net/
-// @version      1.0.5 
+// @version      1.0.6 
 // @description  try to take over the world!
 // @author       Patcher
 // @match        *://klavogonki.ru/g/?gmid=*
@@ -248,12 +248,6 @@
       return;
     }
 
-    // Permanently disconnect observer once we're applying styles
-    if (observer) {
-      observer.disconnect();
-      observer = null;
-    }
-
     hasAppliedOnce = true;
 
     // Create dimming background first
@@ -302,19 +296,12 @@
 
   // Create mutation observer to watch for changes
   function createObserver() {
-    if (hasAppliedOnce) {
-      return;
-    }
-
-    observer = new MutationObserver(function () {
-      // Only check if we haven't applied styles yet
-      if (!isWideMode && !hasAppliedOnce && checkTypeblockVisibility()) {
-        if (!isExiting) {
-          applyWideStyles();
-        }
-      }
+    if (hasAppliedOnce) return;
+    observer = new MutationObserver(() => {
+      if (!isWideMode && !hasAppliedOnce && checkTypeblockVisibility() && !isExiting) applyWideStyles();
+      const bookInfo = document.getElementById('bookinfo');
+      if (bookInfo && isWideMode && bookInfo.style.display === '') exitWideMode();
     });
-
     return observer;
   }
 

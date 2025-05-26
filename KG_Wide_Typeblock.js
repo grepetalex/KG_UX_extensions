@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_Wide_Typeblock
 // @namespace    http://tampermonkey.net/
-// @version      1.0.4 
+// @version      1.0.5 
 // @description  try to take over the world!
 // @author       Patcher
 // @match        *://klavogonki.ru/g/?gmid=*
@@ -13,12 +13,12 @@
   'use strict';
 
   let isWideMode = false;
-  
+
   // Load settings from localStorage
-  let settings = localStorage.getItem('kg-wide-settings') 
-    ? JSON.parse(localStorage.getItem('kg-wide-settings')) 
+  let settings = localStorage.getItem('kg-wide-settings')
+    ? JSON.parse(localStorage.getItem('kg-wide-settings'))
     : { dimmingLevel: 50, mainBlockWidth: 90 };
-  
+
   let isDragging = false;
   let startY = 0;
   let startX = 0;
@@ -65,7 +65,7 @@
         const deltaX = e.clientX - startX; // Right = increase, left = decrease
         const sensitivity = 0.5; // Adjust sensitivity for dimming
         const widthSensitivity = 0.1; // Adjust sensitivity for width
-        
+
         let newDimming = startDimming + (deltaY * sensitivity);
         let newWidth = startWidth + (deltaX * widthSensitivity);
 
@@ -81,13 +81,13 @@
         const absX = Math.abs(deltaX);
         const absY = Math.abs(deltaY);
         let cursor = 'move';
-        
+
         if (absX > absY) {
           cursor = 'ew-resize'; // Horizontal resize
         } else if (absY > absX) {
           cursor = 'ns-resize'; // Vertical resize
         }
-        
+
         dimmingBg.style.cursor = cursor + ' !important';
 
         // Update the CSS
@@ -178,6 +178,7 @@
           padding: 0.2em 0.5em !important;
           border-radius: 0.2em !important;
           outline: none !important;
+          margin-top: 22px !important;
       }
 
       #main-block .handle,
@@ -261,17 +262,18 @@
     // Add all styles inside a style element with class name
     styleElement = document.createElement('style');
     styleElement.className = 'kg-wide-mode-styles';
-    
+
     // Initial styles update
     updateStyles();
 
     document.head.appendChild(styleElement);
-    
+
     // Set color/background-color directly on elements
     if (typeblock) typeblock.style.backgroundColor = '#222222';
     if (inputtext) {
       inputtext.style.setProperty('background-color', '#444444', 'important');
       inputtext.style.setProperty('color', '#b8c0ca', 'important');
+      observeInput();
     }
     isWideMode = true;
   }
@@ -335,6 +337,29 @@
     if (checkTypeblockVisibility()) {
       applyWideStyles();
     }
+  }
+
+  // Single compact MutationObserver for #inputtext .error/.disabled color
+  let inputObserver;
+  function observeInput() {
+    if (inputObserver) return;
+    const el = document.getElementById('inputtext');
+    if (!el) return;
+    const setColor = () => {
+      if (el.classList.contains('disabled')) {
+        el.style.setProperty('color', '#333333', 'important');
+        el.style.setProperty('background-color', '#131313', 'important');
+      } else if (el.classList.contains('error')) {
+        el.style.setProperty('color', '#111111', 'important');
+        el.style.setProperty('background-color', '#dc143c', 'important');
+      } else {
+        el.style.setProperty('color', '#b8c0ca', 'important');
+        el.style.setProperty('background-color', '#444444', 'important');
+      }
+    };
+    setColor();
+    inputObserver = new MutationObserver(setColor);
+    inputObserver.observe(el, { attributes: true, attributeFilter: ['class'] });
   }
 
   // Initialize the script immediately

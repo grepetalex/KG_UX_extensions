@@ -178,7 +178,7 @@
           width: 100% !important;
           height: auto !important;
           border-radius: 14px !important;
-          filter: invert(0.9) brightness(0.83) sepia(1) hue-rotate(200deg) saturate(0.4) !important;
+          filter: invert(93.3%) grayscale(1) !important;
       }
 
       #typetext #typefocus {

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_Wide_Typeblock
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0 
+// @version      1.0.2 
 // @description  try to take over the world!
 // @author       Patcher
 // @match        *://klavogonki.ru/g/?gmid=*
@@ -19,53 +19,15 @@
   let startDimming = 0;
   let dimmingBg = null;
   let styleElement = null;
-  let originalStyles = new Map();
-
-  function savePreviousStyles() {
-    const mainBlock = document.getElementById('main-block');
-
-    if (mainBlock) {
-      originalStyles.set('main-block', {
-        position: mainBlock.style.position,
-        width: mainBlock.style.width,
-        left: mainBlock.style.left,
-        top: mainBlock.style.top,
-        transform: mainBlock.style.transform,
-        zIndex: mainBlock.style.zIndex
-      });
-    }
-  }
-
-  function restoreOriginalStyles() {
-    const mainBlock = document.getElementById('main-block');
-    
-    if (mainBlock && originalStyles.has('main-block')) {
-      const styles = originalStyles.get('main-block');
-      Object.assign(mainBlock.style, styles);
-    }
-
-    // Show handle elements again
-    const handleElements = document.querySelectorAll('.handle');
-    handleElements.forEach(el => {
-      el.style.display = '';
-    });
-  }
+  let isExiting = false; // Flag to prevent automatic re-application during exit
+  let observer = null; // Store observer reference
+  let hasAppliedOnce = false; // Flag to track if styles have been applied once
 
   function createDimmingBackground() {
     dimmingBg = document.createElement('div');
     dimmingBg.id = 'kg-dimming-background';
-    dimmingBg.title = 'Для выхода: ESC или двойной клик. Для настройки затемнения: зажмите и тяните вверх/вниз.';
-    dimmingBg.style.cssText = `
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        background-color: rgba(0, 0, 0, ${dimmingLevel / 100}) !important;
-        z-index: 1999 !important;
-        cursor: ns-resize !important;
-        user-select: none !important;
-    `;
+    dimmingBg.title = `Для выхода: ESC или двойной клик (ЛКМ).
+Для настройки затемнения: зажмите (ЛКМ) и тяните вверх/вниз.`;
 
     // Double click to exit
     dimmingBg.addEventListener('dblclick', (e) => {
@@ -79,7 +41,6 @@
         isDragging = true;
         startY = e.clientY;
         startDimming = dimmingLevel;
-        dimmingBg.style.cursor = 'ns-resize';
         e.preventDefault();
       }
     });
@@ -94,7 +55,14 @@
         newDimming = Math.max(0, Math.min(100, newDimming));
         dimmingLevel = newDimming;
 
-        dimmingBg.style.backgroundColor = `rgba(0, 0, 0, ${dimmingLevel / 100})`;
+        // Update the CSS custom property for dimming
+        const customStyle = document.querySelector('style.kg-wide-mode-styles');
+        if (customStyle) {
+          customStyle.textContent = customStyle.textContent.replace(
+            /rgba\(0, 0, 0, [0-9.]+\)/,
+            `rgba(0, 0, 0, ${dimmingLevel / 100})`
+          );
+        }
 
         // Save to localStorage
         localStorage.setItem('kg-dimming-level', Math.round(dimmingLevel));
@@ -106,7 +74,6 @@
     document.addEventListener('mouseup', (e) => {
       if (isDragging && e.button === 0) {
         isDragging = false;
-        dimmingBg.style.cursor = 'ns-resize';
       }
     });
 
@@ -117,52 +84,83 @@
   function exitWideMode() {
     if (!isWideMode) return;
 
+    isExiting = true; // Set flag to prevent re-application
+
     // Remove dimming background
     if (dimmingBg && dimmingBg.parentNode) {
       dimmingBg.parentNode.removeChild(dimmingBg);
       dimmingBg = null;
     }
 
-    // Remove custom styles
-    if (styleElement && styleElement.parentNode) {
-      styleElement.parentNode.removeChild(styleElement);
+    // Remove style element directly
+    if (styleElement) {
+      if (styleElement.parentNode) {
+        styleElement.parentNode.removeChild(styleElement);
+      }
       styleElement = null;
     }
 
-    // Restore original styles
-    restoreOriginalStyles();
+    // Remove direct styles from elements
+    const typeblock = document.getElementById('typeblock');
+    const inputtext = document.getElementById('inputtext');
+    if (typeblock) typeblock.style.backgroundColor = '';
+    if (inputtext) {
+      inputtext.style.setProperty('background-color', '', 'important');
+      inputtext.style.setProperty('color', '', 'important');
+    }
+
+    // Also try to remove by class name as fallback
+    const fallbackStyle = document.querySelector('style.kg-wide-mode-styles');
+    if (fallbackStyle) {
+      fallbackStyle.remove();
+    }
 
     isWideMode = false;
-    console.log('KG_Wide: Wide mode exited');
+
+    // Clear the exit flag after a short delay to allow DOM to settle
+    setTimeout(() => {
+      isExiting = false;
+    }, 100);
   }
 
   function applyWideStyles() {
-    if (isWideMode) return;
+    if (isWideMode || hasAppliedOnce) return;
 
     const mainBlock = document.getElementById('main-block');
     const typeblock = document.getElementById('typeblock');
     const inputtext = document.getElementById('inputtext');
 
     if (!mainBlock || !typeblock || !inputtext) {
-      console.log('KG_Wide: Required elements not found');
       return;
     }
 
-    // Save current styles before modifying
-    savePreviousStyles();
+    // Permanently disconnect observer once we're applying styles
+    if (observer) {
+      observer.disconnect();
+      observer = null;
+    }
+
+    hasAppliedOnce = true;
 
     // Create dimming background first
     createDimmingBackground();
 
-    // Hide elements with class "handle"
-    const handleElements = mainBlock.querySelectorAll('.handle');
-    handleElements.forEach(el => {
-      el.style.display = 'none !important';
-    });
-
-    // Add !important styles via CSS
+    // Add all styles inside a style element with class name
     styleElement = document.createElement('style');
+    styleElement.className = 'kg-wide-mode-styles';
     styleElement.textContent = `
+      #kg-dimming-background {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        background-color: rgba(0, 0, 0, ${dimmingLevel / 100}) !important;
+        z-index: 1999 !important;
+        cursor: ns-resize !important;
+        user-select: none !important;
+      }
+
       #main-block {
           position: absolute !important;
           width: 90vw !important;
@@ -177,8 +175,8 @@
           border: 2px solid rgba(0,0,0,0.3) !important;
           border-radius: 18px !important;
           background-color: #222222 !important;
+          box-shadow: 0 0 5px rgba(0,0,0,0.4) !important;
       }
-
 
       #typeblock #param_keyboard {
         border-bottom: none !important;
@@ -207,9 +205,7 @@
           transform: translateX(-50%) !important;
           position: relative !important;
           box-shadow: none !important;
-          color: #b8c0ca !important;
           border: none !important;
-          background: #444444 !important;
           padding: 0.2em 0.5em !important;
           border-radius: 0.2em !important;
           outline: none !important;
@@ -229,18 +225,23 @@
   `;
 
     document.head.appendChild(styleElement);
-
+    // Set color/background-color directly on elements
+    if (typeblock) typeblock.style.backgroundColor = '#222222';
+    if (inputtext) {
+      inputtext.style.setProperty('background-color', '#444444', 'important');
+      inputtext.style.setProperty('color', '#b8c0ca', 'important');
+    }
     isWideMode = true;
-    console.log('KG_Wide: Wide mode applied successfully');
   }
 
-  // ESC key handler
+  // ESC key handler - Enhanced to work globally
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && isWideMode) {
       exitWideMode();
       e.preventDefault();
+      e.stopPropagation();
     }
-  });
+  }, true); // Use capture phase to ensure it works
 
   function checkTypeblockVisibility() {
     const typetext = document.getElementById('typetext');
@@ -256,56 +257,45 @@
   }
 
   // Create mutation observer to watch for changes
-  const observer = new MutationObserver(function (mutations) {
-    mutations.forEach(function (mutation) {
-      // Check if typetext becomes visible
-      if (checkTypeblockVisibility() && !isWideMode) {
-        console.log('KG_Wide: Typetext is now visible, applying wide styles');
-        applyWideStyles();
+  function createObserver() {
+    if (hasAppliedOnce) {
+      return;
+    }
+
+    observer = new MutationObserver(function () {
+      // Only check if we haven't applied styles yet
+      if (!isWideMode && !hasAppliedOnce && checkTypeblockVisibility()) {
+        if (!isExiting) {
+          applyWideStyles();
+        }
       }
     });
-  });
+
+    return observer;
+  }
 
   // Start observing immediately
   function startObserver() {
-    const targetNode = document.body || document.documentElement;
+    if (hasAppliedOnce) return;
 
-    observer.observe(targetNode, {
+    const targetNode = document.body || document.documentElement;
+    const obs = createObserver();
+    if (!obs) return;
+
+    obs.observe(targetNode, {
       childList: true,
       subtree: true,
       attributes: true,
       attributeFilter: ['style', 'class']
     });
 
-    console.log('KG_Wide: MutationObserver started');
-
     // Check initial state
     if (checkTypeblockVisibility()) {
-      console.log('KG_Wide: Typetext already visible on load');
       applyWideStyles();
     }
   }
 
   // Initialize the script immediately
   startObserver();
-
-  // Fallback check every 2 seconds for the first 30 seconds
-  let checkCount = 0;
-  const maxChecks = 15;
-
-  const intervalCheck = setInterval(() => {
-    checkCount++;
-
-    if (checkTypeblockVisibility() && !isWideMode) {
-      console.log('KG_Wide: Typetext found via interval check');
-      applyWideStyles();
-      clearInterval(intervalCheck);
-    }
-
-    if (checkCount >= maxChecks) {
-      console.log('KG_Wide: Stopping interval checks');
-      clearInterval(intervalCheck);
-    }
-  }, 2000);
 
 })();

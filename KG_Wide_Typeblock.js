@@ -178,6 +178,7 @@
           width: 100% !important;
           height: auto !important;
           border-radius: 14px !important;
+          filter: invert(93.3%) grayscale(1) !important;
       }
 
       #typetext #typefocus {

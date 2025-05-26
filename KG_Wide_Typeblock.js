@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_Wide_Typeblock
 // @namespace    http://tampermonkey.net/
-// @version      1.0.2 
+// @version      1.0.4 
 // @description  try to take over the world!
 // @author       Patcher
 // @match        *://klavogonki.ru/g/?gmid=*
@@ -13,21 +13,33 @@
   'use strict';
 
   let isWideMode = false;
-  let dimmingLevel = localStorage.getItem('kg-dimming-level') ? parseInt(localStorage.getItem('kg-dimming-level')) : 50;
+  
+  // Load settings from localStorage
+  let settings = localStorage.getItem('kg-wide-settings') 
+    ? JSON.parse(localStorage.getItem('kg-wide-settings')) 
+    : { dimmingLevel: 50, mainBlockWidth: 90 };
+  
   let isDragging = false;
   let startY = 0;
+  let startX = 0;
   let startDimming = 0;
+  let startWidth = 0;
   let dimmingBg = null;
   let styleElement = null;
   let isExiting = false; // Flag to prevent automatic re-application during exit
   let observer = null; // Store observer reference
   let hasAppliedOnce = false; // Flag to track if styles have been applied once
 
+  function saveSettings() {
+    localStorage.setItem('kg-wide-settings', JSON.stringify(settings));
+  }
+
   function createDimmingBackground() {
     dimmingBg = document.createElement('div');
     dimmingBg.id = 'kg-dimming-background';
     dimmingBg.title = `Для выхода: ESC или двойной клик (ЛКМ).
-Для настройки затемнения: зажмите (ЛКМ) и тяните вверх/вниз.`;
+Для настройки затемнения: зажмите (ЛКМ) и тяните вверх/вниз.
+Для настройки ширины: зажмите (ЛКМ) и тяните влево/вправо.`;
 
     // Double click to exit
     dimmingBg.addEventListener('dblclick', (e) => {
@@ -35,12 +47,14 @@
       e.preventDefault();
     });
 
-    // Mouse events for dimming control
+    // Mouse events for dimming and width control
     dimmingBg.addEventListener('mousedown', (e) => {
       if (e.button === 0) { // Left mouse button
         isDragging = true;
         startY = e.clientY;
-        startDimming = dimmingLevel;
+        startX = e.clientX;
+        startDimming = settings.dimmingLevel;
+        startWidth = settings.mainBlockWidth;
         e.preventDefault();
       }
     });
@@ -48,24 +62,39 @@
     document.addEventListener('mousemove', (e) => {
       if (isDragging) {
         const deltaY = startY - e.clientY; // Inverted: up = increase, down = decrease
-        const sensitivity = 0.5; // Adjust sensitivity
+        const deltaX = e.clientX - startX; // Right = increase, left = decrease
+        const sensitivity = 0.5; // Adjust sensitivity for dimming
+        const widthSensitivity = 0.1; // Adjust sensitivity for width
+        
         let newDimming = startDimming + (deltaY * sensitivity);
+        let newWidth = startWidth + (deltaX * widthSensitivity);
 
-        // Clamp between 0 and 100
+        // Clamp dimming between 0 and 100
         newDimming = Math.max(0, Math.min(100, newDimming));
-        dimmingLevel = newDimming;
+        settings.dimmingLevel = newDimming;
 
-        // Update the CSS custom property for dimming
-        const customStyle = document.querySelector('style.kg-wide-mode-styles');
-        if (customStyle) {
-          customStyle.textContent = customStyle.textContent.replace(
-            /rgba\(0, 0, 0, [0-9.]+\)/,
-            `rgba(0, 0, 0, ${dimmingLevel / 100})`
-          );
+        // Clamp width between 20 and 95
+        newWidth = Math.max(20, Math.min(95, newWidth));
+        settings.mainBlockWidth = newWidth;
+
+        // Determine cursor based on movement direction
+        const absX = Math.abs(deltaX);
+        const absY = Math.abs(deltaY);
+        let cursor = 'move';
+        
+        if (absX > absY) {
+          cursor = 'ew-resize'; // Horizontal resize
+        } else if (absY > absX) {
+          cursor = 'ns-resize'; // Vertical resize
         }
+        
+        dimmingBg.style.cursor = cursor + ' !important';
+
+        // Update the CSS
+        updateStyles();
 
         // Save to localStorage
-        localStorage.setItem('kg-dimming-level', Math.round(dimmingLevel));
+        saveSettings();
 
         e.preventDefault();
       }
@@ -74,11 +103,95 @@
     document.addEventListener('mouseup', (e) => {
       if (isDragging && e.button === 0) {
         isDragging = false;
+        // Reset cursor to move when not dragging
+        if (dimmingBg) {
+          dimmingBg.style.cursor = 'move';
+        }
       }
     });
 
     document.body.appendChild(dimmingBg);
     return dimmingBg;
+  }
+
+  function updateStyles() {
+    if (!styleElement) return;
+
+    styleElement.textContent = `
+      #kg-dimming-background {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        background-color: rgba(0, 0, 0, ${settings.dimmingLevel / 100}) !important;
+        z-index: 1999 !important;
+        cursor: move !important;
+        user-select: none !important;
+      }
+
+      #main-block {
+          position: absolute !important;
+          width: ${settings.mainBlockWidth}vw !important;
+          left: 50% !important;
+          top: 35% !important;
+          transform: translate(-50%, -50%) !important;
+          z-index: 2000 !important;
+      }
+
+      #typeblock {
+          width: 100% !important;
+          border: 2px solid rgba(0,0,0,0.3) !important;
+          border-radius: 18px !important;
+          background-color: #222222 !important;
+          box-shadow: 0 0 5px rgba(0,0,0,0.4) !important;
+      }
+
+      #typeblock #param_keyboard {
+        border-bottom: none !important;
+        color: burlywood !important;  
+      }
+
+      #typetext {
+          color: #a2aebb !important;
+      }
+
+      #typetext #typefocus {
+          color: lightgreen !important;
+      }
+
+      #typetext #typefocus.highlight_error {
+          color: coral !important;
+      }
+
+      #fixtypo {
+        color: coral !important;
+      }
+
+      #inputtext {
+          width: 80% !important;
+          left: 50% !important;
+          transform: translateX(-50%) !important;
+          position: relative !important;
+          box-shadow: none !important;
+          border: none !important;
+          padding: 0.2em 0.5em !important;
+          border-radius: 0.2em !important;
+          outline: none !important;
+      }
+
+      #main-block .handle,
+      #report {
+          display: none !important;
+      }
+
+      #typeblock .r.tl,
+      #typeblock .r .tr,
+      #typeblock .r .bl,
+      #typeblock .r .br {
+          background: transparent !important;
+      }
+  `;
   }
 
   function exitWideMode() {
@@ -148,83 +261,12 @@
     // Add all styles inside a style element with class name
     styleElement = document.createElement('style');
     styleElement.className = 'kg-wide-mode-styles';
-    styleElement.textContent = `
-      #kg-dimming-background {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        background-color: rgba(0, 0, 0, ${dimmingLevel / 100}) !important;
-        z-index: 1999 !important;
-        cursor: ns-resize !important;
-        user-select: none !important;
-      }
-
-      #main-block {
-          position: absolute !important;
-          width: 90vw !important;
-          left: 50% !important;
-          top: 35% !important;
-          transform: translate(-50%, -50%) !important;
-          z-index: 2000 !important;
-      }
-
-      #typeblock {
-          width: 100% !important;
-          border: 2px solid rgba(0,0,0,0.3) !important;
-          border-radius: 18px !important;
-          background-color: #222222 !important;
-          box-shadow: 0 0 5px rgba(0,0,0,0.4) !important;
-      }
-
-      #typeblock #param_keyboard {
-        border-bottom: none !important;
-        color: burlywood !important;  
-      }
-
-      #typetext {
-          color: #a2aebb !important;
-      }
-
-      #typetext #typefocus {
-          color: lightgreen !important;
-      }
-
-      #typetext #typefocus.highlight_error {
-          color: coral !important;
-      }
-
-      #fixtypo {
-        color: coral !important;
-      }
-
-      #inputtext {
-          width: 80% !important;
-          left: 50% !important;
-          transform: translateX(-50%) !important;
-          position: relative !important;
-          box-shadow: none !important;
-          border: none !important;
-          padding: 0.2em 0.5em !important;
-          border-radius: 0.2em !important;
-          outline: none !important;
-      }
-
-      #main-block .handle,
-      #report {
-          display: none !important;
-      }
-
-      #typeblock .r.tl,
-      #typeblock .r .tr,
-      #typeblock .r .bl,
-      #typeblock .r .br {
-          background: transparent !important;
-      }
-  `;
+    
+    // Initial styles update
+    updateStyles();
 
     document.head.appendChild(styleElement);
+    
     // Set color/background-color directly on elements
     if (typeblock) typeblock.style.backgroundColor = '#222222';
     if (inputtext) {

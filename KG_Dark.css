@@ -6206,7 +6206,7 @@
 
     /* qualification race img adjustments */
     #typeblock img[src*="tmp/text/"] {
-        filter: invert(93.3%) grayscale(1) !important;
+        filter: invert(0.9) brightness(0.83) sepia(1) hue-rotate(200deg) saturate(0.4) !important;
     }
 
     /* race typeblock input text default color */

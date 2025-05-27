@@ -280,7 +280,7 @@
       }
 
       #typetext #beforefocus {
-          color: #a2aebbbd !important;
+          color:rgba(162, 174, 187, 0.5) !important;
       } 
 
       #typetext #typefocus {

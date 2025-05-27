@@ -8002,8 +8002,8 @@
     }
 
     /* race virtual keyboard img invert */
-    #back_keyboard {
-        filter: invert(83%) !important;
+    #keyboard {
+        filter: invert(1) sepia(0) hue-rotate(40deg) grayscale(0.3) !important;
     }
 
     /* change img speedpanel night mode */

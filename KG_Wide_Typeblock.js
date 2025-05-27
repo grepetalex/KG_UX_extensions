@@ -193,8 +193,14 @@
         color: coral !important;
       }
 
-      #inputtext {
-          width: 80% !important;
+      #inputtextblock {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+      }
+
+      #typeblock #inputtext {
+          width: 100% !important;
           left: 50% !important;
           transform: translateX(-50%) !important;
           position: relative !important;
@@ -203,7 +209,7 @@
           padding: 0.2em 0.5em !important;
           border-radius: 0.2em !important;
           outline: none !important;
-          margin-top: 22px !important;
+          margin: 1em 0 0.5em !important;
       }
 
       #main-block .handle,

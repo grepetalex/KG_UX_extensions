@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_Wide_Typeblock
 // @namespace    http://tampermonkey.net/
-// @version      1.0.8 
+// @version      1.0.9 
 // @description  try to take over the world!
 // @author       Patcher
 // @match        *://klavogonki.ru/g/?gmid=*
@@ -26,6 +26,7 @@
   settings.dimmingLevel = typeof settings.dimmingLevel === 'number' ? settings.dimmingLevel : 50;
   settings.mainBlockWidth = typeof settings.mainBlockWidth === 'number' ? settings.mainBlockWidth : 90;
   settings.typeBlockPosition = typeof settings.typeBlockPosition === 'number' ? settings.typeBlockPosition : 25;
+  settings.inputTextWidth = typeof settings.inputTextWidth === 'number' ? settings.inputTextWidth : 30;
 
   let isDragging = false;
   let startY = 0;
@@ -43,10 +44,13 @@
   function createDimmingBackground() {
     dimmingBg = document.createElement('div');
     dimmingBg.id = 'kg-dimming-background';
-    dimmingBg.title = `Для выхода: ESC или двойной клик (ЛКМ).
+
+      dimmingBg.title = `Для выхода: ESC или двойной клик (ЛКМ).
 Для настройки затемнения: зажмите (ЛКМ) и тяните вверх/вниз на фоне.
-Для настройки ширины: зажмите (ЛКМ) и тяните влево/вправо на основном блоке.
-Для настройки позиционирования: зажмите (ЛКМ) и тяните вверх/вниз на основном блоке.`;
+Для настройки ширины блока с текстом: зажмите (ЛКМ) и тяните влево/вправо.
+Для настройки позиционирования блока с текстом: зажмите (ЛКМ) и тяните вверх/вниз.
+Для настройки ширины поля ввода: зажмите(ЛКМ) и тяните влево/вправо.
+`;
 
     // Double click to exit
     dimmingBg.addEventListener('dblclick', (e) => {
@@ -84,49 +88,115 @@
     return dimmingBg;
   }
 
+  // Helper for drag events
+  function addDragListener({
+    element, onStart, onMove, onEnd, cursorTest
+  }) {
+    let dragging = false;
+    let dragData = null;
+    let isOnEdge = false;
+
+    function mousemove(e) {
+      if (dragging) {
+        onMove(e, dragData);
+        e.preventDefault();
+      } else if (cursorTest) {
+        // For hover cursor logic
+        if (cursorTest(e)) {
+          element.style.cursor = 'ew-resize';
+          isOnEdge = true;
+        } else {
+          element.style.cursor = '';
+          isOnEdge = false;
+        }
+      }
+    }
+    function mousedown(e) {
+      if (e.button === 0 && (!cursorTest || isOnEdge)) {
+        dragging = true;
+        dragData = onStart(e);
+        document.body.style.userSelect = 'none';
+        element.style.userSelect = 'none';
+        if (element.blur) element.blur();
+        e.preventDefault();
+      }
+    }
+    function mouseup(e) {
+      if (dragging && e.button === 0) {
+        dragging = false;
+        document.body.style.userSelect = '';
+        element.style.userSelect = '';
+        onEnd && onEnd(e, dragData);
+      }
+    }
+    element.addEventListener('mousemove', mousemove);
+    element.addEventListener('mouseleave', () => {
+      element.style.cursor = '';
+      isOnEdge = false;
+    });
+    element.addEventListener('mousedown', mousedown);
+    document.addEventListener('mousemove', mousemove);
+    document.addEventListener('mouseup', mouseup);
+  }
+
+  function makeInputTextDraggable() {
+    const input = document.getElementById('inputtext');
+    if (!input) return;
+    const edgeSize = 12; // px
+    addDragListener({
+      element: input,
+      cursorTest: (e) => {
+        const rect = input.getBoundingClientRect();
+        return e.clientX >= rect.right - edgeSize && e.clientX <= rect.right;
+      },
+      onStart: (e) => ({
+        startX: e.clientX,
+        startWidth: settings.inputTextWidth
+      }),
+      onMove: (e, data) => {
+        const winWidth = window.innerWidth;
+        let deltaX = e.clientX - data.startX;
+        let newWidth = data.startWidth + (deltaX / winWidth) * 100;
+        newWidth = Math.max(10, Math.min(90, newWidth));
+        settings.inputTextWidth = newWidth;
+        updateStyles();
+        saveSettings();
+      }
+    });
+  }
+
   function makeMainBlockDraggable() {
     const mainBlock = document.getElementById('main-block');
     if (!mainBlock) return;
-    let isBlockDragging = false;
-    let dragStartX = 0, dragStartY = 0;
-    let dragStartWidth = 0, dragStartTop = 0;
-    mainBlock.addEventListener('mousedown', (e) => {
-      if (e.button === 0) {
-        isBlockDragging = true;
-        dragStartX = e.clientX;
-        dragStartY = e.clientY;
-        dragStartWidth = settings.mainBlockWidth;
-        dragStartTop = settings.typeBlockPosition;
-        document.body.style.userSelect = 'none';
-        e.preventDefault();
-      }
-    });
-    document.addEventListener('mousemove', (e) => {
-      if (isBlockDragging) {
-        const winWidth = window.innerWidth;
-        const winHeight = window.innerHeight;
+    addDragListener({
+      element: mainBlock,
+      onStart: (e) => {
         const block = document.getElementById('main-block');
         const blockHeight = block ? block.offsetHeight : 0;
-        const maxTop = 100 - (blockHeight / winHeight) * 100;
-        let deltaX = e.clientX - dragStartX;
-        let deltaY = e.clientY - dragStartY;
+        return {
+          startX: e.clientX,
+          startY: e.clientY,
+          startWidth: settings.mainBlockWidth,
+          startTop: settings.typeBlockPosition,
+          blockHeight
+        };
+      },
+      onMove: (e, data) => {
+        const winWidth = window.innerWidth;
+        const winHeight = window.innerHeight;
+        const maxTop = 100 - (data.blockHeight / winHeight) * 100;
+        let deltaX = e.clientX - data.startX;
+        let deltaY = e.clientY - data.startY;
         // Horizontal drag: width
-        let newWidth = dragStartWidth + (deltaX / winWidth) * 100;
+        let newWidth = data.startWidth + (deltaX / winWidth) * 100;
         newWidth = Math.max(20, Math.min(95, newWidth));
         settings.mainBlockWidth = newWidth;
         // Vertical drag: position
-        let newTop = dragStartTop + (deltaY / winHeight) * 100;
+        let newTop = data.startTop + (deltaY / winHeight) * 100;
         newTop = Math.max(0, Math.min(maxTop, newTop));
         settings.typeBlockPosition = newTop;
         updateStyles();
         saveSettings();
-        e.preventDefault();
-      }
-    });
-    document.addEventListener('mouseup', (e) => {
-      if (isBlockDragging && e.button === 0) {
-        isBlockDragging = false;
-        document.body.style.userSelect = '';
       }
     });
   }
@@ -200,16 +270,17 @@
       }
 
       #typeblock #inputtext {
-          width: 100% !important;
+          width: ${settings.inputTextWidth}vw !important;
           left: 50% !important;
           transform: translateX(-50%) !important;
           position: relative !important;
           box-shadow: none !important;
           border: none !important;
-          padding: 0.2em 0.5em !important;
+          margin: 1em 0 0.5em !important;
           border-radius: 0.2em !important;
           outline: none !important;
           margin: 1em 0 0.5em !important;
+          user-select: none !important;
       }
 
       #main-block .handle,
@@ -280,9 +351,13 @@
     }
 
     hasAppliedOnce = true;
+    makeInputTextDraggable();
 
-    // Create dimming background first
+
+
+    // Create dimming backgrou
     createDimmingBackground();
+
     makeMainBlockDraggable();
 
     // Add all styles inside a style element with class name
@@ -315,14 +390,11 @@
 
   function checkTypeblockVisibility() {
     const typetext = document.getElementById('typetext');
-
     if (!typetext) return false;
-
     const computedStyle = window.getComputedStyle(typetext);
     const isVisible = computedStyle.display !== 'none' &&
       computedStyle.visibility !== 'hidden' &&
       typetext.offsetParent !== null;
-
     return isVisible;
   }
 
@@ -340,18 +412,15 @@
   // Start observing immediately
   function startObserver() {
     if (hasAppliedOnce) return;
-
     const targetNode = document.body || document.documentElement;
     const obs = createObserver();
     if (!obs) return;
-
     obs.observe(targetNode, {
       childList: true,
       subtree: true,
       attributes: true,
       attributeFilter: ['style', 'class']
     });
-
     // Check initial state
     if (checkTypeblockVisibility()) {
       applyWideStyles();

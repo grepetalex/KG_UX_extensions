@@ -45,7 +45,7 @@
     dimmingBg = document.createElement('div');
     dimmingBg.id = 'kg-dimming-background';
 
-      dimmingBg.title = `Для выхода: ESC или двойной клик (ЛКМ).
+    dimmingBg.title = `Для выхода: ESC или двойной клик (ЛКМ).
 Для настройки затемнения: зажмите (ЛКМ) и тяните вверх/вниз на фоне.
 Для настройки ширины блока с текстом: зажмите (ЛКМ) и тяните влево/вправо.
 Для настройки позиционирования блока с текстом: зажмите (ЛКМ) и тяните вверх/вниз.
@@ -90,7 +90,7 @@
 
   // Helper for drag events
   function addDragListener({
-    element, onStart, onMove, onEnd, cursorTest
+    element, onStart, onMove, onEnd, cursorTest, cursorType
   }) {
     let dragging = false;
     let dragData = null;
@@ -101,9 +101,8 @@
         onMove(e, dragData);
         e.preventDefault();
       } else if (cursorTest) {
-        // For hover cursor logic
         if (cursorTest(e)) {
-          element.style.cursor = 'ew-resize';
+          element.style.cursor = cursorType || 'ew-resize';
           isOnEdge = true;
         } else {
           element.style.cursor = '';
@@ -149,6 +148,7 @@
         const rect = input.getBoundingClientRect();
         return e.clientX >= rect.right - edgeSize && e.clientX <= rect.right;
       },
+      cursorType: 'ew-resize',
       onStart: (e) => ({
         startX: e.clientX,
         startWidth: settings.inputTextWidth
@@ -170,7 +170,14 @@
     if (!mainBlock) return;
     addDragListener({
       element: mainBlock,
+      cursorTest: () => true, // Always show move cursor
+      cursorType: 'move',
       onStart: (e) => {
+        // Prevent drag if mouse is over #inputtext or its children
+        const input = document.getElementById('inputtext');
+        if (input && (e.target === input || input.contains(e.target))) {
+          return null; // Do not start drag
+        }
         const block = document.getElementById('main-block');
         const blockHeight = block ? block.offsetHeight : 0;
         return {
@@ -182,6 +189,7 @@
         };
       },
       onMove: (e, data) => {
+        if (!data) return; // Not dragging if started on input
         const winWidth = window.innerWidth;
         const winHeight = window.innerHeight;
         const maxTop = 100 - (data.blockHeight / winHeight) * 100;

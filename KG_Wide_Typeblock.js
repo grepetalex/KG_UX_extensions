@@ -164,6 +164,10 @@
         settings.inputTextWidth = newWidth;
         updateStyles();
         saveSettings();
+      },
+      onEnd: () => {
+        // Restore focus to input after drag ends
+        setTimeout(() => input.focus(), 0);
       }
     });
   }
@@ -268,10 +272,6 @@
         color: burlywood !important;  
       }
 
-      #typetext {
-          color: #a2aebb !important;
-      }
-        
       #typetext img {
           width: 100% !important;
           height: auto !important;
@@ -279,8 +279,16 @@
           filter: invert(93.3%) grayscale(1) !important;
       }
 
+      #typetext #beforefocus {
+          color: #a2aebbbd !important;
+      } 
+
       #typetext #typefocus {
           color: lightgreen !important;
+      }
+
+      #typetext #afterfocus {
+          color: #a2aebb !important;
       }
 
       #typetext #typefocus.highlight_error {
@@ -307,6 +315,7 @@
           outline: none !important;
           margin: 1em 0 0.5em !important;
           user-select: none !important;
+          transition: background-color 0.2s ease, color 0.2s ease !important;
       }
 
       #main-block .handle,

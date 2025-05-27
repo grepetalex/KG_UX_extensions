@@ -245,7 +245,7 @@
         height: 100vh !important;
         background-color: rgba(0, 0, 0, ${settings.dimmingLevel / 100}) !important;
         z-index: 1999 !important;
-        cursor: move !important;
+        cursor: ns-resize !important;
         user-select: none !important;
       }
 

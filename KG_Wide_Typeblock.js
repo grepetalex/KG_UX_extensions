@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_Wide_Typeblock
 // @namespace    http://tampermonkey.net/
-// @version      1.0.9 
+// @version      1.1.0 
 // @description  try to take over the world!
 // @author       Patcher
 // @match        *://klavogonki.ru/g/?gmid=*
@@ -257,6 +257,7 @@
           transform: translateX(-50%) !important;
           z-index: 2000 !important;
           pointer-events: auto !important;
+          min-width: 566px !important;
       }
 
       #typeblock {
@@ -311,15 +312,16 @@
           box-shadow: none !important;
           border: none !important;
           margin: 1em 0 0.5em !important;
+          padding: 8px !important;
           border-radius: 0.2em !important;
           outline: none !important;
-          margin: 1em 0 0.5em !important;
           user-select: none !important;
           transition: background-color 0.2s ease, color 0.2s ease !important;
       }
 
       #main-block .handle,
-      #report {
+      #report,
+      #fixtypo {
           display: none !important;
       }
 
@@ -329,7 +331,12 @@
       #typeblock .r .br {
           background: transparent !important;
       }
+
+      #keyboard {
+          filter: invert(1) sepia(0.1) hue-rotate(210deg) !important;
+      }
   `;
+
   }
 
   function exitWideMode() {

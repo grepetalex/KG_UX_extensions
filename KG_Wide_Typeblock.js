@@ -48,7 +48,7 @@
     dimmingBg.title = `Для выхода: ESC или двойной клик (ЛКМ).
 Для настройки затемнения: зажмите (ЛКМ) и тяните вверх/вниз на фоне.
 Для настройки ширины блока с текстом: зажмите (ЛКМ) и тяните влево/вправо.
-Для настройки позиционирования блока с текстом: зажмите (ЛКМ) и тяните вверх/вниз.
+Для настройки положения блока с текстом: зажмите (ЛКМ) и тяните вверх/вниз.
 Для настройки ширины поля ввода: зажмите(ЛКМ) и тяните влево/вправо.
 `;
 
@@ -141,12 +141,15 @@
   function makeInputTextDraggable() {
     const input = document.getElementById('inputtext');
     if (!input) return;
-    const edgeSize = 12; // px
+
+    // Make the entire input draggable horizontally
     addDragListener({
       element: input,
       cursorTest: (e) => {
+        // Allow dragging anywhere on the input element
         const rect = input.getBoundingClientRect();
-        return e.clientX >= rect.right - edgeSize && e.clientX <= rect.right;
+        return e.clientX >= rect.left && e.clientX <= rect.right &&
+          e.clientY >= rect.top && e.clientY <= rect.bottom;
       },
       cursorType: 'ew-resize',
       onStart: (e) => ({
@@ -157,7 +160,7 @@
         const winWidth = window.innerWidth;
         let deltaX = e.clientX - data.startX;
         let newWidth = data.startWidth + (deltaX / winWidth) * 100;
-        newWidth = Math.max(10, Math.min(90, newWidth));
+        newWidth = Math.max(20, Math.min(100, newWidth));
         settings.inputTextWidth = newWidth;
         updateStyles();
         saveSettings();
@@ -168,16 +171,33 @@
   function makeMainBlockDraggable() {
     const mainBlock = document.getElementById('main-block');
     if (!mainBlock) return;
+
     addDragListener({
       element: mainBlock,
-      cursorTest: () => true, // Always show move cursor
+      cursorTest: (e) => {
+        // Only show move cursor when NOT over the input text
+        const input = document.getElementById('inputtext');
+        if (input) {
+          const rect = input.getBoundingClientRect();
+          const isOverInput = e.clientX >= rect.left && e.clientX <= rect.right &&
+            e.clientY >= rect.top && e.clientY <= rect.bottom;
+          return !isOverInput; // Return true only when NOT over input
+        }
+        return true;
+      },
       cursorType: 'move',
       onStart: (e) => {
         // Prevent drag if mouse is over #inputtext or its children
         const input = document.getElementById('inputtext');
-        if (input && (e.target === input || input.contains(e.target))) {
-          return null; // Do not start drag
+        if (input) {
+          const rect = input.getBoundingClientRect();
+          const isOverInput = e.clientX >= rect.left && e.clientX <= rect.right &&
+            e.clientY >= rect.top && e.clientY <= rect.bottom;
+          if (isOverInput) {
+            return null; // Do not start drag
+          }
         }
+
         const block = document.getElementById('main-block');
         const blockHeight = block ? block.offsetHeight : 0;
         return {
@@ -229,7 +249,7 @@
           position: fixed !important;
           width: ${settings.mainBlockWidth}vw !important;
           left: 50% !important;
-          top: ${settings.typeBlockPosition}% !important;
+          top: ${settings.typeBlockPosition}vh !important;
           transform: translateX(-50%) !important;
           z-index: 2000 !important;
           pointer-events: auto !important;
@@ -278,9 +298,7 @@
       }
 
       #typeblock #inputtext {
-          width: ${settings.inputTextWidth}vw !important;
-          left: 50% !important;
-          transform: translateX(-50%) !important;
+          width: ${settings.inputTextWidth}% !important;
           position: relative !important;
           box-shadow: none !important;
           border: none !important;

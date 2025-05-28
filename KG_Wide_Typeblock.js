@@ -43,26 +43,26 @@
   // Function to align inputtextblock with typefocus
   function alignInputWithTypeFocus() {
     if (!isWideMode) return;
-    
+
     const inputTextBlock = document.getElementById('inputtextblock');
     const typeFocus = document.getElementById('typefocus');
     const typeText = document.getElementById('typetext');
-    
+
     if (!inputTextBlock || !typeFocus || !typeText) return;
-    
+
     const typeTextRect = typeText.getBoundingClientRect();
     const typeFocusRect = typeFocus.getBoundingClientRect();
-    
+
     // Calculate the offset of typefocus relative to typetext
     const offsetLeft = typeFocusRect.left - typeTextRect.left;
-    
+
     // Convert to percentage relative to typetext width
     const offsetPercentage = (offsetLeft / typeTextRect.width) * 100;
-    
+
     // Adjust for input padding (8px left + 8px right = 16px total)
     // Convert 8px to percentage relative to typetext width
     const paddingAdjustment = (8 / typeTextRect.width) * 100;
-    
+
     // Apply margin-left to inputtextblock, accounting for left padding
     const adjustedOffset = offsetPercentage - paddingAdjustment;
     inputTextBlock.style.setProperty('margin-left', `${adjustedOffset}%`, 'important');
@@ -363,10 +363,14 @@
     // Remove direct styles from elements
     const typeblock = document.getElementById('typeblock');
     const inputtext = document.getElementById('inputtext');
+    const inputTextBlock = document.getElementById('inputtextblock');
     if (typeblock) typeblock.style.backgroundColor = '';
     if (inputtext) {
       inputtext.style.setProperty('background-color', '', 'important');
       inputtext.style.setProperty('color', '', 'important');
+    }
+    if (inputTextBlock) {
+      inputTextBlock.style.removeProperty('margin-left');
     }
 
     // Also try to remove by class name as fallback
@@ -415,10 +419,10 @@
       inputtext.style.setProperty('color', '#b8c0ca', 'important');
       observeInput();
     }
-    
+
     // Initial alignment
     alignInputWithTypeFocus();
-    
+
     isWideMode = true;
   }
 
@@ -448,7 +452,7 @@
       if (!isWideMode && !hasAppliedOnce && checkTypeblockVisibility() && !isExiting) applyWideStyles();
       const bookInfo = document.getElementById('bookinfo');
       if (bookInfo && isWideMode && bookInfo.style.display === '') exitWideMode();
-      
+
       // Add real-time alignment when in wide mode
       if (isWideMode) {
         alignInputWithTypeFocus();

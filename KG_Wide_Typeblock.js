@@ -227,7 +227,7 @@
 
   function updateStyles(opts = {}) {
     const inputTransition = opts.inputTransition !== false;
-    return `
+    const css = `
       #kg-dimming-background {
         position: fixed !important;
         top: 0 !important;
@@ -333,7 +333,8 @@
         margin-top: 0 !important; 
       }
   `;
-
+    if (styleElement) styleElement.textContent = css;
+    return css;
   }
 
   function exitWideMode() {

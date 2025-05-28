@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_Wide_Typeblock
 // @namespace    http://tampermonkey.net/
-// @version      1.1.2 
+// @version      1.1.3
 // @description  try to take over the world!
 // @author       Patcher
 // @match        *://klavogonki.ru/g/?gmid=*
@@ -12,9 +12,16 @@
 (function () {
   'use strict';
 
-  let isWideMode = false;
+  // Default Settings
+  const defaultSettings = {
+    dimmingLevel: 50,
+    mainBlockWidth: 90,
+    typeBlockPosition: 25,
+    isPartialMode: false,
+    visibleLines: 1
+  };
 
-  // Load settings from localStorage
+  // Load and Merge Settings
   let settingsRaw = localStorage.getItem('kg-wide-settings');
   let settings;
   try {
@@ -22,31 +29,34 @@
   } catch {
     settings = {};
   }
-  // Set defaults if missing or null
-  settings.dimmingLevel = typeof settings.dimmingLevel === 'number' ? settings.dimmingLevel : 50;
-  settings.mainBlockWidth = typeof settings.mainBlockWidth === 'number' ? settings.mainBlockWidth : 90;
-  settings.typeBlockPosition = typeof settings.typeBlockPosition === 'number' ? settings.typeBlockPosition : 25;
-  settings.isPartialMode = typeof settings.isPartialMode === 'boolean' ? settings.isPartialMode : false;
-  settings.visibleLines = typeof settings.visibleLines === 'number' ? settings.visibleLines : 1;
+  settings = Object.assign({}, defaultSettings, settings);
 
-  let isDragging = false;
-  let startY = 0;
-  let startDimming = 0;
+  // Settings Helper Functions
+  function saveSettings() {
+    localStorage.setItem('kg-wide-settings', JSON.stringify(settings));
+  }
+
+  function getSetting(key) {
+    return settings[key];
+  }
+
+  function setSetting(key, value) {
+    settings[key] = value;
+    saveSettings();
+  }
+
+  // State Variables
+  let isWideMode = false;
   let dimmingBg = null;
   let styleElement = null;
   let isExiting = false;
   let observer = null;
   let hasAppliedOnce = false;
 
-  function saveSettings() {
-    localStorage.setItem('kg-wide-settings', JSON.stringify(settings));
-  }
-
-  // Get line height with fallback
+  // Get line height of the type focus element
   function getLineHeight() {
     const typeFocus = document.getElementById('typefocus');
     if (!typeFocus) return 0;
-    
     const computedStyle = window.getComputedStyle(typeFocus);
     const lineHeight = parseFloat(computedStyle.lineHeight);
     return lineHeight > 0 ? lineHeight : typeFocus.offsetHeight;
@@ -59,200 +69,198 @@
     return typeText && lineHeight > 0 ? Math.floor(typeText.scrollHeight / lineHeight) : 1;
   }
 
-  // Consolidated text visibility management
+  // Text Visibility Management
   function updateTextVisibility() {
     const typeText = document.getElementById('typetext');
     const typeFocus = document.getElementById('typefocus');
-    
     if (!typeText || !typeFocus) return;
 
-    if (settings.isPartialMode) {
+    if (getSetting('isPartialMode')) {
       const lineHeight = getLineHeight();
       if (lineHeight <= 0) return;
-
-      // Clamp visible lines to valid range
       const maxLines = getMaxLines();
-      settings.visibleLines = Math.max(1, Math.min(settings.visibleLines, maxLines));
-      
-      const visibleHeight = settings.visibleLines * lineHeight;
-      
-      // Apply only dynamic height
+      const visibleLines = Math.max(1, Math.min(getSetting('visibleLines'), maxLines));
+      setSetting('visibleLines', visibleLines);
+      const visibleHeight = visibleLines * lineHeight;
       typeText.style.setProperty('height', `${visibleHeight}px`, 'important');
-
-      // Smart scroll positioning - keep focus visible
       const focusOffset = typeFocus.offsetTop;
       const maxScroll = typeText.scrollHeight - visibleHeight;
-      
-      // Keep focus in view, preferably at top for single line mode
-      let targetScroll = settings.visibleLines === 1 ? focusOffset : Math.min(focusOffset, maxScroll);
-      
+      let targetScroll = visibleLines === 1 ? focusOffset : Math.min(focusOffset, maxScroll);
       typeText.scrollTop = Math.max(0, targetScroll);
-      
     } else {
-      // Reset to full view
       typeText.style.removeProperty('height');
       typeFocus.style.removeProperty('top');
     }
   }
 
-  // Lines count adjustment with wheel
   function adjustVisibleLines(delta) {
-    if (!settings.isPartialMode) return;
-    
+    if (!getSetting('isPartialMode')) return;
     const maxLines = getMaxLines();
     const change = delta > 0 ? 1 : -1;
-    
-    settings.visibleLines = Math.max(1, Math.min(
-      settings.visibleLines + change, 
-      maxLines
-    ));
-    
+    const newVisibleLines = Math.max(1, Math.min(getSetting('visibleLines') + change, maxLines));
+    setSetting('visibleLines', newVisibleLines);
     updateTextVisibility();
-    saveSettings();
   }
 
-  // Simplified toggle function
   function toggleTextVisibilityMode() {
-    settings.isPartialMode = !settings.isPartialMode;
+    setSetting('isPartialMode', !getSetting('isPartialMode'));
     updateTextVisibility();
-    saveSettings();
   }
 
-  // Function to align inputtextblock with typefocus
+  // Input Alignment
   function alignInputWithTypeFocus() {
     if (!isWideMode) return;
-
     const inputTextBlock = document.getElementById('inputtextblock');
     const typeFocus = document.getElementById('typefocus');
     const typeText = document.getElementById('typetext');
-
     if (!inputTextBlock || !typeFocus || !typeText) return;
-
     const typeTextRect = typeText.getBoundingClientRect();
     const typeFocusRect = typeFocus.getBoundingClientRect();
-
-    // Calculate the offset of typefocus relative to typetext
     const offsetLeft = typeFocusRect.left - typeTextRect.left;
-
-    // Convert to percentage relative to typetext width
     const offsetPercentage = (offsetLeft / typeTextRect.width) * 100;
-
-    // Adjust for input padding (8px left + 8px right = 16px total)
-    // Convert 8px to percentage relative to typetext width
     const paddingAdjustment = (8 / typeTextRect.width) * 100;
-
-    // Apply margin-left to inputtextblock, accounting for left padding
     const adjustedOffset = offsetPercentage - paddingAdjustment;
     inputTextBlock.style.setProperty('margin-left', `${adjustedOffset}%`, 'important');
   }
 
+  // --- Wide Mode Event Listener Management ---
+  const eventListeners = [];
+  function addEvent(target, type, handler, options) {
+    target.addEventListener(type, handler, options);
+    eventListeners.push({ target, type, handler, options });
+  }
+  function removeEvents() {
+    eventListeners.forEach(({ target, type, handler, options }) => {
+      target.removeEventListener(type, handler, options);
+    });
+    eventListeners.length = 0;
+  }
+
+  // Dimming Background
   function createDimmingBackground() {
     dimmingBg = document.createElement('div');
     dimmingBg.id = 'kg-dimming-background';
-
     dimmingBg.title = `Для выхода: ESC или двойной клик (ЛКМ).
 Для настройки затемнения: зажмите (ЛКМ) и тяните вверх/вниз на фоне.
 Для настройки ширины блока с текстом: зажмите (ЛКМ) и тяните влево/вправо.
 Для настройки положения блока с текстом: зажмите (ЛКМ) и тяните вверх/вниз.
-`;
+Для изменения количества видимых строк: прокрутите колесо мыши вверх/вниз на блоке с текстом.`;
 
-    // Double click to exit
-    dimmingBg.addEventListener('dblclick', (e) => {
+    const dblClickHandler = (e) => {
       exitWideMode();
       e.preventDefault();
-    });
+    };
 
-    // Mouse events for dimming element dragging up/down
-    dimmingBg.addEventListener('mousedown', (e) => {
+    addEvent(dimmingBg, 'dblclick', dblClickHandler);
+
+    // Drag logic handlers
+    let dimDrag = { isDragging: false, startY: 0, startDimming: 0 };
+    const mouseDown = (e) => {
       if (e.button === 0) {
-        isDragging = true;
-        startY = e.clientY;
-        startDimming = settings.dimmingLevel;
+        dimDrag.isDragging = true;
+        dimDrag.startY = e.clientY;
+        dimDrag.startDimming = getSetting('dimmingLevel');
         e.preventDefault();
       }
-    });
-    dimmingBg.addEventListener('mousemove', (e) => {
-      if (isDragging) {
-        const deltaY = startY - e.clientY; // up = increase, down = decrease
+    };
+
+    const mouseMove = (e) => {
+      if (dimDrag.isDragging) {
+        const deltaY = dimDrag.startY - e.clientY;
         const sensitivity = 0.5;
-        let newDimming = startDimming + (deltaY * sensitivity);
+        let newDimming = dimDrag.startDimming + (deltaY * sensitivity);
         newDimming = Math.max(0, Math.min(100, newDimming));
-        settings.dimmingLevel = newDimming;
+        setSetting('dimmingLevel', newDimming);
         updateStyles();
-        saveSettings();
         e.preventDefault();
       }
-    });
-    dimmingBg.addEventListener('mouseup', (e) => {
-      if (isDragging && e.button === 0) {
-        isDragging = false;
+    };
+
+    const mouseUp = (e) => {
+      if (dimDrag.isDragging && e.button === 0) {
+        dimDrag.isDragging = false;
       }
-    });
+    };
+    addEvent(dimmingBg, 'mousedown', mouseDown);
+    addEvent(dimmingBg, 'mousemove', mouseMove);
+    addEvent(dimmingBg, 'mouseup', mouseUp);
     document.body.appendChild(dimmingBg);
     return dimmingBg;
   }
 
-  // Optimized event handling for main block
+  // Main Block Interactions
   function setupMainBlockInteractions() {
     const mainBlock = document.getElementById('main-block');
     if (!mainBlock) return;
-
-    // Helper to check if click is over input to prevent toggling text visibility mode
     const isOverInput = (e) => {
       const input = document.getElementById('inputtext');
       if (!input) return false;
-      
       const rect = input.getBoundingClientRect();
       return e.clientX >= rect.left && e.clientX <= rect.right &&
-             e.clientY >= rect.top && e.clientY <= rect.bottom;
+        e.clientY >= rect.top && e.clientY <= rect.bottom;
     };
 
-    // Combined event handler
-    mainBlock.addEventListener('dblclick', (e) => {
+    const dblClick = (e) => {
       if (!isOverInput(e)) {
         toggleTextVisibilityMode();
         e.preventDefault();
         e.stopPropagation();
       }
-    });
+    };
 
-    // Wheel event for line adjustment
-    mainBlock.addEventListener('wheel', (e) => {
-      if (settings.isPartialMode) {
+    addEvent(mainBlock, 'dblclick', dblClick);
+    const wheel = (e) => {
+      if (getSetting('isPartialMode')) {
         adjustVisibleLines(-e.deltaY);
         e.preventDefault();
         e.stopPropagation();
       }
-    }, { passive: false });
+    };
+    addEvent(mainBlock, 'wheel', wheel, { passive: false });
 
-    // Simplified drag setup
-    setupDragInteraction(mainBlock, isOverInput);
+    // Use a factory function that captures current state when drag starts
+    setupDragInteraction(mainBlock, (e, data) => {
+      const { innerWidth: winWidth, innerHeight: winHeight } = window;
+      const maxTop = 100 - (data.blockHeight / winHeight) * 100;
+      const deltaX = e.clientX - data.startX;
+      const deltaY = e.clientY - data.startY;
+      const newWidth = Math.max(20, Math.min(95, data.startWidth + (deltaX / winWidth) * 100));
+      const newTop = Math.max(0, Math.min(maxTop, data.startTop + (deltaY / winHeight) * 100));
+      setSetting('mainBlockWidth', newWidth);
+      setSetting('typeBlockPosition', newTop);
+      updateStyles();
+    }, () => ({
+      // This function is called when drag starts, capturing current values
+      startWidth: getSetting('mainBlockWidth'),
+      startTop: getSetting('typeBlockPosition'),
+      blockHeight: mainBlock.offsetHeight
+    }), isOverInput);
   }
 
-  // Streamlined drag interaction
-  function setupDragInteraction(element, isOverInput) {
+  // Drag Interaction Setup
+  function setupDragInteraction(element, onDrag, dragDataFactory = () => ({}), condition = () => false) {
+
     let isDragging = false;
-    let dragData = null;
+    let data = null;
 
     const handleMouseMove = (e) => {
-      if (isDragging && dragData) {
-        updateBlockPosition(e, dragData);
+      if (isDragging && data) {
+        onDrag(e, data);
         e.preventDefault();
       } else if (!isDragging) {
-        // Update cursor based on position
-        element.style.cursor = isOverInput(e) ? 'default' : 'move';
+        element.style.cursor = condition(e) ? 'default' : 'move';
       }
     };
 
     const handleMouseDown = (e) => {
-      if (e.button === 0 && !isOverInput(e)) {
+      if (e.button === 0 && !condition(e)) {
         isDragging = true;
-        dragData = {
+        // Capture current state when drag starts, not when setup happens
+        const dragData = typeof dragDataFactory === 'function' ? dragDataFactory() : dragDataFactory;
+        data = {
           startX: e.clientX,
           startY: e.clientY,
-          startWidth: settings.mainBlockWidth,
-          startTop: settings.typeBlockPosition,
-          blockHeight: element.offsetHeight
+          ...dragData
         };
         document.body.style.userSelect = 'none';
         e.preventDefault();
@@ -267,37 +275,14 @@
       }
     };
 
-    // Attach events
-    element.addEventListener('mousemove', handleMouseMove);
-    element.addEventListener('mousedown', handleMouseDown);
-    element.addEventListener('mouseleave', () => element.style.cursor = '');
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    addEvent(element, 'mousemove', handleMouseMove);
+    addEvent(element, 'mousedown', handleMouseDown);
+    addEvent(element, 'mouseleave', () => element.style.cursor = '');
+    addEvent(document, 'mousemove', handleMouseMove);
+    addEvent(document, 'mouseup', handleMouseUp);
   }
 
-  // Optimized position update
-  function updateBlockPosition(e, data) {
-    const { innerWidth: winWidth, innerHeight: winHeight } = window;
-    const maxTop = 100 - (data.blockHeight / winHeight) * 100;
-    
-    // Calculate deltas
-    const deltaX = e.clientX - data.startX;
-    const deltaY = e.clientY - data.startY;
-    
-    // Update width (horizontal drag)
-    settings.mainBlockWidth = Math.max(20, Math.min(95, 
-      data.startWidth + (deltaX / winWidth) * 100
-    ));
-    
-    // Update position (vertical drag)
-    settings.typeBlockPosition = Math.max(0, Math.min(maxTop,
-      data.startTop + (deltaY / winHeight) * 100
-    ));
-    
-    updateStyles();
-    saveSettings();
-  }
-
+  // Styles Management
   function updateStyles(opts = {}) {
     const inputTransition = opts.inputTransition !== false;
     const css = `
@@ -307,7 +292,7 @@
         left: 0 !important;
         width: 100vw !important;
         height: 100vh !important;
-        background-color: rgba(0, 0, 0, ${settings.dimmingLevel / 100}) !important;
+        background-color: rgba(0, 0, 0, ${getSetting('dimmingLevel') / 100}) !important;
         z-index: 1999 !important;
         cursor: ns-resize !important;
         user-select: none !important;
@@ -315,9 +300,9 @@
 
       #main-block {
           position: fixed !important;
-          width: ${settings.mainBlockWidth}vw !important;
+          width: ${getSetting('mainBlockWidth')}vw !important;
           left: 50% !important;
-          top: ${settings.typeBlockPosition}vh !important;
+          top: ${getSetting('typeBlockPosition')}vh !important;
           transform: translateX(-50%) !important;
           z-index: 2000 !important;
           pointer-events: auto !important;
@@ -338,7 +323,7 @@
 
       #typeblock #param_keyboard {
         border-bottom: none !important;
-        color: burlywood !important;  
+        color: burlywood !important;
       }
 
       #typetext {
@@ -355,8 +340,8 @@
       }
 
       #typetext #beforefocus {
-          color:rgba(162, 174, 187, 0.5) !important;
-      } 
+          color: rgba(162, 174, 187, 0.5) !important;
+      }
 
       #typetext #typefocus {
           color: lightgreen !important;
@@ -409,25 +394,38 @@
       }
 
       #keyboard_cont {
-        margin-top: 0 !important; 
+        margin-top: 0 !important;
       }
-  `;
+    `;
+
     if (styleElement) styleElement.textContent = css;
     return css;
   }
 
+  function resetStyles() {
+    // Remove all inline styles for a full reset
+    const idsToReset = ['typeblock', 'typetext', 'inputtext', 'inputtextblock', 'typefocus'];
+    idsToReset.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.removeAttribute('style');
+    });
+    // Remove selection style
+    const selStyle = document.getElementById('kg-inputtext-selection-style');
+    if (selStyle) selStyle.remove();
+  }
+
+  // Mode Management
   function exitWideMode() {
     if (!isWideMode) return;
 
     isExiting = true;
+    removeEvents();
 
-    // Remove dimming background
     if (dimmingBg && dimmingBg.parentNode) {
       dimmingBg.parentNode.removeChild(dimmingBg);
       dimmingBg = null;
     }
 
-    // Remove style element directly
     if (styleElement) {
       if (styleElement.parentNode) {
         styleElement.parentNode.removeChild(styleElement);
@@ -435,29 +433,8 @@
       styleElement = null;
     }
 
-    // Remove direct styles from elements
-    const typeblock = document.getElementById('typeblock');
-    const inputtext = document.getElementById('inputtext');
-    const inputTextBlock = document.getElementById('inputtextblock');
-    const typeText = document.getElementById('typetext');
-    const typeFocus = document.getElementById('typefocus');
+    resetStyles();
 
-    if (typeblock) typeblock.style.backgroundColor = '';
-    if (inputtext) {
-      inputtext.style.setProperty('background-color', '', 'important');
-      inputtext.style.setProperty('color', '', 'important');
-    }
-    if (inputTextBlock) {
-      inputTextBlock.style.removeProperty('margin-left');
-    }
-    if (typeText) {
-      typeText.style.removeProperty('height');
-    }
-    if (typeFocus) {
-      typeFocus.style.removeProperty('top');
-    }
-
-    // Also try to remove by class name as fallback
     const fallbackStyle = document.querySelector('style.kg-wide-mode-styles');
     if (fallbackStyle) {
       fallbackStyle.remove();
@@ -465,7 +442,6 @@
 
     isWideMode = false;
 
-    // Clear the exit flag after a short delay to allow DOM to settle
     setTimeout(() => {
       isExiting = false;
     }, 100);
@@ -478,88 +454,74 @@
     const typeblock = document.getElementById('typeblock');
     const inputtext = document.getElementById('inputtext');
 
-    if (!mainBlock || !typeblock || !inputtext) {
-      return;
-    }
+    if (!mainBlock || !typeblock || !inputtext) return;
 
     hasAppliedOnce = true;
 
     createDimmingBackground();
     setupMainBlockInteractions();
 
-    // Add all styles inside a style element with class name
     styleElement = document.createElement('style');
     styleElement.className = 'kg-wide-mode-styles';
-
-    // Initial styles update (without transition for inputtext)
     styleElement.textContent = updateStyles({ inputTransition: false });
     document.head.appendChild(styleElement);
 
-    // Set color/background-color directly on elements
     if (typeblock) typeblock.style.backgroundColor = '#222222';
     if (inputtext) {
       setInputColorState(inputtext);
       observeInput();
     }
 
-    // Initial alignment
     alignInputWithTypeFocus();
-
-    // Initialize text visibility mode
     updateTextVisibility();
 
     isWideMode = true;
 
-    // Enable transition after wide mode is fully applied
     setTimeout(() => {
       if (styleElement) styleElement.textContent = updateStyles({ inputTransition: true });
     }, 0);
   }
 
-  // ESC key handler - Enhanced to work globally
+  // Event Listeners
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && isWideMode) {
       exitWideMode();
       e.preventDefault();
       e.stopPropagation();
     }
-  }, true); // Use capture phase to ensure it works
+  }, true);
 
+  // Visibility Check
   function checkTypeblockVisibility() {
     const typetext = document.getElementById('typetext');
     if (!typetext) return false;
     const computedStyle = window.getComputedStyle(typetext);
-    const isVisible = computedStyle.display !== 'none' &&
+    return computedStyle.display !== 'none' &&
       computedStyle.visibility !== 'hidden' &&
       typetext.offsetParent !== null;
-    return isVisible;
   }
 
-  // Enhanced mutation observer callback
   function handleContentChanges() {
     if (isWideMode) {
       alignInputWithTypeFocus();
-      if (settings.isPartialMode) {
+      if (getSetting('isPartialMode')) {
         updateTextVisibility();
       }
     }
   }
 
-  // Create mutation observer to watch for changes
+  // Mutation Observer
   function createObserver() {
     if (hasAppliedOnce) return;
     observer = new MutationObserver(() => {
       if (!isWideMode && !hasAppliedOnce && checkTypeblockVisibility() && !isExiting) applyWideStyles();
       const bookInfo = document.getElementById('bookinfo');
       if (bookInfo && isWideMode && bookInfo.style.display === '') exitWideMode();
-
-      // Add real-time alignment when in wide mode
       handleContentChanges();
     });
     return observer;
   }
 
-  // Start observing immediately
   function startObserver() {
     if (hasAppliedOnce) return;
     const targetNode = document.body || document.documentElement;
@@ -571,13 +533,12 @@
       attributes: true,
       attributeFilter: ['style', 'class']
     });
-    // Check initial state
     if (checkTypeblockVisibility()) {
       applyWideStyles();
     }
   }
 
-  // Single compact MutationObserver for #inputtext .error/.disabled color
+  // Input Observation
   let inputObserver;
   function observeInput() {
     if (inputObserver) return;
@@ -621,7 +582,6 @@
     selStyle.textContent = `#inputtext::selection { background: ${bg} !important; color: ${color} !important; }`;
   }
 
-  // Initialize the script immediately
+  // Initialize
   startObserver();
-
 })();

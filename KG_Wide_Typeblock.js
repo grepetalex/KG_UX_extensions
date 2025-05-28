@@ -486,6 +486,7 @@
     const el = document.getElementById('inputtext');
     if (!el) return;
     const setColor = () => {
+      if (!isWideMode) return; // Only set colors in wide mode
       if (el.classList.contains('disabled')) {
         el.style.setProperty('color', '#333333', 'important');
         el.style.setProperty('background-color', '#131313', 'important');

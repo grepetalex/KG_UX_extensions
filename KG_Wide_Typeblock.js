@@ -507,6 +507,7 @@
 
     isExiting = true;
     removeEvents();
+    removeGlobalKeydown();
 
     if (dimmingBg && dimmingBg.parentNode) {
       dimmingBg.parentNode.removeChild(dimmingBg);
@@ -569,22 +570,37 @@
 
     isWideMode = true;
 
+    addGlobalKeydown();
+
     setTimeout(() => {
       if (styleElement) styleElement.textContent = updateStyles({ inputTransition: true });
     }, 0);
   }
   // Event Listeners
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && isWideMode) {
-      exitWideMode();
-      e.preventDefault();
-      e.stopPropagation();
-    } else if (e.altKey && e.key.toLowerCase() === 't' && isWideMode) {
-      toggleTheme();
-      e.preventDefault();
-      e.stopPropagation();
+  let globalKeydownHandler = null;
+
+  function addGlobalKeydown() {
+    if (globalKeydownHandler) return;
+    globalKeydownHandler = (e) => {
+      if (e.key === 'Escape' && isWideMode) {
+        exitWideMode();
+        e.preventDefault();
+        e.stopPropagation();
+      } else if (e.altKey && e.key.toLowerCase() === 't' && isWideMode) {
+        toggleTheme();
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+    document.addEventListener('keydown', globalKeydownHandler, true);
+  }
+
+  function removeGlobalKeydown() {
+    if (globalKeydownHandler) {
+      document.removeEventListener('keydown', globalKeydownHandler, true);
+      globalKeydownHandler = null;
     }
-  }, true);
+  }
 
   // Visibility Check
   function checkTypeblockVisibility() {

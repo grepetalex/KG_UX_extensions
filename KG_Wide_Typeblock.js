@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_Wide_Typeblock
 // @namespace    http://tampermonkey.net/
-// @version      1.1.0 
+// @version      1.1.1 
 // @description  try to take over the world!
 // @author       Patcher
 // @match        *://klavogonki.ru/g/?gmid=*
@@ -262,6 +262,10 @@
           box-shadow: 0 0 5px rgba(0,0,0,0.4) !important;
       }
 
+      #typeblock .rc {
+          padding: 10px 10px 10px 20px !important;
+      }
+
       #typeblock #param_keyboard {
         border-bottom: none !important;
         color: burlywood !important;  
@@ -356,14 +360,10 @@
     // Remove direct styles from elements
     const typeblock = document.getElementById('typeblock');
     const inputtext = document.getElementById('inputtext');
-    const inputtextblock = document.getElementById('inputtextblock');
     if (typeblock) typeblock.style.backgroundColor = '';
     if (inputtext) {
       inputtext.style.setProperty('background-color', '', 'important');
       inputtext.style.setProperty('color', '', 'important');
-    }
-    if (inputtextblock) {
-      inputtextblock.style.setProperty('margin-left', '', 'important');
     }
 
     // Also try to remove by class name as fallback

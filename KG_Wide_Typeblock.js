@@ -17,13 +17,14 @@
     dimmingLevel: 50,
     mainBlockWidth: 90,
     typeBlockPosition: 25,
-    visibleLines: 1
+    visibleLines: 1,
+    theme: 'dark'
   };
 
   // State Variables
   let isWideMode = false;
   let isPartialMode = false;
-  let currentTheme = 'dark';
+  let currentTheme = defaultSettings.theme;
   let dimmingBg = null;
   let styleElement = null;
   let isExiting = false;
@@ -115,6 +116,7 @@
     settings = {};
   }
   settings = Object.assign({}, defaultSettings, settings);
+  currentTheme = settings.theme || defaultSettings.theme;
 
   // Settings Helper Functions
   function saveSettings() {
@@ -127,6 +129,7 @@
 
   function setSetting(key, value) {
     settings[key] = value;
+    if (key === 'theme') currentTheme = value;
     saveSettings();
   }
 
@@ -696,6 +699,7 @@
   // Toggle Theme Function
   function toggleTheme() {
     currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    setSetting('theme', currentTheme);
     if (isWideMode) {
       updateStyles();
       const inputtext = document.getElementById('inputtext');

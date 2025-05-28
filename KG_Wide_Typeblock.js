@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_Wide_Typeblock
 // @namespace    http://tampermonkey.net/
-// @version      1.1.1 
+// @version      1.1.2 
 // @description  try to take over the world!
 // @author       Patcher
 // @match        *://klavogonki.ru/g/?gmid=*
@@ -291,10 +291,6 @@
           color: coral !important;
       }
 
-      #fixtypo {
-        color: coral !important;
-      }
-
       #inputtextblock {
         display: flex !important;
         justify-content: flex-start !important;
@@ -500,13 +496,29 @@
     if (el.classList.contains('disabled')) {
       el.style.setProperty('color', '#333333', 'important');
       el.style.setProperty('background-color', '#131313', 'important');
+      el.style.caretColor = '#333333';
+      setSelectionStyle('#131313', '#333333');
     } else if (el.classList.contains('error')) {
       el.style.setProperty('color', '#111111', 'important');
       el.style.setProperty('background-color', '#dc143c', 'important');
+      el.style.caretColor = '#7a0a1a';
+      setSelectionStyle('#7a0a1a', '#ffa4b6');
     } else {
       el.style.setProperty('color', '#b8c0ca', 'important');
       el.style.setProperty('background-color', '#444444', 'important');
+      el.style.caretColor = '#222';
+      setSelectionStyle('#222', '#e0e0e0');
     }
+  }
+
+  function setSelectionStyle(bg, color) {
+    let selStyle = document.getElementById('kg-inputtext-selection-style');
+    if (!selStyle) {
+      selStyle = document.createElement('style');
+      selStyle.id = 'kg-inputtext-selection-style';
+      document.head.appendChild(selStyle);
+    }
+    selStyle.textContent = `#inputtext::selection { background: ${bg} !important; color: ${color} !important; }`;
   }
 
   // Initialize the script immediately

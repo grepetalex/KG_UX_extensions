@@ -318,7 +318,8 @@
       #main-block .handle,
       #report,
       #fixtypo,
-      #entertip {
+      #entertip,
+      #param_keyboard {
           display: none !important;
       }
 

@@ -321,7 +321,8 @@
 
       #main-block .handle,
       #report,
-      #fixtypo {
+      #fixtypo,
+      #entertip {
           display: none !important;
       }
 

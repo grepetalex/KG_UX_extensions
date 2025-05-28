@@ -6214,7 +6214,6 @@
         color: var(--white);
         background: var(--darkgray) !important;
         border: none !important;
-        border-bottom: 1px solid var(--middlegray) !important;
     }
 
     #typeblock .disabled {

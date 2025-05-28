@@ -308,9 +308,9 @@
           position: relative !important;
           box-shadow: none !important;
           border: none !important;
-          margin: 1em 0 0.5em !important;
+          margin: 0.5em 0 0 !important;
           padding: 8px !important;
-          border-radius: 0.2em !important;
+          border-radius: 0.4em !important;
           outline: none !important;
           transition: background-color 0.2s ease, color 0.2s ease !important;
       }

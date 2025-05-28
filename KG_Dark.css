@@ -7976,9 +7976,9 @@
         border: none !important;
         background: var(--virtualKeyboard);
         color: transparent !important;
-        height: 12px !important;
-        width: 26px !important;
-        display: block !important;
+        height: 12px;
+        width: 26px;
+        display: block;
         transition: all .2s !important;
         animation: keyboard 10s linear infinite !important;
     }

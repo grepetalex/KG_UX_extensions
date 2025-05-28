@@ -26,7 +26,6 @@
   settings.dimmingLevel = typeof settings.dimmingLevel === 'number' ? settings.dimmingLevel : 50;
   settings.mainBlockWidth = typeof settings.mainBlockWidth === 'number' ? settings.mainBlockWidth : 90;
   settings.typeBlockPosition = typeof settings.typeBlockPosition === 'number' ? settings.typeBlockPosition : 25;
-  settings.inputTextWidth = typeof settings.inputTextWidth === 'number' ? settings.inputTextWidth : 30;
 
   let isDragging = false;
   let startY = 0;
@@ -77,7 +76,6 @@
 Для настройки затемнения: зажмите (ЛКМ) и тяните вверх/вниз на фоне.
 Для настройки ширины блока с текстом: зажмите (ЛКМ) и тяните влево/вправо.
 Для настройки положения блока с текстом: зажмите (ЛКМ) и тяните вверх/вниз.
-Для настройки ширины поля ввода: зажмите(ЛКМ) и тяните влево/вправо.
 `;
 
     // Double click to exit
@@ -306,7 +304,7 @@
       }
 
       #typeblock #inputtext {
-          width: ${settings.inputTextWidth}% !important;
+          width: 100% !important;
           position: relative !important;
           box-shadow: none !important;
           border: none !important;

@@ -480,7 +480,7 @@
       }
 
       #keyboard {
-          filter: invert(1) sepia(0) hue-rotate(40deg) grayscale(0.3) !important;
+          filter: ${currentTheme === 'dark' ? 'invert(1) sepia(0) hue-rotate(40deg) grayscale(0.3)' : 'none'} !important;
       }
 
       #keyboard_cont {

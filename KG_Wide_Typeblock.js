@@ -17,8 +17,93 @@
     dimmingLevel: 50,
     mainBlockWidth: 90,
     typeBlockPosition: 25,
-    isPartialMode: false,
     visibleLines: 1
+  };
+
+  // State Variables
+  let isWideMode = false;
+  let isPartialMode = false;
+  let currentTheme = 'dark';
+  let dimmingBg = null;
+  let styleElement = null;
+  let isExiting = false;
+  let observer = null;
+  let hasAppliedOnce = false;
+
+  // Theme Configuration
+  const themes = {
+    dark: {
+      background: '#222222',
+      text: {
+        before: '#414548',
+        focus: '#90ee90',
+        after: '#a2aebb',
+        error: '#ff7f50'
+      },
+      input: {
+        background: '#444444',
+        text: '#b8c0ca',
+        caret: '#222',
+        selection: {
+          background: '#222',
+          text: '#e0e0e0'
+        },
+        disabled: {
+          background: '#131313',
+          text: '#333333',
+          caret: '#333333',
+          selection: {
+            background: '#131313',
+            text: '#333333'
+          }
+        },
+        error: {
+          background: '#dc143c',
+          text: '#111111',
+          caret: '#7a0a1a',
+          selection: {
+            background: '#7a0a1a',
+            text: '#ffa4b6'
+          }
+        }
+      }
+    },
+    light: {
+      background: '#f3f3f3',
+      text: {
+        before: '#a6b2bd',
+        focus: '#0f738a',
+        after: '#677584',
+        error: '#d63301'
+      },
+      input: {
+        background: '#e0e0e0',
+        text: '#222222',
+        caret: '#333333',
+        selection: {
+          background: '#c0c0c0',
+          text: '#000000'
+        },
+        disabled: {
+          background: '#ededed',
+          text: '#b0b0b0',
+          caret: '#b0b0b0',
+          selection: {
+            background: '#ededed',
+            text: '#b0b0b0'
+          }
+        },
+        error: {
+          background: '#d05050',
+          text: '#6f0b0b',
+          caret: '#6f0b0b',
+          selection: {
+            background: '#6f0b0b',
+            text: '#ffa4a4'
+          }
+        }
+      }
+    }
   };
 
   // Load and Merge Settings
@@ -45,14 +130,6 @@
     saveSettings();
   }
 
-  // State Variables
-  let isWideMode = false;
-  let dimmingBg = null;
-  let styleElement = null;
-  let isExiting = false;
-  let observer = null;
-  let hasAppliedOnce = false;
-
   // Get line height of the type focus element
   function getLineHeight() {
     const typeFocus = document.getElementById('typefocus');
@@ -75,7 +152,7 @@
     const typeFocus = document.getElementById('typefocus');
     if (!typeText || !typeFocus) return;
 
-    if (getSetting('isPartialMode')) {
+    if (isPartialMode) {
       const lineHeight = getLineHeight();
       if (lineHeight <= 0) return;
       const maxLines = getMaxLines();
@@ -92,18 +169,17 @@
       typeFocus.style.removeProperty('top');
     }
   }
-
   function adjustVisibleLines(delta) {
-    if (!getSetting('isPartialMode')) return;
+    if (!isPartialMode) return;
     const maxLines = getMaxLines();
     const change = delta > 0 ? 1 : -1;
     const newVisibleLines = Math.max(1, Math.min(getSetting('visibleLines') + change, maxLines));
     setSetting('visibleLines', newVisibleLines);
     updateTextVisibility();
   }
-
   function toggleTextVisibilityMode() {
     setSetting('isPartialMode', !getSetting('isPartialMode'));
+    isPartialMode = getSetting('isPartialMode');
     updateTextVisibility();
   }
 
@@ -141,6 +217,7 @@
     dimmingBg = document.createElement('div');
     dimmingBg.id = 'kg-dimming-background';
     dimmingBg.title = `Для выхода: ESC или двойной клик (ЛКМ).
+Для переключения темы: Alt+T или двойной клик (ЛКМ) по строке ввода.
 Для настройки затемнения: зажмите (ЛКМ) и тяните вверх/вниз на фоне.
 Для настройки ширины блока с текстом: зажмите (ЛКМ) и тяните влево/вправо.
 Для настройки положения блока с текстом: зажмите (ЛКМ) и тяните вверх/вниз.
@@ -308,12 +385,12 @@
           pointer-events: auto !important;
           min-width: 566px !important;
       }
-
+    
       #typeblock {
           width: 100% !important;
           border: 2px solid rgba(0,0,0,0.3) !important;
           border-radius: 18px !important;
-          background-color: #222222 !important;
+          background-color: ${themes[currentTheme].background} !important;
           box-shadow: 0 0 5px rgba(0,0,0,0.4) !important;
       }
 
@@ -336,23 +413,23 @@
           width: 100% !important;
           height: auto !important;
           border-radius: 14px !important;
-          filter: invert(93.3%) grayscale(1) !important;
+          filter: ${currentTheme === 'dark' ? 'invert(93.3%) grayscale(1)' : 'none'} !important;
       }
 
       #typetext #beforefocus {
-          color: rgba(162, 174, 187, 0.5) !important;
+          color: ${themes[currentTheme].text.before} !important;
       }
 
       #typetext #typefocus {
-          color: lightgreen !important;
+          color: ${themes[currentTheme].text.focus} !important;
       }
 
       #typetext #afterfocus {
-          color: #a2aebb !important;
+          color: ${themes[currentTheme].text.after} !important;
       }
 
       #typetext #typefocus.highlight_error {
-          color: coral !important;
+          color: ${themes[currentTheme].text.error} !important;
       }
 
       #inputtextblock {
@@ -450,6 +527,11 @@
   function applyWideStyles() {
     if (isWideMode || hasAppliedOnce) return;
 
+    // Load isPartialMode from settings when entering wide mode
+    if (typeof settings.isPartialMode === 'boolean') {
+      isPartialMode = settings.isPartialMode;
+    }
+
     const mainBlock = document.getElementById('main-block');
     const typeblock = document.getElementById('typeblock');
     const inputtext = document.getElementById('inputtext');
@@ -481,11 +563,14 @@
       if (styleElement) styleElement.textContent = updateStyles({ inputTransition: true });
     }, 0);
   }
-
   // Event Listeners
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && isWideMode) {
       exitWideMode();
+      e.preventDefault();
+      e.stopPropagation();
+    } else if (e.altKey && e.key.toLowerCase() === 't' && isWideMode) {
+      toggleTheme();
       e.preventDefault();
       e.stopPropagation();
     }
@@ -552,23 +637,23 @@
     inputObserver = new MutationObserver(setColor);
     inputObserver.observe(el, { attributes: true, attributeFilter: ['class'] });
   }
-
   function setInputColorState(el) {
+    const theme = themes[currentTheme];
     if (el.classList.contains('disabled')) {
-      el.style.setProperty('color', '#333333', 'important');
-      el.style.setProperty('background-color', '#131313', 'important');
-      el.style.caretColor = '#333333';
-      setSelectionStyle('#131313', '#333333');
+      el.style.setProperty('color', theme.input.disabled.text, 'important');
+      el.style.setProperty('background-color', theme.input.disabled.background, 'important');
+      el.style.caretColor = theme.input.disabled.text;
+      setSelectionStyle(theme.input.disabled.background, theme.input.disabled.text);
     } else if (el.classList.contains('error')) {
-      el.style.setProperty('color', '#111111', 'important');
-      el.style.setProperty('background-color', '#dc143c', 'important');
-      el.style.caretColor = '#7a0a1a';
-      setSelectionStyle('#7a0a1a', '#ffa4b6');
+      el.style.setProperty('color', theme.input.error.text, 'important');
+      el.style.setProperty('background-color', theme.input.error.background, 'important');
+      el.style.caretColor = theme.input.error.caret;
+      setSelectionStyle(theme.input.error.selection.background, theme.input.error.selection.text);
     } else {
-      el.style.setProperty('color', '#b8c0ca', 'important');
-      el.style.setProperty('background-color', '#444444', 'important');
-      el.style.caretColor = '#222';
-      setSelectionStyle('#222', '#e0e0e0');
+      el.style.setProperty('color', theme.input.text, 'important');
+      el.style.setProperty('background-color', theme.input.background, 'important');
+      el.style.caretColor = theme.input.selection.background;
+      setSelectionStyle(theme.input.selection.background, theme.input.selection.text);
     }
   }
 
@@ -580,6 +665,18 @@
       document.head.appendChild(selStyle);
     }
     selStyle.textContent = `#inputtext::selection { background: ${bg} !important; color: ${color} !important; }`;
+  }
+
+  // Toggle Theme Function
+  function toggleTheme() {
+    currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    if (isWideMode) {
+      updateStyles();
+      const inputtext = document.getElementById('inputtext');
+      if (inputtext) {
+        setInputColorState(inputtext);
+      }
+    }
   }
 
   // Initialize

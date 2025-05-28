@@ -585,11 +585,12 @@
   function addGlobalKeydown() {
     if (globalKeydownHandler) return;
     globalKeydownHandler = (e) => {
+      // Use e.code === 'KeyT' for layout independence
       if (e.key === 'Escape' && isWideMode) {
         exitWideMode();
         e.preventDefault();
         e.stopPropagation();
-      } else if (e.altKey && e.key.toLowerCase() === 't' && isWideMode) {
+      } else if (e.altKey && e.code === 'KeyT' && isWideMode) {
         toggleTheme();
         e.preventDefault();
         e.stopPropagation();

@@ -333,6 +333,10 @@
       #keyboard {
           filter: invert(1) sepia(0) hue-rotate(40deg) grayscale(0.3) !important;
       }
+
+      #keyboard_cont {
+        margin-top: 0 !important; 
+      }
   `;
 
   }

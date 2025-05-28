@@ -217,7 +217,7 @@
     dimmingBg = document.createElement('div');
     dimmingBg.id = 'kg-dimming-background';
     dimmingBg.title = `Для выхода: ESC или двойной клик (ЛКМ).
-Для переключения темы: Alt+T или двойной клик (ЛКМ) по строке ввода.
+Для переключения темы: Alt + T или Ctrl + клик (ЛКМ) по фону.
 Для настройки затемнения: зажмите (ЛКМ) и тяните вверх/вниз на фоне.
 Для настройки ширины блока с текстом: зажмите (ЛКМ) и тяните влево/вправо.
 Для настройки положения блока с текстом: зажмите (ЛКМ) и тяните вверх/вниз.
@@ -229,6 +229,16 @@
     };
 
     addEvent(dimmingBg, 'dblclick', dblClickHandler);
+
+    // Ctrl + Click toggles theme
+    const ctrlClickHandler = (e) => {
+      if (e.button === 0 && e.ctrlKey) {
+        toggleTheme();
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+    addEvent(dimmingBg, 'click', ctrlClickHandler);
 
     // Drag logic handlers
     let dimDrag = { isDragging: false, startY: 0, startDimming: 0 };

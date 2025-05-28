@@ -225,10 +225,9 @@
     });
   }
 
-  function updateStyles() {
-    if (!styleElement) return;
-
-    styleElement.textContent = `
+  function updateStyles(opts = {}) {
+    const inputTransition = opts.inputTransition !== false;
+    return `
       #kg-dimming-background {
         position: fixed !important;
         top: 0 !important;
@@ -312,7 +311,7 @@
           padding: 8px !important;
           border-radius: 0.4em !important;
           outline: none !important;
-          transition: background-color 0.2s ease, color 0.2s ease !important;
+          ${inputTransition ? 'transition: background-color 0.2s ease, color 0.2s ease !important;' : ''}
       }
 
       #main-block .handle,
@@ -407,9 +406,8 @@
     styleElement = document.createElement('style');
     styleElement.className = 'kg-wide-mode-styles';
 
-    // Initial styles update
-    updateStyles();
-
+    // Initial styles update (without transition for inputtext)
+    styleElement.textContent = updateStyles({ inputTransition: false });
     document.head.appendChild(styleElement);
 
     // Set color/background-color directly on elements
@@ -423,6 +421,11 @@
     alignInputWithTypeFocus();
 
     isWideMode = true;
+
+    // Enable transition after wide mode is fully applied
+    setTimeout(() => {
+      if (styleElement) styleElement.textContent = updateStyles({ inputTransition: true });
+    }, 0);
   }
 
   // ESC key handler - Enhanced to work globally

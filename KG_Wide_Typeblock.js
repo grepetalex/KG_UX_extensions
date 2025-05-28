@@ -415,8 +415,7 @@
     // Set color/background-color directly on elements
     if (typeblock) typeblock.style.backgroundColor = '#222222';
     if (inputtext) {
-      inputtext.style.setProperty('background-color', '#444444', 'important');
-      inputtext.style.setProperty('color', '#b8c0ca', 'important');
+      setInputColorState(inputtext);
       observeInput();
     }
 
@@ -486,21 +485,25 @@
     const el = document.getElementById('inputtext');
     if (!el) return;
     const setColor = () => {
-      if (!isWideMode) return; // Only set colors in wide mode
-      if (el.classList.contains('disabled')) {
-        el.style.setProperty('color', '#333333', 'important');
-        el.style.setProperty('background-color', '#131313', 'important');
-      } else if (el.classList.contains('error')) {
-        el.style.setProperty('color', '#111111', 'important');
-        el.style.setProperty('background-color', '#dc143c', 'important');
-      } else {
-        el.style.setProperty('color', '#b8c0ca', 'important');
-        el.style.setProperty('background-color', '#444444', 'important');
-      }
+      if (!isWideMode) return;
+      setInputColorState(el);
     };
     setColor();
     inputObserver = new MutationObserver(setColor);
     inputObserver.observe(el, { attributes: true, attributeFilter: ['class'] });
+  }
+
+  function setInputColorState(el) {
+    if (el.classList.contains('disabled')) {
+      el.style.setProperty('color', '#333333', 'important');
+      el.style.setProperty('background-color', '#131313', 'important');
+    } else if (el.classList.contains('error')) {
+      el.style.setProperty('color', '#111111', 'important');
+      el.style.setProperty('background-color', '#dc143c', 'important');
+    } else {
+      el.style.setProperty('color', '#b8c0ca', 'important');
+      el.style.setProperty('background-color', '#444444', 'important');
+    }
   }
 
   // Initialize the script immediately

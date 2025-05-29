@@ -27,9 +27,7 @@
   let currentTheme = defaultSettings.theme;
   let dimmingBg = null;
   let styleElement = null;
-  let isExiting = false;
-  let observer = null;
-  let hasAppliedOnce = false;
+  let isManualExit = false;
 
   // Theme Configuration
   const disabledLight = 'hsl(0, 0%, 85%)';
@@ -224,13 +222,6 @@
   function createDimmingBackground() {
     dimmingBg = document.createElement('div');
     dimmingBg.id = 'kg-dimming-background';
-
-    const dblClickHandler = (e) => {
-      exitWideMode();
-      e.preventDefault();
-    };
-
-    addEvent(dimmingBg, 'dblclick', dblClickHandler);
 
     // Ctrl + Click toggles theme
     const ctrlClickHandler = (e) => {
@@ -504,10 +495,7 @@
   }
 
   // Mode Management
-  function exitWideMode() {
-    if (!isWideMode) return;
-
-    isExiting = true;
+  function exitWideMode(isManual = false) {
     removeEvents();
     removeGlobalKeydown();
 
@@ -531,14 +519,12 @@
     }
 
     isWideMode = false;
-
-    setTimeout(() => {
-      isExiting = false;
-    }, 100);
+    isManualExit = isManual;
   }
 
-  function applyWideStyles() {
-    if (isWideMode || hasAppliedOnce) return;
+  function enterWideMode() {
+    if (isWideMode) return;
+    isManualExit = false;
 
     // Load isPartialMode from settings when entering wide mode
     if (typeof settings.isPartialMode === 'boolean') {
@@ -550,8 +536,6 @@
     const inputtext = document.getElementById('inputtext');
 
     if (!mainBlock || !typeblock || !inputtext) return;
-
-    hasAppliedOnce = true;
 
     createDimmingBackground();
     setupMainBlockInteractions();
@@ -718,33 +702,29 @@
     }
   }
 
-  // Mutation Observer
-  function createObserver() {
-    if (hasAppliedOnce) return;
-    observer = new MutationObserver(() => {
-      if (!isWideMode && !hasAppliedOnce && checkTypeblockVisibility() && !isExiting) applyWideStyles();
+  let behaviorObserver = null;
+  function startObserver() {
+    behaviorObserver = new MutationObserver(() => {
       const bookInfo = document.getElementById('bookinfo');
       if (bookInfo && isWideMode && bookInfo.style.display === '') exitWideMode();
-      handleContentChanges();
+      if (!isWideMode && !isManualExit && checkTypeblockVisibility()) enterWideMode();
+      if (isWideMode) handleContentChanges();
     });
-    return observer;
-  }
 
-  function startObserver() {
-    if (hasAppliedOnce) return;
-    const targetNode = document.body || document.documentElement;
-    const obs = createObserver();
-    if (!obs) return;
-    obs.observe(targetNode, {
+    behaviorObserver.observe(document.body, {
       childList: true,
       subtree: true,
       attributes: true,
       attributeFilter: ['style', 'class']
     });
-    if (checkTypeblockVisibility()) {
-      applyWideStyles();
+
+    if (!isWideMode && checkTypeblockVisibility()) {
+      enterWideMode();
     }
   }
+
+  // Initialize
+  startObserver();
 
   // Input Observation
   let inputObserver;
@@ -805,6 +785,17 @@
     }
   }
 
-  // Initialize
-  startObserver();
+  // Toggle Wide Mode Function
+  const toggleWideMode = () => isWideMode ? exitWideMode(true) : enterWideMode();
+
+  // Add double-click event to input text element
+  document.addEventListener('dblclick', (e) => {
+    const inputText = document.getElementById('inputtext');
+    if (inputText && e.target === inputText) {
+      toggleWideMode();
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  });
+
 })();

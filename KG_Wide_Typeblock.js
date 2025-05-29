@@ -713,6 +713,7 @@
 
     handleContentChanges();
     updateSavedIndicator();
+    updatePartialModeIndicator();
 
     isWideMode = true;
 
@@ -1035,7 +1036,6 @@
     } else {
       if (span) span.remove();
     }
-    updatePartialModeIndicator();
   }
 
   function updatePartialModeIndicator() {

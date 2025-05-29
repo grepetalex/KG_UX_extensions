@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_Wide_Typeblock
 // @namespace    http://tampermonkey.net/
-// @version      1.1.3
+// @version      1.1.4
 // @description  try to take over the world!
 // @author       Patcher
 // @match        *://klavogonki.ru/g/?gmid=*
@@ -32,26 +32,26 @@
   let hasAppliedOnce = false;
 
   // Theme Configuration
-  const disabledLight = 'hsl(150, 0%, 85%)';
-  const disabledDark = 'hsl(0, 0%, 7.5%)';
+  const disabledLight = 'hsl(0, 0%, 85%)';
+  const disabledDark = 'hsl(0, 0%, 10%)';
 
   const themes = {
     dark: {
-      background: '#222222',
-      borderColor: 'rgba(0,0,0,0.3)',
+      background: 'hsl(0, 0%, 15%)',
+      borderColor: 'hsl(0, 0%, 20%)',
       text: {
-        before: '#414548',
-        focus: '#90ee90',
-        after: '#a2aebb',
-        error: '#ff7f50'
+        before: 'hsl(200, 10%, 40%)',
+        focus: 'hsl(120, 70%, 70%)',
+        after: 'hsl(200, 10%, 70%)',
+        error: 'hsl(0, 85%, 70%)'
       },
       input: {
-        background: '#444444',
-        text: '#b8c0ca',
-        caret: '#222',
+        background: 'hsl(120, 15%, 25%)',
+        text: 'hsl(120, 15%, 75%)',
+        caret: 'hsl(120, 15%, 75%)',
         selection: {
-          background: '#222',
-          text: '#e0e0e0'
+          background: 'hsl(120, 15%, 75%)',
+          text: 'hsl(120, 15%, 25%)'
         },
         disabled: {
           background: disabledDark,
@@ -63,19 +63,19 @@
           }
         },
         error: {
-          background: '#dc143c',
-          text: '#111111',
-          caret: '#7a0a1a',
+          background: 'hsl(350, 80%, 50%)',
+          text: 'hsl(350, 80%, 20%)',
+          caret: 'hsl(350, 80%, 20%)',
           selection: {
-            background: '#7a0a1a',
-            text: '#ffa4b6'
+            background: 'hsl(350, 80%, 20%)',
+            text: 'hsl(350, 80%, 50%)'
           }
         }
       }
     },
     light: {
       background: 'hsl(0, 0%, 95%)',
-      borderColor: 'rgba(0,0,0,0.1)',
+      borderColor: 'hsl(0, 0%, 70%)',
       text: {
         before: 'hsl(200, 15%, 70%)',
         focus: 'hsl(150, 30%, 30%)',
@@ -92,10 +92,10 @@
         },
         disabled: {
           background: disabledLight,
-          text: disabledLight, 
-          caret: disabledLight, 
+          text: disabledLight,
+          caret: disabledLight,
           selection: {
-            background: disabledLight, 
+            background: disabledLight,
             text: disabledLight
           }
         },
@@ -406,7 +406,7 @@
     
       #typeblock {
           width: 100% !important;
-          border: 2px solid rgba(0,0,0,0.3) !important;
+          border: 2px solid ${themes[currentTheme].borderColor} !important;
           border-radius: 18px !important;
           background-color: ${themes[currentTheme].background} !important;
           box-shadow: 0 0 5px rgba(0,0,0,0.4) !important;

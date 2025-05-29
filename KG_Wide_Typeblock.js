@@ -217,14 +217,16 @@
     if (isPartialMode) {
       const lineHeight = getLineHeight();
       if (lineHeight <= 0) return;
+      // Use the value from settings directly, do not clamp to maxLines here
+      let visibleLines = getSetting('visibleLines');
+      // Clamp only for display, not for saving
       const maxLines = getMaxLines();
-      const visibleLines = Math.max(1, Math.min(getSetting('visibleLines'), maxLines));
-      setSetting('visibleLines', visibleLines);
-      const visibleHeight = visibleLines * lineHeight;
+      const clampedLines = Math.max(1, Math.min(visibleLines, maxLines));
+      const visibleHeight = clampedLines * lineHeight;
       typeText.style.setProperty('height', `${visibleHeight}px`, 'important');
       const focusOffset = typeFocus.offsetTop;
       const maxScroll = typeText.scrollHeight - visibleHeight;
-      let targetScroll = visibleLines === 1 ? focusOffset : Math.min(focusOffset, maxScroll);
+      let targetScroll = clampedLines === 1 ? focusOffset : Math.min(focusOffset, maxScroll);
       typeText.scrollTop = Math.max(0, targetScroll);
     } else {
       typeText.style.removeProperty('height');
@@ -236,7 +238,8 @@
     if (!isPartialMode) return;
     const maxLines = getMaxLines();
     const change = delta > 0 ? 1 : -1;
-    const newVisibleLines = Math.max(1, Math.min(getSetting('visibleLines') + change, maxLines));
+    let newVisibleLines = getSetting('visibleLines') + change;
+    newVisibleLines = Math.max(1, Math.min(newVisibleLines, maxLines));
     setSetting('visibleLines', newVisibleLines);
     updateTextVisibility();
   }

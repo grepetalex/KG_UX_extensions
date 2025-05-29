@@ -311,6 +311,7 @@
       const newTop = Math.max(0, Math.min(maxTop, data.startTop + (deltaY / winHeight) * 100));
       setSetting('mainBlockWidth', newWidth);
       setSetting('typeBlockPosition', newTop);
+
       updateStyles();
     }, () => ({
       // This function is called when drag starts, capturing current values
@@ -368,6 +369,7 @@
   // Styles Management
   function updateStyles(opts = {}) {
     const inputTransition = opts.inputTransition !== false;
+    const typeText = document.getElementById('typetext');
     const css = `
       #kg-dimming-background {
         position: fixed !important;
@@ -482,6 +484,8 @@
     `;
 
     if (styleElement) styleElement.textContent = css;
+    // Reset height to allow dynamic resizing with auto height back with mutation observer
+    typeText && (typeText.style.removeProperty('height'));
     return css;
   }
 

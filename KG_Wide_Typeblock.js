@@ -246,6 +246,7 @@
     setSetting('isPartialMode', !getSetting('isPartialMode'));
     isPartialMode = getSetting('isPartialMode');
     updateTextVisibility();
+    updatePartialModeIndicator();
   }
 
   // Input Alignment

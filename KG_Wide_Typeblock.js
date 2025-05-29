@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_Wide_Typeblock
 // @namespace    http://tampermonkey.net/
-// @version      1.1.5
+// @version      1.1.6
 // @description  try to take over the world!
 // @author       Patcher
 // @match        *://klavogonki.ru/g/?gmid=*
@@ -709,6 +709,7 @@
     }
 
     handleContentChanges();
+    updateSavedIndicator();
 
     isWideMode = true;
 
@@ -876,6 +877,7 @@
     setSetting('theme', currentTheme);
     if (isWideMode) {
       updateStyles();
+      updateSavedIndicator();
       const inputtext = document.getElementById('inputtext');
       if (inputtext) {
         setInputColorState(inputtext);
@@ -930,6 +932,7 @@
         } else {
           setSettingsForMode(modeKey, Object.assign({}, settings));
         }
+        updateSavedIndicator();
         removeBtn();
       };
       document.body.appendChild(btn);
@@ -938,6 +941,60 @@
       btn.style.left = (e.pageX - rect.width / 2) + 'px';
       btn.style.top = (e.pageY - rect.height / 2) + 'px';
     });
+  }
+
+  function updateSavedIndicator() {
+    const mainBlock = document.getElementById('main-block');
+    if (!mainBlock) return;
+
+    const modeKey = getCurrentModeKey();
+    const hasCustom = !!getSettingsForMode(modeKey);
+    let span = document.getElementById('kg-saved-indicator');
+
+    if (hasCustom) {
+      if (span) {
+        // Update theme colors if indicator exists
+        span.style.backgroundColor = themes[currentTheme].input.background;
+        // Update SVG stroke color
+        const svg = span.querySelector('svg');
+        if (svg) {
+          svg.setAttribute('stroke', themes[currentTheme].input.text);
+        }
+        return;
+      }
+      span = document.createElement('span');
+      span.id = 'kg-saved-indicator';
+      span.style.position = 'absolute';
+      span.style.right = '-35px';
+      span.style.top = '50%';
+      span.style.transform = 'translateY(-50%)';
+      span.style.display = 'flex';
+      span.style.alignItems = 'center';
+      span.style.justifyContent = 'center';
+      span.style.width = '28px';
+      span.style.height = '28px';
+      span.style.backgroundColor = themes[currentTheme].input.background;
+      span.style.setProperty('border-radius', '0.2em', 'important');
+      span.style.setProperty('box-shadow', '0 2px 4px rgba(0,0,0,0.2)', 'important');
+      span.style.zIndex = '2100';
+      span.innerHTML = `
+        <svg
+          width="20" height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="${themes[currentTheme].input.text}"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+          <polyline points="17 21 17 13 7 13 7 21"></polyline>
+          <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
+      `;
+      mainBlock.appendChild(span);
+    } else {
+      if (span) span.remove();
+    }
   }
 
 })();

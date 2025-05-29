@@ -18,6 +18,7 @@
     mainBlockWidth: 90,
     typeBlockPosition: 25,
     visibleLines: 1,
+    fontSize: 16,
     theme: 'dark'
   };
 
@@ -539,6 +540,7 @@
 
     createDimmingBackground();
     setupMainBlockInteractions();
+    setupFontSizeManagement();
 
     styleElement = document.createElement('style');
     styleElement.className = 'kg-wide-mode-styles';
@@ -647,6 +649,7 @@
 
     alignInputWithTypeFocus();
     updateTextVisibility();
+    applyFontSize();
 
     isWideMode = true;
 
@@ -770,6 +773,43 @@
       document.head.appendChild(selStyle);
     }
     selStyle.textContent = `#inputtext::selection { background: ${bg} !important; color: ${color} !important; }`;
+  }
+
+  // Font Size Management
+  function getFontSize() {
+    let size = getSetting('fontSize');
+    if (typeof size !== 'number' || isNaN(size)) size = 16;
+    return Math.max(12, Math.min(48, size));
+  }
+
+  function setFontSize(size) {
+    size = Math.max(12, Math.min(48, size));
+    setSetting('fontSize', size);
+    applyFontSize();
+  }
+
+  function applyFontSize() {
+    const typetext = document.getElementById('typetext');
+    const inputtext = document.getElementById('inputtext');
+    const size = getFontSize();
+    if (typetext) {
+      typetext.style.fontSize = size + 'px';
+      typetext.style.lineHeight = (size * 1.2) + 'px';
+    }
+    inputtext && (inputtext.style.fontSize = size + 'px');
+  }
+
+  // Listen for ctrl+wheel to change font size in wide mode (only on main block)
+  function setupFontSizeManagement() {
+    const mainBlock = document.getElementById('main-block');
+    if (!mainBlock) return;
+    addEvent(mainBlock, 'wheel', function (e) {
+      if (e.ctrlKey && isWideMode) {
+        e.preventDefault();
+        if (e.deltaY < 0) setFontSize(getFontSize() + 2);
+        else if (e.deltaY > 0) setFontSize(getFontSize() - 2);
+      }
+    }, { passive: false });
   }
 
   // Toggle Theme Function

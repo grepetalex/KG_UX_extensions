@@ -176,6 +176,7 @@
       typeFocus.style.removeProperty('top');
     }
   }
+
   function adjustVisibleLines(delta) {
     if (!isPartialMode) return;
     const maxLines = getMaxLines();
@@ -184,6 +185,7 @@
     setSetting('visibleLines', newVisibleLines);
     updateTextVisibility();
   }
+
   function toggleTextVisibilityMode() {
     setSetting('isPartialMode', !getSetting('isPartialMode'));
     isPartialMode = getSetting('isPartialMode');

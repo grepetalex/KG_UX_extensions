@@ -902,6 +902,7 @@
     if (isWideMode) {
       updateStyles();
       updateSavedIndicator();
+      updatePartialModeIndicator();
       const inputtext = document.getElementById('inputtext');
       if (inputtext) {
         setInputColorState(inputtext);

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_Wide_Typeblock
 // @namespace    http://tampermonkey.net/
-// @version      1.1.4
+// @version      1.1.5
 // @description  try to take over the world!
 // @author       Patcher
 // @match        *://klavogonki.ru/g/?gmid=*
@@ -563,18 +563,98 @@
 
     if (typeblock) typeblock.style.backgroundColor = '#222222';
     if (inputtext) {
-      // Set help tooltip on hover when CTRL key is held down
-      const helpTitle = `Выход: ESC или двойной клик по фону.
-Тема: Alt + T или Ctrl + клик по фону.
-Затемнение: зажмите (ЛКМ) и тяните вверх/вниз на фоне.
-Ширина блока: зажмите (ЛКМ) и тяните влево/вправо на блоке.
-Положение блока: зажмите (ЛКМ) и тяните вверх/вниз на блоке.
-Колличество строк: прокрутите колесо мыши вверх/вниз на блоке.`;
+      // Show custom help popup on hover with CTRL key held down
+      const helpText = `
+        [Выход:] ESC или двойной клик по фону.<br>
+        [Тема:] Alt + T или Ctrl + клик по фону.<br>
+        [Затемнение:] зажмите (ЛКМ) и тяните вверх/вниз на фоне.<br>
+        [Ширина блока:] зажмите (ЛКМ) и тяните влево/вправо на блоке.<br>
+        [Положение блока:] зажмите (ЛКМ) и тяните вверх/вниз на блоке.<br>
+        [Колличество строк:] прокрутите колесо мыши вверх/вниз на блоке.
+      `;
 
-      addEvent(inputtext, 'mouseenter', (e) => {
-        inputtext.title = e.ctrlKey ? helpTitle : '';
-      });
-      addEvent(inputtext, 'mouseleave', () => { inputtext.title = ''; });
+      let helpPopup = null;
+      let ctrlDown = false;
+
+      // Helper to wrap anything in [] with span.help-highlight
+      function highlightHelpKeywords(text, color) {
+        // Replace all [keyword:] with span
+        return text.replace(/\[(.+?:)\]/g, (_m, kw) => `<span class='help-highlight' style='color: ${color}'>${kw}</span>`);
+      }
+
+      const showHelp = () => {
+        if (!ctrlDown) return;
+        if (!helpPopup) {
+          helpPopup = document.createElement('div');
+          helpPopup.className = 'kg-help-popup';
+          document.body.appendChild(helpPopup);
+        }
+        const theme = themes[currentTheme];
+        // Highlight keywords in helpText
+        helpPopup.innerHTML = highlightHelpKeywords(helpText, theme.text.focus);
+        // Calculate position: below by default, above if not enough space, and prevent overflow
+        const rect = inputtext.getBoundingClientRect();
+        const margin = 6;
+        helpPopup.style.width = 'fit-content';
+        helpPopup.style.maxWidth = '90vw';
+        helpPopup.style.display = 'block';
+        const popupHeight = helpPopup.offsetHeight || 140;
+        // Calculate position
+        let top = rect.bottom + window.scrollY + margin;
+        let left = rect.left + window.scrollX;
+        // Align left side of popup with left side of input
+        left = rect.left + window.scrollX;
+        // If not enough space below, show above
+        if (top + popupHeight > window.innerHeight + window.scrollY) {
+          top = rect.top + window.scrollY - popupHeight - margin;
+        }
+        // Prevent overflow top
+        if (top < window.scrollY) {
+          top = window.scrollY + margin;
+        }
+        // Prevent overflow bottom
+        if (top + popupHeight > window.innerHeight + window.scrollY) {
+          top = window.innerHeight + window.scrollY - popupHeight - margin;
+        }
+        Object.assign(helpPopup.style, {
+          position: 'absolute',
+          zIndex: 2010,
+          left: left + 'px',
+          top: top + 'px',
+          background: theme.background,
+          color: theme.text.after,
+          border: `2px solid ${theme.borderColor}`,
+          boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
+          padding: '12px 18px',
+          fontSize: '15px',
+          fontFamily: 'Tahoma, Arial, sans-serif',
+          whiteSpace: 'pre-line',
+          pointerEvents: 'none',
+          userSelect: 'none',
+          maxWidth: '90vw',
+          display: 'block',
+          minHeight: popupHeight + 'px',
+        });
+        // Add highlight color for help-highlight class
+        helpPopup.querySelectorAll('.help-highlight').forEach(el => {
+          el.style.color = theme.text.focus;
+          el.style.fontWeight = 'bold';
+        });
+      };
+
+      const hideHelp = () => { if (helpPopup) helpPopup.style.display = 'none'; };
+
+      const ctrlKeyHandler = e => {
+        ctrlDown = e.ctrlKey;
+        if (ctrlDown && inputtext.matches(':hover')) showHelp();
+        else hideHelp();
+      };
+
+      addEvent(window, 'keydown', ctrlKeyHandler);
+      addEvent(window, 'keyup', ctrlKeyHandler);
+
+      addEvent(inputtext, 'mouseenter', () => { if (ctrlDown) showHelp(); });
+      addEvent(inputtext, 'mouseleave', hideHelp);
 
       setInputColorState(inputtext);
       observeInput();

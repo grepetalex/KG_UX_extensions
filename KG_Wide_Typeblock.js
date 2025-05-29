@@ -23,12 +23,15 @@
   };
 
   // State Variables
+
+  let settings = null;
   let isWideMode = false;
   let isPartialMode = false;
   let currentTheme = null;
   let dimmingBg = null;
   let styleElement = null;
   let isManualExit = false;
+  let isEntered = false;
 
   // Theme Configuration
   const disabledLight = 'hsl(0, 0%, 85%)';
@@ -176,13 +179,6 @@
       localStorage.setItem(DEFAULT_SETTINGS_KEY, JSON.stringify(settingsObj));
     }
   }
-
-  // Settings state
-  let settings;
-  setTimeout(() => {
-    settings = getCurrentSettings();
-    currentTheme = settings.theme || defaultSettings.theme;
-  }, 3000);
 
   // Settings Helper Functions
   function getSetting(key) {
@@ -587,6 +583,7 @@
 
     isWideMode = false;
     isManualExit = isManual;
+    isEntered = false;
   }
 
   function enterWideMode() {
@@ -773,12 +770,24 @@
     }
   }
 
+  // Helper to initialize settings and enter wide mode if needed
+  function tryEnterWideMode() {
+    if (!isWideMode && !isManualExit && !isEntered && checkTypeblockVisibility()) {
+      if (!settings) {
+        settings = getCurrentSettings();
+        currentTheme = settings.theme || defaultSettings.theme;
+      }
+      isEntered = true;
+      enterWideMode();
+    }
+  }
+
   let behaviorObserver = null;
   function startObserver() {
     behaviorObserver = new MutationObserver(() => {
       const bookInfo = document.getElementById('bookinfo');
       if (bookInfo && isWideMode && bookInfo.style.display === '') exitWideMode();
-      if (!isWideMode && !isManualExit && checkTypeblockVisibility()) enterWideMode();
+      tryEnterWideMode();
       if (isWideMode) handleContentChanges();
     });
 
@@ -789,9 +798,7 @@
       attributeFilter: ['style', 'class']
     });
 
-    if (!isWideMode && checkTypeblockVisibility()) {
-      enterWideMode();
-    }
+    tryEnterWideMode();
   }
 
   // Initialize

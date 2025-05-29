@@ -25,7 +25,7 @@
   // State Variables
   let isWideMode = false;
   let isPartialMode = false;
-  let currentTheme = defaultSettings.theme;
+  let currentTheme = null;
   let dimmingBg = null;
   let styleElement = null;
   let isManualExit = false;
@@ -178,8 +178,11 @@
   }
 
   // Settings state
-  let settings = getCurrentSettings();
-  currentTheme = settings.theme || defaultSettings.theme;
+  let settings;
+  setTimeout(() => {
+    settings = getCurrentSettings();
+    currentTheme = settings.theme || defaultSettings.theme;
+  }, 3000);
 
   // Settings Helper Functions
   function getSetting(key) {

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_Wide_Typeblock
 // @namespace    http://tampermonkey.net/
-// @version      1.1.6
+// @version      1.1.7
 // @description  try to take over the world!
 // @author       Patcher
 // @match        *://klavogonki.ru/g/?gmid=*
@@ -367,10 +367,8 @@
       const newTop = Math.max(0, Math.min(maxTop, data.startTop + (deltaY / winHeight) * 100));
       setSetting('mainBlockWidth', Math.round(newWidth * 10) / 10);
       setSetting('mainBlockPosition', Math.round(newTop * 10) / 10);
-      updateStyles();
-      // Reset height to allow dynamic resizing with auto height back with mutation observer
-      const typeText = document.getElementById('typetext');
-      typeText && (typeText.style.removeProperty('height'));
+      updateStyles(); // Update styles after resizing
+      updateTextVisibility(); // Ensure text visibility is updated after resizing
     }, () => ({
       // This function is called when drag starts, capturing current values
       startWidth: getSetting('mainBlockWidth'),

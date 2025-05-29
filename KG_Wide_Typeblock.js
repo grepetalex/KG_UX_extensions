@@ -31,7 +31,6 @@
   let dimmingBg = null;
   let styleElement = null;
   let isManualExit = false;
-  let isEntered = false;
 
   // Theme Configuration
   const disabledLight = 'hsl(0, 0%, 85%)';
@@ -583,7 +582,6 @@
 
     isWideMode = false;
     isManualExit = isManual;
-    isEntered = false;
   }
 
   function enterWideMode() {
@@ -772,23 +770,36 @@
 
   // Helper to initialize settings and enter wide mode if needed
   function tryEnterWideMode() {
-    if (!isWideMode && !isManualExit && !isEntered && checkTypeblockVisibility()) {
+    if (!isWideMode && !isManualExit && checkTypeblockVisibility()) {
       if (!settings) {
         settings = getCurrentSettings();
         currentTheme = settings.theme || defaultSettings.theme;
       }
-      isEntered = true;
       enterWideMode();
     }
   }
 
   let behaviorObserver = null;
   function startObserver() {
+    let hasTriedEntering = false;
+
     behaviorObserver = new MutationObserver(() => {
       const bookInfo = document.getElementById('bookinfo');
-      if (bookInfo && isWideMode && bookInfo.style.display === '') exitWideMode();
-      tryEnterWideMode();
-      if (isWideMode) handleContentChanges();
+      if (bookInfo && isWideMode && bookInfo.style.display === '') {
+        exitWideMode();
+        hasTriedEntering = false;
+        return;
+      }
+
+      // Only try to enter if we haven't tried yet or if we're already in wide mode
+      if (!hasTriedEntering || isWideMode) {
+        if (!isWideMode) {
+          tryEnterWideMode();
+          if (isWideMode) hasTriedEntering = true;
+        } else {
+          handleContentChanges();
+        }
+      }
     });
 
     behaviorObserver.observe(document.body, {

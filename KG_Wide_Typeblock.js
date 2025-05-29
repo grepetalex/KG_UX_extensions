@@ -32,9 +32,13 @@
   let hasAppliedOnce = false;
 
   // Theme Configuration
+  const disabledLight = 'hsl(150, 0%, 85%)';
+  const disabledDark = 'hsl(0, 0%, 7.5%)';
+
   const themes = {
     dark: {
       background: '#222222',
+      borderColor: 'rgba(0,0,0,0.3)',
       text: {
         before: '#414548',
         focus: '#90ee90',
@@ -50,12 +54,12 @@
           text: '#e0e0e0'
         },
         disabled: {
-          background: '#131313',
-          text: '#333333',
-          caret: '#333333',
+          background: disabledDark,
+          text: disabledDark,
+          caret: disabledDark,
           selection: {
-            background: '#131313',
-            text: '#333333'
+            background: disabledDark,
+            text: disabledDark
           }
         },
         error: {
@@ -70,37 +74,38 @@
       }
     },
     light: {
-      background: '#f3f3f3',
+      background: 'hsl(0, 0%, 95%)',
+      borderColor: 'rgba(0,0,0,0.1)',
       text: {
-        before: '#a6b2bd',
-        focus: '#0f738a',
-        after: '#677584',
-        error: '#d63301'
+        before: 'hsl(200, 15%, 70%)',
+        focus: 'hsl(150, 30%, 30%)',
+        after: 'hsl(200, 15%, 40%)',
+        error: 'hsl(350, 80%, 45%)'
       },
       input: {
-        background: '#e0e0e0',
-        text: '#222222',
-        caret: '#333333',
+        background: 'hsl(150, 30%, 70%)',
+        text: 'hsl(150, 30%, 20%)',
+        caret: 'hsl(150, 30%, 20%)',
         selection: {
-          background: '#c0c0c0',
-          text: '#000000'
+          background: 'hsl(150, 30%, 20%)',
+          text: 'hsl(150, 30%, 70%)'
         },
         disabled: {
-          background: '#ededed',
-          text: '#b0b0b0',
-          caret: '#b0b0b0',
+          background: disabledLight,
+          text: disabledLight, 
+          caret: disabledLight, 
           selection: {
-            background: '#ededed',
-            text: '#b0b0b0'
+            background: disabledLight, 
+            text: disabledLight
           }
         },
         error: {
-          background: '#d05050',
-          text: '#6f0b0b',
-          caret: '#6f0b0b',
+          background: 'hsl(350, 80%, 60%)',
+          text: 'hsl(350, 80%, 30%)',
+          caret: 'hsl(350, 80%, 30%)',
           selection: {
-            background: '#6f0b0b',
-            text: '#ffa4a4'
+            background: 'hsl(350, 80%, 30%)',
+            text: 'hsl(350, 80%, 60%)'
           }
         }
       }
@@ -670,6 +675,8 @@
   function setInputColorState(el) {
     const theme = themes[currentTheme];
     if (el.classList.contains('disabled')) {
+      // Remove unwanted placeholder value if present and input is disabled
+      el.value = '';
       el.style.setProperty('color', theme.input.disabled.text, 'important');
       el.style.setProperty('background-color', theme.input.disabled.background, 'important');
       el.style.caretColor = theme.input.disabled.text;

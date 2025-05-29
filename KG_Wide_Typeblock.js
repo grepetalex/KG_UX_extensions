@@ -1050,10 +1050,19 @@
         span.title = 'Активирован режим частичного отображения текста';
         applyIndicatorBaseStyles(span);
         span.innerHTML = `
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${themes[currentTheme].input.text}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="4" y="5" width="16" height="14" rx="2"/>
-            <line x1="8" y1="9" x2="16" y2="9"/>
-            <line x1="8" y1="13" x2="16" y2="13"/>
+          <svg
+            width="20" height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="${themes[currentTheme].input.text}"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="feather feather-align-left">
+            <line x1="17" y1="10" x2="3" y2="10"></line>
+            <line x1="21" y1="6" x2="3" y2="6"></line>
+            <line x1="21" y1="14" x2="3" y2="14"></line>
+            <line x1="17" y1="18" x2="3" y2="18"></line>
           </svg>
         `;
         container.appendChild(span);

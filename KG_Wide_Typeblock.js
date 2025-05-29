@@ -775,7 +775,8 @@
         settings = getCurrentSettings();
         currentTheme = settings.theme || defaultSettings.theme;
       }
-      enterWideMode();
+      enterWideMode(); // Enter wide mode if not already
+      handleContentChanges(); // Ensure initial content is handled
     }
   }
 
@@ -802,12 +803,7 @@
       }
     });
 
-    behaviorObserver.observe(document.body, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ['style', 'class']
-    });
+    behaviorObserver.observe(document.body, { childList: true, subtree: true });
 
     tryEnterWideMode();
   }

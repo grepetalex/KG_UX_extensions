@@ -664,7 +664,7 @@
     globalKeydownHandler = (e) => {
       // Use e.code === 'KeyT' for layout independence
       if (e.key === 'Escape' && isWideMode) {
-        exitWideMode();
+        exitWideMode(true);
         e.preventDefault();
         e.stopPropagation();
       } else if (e.altKey && e.code === 'KeyT' && isWideMode) {

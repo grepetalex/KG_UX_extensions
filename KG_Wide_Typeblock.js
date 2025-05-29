@@ -121,7 +121,14 @@
     const modeClass = Array.from(gamedesc.querySelectorAll('[class^="gametype-"]'))
       .map(el => Array.from(el.classList).find(cls => cls.startsWith('gametype-')))
       .find(Boolean);
-    return modeClass || null;
+    if (!modeClass) return null;
+    if (modeClass === 'gametype-voc') {
+      // Compact: get voc id from first /vocs/\d+ in href
+      const a = gamedesc.querySelector('.gametype-voc a[href*="/vocs/"]');
+      const id = a && a.href.match(/\/vocs\/(\d+)/)?.[1];
+      if (id) return modeClass + '-' + id;
+    }
+    return modeClass;
   }
 
   function loadCustomSettings() {

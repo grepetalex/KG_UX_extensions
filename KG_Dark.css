@@ -6212,8 +6212,10 @@
     /* race typeblock input text default color */
     #typeblock #inputtext {
         color: var(--white);
-        background: var(--darkgray) !important;
+        background: var(--deepgray) !important;
         border: none !important;
+        padding: 8px;
+        box-sizing: border-box;
     }
 
     #typeblock .disabled {

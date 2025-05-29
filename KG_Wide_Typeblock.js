@@ -647,9 +647,7 @@
       observeInput();
     }
 
-    alignInputWithTypeFocus();
-    updateTextVisibility();
-    applyFontSize();
+    handleContentChanges();
 
     isWideMode = true;
 
@@ -699,9 +697,8 @@
   function handleContentChanges() {
     if (isWideMode) {
       alignInputWithTypeFocus();
-      if (getSetting('isPartialMode')) {
-        updateTextVisibility();
-      }
+      updateTextVisibility();
+      applyFontSize();
     }
   }
 

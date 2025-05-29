@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_Wide_Typeblock
 // @namespace    http://tampermonkey.net/
-// @version      1.1.7
+// @version      1.1.8
 // @description  try to take over the world!
 // @author       Patcher
 // @match        *://klavogonki.ru/g/?gmid=*
@@ -965,55 +965,102 @@
     });
   }
 
-  function updateSavedIndicator() {
+  function updateIndicatorContainer() {
     const mainBlock = document.getElementById('main-block');
     if (!mainBlock) return;
+    let container = document.getElementById('kg-indicator-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'kg-indicator-container';
+      container.style.position = 'absolute';
+      container.style.right = '-35px';
+      container.style.top = '50%';
+      container.style.gap = '8px';
+      container.style.transform = 'translateY(-50%)';
+      container.style.display = 'flex';
+      container.style.flexDirection = 'column';
+      container.style.alignItems = 'center';
+      container.style.justifyContent = 'center';
+      container.style.zIndex = '2100';
+      mainBlock.appendChild(container);
+    }
+    return container;
+  }
 
+  // Helper to apply base indicator styles
+  function applyIndicatorBaseStyles(span) {
+    span.style.display = 'flex';
+    span.style.alignItems = 'center';
+    span.style.justifyContent = 'center';
+    span.style.width = '28px';
+    span.style.height = '28px';
+    span.style.backgroundColor = themes[currentTheme].input.background;
+    span.style.setProperty('border-radius', '0.2em', 'important');
+    span.style.setProperty('box-shadow', '0 2px 4px rgba(0,0,0,0.2)', 'important');
+  }
+
+  function updateSavedIndicator() {
+    const container = updateIndicatorContainer();
+    if (!container) return;
     const modeKey = getCurrentModeKey();
     const hasCustom = !!getSettingsForMode(modeKey);
     let span = document.getElementById('kg-saved-indicator');
 
     if (hasCustom) {
-      if (span) {
-        // Update theme colors if indicator exists
-        span.style.backgroundColor = themes[currentTheme].input.background;
-        // Update SVG stroke color
-        const svg = span.querySelector('svg');
-        if (svg) {
-          svg.setAttribute('stroke', themes[currentTheme].input.text);
-        }
-        return;
-      }
-      span = document.createElement('span');
-      span.id = 'kg-saved-indicator';
-      span.style.position = 'absolute';
-      span.style.right = '-35px';
-      span.style.top = '50%';
-      span.style.transform = 'translateY(-50%)';
-      span.style.display = 'flex';
-      span.style.alignItems = 'center';
-      span.style.justifyContent = 'center';
-      span.style.width = '28px';
-      span.style.height = '28px';
-      span.style.backgroundColor = themes[currentTheme].input.background;
-      span.style.setProperty('border-radius', '0.2em', 'important');
-      span.style.setProperty('box-shadow', '0 2px 4px rgba(0,0,0,0.2)', 'important');
-      span.style.zIndex = '2100';
-      span.innerHTML = `
-        <svg
-          width="20" height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="${themes[currentTheme].input.text}"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round">
-          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-          <polyline points="17 21 17 13 7 13 7 21"></polyline>
-          <polyline points="7 3 7 8 15 8"></polyline>
+      if (!span) {
+        span = document.createElement('span');
+        span.id = 'kg-saved-indicator';
+        span.title = 'Применены кастомные настройки';
+        applyIndicatorBaseStyles(span);
+        span.innerHTML = `
+          <svg
+            width="20" height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="${themes[currentTheme].input.text}"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
           </svg>
-      `;
-      mainBlock.appendChild(span);
+        `;
+        container.appendChild(span);
+      } else {
+        applyIndicatorBaseStyles(span);
+        const svg = span.querySelector('svg');
+        if (svg) svg.setAttribute('stroke', themes[currentTheme].input.text);
+      }
+    } else {
+      if (span) span.remove();
+    }
+    updatePartialModeIndicator();
+  }
+
+  function updatePartialModeIndicator() {
+    const container = updateIndicatorContainer();
+    if (!container) return;
+    let span = document.getElementById('kg-partial-indicator');
+    if (isPartialMode) {
+      if (!span) {
+        span = document.createElement('span');
+        span.id = 'kg-partial-indicator';
+        span.title = 'Активирован режим частичного отображения текста';
+        applyIndicatorBaseStyles(span);
+        span.innerHTML = `
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${themes[currentTheme].input.text}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="5" width="16" height="14" rx="2"/>
+            <line x1="8" y1="9" x2="16" y2="9"/>
+            <line x1="8" y1="13" x2="16" y2="13"/>
+          </svg>
+        `;
+        container.appendChild(span);
+      } else {
+        applyIndicatorBaseStyles(span);
+        const svg = span.querySelector('svg');
+        if (svg) svg.setAttribute('stroke', themes[currentTheme].input.text);
+      }
     } else {
       if (span) span.remove();
     }

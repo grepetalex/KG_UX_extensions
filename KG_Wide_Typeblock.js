@@ -348,7 +348,7 @@
 
     addEvent(mainBlock, 'dblclick', dblClick);
     const wheel = (e) => {
-      if (getSetting('isPartialMode')) {
+      if (getSetting('isPartialMode') && !e.ctrlKey) {
         adjustVisibleLines(-e.deltaY);
         e.preventDefault();
         e.stopPropagation();

@@ -111,22 +111,70 @@
     }
   };
 
-  // Load and Merge Settings
-  let settingsRaw = localStorage.getItem('kg-wide-settings');
-  let settings;
-  try {
-    settings = settingsRaw ? JSON.parse(settingsRaw) : {};
-  } catch {
-    settings = {};
+  // Personal settings for different modes
+  const CUSTOM_SETTINGS_KEY = 'kg-wide-custom-settings';
+  const DEFAULT_SETTINGS_KEY = 'kg-wide-settings';
+
+  function getCurrentModeKey() {
+    const gamedesc = document.getElementById('gamedesc');
+    if (!gamedesc) return null;
+    const modeClass = Array.from(gamedesc.querySelectorAll('[class^="gametype-"]'))
+      .map(el => Array.from(el.classList).find(cls => cls.startsWith('gametype-')))
+      .find(Boolean);
+    return modeClass || null;
   }
-  settings = Object.assign({}, defaultSettings, settings);
+
+  function loadCustomSettings() {
+    let custom = {};
+    try {
+      custom = JSON.parse(localStorage.getItem(CUSTOM_SETTINGS_KEY) || '{}');
+    } catch { custom = {}; }
+    return custom;
+  }
+
+  function saveCustomSettings(custom) {
+    localStorage.setItem(CUSTOM_SETTINGS_KEY, JSON.stringify(custom));
+  }
+  function getSettingsForMode(modeKey) {
+    const custom = loadCustomSettings();
+    return (modeKey && custom[modeKey]) ? custom[modeKey] : null;
+  }
+  function setSettingsForMode(modeKey, newSettings) {
+    const custom = loadCustomSettings();
+    custom[modeKey] = newSettings;
+    saveCustomSettings(custom);
+  }
+  function removeSettingsForMode(modeKey) {
+    const custom = loadCustomSettings();
+    delete custom[modeKey];
+    saveCustomSettings(custom);
+  }
+
+  // Settings Management
+  function getCurrentSettings() {
+    const modeKey = getCurrentModeKey();
+    let base = {};
+    try {
+      base = JSON.parse(localStorage.getItem(DEFAULT_SETTINGS_KEY) || '{}');
+    } catch { base = {}; }
+    const custom = getSettingsForMode(modeKey);
+    return Object.assign({}, defaultSettings, base, custom || {});
+  }
+
+  function saveCurrentSettings(settingsObj) {
+    const modeKey = getCurrentModeKey();
+    if (getSettingsForMode(modeKey)) {
+      setSettingsForMode(modeKey, settingsObj);
+    } else {
+      localStorage.setItem(DEFAULT_SETTINGS_KEY, JSON.stringify(settingsObj));
+    }
+  }
+
+  // Settings state
+  let settings = getCurrentSettings();
   currentTheme = settings.theme || defaultSettings.theme;
 
   // Settings Helper Functions
-  function saveSettings() {
-    localStorage.setItem('kg-wide-settings', JSON.stringify(settings));
-  }
-
   function getSetting(key) {
     return settings[key];
   }
@@ -134,7 +182,7 @@
   function setSetting(key, value) {
     settings[key] = value;
     if (key === 'theme') currentTheme = value;
-    saveSettings();
+    saveCurrentSettings(settings);
   }
 
   // Get line height of the type focus element
@@ -546,6 +594,7 @@
     createDimmingBackground();
     setupMainBlockInteractions();
     setupFontSizeManagement();
+    setupRememberButton();
 
     styleElement = document.createElement('style');
     styleElement.className = 'kg-wide-mode-styles';
@@ -839,5 +888,49 @@
       e.stopPropagation();
     }
   });
+
+  // Setup right click button to remember or forget settings for the current mode
+  function setupRememberButton() {
+    const input = document.getElementById('inputtext');
+    if (!input) return;
+    let btn = null;
+    function removeBtn() {
+      btn && btn.remove(); btn = null;
+    }
+    input.addEventListener('contextmenu', function (e) {
+      e.preventDefault();
+      const modeKey = getCurrentModeKey();
+      const hasCustom = !!getSettingsForMode(modeKey);
+      btn = document.createElement('button');
+      btn.textContent = hasCustom ? 'Забыть' : 'Запомнить';
+      btn.style.position = 'absolute';
+      btn.style.zIndex = '2020';
+      btn.style.fontSize = '16px';
+      btn.style.padding = '6px 16px';
+      btn.style.background = themes[currentTheme].input.background;
+      btn.style.color = themes[currentTheme].input.text;
+      btn.style.setProperty('box-shadow', '0 2px 4px rgba(0,0,0,0.2)', 'important');
+      btn.style.setProperty('border', `2px solid ${themes[currentTheme].borderColor}`, 'important');
+      btn.style.setProperty('border-radius', '0.4em', 'important');
+      btn.style.cursor = 'pointer';
+      btn.onmousedown = ev => ev.stopPropagation();
+      btn.onclick = function (ev) {
+        ev.preventDefault();
+        if (hasCustom) {
+          removeSettingsForMode(modeKey);
+          settings = getCurrentSettings();
+          saveCurrentSettings(settings);
+        } else {
+          setSettingsForMode(modeKey, Object.assign({}, settings));
+        }
+        removeBtn();
+      };
+      document.body.appendChild(btn);
+      btn.addEventListener('mouseleave', removeBtn);
+      const rect = btn.getBoundingClientRect();
+      btn.style.left = (e.pageX - rect.width / 2) + 'px';
+      btn.style.top = (e.pageY - rect.height / 2) + 'px';
+    });
+  }
 
 })();

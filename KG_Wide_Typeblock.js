@@ -16,7 +16,7 @@
   const defaultSettings = {
     dimmingLevel: 50,
     mainBlockWidth: 90,
-    typeBlockPosition: 25,
+    mainBlockPosition: 25,
     visibleLines: 1,
     fontSize: 16,
     theme: 'dark'
@@ -309,14 +309,13 @@
       const deltaY = e.clientY - data.startY;
       const newWidth = Math.max(20, Math.min(95, data.startWidth + (deltaX / winWidth) * 100));
       const newTop = Math.max(0, Math.min(maxTop, data.startTop + (deltaY / winHeight) * 100));
-      setSetting('mainBlockWidth', newWidth);
-      setSetting('typeBlockPosition', newTop);
-
+      setSetting('mainBlockWidth', Math.round(newWidth * 10) / 10);
+      setSetting('mainBlockPosition', Math.round(newTop * 10) / 10);
       updateStyles();
     }, () => ({
       // This function is called when drag starts, capturing current values
       startWidth: getSetting('mainBlockWidth'),
-      startTop: getSetting('typeBlockPosition'),
+      startTop: getSetting('mainBlockPosition'),
       blockHeight: mainBlock.offsetHeight
     }), isOverInput);
   }
@@ -387,7 +386,7 @@
           position: fixed !important;
           width: ${getSetting('mainBlockWidth')}vw !important;
           left: 50% !important;
-          top: ${getSetting('typeBlockPosition')}vh !important;
+          top: ${getSetting('mainBlockPosition')}vh !important;
           transform: translateX(-50%) !important;
           z-index: 2000 !important;
           pointer-events: auto !important;

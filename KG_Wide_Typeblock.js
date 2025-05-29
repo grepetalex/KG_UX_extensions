@@ -224,12 +224,6 @@
   function createDimmingBackground() {
     dimmingBg = document.createElement('div');
     dimmingBg.id = 'kg-dimming-background';
-    dimmingBg.title = `Для выхода: ESC или двойной клик (ЛКМ) по фону.
-Для переключения темы: Alt + T или Ctrl + клик (ЛКМ) по фону.
-Для настройки затемнения: зажмите (ЛКМ) и тяните вверх/вниз на фоне.
-Для настройки ширины блока с текстом: зажмите (ЛКМ) и тяните влево/вправо на блоке.
-Для настройки положения блока с текстом: зажмите (ЛКМ) и тяните вверх/вниз на блоке.
-Для изменения количества видимых строк: прокрутите колесо мыши вверх/вниз на блоке.`;
 
     const dblClickHandler = (e) => {
       exitWideMode();
@@ -569,6 +563,19 @@
 
     if (typeblock) typeblock.style.backgroundColor = '#222222';
     if (inputtext) {
+      // Set help tooltip on hover when CTRL key is held down
+      const helpTitle = `Выход: ESC или двойной клик по фону.
+Тема: Alt + T или Ctrl + клик по фону.
+Затемнение: зажмите (ЛКМ) и тяните вверх/вниз на фоне.
+Ширина блока: зажмите (ЛКМ) и тяните влево/вправо на блоке.
+Положение блока: зажмите (ЛКМ) и тяните вверх/вниз на блоке.
+Колличество строк: прокрутите колесо мыши вверх/вниз на блоке.`;
+
+      addEvent(inputtext, 'mouseenter', (e) => {
+        inputtext.title = e.ctrlKey ? helpTitle : '';
+      });
+      addEvent(inputtext, 'mouseleave', () => { inputtext.title = ''; });
+
       setInputColorState(inputtext);
       observeInput();
     }

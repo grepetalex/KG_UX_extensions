@@ -8,6 +8,76 @@
 // @icon          https://www.google.com/s2/favicons?sz=64&domain=klavogonki.ru
 // ==/UserScript==
 
+// Color Configuration (moved outside the class for valid JS syntax)
+const THEME_COLORS = {
+  light: {
+    // Main colors
+    '--bg-primary': '#fff',
+    '--bg-secondary': '#fafafa',
+    '--bg-card': '#fafafa',
+    '--bg-card-pinned': '#f0f8f0',
+    '--bg-hover': '#f4f4f4',
+
+    // Border colors
+    '--border-primary': '#e0e0e0',
+    '--border-hover': '#bdbdbd',
+    '--border-pinned': '#4CAF50',
+
+    // Text colors
+    '--text-primary': '#212121',
+    '--text-secondary': '#666',
+    '--text-tertiary': '#888',
+    '--text-options': '#444',
+    '--text-count': '#222',
+
+    // Icon colors
+    '--icon-primary': 'currentColor',
+    '--icon-pin': '#4CAF50',
+    '--icon-pin-fill': '#4CAF50',
+    '--icon-delete': '#F44336',
+    '--icon-theme-sun': '#FFD600',
+    '--icon-theme-moon': '#90CAF9',
+
+    // Interactive colors
+    '--hover-pin': 'rgba(76, 175, 80, 0.2)',
+    '--hover-delete': 'rgba(244, 67, 54, 0.2)',
+    '--hover-control': '#e0e0e0'
+  },
+  dark: {
+    // Main colors
+    '--bg-primary': '#181A1B',
+    '--bg-secondary': '#23272A',
+    '--bg-card': '#23272A',
+    '--bg-card-pinned': '#1e2b22',
+    '--bg-hover': '#23272A',
+
+    // Border colors
+    '--border-primary': '#23272A',
+    '--border-hover': '#616161',
+    '--border-pinned': '#43A047',
+
+    // Text colors
+    '--text-primary': '#e0e0e0',
+    '--text-secondary': '#e0e0e0',
+    '--text-tertiary': '#e0e0e0',
+    '--text-options': '#e0e0e0',
+    '--text-count': '#FFD600',
+
+    // Icon colors
+    '--icon-primary': '#90CAF9',
+    '--icon-pin': '#43A047',
+    '--icon-pin-fill': '#43A047',
+    '--icon-delete': '#FF8A80',
+    '--icon-theme-sun': '#FFD600',
+    '--icon-theme-moon': '#90CAF9',
+
+    // Interactive colors
+    '--hover-pin': 'rgba(67, 160, 71, 0.2)',
+    '--hover-delete': 'rgba(255, 138, 128, 0.2)',
+    '--hover-control': '#616161'
+  }
+};
+
 class RecentGamesManager {
   constructor() {
     this.maxGameCount = 5;
@@ -66,6 +136,7 @@ class RecentGamesManager {
 
   // --- Theme Management Methods ---
 
+  // Applies the current theme to the container
   applyTheme() {
     const container = document.getElementById('recent-games-container');
     if (container) {
@@ -74,44 +145,44 @@ class RecentGamesManager {
     }
   }
 
-  // Updated method that works with any SVG element
+  // Updates the theme icon based on the current theme
   updateThemeIcon(svg) {
     if (this.currentTheme === 'light') {
       svg.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg"
-        width="24" height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        class="feather feather-sun">
-          <circle cx="12" cy="12" r="5"></circle>
-          <line x1="12" y1="1" x2="12" y2="3"></line>
-          <line x1="12" y1="21" x2="12" y2="23"></line>
-          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-          <line x1="1" y1="12" x2="3" y2="12"></line>
-          <line x1="21" y1="12" x2="23" y2="12"></line>
-          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-        </svg>
-      `;
+      <svg xmlns="http://www.w3.org/2000/svg"
+      class="feather feather-sun"
+      width="16" height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round">
+        <circle cx="12" cy="12" r="5"></circle>
+        <line x1="12" y1="1" x2="12" y2="3"></line>
+        <line x1="12" y1="21" x2="12" y2="23"></line>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+        <line x1="1" y1="12" x2="3" y2="12"></line>
+        <line x1="21" y1="12" x2="23" y2="12"></line>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+      </svg>
+    `;
     } else {
       svg.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg"
-        width="24" height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        class="feather feather-moon">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-        </svg>
-      `;
+      <svg xmlns="http://www.w3.org/2000/svg"
+      class="feather feather-moon"
+      width="16" height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+      </svg>
+    `;
     }
   }
 
@@ -279,8 +350,9 @@ class RecentGamesManager {
     document.body.appendChild(container);
   }
 
+  // Injects styles based on the current theme
   injectStyles() {
-    const styles = {
+    const baseStyles = {
       '#recent-games-hover-area': {
         position: 'fixed',
         left: '0',
@@ -299,8 +371,8 @@ class RecentGamesManager {
         minWidth: '200px',
         maxWidth: '250px',
         maxHeight: 'calc(100vh - 200px)',
-        backgroundColor: '#fff', // Material Light: White
-        border: '1px solid #e0e0e0', // Material Light: Light gray border
+        backgroundColor: 'var(--bg-primary)',
+        border: '1px solid var(--border-primary)',
         borderLeft: 'none',
         borderRadius: '0 8px 8px 0',
         boxShadow: '2px 0 10px rgba(0,0,0,0.1)',
@@ -310,15 +382,10 @@ class RecentGamesManager {
         overflowY: 'auto',
         overflowX: 'hidden',
         scrollbarWidth: 'none',
-        color: '#212121' // Material Light: Dark gray text
+        color: 'var(--text-primary)'
       },
       '#recent-games-container.visible': {
         left: '0'
-      },
-      '#recent-games-container.dark-theme': {
-        backgroundColor: '#181A1B', // Material Deep Dark
-        borderColor: '#23272A', // Material Deep Dark border
-        color: '#e0e0e0'
       },
       '#recent-games': {
         margin: '0',
@@ -331,33 +398,19 @@ class RecentGamesManager {
       '.recent-game': {
         position: 'relative',
         margin: '0 10px',
-        border: '1px solid #e0e0e0',
+        border: '1px solid var(--border-primary)',
         borderRadius: '4px',
-        backgroundColor: '#fafafa', // Material Light: Card
+        backgroundColor: 'var(--bg-card)',
         transition: 'all 0.2s ease'
       },
-      '.dark-theme .recent-game': {
-        borderColor: '#23272A',
-        backgroundColor: '#23272A', // Material Deep Dark card
-        color: '#e0e0e0'
-      },
       '.recent-game.pin-game': {
-        border: '2px solid #4CAF50',
-        backgroundColor: '#f0f8f0'
-      },
-      '.dark-theme .recent-game.pin-game': {
-        border: '2px solid #43A047',
-        backgroundColor: '#1e2b22'
+        border: '2px solid var(--border-pinned)',
+        backgroundColor: 'var(--bg-card-pinned)'
       },
       '.recent-game:hover': {
-        borderColor: '#bdbdbd',
-        backgroundColor: '#f4f4f4',
+        borderColor: 'var(--border-hover)',
+        backgroundColor: 'var(--bg-hover)',
         transform: 'translateX(2px)'
-      },
-      '.dark-theme .recent-game:hover': {
-        borderColor: '#616161',
-        backgroundColor: '#23272A',
-        color: '#fff'
       },
       '.recent-game.dragging': {
         opacity: '0.7',
@@ -379,7 +432,7 @@ class RecentGamesManager {
       '.recent-game-description': {
         display: 'block',
         fontSize: '10px',
-        color: '#666',
+        color: 'var(--text-secondary)',
         lineHeight: '1.2'
       },
       '.recent-game-qual': {
@@ -389,7 +442,7 @@ class RecentGamesManager {
       '.recent-game-levels': {
         display: 'block',
         fontSize: '9px',
-        color: '#888',
+        color: 'var(--text-tertiary)',
         marginTop: '1px'
       },
       '.recent-game-handle': {
@@ -400,11 +453,8 @@ class RecentGamesManager {
         width: '12px',
         height: '12px',
         cursor: 'move',
-        opacity: '0.5'
-      },
-      '.recent-game-handle svg': {
-        width: '100%',
-        height: '100%'
+        opacity: '0.5',
+        color: 'var(--icon-primary)'
       },
       '.pin-game .recent-game-handle': {
         display: 'block'
@@ -431,22 +481,25 @@ class RecentGamesManager {
         justifyContent: 'center',
         transition: 'background-color 0.2s ease'
       },
-      '.dark-theme .recent-game-pin': {
-        borderColor: '#616161' // Material Dark: Medium gray
-      },
-      '.dark-theme .recent-game-delete': {
-        borderColor: '#616161' // Material Dark: Medium gray
-      },
       '.recent-game-pin:hover': {
-        backgroundColor: 'rgba(76, 175, 80, 0.2)'
+        backgroundColor: 'var(--hover-pin)'
       },
       '.recent-game-delete:hover': {
-        backgroundColor: 'rgba(244, 67, 54, 0.2)'
+        backgroundColor: 'var(--hover-delete)'
       },
-      '.recent-game-pin svg, .recent-game-delete svg': {
+      '.recent-game-pin svg': {
         width: '10px',
         height: '10px',
-        opacity: '0.6'
+        opacity: '0.6',
+        fill: 'var(--icon-pin-fill)', // Pin icon uses fill instead of stroke
+        stroke: 'none'
+      },
+      '.recent-game-delete svg': {
+        width: '10px',
+        height: '10px',
+        opacity: '0.6',
+        stroke: 'var(--icon-delete)',
+        fill: 'none'
       },
       '.recent-game-pin:hover svg, .recent-game-delete:hover svg': {
         opacity: '1'
@@ -467,11 +520,8 @@ class RecentGamesManager {
         alignItems: 'center',
         fontSize: '13px',
         gap: '6px',
-        color: '#444',
+        color: 'var(--text-options)',
         userSelect: 'none'
-      },
-      '.dark-theme #recent-games-options': {
-        color: '#e0e0e0',
       },
       '#recent-games-count': {
         margin: '0 6px',
@@ -479,10 +529,7 @@ class RecentGamesManager {
         fontSize: '14px',
         minWidth: '18px',
         textAlign: 'center',
-        color: '#222'
-      },
-      '.dark-theme #recent-games-count': {
-        color: '#FFD600',
+        color: 'var(--text-count)'
       },
       '#recent-games-count-inc, #recent-games-count-dec': {
         cursor: 'pointer',
@@ -493,13 +540,11 @@ class RecentGamesManager {
         userSelect: 'none',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        color: 'var(--icon-primary)'
       },
       '#recent-games-count-inc:hover, #recent-games-count-dec:hover': {
-        background: '#e0e0e0'
-      },
-      '.dark-theme #recent-games-count-inc:hover, .dark-theme #recent-games-count-dec:hover': {
-        background: '#616161' // Material Dark: Medium gray hover
+        background: 'var(--hover-control)'
       },
       '.theme-toggle': {
         cursor: 'pointer',
@@ -510,51 +555,56 @@ class RecentGamesManager {
         height: '24px'
       },
       '.theme-toggle svg': {
-        width: '24px',
-        height: '24px',
+        width: '16px',
+        height: '16px',
         display: 'block',
-        stroke: 'currentColor',
-        'stroke-width': '2',
-        'stroke-linecap': 'round',
-        'stroke-linejoin': 'round',
-        fill: 'none',
-        transition: 'stroke 0.2s, fill 0.2s',
-      },
-      '.theme-toggle svg.feather-moon': {
-        stroke: '#90CAF9', // Moon accent for light
+        transition: 'stroke 0.2s, fill 0.2s'
       },
       '.theme-toggle svg.feather-sun': {
-        stroke: '#FFD600', // Sun accent for dark
+        stroke: 'var(--icon-theme-sun)',
+        fill: 'none',
+        strokeWidth: '2',
+        strokeLinecap: 'round',
+        strokeLinejoin: 'round'
       },
-      '.recent-game-handle svg, .recent-game-pin svg, .recent-game-delete svg': {
-        width: '10px',
-        height: '10px',
-        opacity: '0.6',
+      '.theme-toggle svg.feather-moon': {
+        stroke: 'var(--icon-theme-moon)',
+        fill: 'none',
+        strokeWidth: '2',
+        strokeLinecap: 'round',
+        strokeLinejoin: 'round'
+      },
+      // Generic SVG styling
+      '.recent-game-handle svg': {
+        width: '12px',
+        height: '12px',
+        fill: 'currentColor'
       },
       '#recent-games-count-dec svg, #recent-games-count-inc svg': {
         width: '16px',
         height: '16px',
-      },
-      '.dark-theme .recent-game-handle svg, .dark-theme .recent-game-pin svg, .dark-theme .recent-game-delete svg, .dark-theme #recent-games-count-dec svg, .dark-theme #recent-games-count-inc svg': {
-        stroke: '#90CAF9',
-      },
-      '.recent-game-pin svg': {
-        stroke: '#4CAF50',
-      },
-      '.dark-theme .recent-game-pin svg': {
-        stroke: '#43A047',
-      },
-      '.recent-game-delete svg': {
-        stroke: '#F44336',
-      },
-      '.dark-theme .recent-game-delete svg': {
-        stroke: '#FF8A80',
+        fill: 'currentColor'
       }
     };
 
+    this.createStyleSheet(baseStyles);
+  }
+
+  // Create stylesheet with CSS variables
+  createStyleSheet(styles) {
     const styleElement = this.createElement('style');
     let cssText = '';
 
+    // Add CSS custom properties for each theme
+    Object.entries(THEME_COLORS).forEach(([themeName, colors]) => {
+      cssText += `#recent-games-container.${themeName}-theme { `;
+      Object.entries(colors).forEach(([property, value]) => {
+        cssText += `${property}: ${value}; `;
+      });
+      cssText += '} ';
+    });
+
+    // Add base styles
     Object.entries(styles).forEach(([selector, rules]) => {
       cssText += `${selector} { `;
       Object.entries(rules).forEach(([property, value]) => {
@@ -566,8 +616,6 @@ class RecentGamesManager {
     styleElement.textContent = cssText;
     document.head.appendChild(styleElement);
   }
-
-  // --- Remaining Unchanged Methods ---
 
   loadSettings() {
     try {

@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name          KG_Recent_Games
 // @namespace     klavogonki
-// @version       1.0.1
-// @description   Fast game creation buttons on main and gamelist page
+// @version       1.0.2
+// @description   Fast game creation buttons on main and gamelist page with theme switcher
 // @match         *://klavogonki.ru/*
 // @author        Patcher
 // @icon          https://www.google.com/s2/favicons?sz=64&domain=klavogonki.ru
@@ -47,6 +47,9 @@ class RecentGamesManager {
       'кибергонщиков': 8, 'экстракиберов': 9
     };
 
+    // Load theme from localStorage, default to light
+    this.currentTheme = localStorage.getItem('recent_games_theme') || 'light';
+
     this.init();
   }
 
@@ -58,7 +61,418 @@ class RecentGamesManager {
     this.createContainer();
     this.handlePageSpecificLogic();
     this.exposeGlobalFunctions();
+    this.applyTheme(); // Apply initial theme
   }
+
+  // --- Theme Management Methods ---
+
+  applyTheme() {
+    const container = document.getElementById('recent-games-container');
+    if (container) {
+      container.classList.remove('light-theme', 'dark-theme');
+      container.classList.add(`${this.currentTheme}-theme`);
+    }
+  }
+
+  updateThemeToggle() {
+    const svg = document.querySelector('#recent-games-container .theme-toggle svg');
+    if (svg) {
+      if (this.currentTheme === 'light') {
+        svg.innerHTML = '<path d="M12 2a10 10 0 000 20c5.523 0 10-4.477 10-10s-4.477-10-10-10z" fill="currentColor" />'; // Moon
+      } else {
+        svg.innerHTML = '<circle cx="12" cy="12" r="6" fill="currentColor" />'; // Sun
+      }
+    }
+  }
+
+  toggleTheme() {
+    this.currentTheme = this.currentTheme === 'light' ? 'dark' : 'light';
+    localStorage.setItem('recent_games_theme', this.currentTheme);
+    this.applyTheme();
+    this.updateThemeToggle();
+  }
+
+  createThemeToggle() {
+    const toggleButton = this.createElement('div', {
+      className: 'theme-toggle',
+      title: 'Switch theme'
+    });
+
+    const svg = this.createElement('svg', {
+      viewBox: '0 0 24 24',
+      width: '16',
+      height: '16'
+    });
+
+    toggleButton.appendChild(svg);
+
+    toggleButton.addEventListener('click', () => {
+      this.toggleTheme();
+    });
+
+    this.updateThemeToggle(); // Set initial icon
+
+    return toggleButton;
+  }
+
+  // --- Existing Methods with Modifications ---
+
+  createGameElement(game, id) {
+    const li = this.createElement('li', {
+      className: `recent-game${game.pin ? ' pin-game' : ''}`,
+      id: `recent-game-${id}`
+    });
+
+    const handle = this.createElement('div', {
+      className: 'recent-game-handle',
+      innerHTML: `<svg viewBox="0 0 24 24" width="12" height="12">
+        <path d="M9 3h2v2H9V3zm4 0h2v2h-2V3zM9 7h2v2H9V7zm4 0h2v2h-2V7zm-4 4h2v2H9v-2zm4 0h2v2h-2v-2zm-4 4h2v2H9v-2zm4 0h2v2h-2v-2zm-4 4h2v2H9v-2zm4 0h2v2h-2v-2z" fill="currentColor"/>
+      </svg>`
+    });
+
+    const buttons = this.createElement('div', {
+      className: 'recent-game-buttons'
+    });
+
+    const pinButton = this.createElement('div', {
+      className: 'recent-game-pin',
+      title: 'Зафиксировать',
+      innerHTML: `<svg viewBox="0 0 24 24" width="10" height="10">
+        <path d="M16,12V4H17V2H7V4H8V12L6,14V16H11.2V22H12.8V16H18V14L16,12Z" fill="currentColor"/>
+      </svg>`
+    });
+    pinButton.addEventListener('click', () => this.pinGame(id));
+
+    const deleteButton = this.createElement('div', {
+      className: 'recent-game-delete',
+      title: 'Удалить',
+      innerHTML: `<svg viewBox="0 0 24 24" width="10" height="10">
+        <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" fill="currentColor"/>
+      </svg>`
+    });
+    deleteButton.addEventListener('click', () => this.deleteGame(id));
+
+    buttons.appendChild(pinButton);
+    buttons.appendChild(deleteButton);
+
+    const link = this.createElement('a', {
+      href: this.generateGameLink(game),
+      innerHTML: this.generateGameName(game)
+    });
+
+    li.appendChild(handle);
+    li.appendChild(buttons);
+    li.appendChild(link);
+
+    if (game.pin) {
+      this.addDragFunctionality(li, handle, id);
+    }
+
+    return li;
+  }
+
+  createControls() {
+    const controlsContainer = this.createElement('div', {
+      className: 'recent-games-controls'
+    });
+
+    const options = this.createElement('span', {
+      id: 'recent-games-options',
+      textContent: 'История: '
+    });
+
+    const decreaseBtn = this.createElement('span', {
+      id: 'recent-games-count-dec',
+      innerHTML: `<svg viewBox="0 0 24 24" width="16" height="16">
+        <path d="M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z" fill="currentColor"/>
+      </svg>`
+    });
+
+    const countDisplay = this.createElement('span', {
+      id: 'recent-games-count',
+      textContent: this.maxGameCount.toString()
+    });
+
+    const increaseBtn = this.createElement('span', {
+      id: 'recent-games-count-inc',
+      innerHTML: `<svg viewBox="0 0 24 24" width="16" height="16">
+        <path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" fill="currentColor"/>
+      </svg>`
+    });
+
+    decreaseBtn.addEventListener('click', () => this.changeGameCount(-1));
+    increaseBtn.addEventListener('click', () => this.changeGameCount(1));
+
+    options.appendChild(decreaseBtn);
+    options.appendChild(countDisplay);
+    options.appendChild(increaseBtn);
+
+    controlsContainer.appendChild(options);
+    controlsContainer.appendChild(this.createThemeToggle());
+
+    return controlsContainer;
+  }
+
+  createContainer() {
+    const container = this.createElement('div', {
+      id: 'recent-games-container'
+    });
+
+    const gamesList = this.createElement('ul', {
+      id: 'recent-games'
+    });
+
+    this.populateGamesList(gamesList);
+    container.appendChild(gamesList);
+
+    const controls = this.createControls();
+    container.appendChild(controls);
+
+    container.addEventListener('mouseenter', () => {
+      this.showContainer();
+    });
+
+    container.addEventListener('mouseleave', () => {
+      this.hideContainerWithDelay();
+    });
+
+    document.body.appendChild(container);
+  }
+
+  injectStyles() {
+    const styles = {
+      '#recent-games-hover-area': {
+        position: 'fixed',
+        left: '0',
+        top: '0',
+        width: '50px',
+        height: '100vh',
+        zIndex: '9998',
+        backgroundColor: 'transparent',
+        pointerEvents: 'auto'
+      },
+      '#recent-games-container': {
+        position: 'fixed',
+        left: '-250px',
+        top: '100px',
+        width: 'auto',
+        minWidth: '200px',
+        maxWidth: '250px',
+        maxHeight: 'calc(100vh - 200px)',
+        backgroundColor: '#fff', // Material Light: White
+        border: '1px solid #ccc', // Material Light: Light gray border
+        borderLeft: 'none',
+        borderRadius: '0 8px 8px 0',
+        boxShadow: '2px 0 10px rgba(0,0,0,0.1)',
+        zIndex: '9999',
+        padding: '10px 0',
+        transition: 'left 0.3s ease-in-out',
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        scrollbarWidth: 'none',
+        color: '#333' // Material Light: Dark gray text
+      },
+      '#recent-games-container.visible': {
+        left: '0'
+      },
+      '#recent-games-container.dark-theme': {
+        backgroundColor: '#303030', // Material Dark: Dark gray
+        borderColor: '#616161', // Material Dark: Medium gray
+        color: '#e0e0e0' // Material Dark: Light gray text
+      },
+      '#recent-games': {
+        margin: '0',
+        padding: '0',
+        listStyle: 'none',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '5px'
+      },
+      '.recent-game': {
+        position: 'relative',
+        margin: '0 10px',
+        border: '1px solid #ddd',
+        borderRadius: '4px',
+        backgroundColor: '#f9f9f9',
+        transition: 'all 0.2s ease'
+      },
+      '.dark-theme .recent-game': {
+        borderColor: '#616161' // Material Dark: Medium gray
+      },
+      '.recent-game.pin-game': {
+        border: '2px solid #4CAF50',
+        backgroundColor: '#f0f8f0'
+      },
+      '.recent-game:hover': {
+        borderColor: '#666',
+        backgroundColor: '#f4f4f4',
+        transform: 'translateX(2px)'
+      },
+      '.recent-game.pin-game:hover': {
+        borderColor: '#45a049'
+      },
+      '.recent-game.dragging': {
+        opacity: '0.7',
+        transform: 'rotate(2deg)',
+        zIndex: '10000'
+      },
+      '.recent-game a': {
+        display: 'block',
+        padding: '8px 12px',
+        textDecoration: 'none',
+        color: 'inherit'
+      },
+      '.recent-game-name': {
+        display: 'block',
+        fontWeight: 'bold',
+        fontSize: '12px',
+        marginBottom: '2px'
+      },
+      '.recent-game-description': {
+        display: 'block',
+        fontSize: '10px',
+        color: '#666',
+        lineHeight: '1.2'
+      },
+      '.recent-game-qual': {
+        color: '#f00',
+        fontWeight: 'bold'
+      },
+      '.recent-game-levels': {
+        display: 'block',
+        fontSize: '9px',
+        color: '#888',
+        marginTop: '1px'
+      },
+      '.recent-game-handle': {
+        display: 'none',
+        position: 'absolute',
+        left: '2px',
+        top: '2px',
+        width: '12px',
+        height: '12px',
+        cursor: 'move',
+        opacity: '0.5'
+      },
+      '.recent-game-handle svg': {
+        width: '100%',
+        height: '100%'
+      },
+      '.pin-game .recent-game-handle': {
+        display: 'block'
+      },
+      '.recent-game-buttons': {
+        position: 'absolute',
+        right: '4px',
+        top: '4px',
+        display: 'flex',
+        gap: '2px',
+        opacity: '0',
+        transition: 'opacity 0.2s ease'
+      },
+      '.recent-game:hover .recent-game-buttons': {
+        opacity: '1'
+      },
+      '.recent-game-pin, .recent-game-delete': {
+        width: '16px',
+        height: '16px',
+        cursor: 'pointer',
+        borderRadius: '2px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        transition: 'background-color 0.2s ease'
+      },
+      '.dark-theme .recent-game-pin': {
+        borderColor: '#616161' // Material Dark: Medium gray
+      },
+      '.dark-theme .recent-game-delete': {
+        borderColor: '#616161' // Material Dark: Medium gray
+      },
+      '.recent-game-pin:hover': {
+        backgroundColor: 'rgba(76, 175, 80, 0.2)'
+      },
+      '.recent-game-delete:hover': {
+        backgroundColor: 'rgba(244, 67, 54, 0.2)'
+      },
+      '.recent-game-pin svg, .recent-game-delete svg': {
+        width: '10px',
+        height: '10px',
+        opacity: '0.6'
+      },
+      '.recent-game-pin:hover svg, .recent-game-delete:hover svg': {
+        opacity: '1'
+      },
+      '.pin-game .recent-game-pin': {
+        display: 'none'
+      },
+      '.recent-games-controls': {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '0 10px',
+        marginTop: '10px'
+      },
+      '#recent-games-options': {
+        fontFamily: 'sans-serif',
+        display: 'flex',
+        alignItems: 'center',
+        fontSize: '13px',
+        gap: '6px',
+        color: '#444',
+        userSelect: 'none'
+      },
+      '#recent-games-count': {
+        margin: '0 6px',
+        fontWeight: 'bold',
+        fontSize: '14px',
+        minWidth: '18px',
+        textAlign: 'center',
+        color: '#222'
+      },
+      '#recent-games-count-inc, #recent-games-count-dec': {
+        cursor: 'pointer',
+        fontSize: '16px',
+        padding: '2px 6px',
+        borderRadius: '3px',
+        transition: 'background 0.15s',
+        userSelect: 'none',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      },
+      '#recent-games-count-inc:hover, #recent-games-count-dec:hover': {
+        background: '#e0e0e0'
+      },
+      '.dark-theme #recent-games-count-inc:hover, .dark-theme #recent-games-count-dec:hover': {
+        background: '#616161' // Material Dark: Medium gray hover
+      },
+      '.theme-toggle': {
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '24px',
+        height: '24px'
+      }
+    };
+
+    const styleElement = this.createElement('style');
+    let cssText = '';
+
+    Object.entries(styles).forEach(([selector, rules]) => {
+      cssText += `${selector} { `;
+      Object.entries(rules).forEach(([property, value]) => {
+        cssText += `${property.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value}; `;
+      });
+      cssText += '} ';
+    });
+
+    styleElement.textContent = cssText;
+    document.head.appendChild(styleElement);
+  }
+
+  // --- Remaining Unchanged Methods ---
 
   loadSettings() {
     try {
@@ -224,61 +638,6 @@ class RecentGamesManager {
     return `${location.protocol}//klavogonki.ru/create/?${params.toString()}`;
   }
 
-  createGameElement(game, id) {
-    const li = this.createElement('li', {
-      className: `recent-game${game.pin ? ' pin-game' : ''}`,
-      id: `recent-game-${id}`
-    });
-
-    const handle = this.createElement('div', {
-      className: 'recent-game-handle',
-      innerHTML: `<svg viewBox="0 0 24 24" width="12" height="12">
-        <path d="M9 3h2v2H9V3zm4 0h2v2h-2V3zM9 7h2v2H9V7zm4 0h2v2h-2V7zm-4 4h2v2H9v-2zm4 0h2v2h-2v-2zm-4 4h2v2H9v-2zm4 0h2v2h-2v-2zm-4 4h2v2H9v-2zm4 0h2v2h-2v-2z" fill="#666"/>
-      </svg>`
-    });
-
-    const buttons = this.createElement('div', {
-      className: 'recent-game-buttons'
-    });
-
-    const pinButton = this.createElement('div', {
-      className: 'recent-game-pin',
-      title: 'Зафиксировать',
-      innerHTML: `<svg viewBox="0 0 24 24" width="10" height="10">
-        <path d="M16,12V4H17V2H7V4H8V12L6,14V16H11.2V22H12.8V16H18V14L16,12Z" fill="#666"/>
-      </svg>`
-    });
-    pinButton.addEventListener('click', () => this.pinGame(id));
-
-    const deleteButton = this.createElement('div', {
-      className: 'recent-game-delete',
-      title: 'Удалить',
-      innerHTML: `<svg viewBox="0 0 24 24" width="10" height="10">
-        <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" fill="#666"/>
-      </svg>`
-    });
-    deleteButton.addEventListener('click', () => this.deleteGame(id));
-
-    buttons.appendChild(pinButton);
-    buttons.appendChild(deleteButton);
-
-    const link = this.createElement('a', {
-      href: this.generateGameLink(game),
-      innerHTML: this.generateGameName(game)
-    });
-
-    li.appendChild(handle);
-    li.appendChild(buttons);
-    li.appendChild(link);
-
-    // Add drag and drop functionality for pinned games
-    if (game.pin) {
-      this.addDragFunctionality(li, handle, id);
-    }
-
-    return li;
-  }
-
   addDragFunctionality(element, handle, id) {
     handle.addEventListener('mousedown', (e) => {
       e.preventDefault();
@@ -321,7 +680,6 @@ class RecentGamesManager {
     if (insertAfter) {
       insertAfter.parentNode.insertBefore(this.draggedElement, insertAfter.nextSibling);
     } else {
-      // Insert at the beginning of pinned games
       const firstPinned = gamesList.querySelector('.pin-game:not(.dragging)');
       if (firstPinned) {
         gamesList.insertBefore(this.draggedElement, firstPinned);
@@ -335,7 +693,6 @@ class RecentGamesManager {
     this.isDragging = false;
     this.draggedElement.classList.remove('dragging');
     
-    // Update game data order based on DOM order
     this.updateGameOrderFromDOM();
     
     this.draggedElement = null;
@@ -379,33 +736,6 @@ class RecentGamesManager {
     });
 
     document.body.appendChild(hoverArea);
-  }
-
-  createContainer() {
-    const container = this.createElement('div', {
-      id: 'recent-games-container'
-    });
-
-    const gamesList = this.createElement('ul', {
-      id: 'recent-games'
-    });
-
-    this.populateGamesList(gamesList);
-    container.appendChild(gamesList);
-
-    // Add counter controls at the bottom of the panel
-    const controls = this.createCounterControls();
-    container.appendChild(controls);
-
-    container.addEventListener('mouseenter', () => {
-      this.showContainer();
-    });
-
-    container.addEventListener('mouseleave', () => {
-      this.hideContainerWithDelay();
-    });
-
-    document.body.appendChild(container);
   }
 
   populateGamesList(gamesList) {
@@ -476,7 +806,6 @@ class RecentGamesManager {
     const gameIndex = this.findGameIndex(id);
     if (gameIndex === -1) return;
 
-    // Find insertion point (after all pinned games)
     let insertIndex = 0;
     for (let i = 0; i < this.gameData.length; i++) {
       if (!this.gameData[i].pin) {
@@ -516,7 +845,6 @@ class RecentGamesManager {
     const gameParams = this.parseGameParams(span, descText);
     const gameParamsString = JSON.stringify(gameParams);
 
-    // Remove existing game if found (unless it's pinned)
     for (let i = 0; i < this.gameData.length; i++) {
       if (JSON.stringify(this.gameData[i].params) === gameParamsString) {
         if (this.gameData[i].pin) {
@@ -528,7 +856,6 @@ class RecentGamesManager {
       }
     }
 
-    // Maintain max game count
     const pinnedCount = this.getPinnedGameCount();
     while (this.gameData.length >= this.maxGameCount + pinnedCount) {
       this.gameData.pop();
@@ -593,41 +920,6 @@ class RecentGamesManager {
     };
   }
 
-  createCounterControls() {
-    const container = this.createElement('span', {
-      id: 'recent-games-options',
-      textContent: 'История: '
-    });
-
-    const decreaseBtn = this.createElement('span', {
-      id: 'recent-games-count-dec',
-      innerHTML: `<svg viewBox="0 0 24 24" width="16" height="16">
-        <path d="M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z" fill="#666"/>
-      </svg>`
-    });
-
-    const countDisplay = this.createElement('span', {
-      id: 'recent-games-count',
-      textContent: this.maxGameCount.toString()
-    });
-
-    const increaseBtn = this.createElement('span', {
-      id: 'recent-games-count-inc',
-      innerHTML: `<svg viewBox="0 0 24 24" width="16" height="16">
-        <path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" fill="#666"/>
-      </svg>`
-    });
-
-    decreaseBtn.addEventListener('click', () => this.changeGameCount(-1));
-    increaseBtn.addEventListener('click', () => this.changeGameCount(1));
-
-    container.appendChild(decreaseBtn);
-    container.appendChild(countDisplay);
-    container.appendChild(increaseBtn);
-
-    return container;
-  }
-
   changeGameCount(delta) {
     if (delta < 0 && this.maxGameCount > 0) {
       this.maxGameCount--;
@@ -644,218 +936,9 @@ class RecentGamesManager {
     this.refreshContainer();
   }
 
-  injectStyles() {
-    const styles = {
-      '#recent-games-hover-area': {
-        position: 'fixed',
-        left: '0',
-        top: '0',
-        width: '50px',
-        height: '100vh',
-        zIndex: '9998',
-        backgroundColor: 'transparent',
-        pointerEvents: 'auto'
-      },
-      '#recent-games-container': {
-        position: 'fixed',
-        left: '-250px',
-        top: '100px',
-        width: 'auto',
-        minWidth: '200px',
-        maxWidth: '250px',
-        maxHeight: 'calc(100vh - 200px)',
-        backgroundColor: '#fff',
-        border: '1px solid #ccc',
-        borderLeft: 'none',
-        borderRadius: '0 8px 8px 0',
-        boxShadow: '2px 0 10px rgba(0,0,0,0.1)',
-        zIndex: '9999',
-        padding: '10px 0',
-        transition: 'left 0.3s ease-in-out',
-        overflowY: 'auto',
-        overflowX: 'hidden',
-        scrollbarWidth: 'none',
-      },
-      '#recent-games-container.visible': {
-        left: '0'
-      },
-      '#recent-games': {
-        margin: '0',
-        padding: '0',
-        listStyle: 'none',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '5px'
-      },
-      '.recent-game': {
-        position: 'relative',
-        margin: '0 10px',
-        border: '1px solid #ddd',
-        borderRadius: '4px',
-        backgroundColor: '#f9f9f9',
-        transition: 'all 0.2s ease'
-      },
-      '.recent-game.pin-game': {
-        border: '2px solid #4CAF50',
-        backgroundColor: '#f0f8f0'
-      },
-      '.recent-game:hover': {
-        borderColor: '#666',
-        backgroundColor: '#f4f4f4',
-        transform: 'translateX(2px)'
-      },
-      '.recent-game.pin-game:hover': {
-        borderColor: '#45a049'
-      },
-      '.recent-game.dragging': {
-        opacity: '0.7',
-        transform: 'rotate(2deg)',
-        zIndex: '10000'
-      },
-      '.recent-game a': {
-        display: 'block',
-        padding: '8px 12px',
-        textDecoration: 'none',
-        color: '#333'
-      },
-      '.recent-game-name': {
-        display: 'block',
-        fontWeight: 'bold',
-        fontSize: '12px',
-        marginBottom: '2px'
-      },
-      '.recent-game-description': {
-        display: 'block',
-        fontSize: '10px',
-        color: '#666',
-        lineHeight: '1.2'
-      },
-      '.recent-game-qual': {
-        color: '#f00',
-        fontWeight: 'bold'
-      },
-      '.recent-game-levels': {
-        display: 'block',
-        fontSize: '9px',
-        color: '#888',
-        marginTop: '1px'
-      },
-      '.recent-game-handle': {
-        display: 'none',
-        position: 'absolute',
-        left: '2px',
-        top: '2px',
-        width: '12px',
-        height: '12px',
-        cursor: 'move',
-        opacity: '0.5'
-      },
-      '.recent-game-handle svg': {
-        width: '100%',
-        height: '100%'
-      },
-      '.pin-game .recent-game-handle': {
-        display: 'block'
-      },
-      '.recent-game-buttons': {
-        position: 'absolute',
-        right: '4px',
-        top: '4px',
-        display: 'flex',
-        gap: '2px',
-        opacity: '0',
-        transition: 'opacity 0.2s ease'
-      },
-      '.recent-game:hover .recent-game-buttons': {
-        opacity: '1'
-      },
-      '.recent-game-pin, .recent-game-delete': {
-        width: '16px',
-        height: '16px',
-        cursor: 'pointer',
-        borderRadius: '2px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        transition: 'background-color 0.2s ease'
-      },
-      '.recent-game-pin:hover': {
-        backgroundColor: 'rgba(76, 175, 80, 0.2)'
-      },
-      '.recent-game-delete:hover': {
-        backgroundColor: 'rgba(244, 67, 54, 0.2)'
-      },
-      '.recent-game-pin svg, .recent-game-delete svg': {
-        width: '10px',
-        height: '10px',
-        opacity: '0.6'
-      },
-      '.recent-game-pin:hover svg, .recent-game-delete:hover svg': {
-        opacity: '1'
-      },
-      '.pin-game .recent-game-pin': {
-        display: 'none'
-      },
-      '#recent-games-options': {
-        fontFamily: 'sans-serif',
-        margin: '10px 0 0 0',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        fontSize: '13px',
-        gap: '6px',
-        color: '#444',
-        userSelect: 'none',
-      },
-      '#recent-games-count': {
-        margin: '0 6px',
-        fontWeight: 'bold',
-        fontSize: '14px',
-        minWidth: '18px',
-        textAlign: 'center',
-        color: '#222',
-      },
-      '#recent-games-count-inc, #recent-games-count-dec': {
-        cursor: 'pointer',
-        fontSize: '16px',
-        padding: '2px 6px',
-        borderRadius: '3px',
-        transition: 'background 0.15s',
-        userSelect: 'none',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      },
-      '#recent-games-count-inc:hover, #recent-games-count-dec:hover': {
-        background: '#e0e0e0',
-      },
-      '#recent-games-count-inc svg, #recent-games-count-dec svg': {
-        transition: 'fill 0.15s'
-      },
-      '#recent-games-count-inc:hover svg, #recent-games-count-dec:hover svg': {
-        fill: '#333'
-      }
-    };
-
-    const styleElement = this.createElement('style');
-    let cssText = '';
-
-    Object.entries(styles).forEach(([selector, rules]) => {
-      cssText += `${selector} { `;
-      Object.entries(rules).forEach(([property, value]) => {
-        cssText += `${property.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value}; `;
-      });
-      cssText += '} ';
-    });
-
-    styleElement.textContent = cssText;
-    document.head.appendChild(styleElement);
-  }
-
   handlePageSpecificLogic() {
     const { href } = location;
 
-    // Game page - save game parameters
     if (/https?:\/\/klavogonki\.ru\/g\/\?gmid=/.test(href)) {
       const gameLoading = document.getElementById('gameloading');
       if (!gameLoading) {
@@ -873,9 +956,8 @@ class RecentGamesManager {
       }
     }
 
-    // Game list page - show counter controls in original location
     if (/https?:\/\/klavogonki\.ru\/gamelist\//.test(href)) {
-      const controls = this.createCounterControls();
+      const controls = this.createControls();
 
       const gamelistCreate = document.querySelector('.gamelist-create');
       if (gamelistCreate) {
@@ -888,17 +970,14 @@ class RecentGamesManager {
   }
 
   exposeGlobalFunctions() {
-    // Expose functions globally for debugging
     window.recentGamesManager = this;
   }
 }
 
-// Initialize immediately without waiting for DOM
 function initializeRecentGames() {
   if (!document.getElementById('KTS_RecentGames')) {
     new RecentGamesManager();
 
-    // Mark as initialized
     const marker = document.createElement('div');
     marker.id = 'KTS_RecentGames';
     marker.style.display = 'none';
@@ -906,5 +985,4 @@ function initializeRecentGames() {
   }
 }
 
-// Initialize immediately
 initializeRecentGames();

@@ -8,7 +8,7 @@
 // @icon          https://www.google.com/s2/favicons?sz=64&domain=klavogonki.ru
 // ==/UserScript==
 
-// Color Configuration (moved outside the class for valid JS syntax)
+// Color Configuration
 const THEME_COLORS = {
   light: {
     // Main colors
@@ -50,8 +50,8 @@ const THEME_COLORS = {
     // Interactive colors
     '--rg-hover-pin': 'hsla(122, 39%, 49%, 0.2)',
     '--rg-hover-delete': 'hsla(4, 90%, 58%, 0.2)',
-    '--rg-hover-control': 'hsl(0, 0%, 92%)', // lighter for light theme
-    '--rg-hover-control-btn': 'hsl(213, 77%, 96%)', // nice blueish for light theme
+    '--rg-hover-control': 'hsl(0, 0%, 92%)',
+    '--rg-hover-control-btn': 'hsl(213, 77%, 96%)',
   },
   dark: {
     // Main colors
@@ -94,7 +94,7 @@ const THEME_COLORS = {
     '--rg-hover-pin': 'hsla(133, 43%, 47%, 0.2)',
     '--rg-hover-delete': 'hsla(4, 100%, 75%, 0.2)',
     '--rg-hover-control': 'hsl(0, 0%, 38%)',
-    '--rg-hover-control-btn': 'hsl(213, 81.60%, 29.80%)', // nice blueish for dark theme
+    '--rg-hover-control-btn': 'hsl(213, 81.60%, 29.80%)',
   }
 };
 
@@ -153,7 +153,7 @@ class RecentGamesManager {
     this.createContainer();
     this.handlePageSpecificLogic();
     this.exposeGlobalFunctions();
-    this.applyTheme(); // Apply initial theme
+    this.applyTheme();
   }
 
   // --- Theme Management Methods ---
@@ -374,8 +374,24 @@ class RecentGamesManager {
     const controls = this.createControls();
     container.appendChild(controls);
 
+    // Restore scroll position if available
+    const savedScroll = localStorage.getItem('recent_games_scroll');
+    if (savedScroll) {
+      container.scrollTop = parseInt(savedScroll, 10);
+    }
+
+    // Save scroll position on scroll
+    container.addEventListener('scroll', () => {
+      localStorage.setItem('recent_games_scroll', container.scrollTop.toString());
+    });
+
     container.addEventListener('mouseenter', () => {
       this.showContainer();
+      // Restore scroll position again in case container was re-created
+      const savedScroll = localStorage.getItem('recent_games_scroll');
+      if (savedScroll) {
+        container.scrollTop = parseInt(savedScroll, 10);
+      }
     });
 
     container.addEventListener('mouseleave', () => {
@@ -986,6 +1002,11 @@ class RecentGamesManager {
     const container = document.getElementById('recent-games-container');
     if (container) {
       container.classList.add('visible');
+      // Restore scroll position on show (in case container was re-rendered)
+      const savedScroll = localStorage.getItem('recent_games_scroll');
+      if (savedScroll !== null) {
+        container.scrollTop = parseInt(savedScroll, 10) || 0;
+      }
     }
   }
 

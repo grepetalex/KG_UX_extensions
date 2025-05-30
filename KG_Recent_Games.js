@@ -89,7 +89,7 @@ class RecentGamesManager {
           <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>`;
         svg.setAttribute('viewBox', '0 0 24 24');
         svg.setAttribute('fill', 'none');
-        svg.setAttribute('stroke', 'currentColor');
+        svg.setAttribute('stroke', '#FFB300'); // Material yellow for sun (light)
         svg.setAttribute('stroke-width', '2');
         svg.setAttribute('stroke-linecap', 'round');
         svg.setAttribute('stroke-linejoin', 'round');
@@ -99,7 +99,7 @@ class RecentGamesManager {
         svg.innerHTML = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
         svg.setAttribute('viewBox', '0 0 24 24');
         svg.setAttribute('fill', 'none');
-        svg.setAttribute('stroke', 'currentColor');
+        svg.setAttribute('stroke', '#90CAF9'); // Material blue for moon (dark)
         svg.setAttribute('stroke-width', '2');
         svg.setAttribute('stroke-linecap', 'round');
         svg.setAttribute('stroke-linejoin', 'round');
@@ -696,7 +696,7 @@ class RecentGamesManager {
     return `${location.protocol}//klavogonki.ru/create/?${params.toString()}`;
   }
 
-  addDragFunctionality(element, handle, id) {
+  addDragFunctionality(element, handle, _id) {
     handle.addEventListener('mousedown', (e) => {
       e.preventDefault();
       this.isDragging = true;
@@ -745,7 +745,7 @@ class RecentGamesManager {
     }
   }
 
-  handleDragEnd(e) {
+  handleDragEnd(_e) {
     if (!this.isDragging || !this.draggedElement) return;
 
     this.isDragging = false;

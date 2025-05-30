@@ -17,7 +17,7 @@ class RecentGamesManager {
     this.isDragging = false;
     this.draggedElement = null;
     this.dragOffset = { x: 0, y: 0 };
-    
+
     this.gameTypes = {
       normal: 'Oбычный',
       abra: 'Абракадабра',
@@ -37,13 +37,13 @@ class RecentGamesManager {
     };
 
     this.ranks = [
-      "новички", "любители", "таксисты", "профи", 
+      "новички", "любители", "таксисты", "профи",
       "гонщики", "маньяки", "супермены", "кибергонщики", "экстракиберы"
     ];
 
     this.ranksMap = {
       'новичков': 1, 'любителей': 2, 'таксистов': 3, 'профи': 4,
-      'гонщиков': 5, 'маньяков': 6, 'суперменов': 7, 
+      'гонщиков': 5, 'маньяков': 6, 'суперменов': 7,
       'кибергонщиков': 8, 'экстракиберов': 9
     };
 
@@ -78,9 +78,33 @@ class RecentGamesManager {
     const svg = document.querySelector('#recent-games-container .theme-toggle svg');
     if (svg) {
       if (this.currentTheme === 'light') {
-        svg.innerHTML = '<path d="M12 2a10 10 0 000 20c5.523 0 10-4.477 10-10s-4.477-10-10-10z" fill="currentColor" />'; // Moon
+        svg.innerHTML = `<circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>`;
+        svg.setAttribute('viewBox', '0 0 24 24');
+        svg.setAttribute('fill', 'none');
+        svg.setAttribute('stroke', 'currentColor');
+        svg.setAttribute('stroke-width', '2');
+        svg.setAttribute('stroke-linecap', 'round');
+        svg.setAttribute('stroke-linejoin', 'round');
+        svg.classList.add('feather-sun');
+        svg.classList.remove('feather-moon');
       } else {
-        svg.innerHTML = '<circle cx="12" cy="12" r="6" fill="currentColor" />'; // Sun
+        svg.innerHTML = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
+        svg.setAttribute('viewBox', '0 0 24 24');
+        svg.setAttribute('fill', 'none');
+        svg.setAttribute('stroke', 'currentColor');
+        svg.setAttribute('stroke-width', '2');
+        svg.setAttribute('stroke-linecap', 'round');
+        svg.setAttribute('stroke-linejoin', 'round');
+        svg.classList.add('feather-moon');
+        svg.classList.remove('feather-sun');
       }
     }
   }
@@ -260,7 +284,7 @@ class RecentGamesManager {
         maxWidth: '250px',
         maxHeight: 'calc(100vh - 200px)',
         backgroundColor: '#fff', // Material Light: White
-        border: '1px solid #ccc', // Material Light: Light gray border
+        border: '1px solid #e0e0e0', // Material Light: Light gray border
         borderLeft: 'none',
         borderRadius: '0 8px 8px 0',
         boxShadow: '2px 0 10px rgba(0,0,0,0.1)',
@@ -270,15 +294,15 @@ class RecentGamesManager {
         overflowY: 'auto',
         overflowX: 'hidden',
         scrollbarWidth: 'none',
-        color: '#333' // Material Light: Dark gray text
+        color: '#212121' // Material Light: Dark gray text
       },
       '#recent-games-container.visible': {
         left: '0'
       },
       '#recent-games-container.dark-theme': {
-        backgroundColor: '#303030', // Material Dark: Dark gray
-        borderColor: '#616161', // Material Dark: Medium gray
-        color: '#e0e0e0' // Material Dark: Light gray text
+        backgroundColor: '#181A1B', // Material Deep Dark
+        borderColor: '#23272A', // Material Deep Dark border
+        color: '#e0e0e0'
       },
       '#recent-games': {
         margin: '0',
@@ -291,25 +315,33 @@ class RecentGamesManager {
       '.recent-game': {
         position: 'relative',
         margin: '0 10px',
-        border: '1px solid #ddd',
+        border: '1px solid #e0e0e0',
         borderRadius: '4px',
-        backgroundColor: '#f9f9f9',
+        backgroundColor: '#fafafa', // Material Light: Card
         transition: 'all 0.2s ease'
       },
       '.dark-theme .recent-game': {
-        borderColor: '#616161' // Material Dark: Medium gray
+        borderColor: '#23272A',
+        backgroundColor: '#23272A', // Material Deep Dark card
+        color: '#e0e0e0'
       },
       '.recent-game.pin-game': {
         border: '2px solid #4CAF50',
         backgroundColor: '#f0f8f0'
       },
+      '.dark-theme .recent-game.pin-game': {
+        border: '2px solid #43A047',
+        backgroundColor: '#1e2b22'
+      },
       '.recent-game:hover': {
-        borderColor: '#666',
+        borderColor: '#bdbdbd',
         backgroundColor: '#f4f4f4',
         transform: 'translateX(2px)'
       },
-      '.recent-game.pin-game:hover': {
-        borderColor: '#45a049'
+      '.dark-theme .recent-game:hover': {
+        borderColor: '#616161',
+        backgroundColor: '#23272A',
+        color: '#fff'
       },
       '.recent-game.dragging': {
         opacity: '0.7',
@@ -454,6 +486,32 @@ class RecentGamesManager {
         justifyContent: 'center',
         width: '24px',
         height: '24px'
+      },
+      '.theme-toggle svg': {
+        width: '24px',
+        height: '24px',
+        display: 'block',
+        stroke: 'currentColor',
+        'stroke-width': '2',
+        'stroke-linecap': 'round',
+        'stroke-linejoin': 'round',
+        fill: 'none',
+        transition: 'stroke 0.2s, fill 0.2s',
+      },
+      '.dark-theme .theme-toggle svg': {
+        stroke: '#FFD600', // Sun/Moon icon accent for dark
+      },
+      '.theme-toggle svg.feather-sun': {
+        stroke: '#FFB300', // Sun accent for light
+      },
+      '.theme-toggle svg.feather-moon': {
+        stroke: '#90CAF9', // Moon accent for light
+      },
+      '.dark-theme .theme-toggle svg.feather-sun': {
+        stroke: '#FFD600', // Sun accent for dark
+      },
+      '.dark-theme .theme-toggle svg.feather-moon': {
+        stroke: '#90CAF9', // Moon accent for dark
       }
     };
 
@@ -530,94 +588,94 @@ class RecentGamesManager {
 
   createElement(tag, options = {}) {
     const element = document.createElement(tag);
-    
+
     if (options.className) {
       element.className = options.className;
     }
-    
+
     if (options.id) {
       element.id = options.id;
     }
-    
+
     if (options.innerHTML) {
       element.innerHTML = options.innerHTML;
     }
-    
+
     if (options.textContent) {
       element.textContent = options.textContent;
     }
-    
+
     if (options.href) {
       element.href = options.href;
     }
-    
+
     if (options.title) {
       element.title = options.title;
     }
-    
+
     if (options.src) {
       element.src = options.src;
     }
-    
+
     if (options.style) {
       Object.assign(element.style, options.style);
     }
-    
+
     if (options.attributes) {
       Object.entries(options.attributes).forEach(([key, value]) => {
         element.setAttribute(key, value);
       });
     }
-    
+
     return element;
   }
 
   generateGameName(game) {
     const gameType = this.gameTypes[game.params.gametype];
     const { vocName, timeout, type: visibility, level_from, level_to, qual } = game.params;
-    
+
     const nameSpan = this.createElement('span', {
       className: `recent-game-name gametype-${game.params.gametype}`,
       textContent: vocName === '' ? gameType : `«${vocName}»`
     });
-    
+
     const descSpan = this.createElement('span', {
       className: 'recent-game-description'
     });
-    
+
     const qualSpan = this.createElement('span', {
       className: 'recent-game-qual',
       textContent: qual ? ' (к)' : ''
     });
-    
+
     let levelText = '';
     if (level_from !== 1 || level_to !== 9) {
       const levelFromName = this.ranks[level_from - 1];
       const levelToName = this.ranks[level_to - 1];
       levelText = ` ${levelFromName} - ${levelToName}`;
     }
-    
+
     const levelsSpan = this.createElement('span', {
       className: 'recent-game-levels',
       textContent: levelText
     });
-    
+
     descSpan.textContent = `${this.visibilities[visibility]}, ${timeout} сек.`;
     descSpan.appendChild(qualSpan);
     if (levelText) {
       descSpan.appendChild(levelsSpan);
     }
-    
+
     const container = this.createElement('div');
     container.appendChild(nameSpan);
     container.appendChild(descSpan);
-    
+
     return container.innerHTML;
   }
 
   generateGameLink(game) {
     const { gametype, vocId, type, level_from, level_to, timeout, qual } = game.params;
-    
+
     const params = new URLSearchParams({
       gametype,
       type,
@@ -626,15 +684,15 @@ class RecentGamesManager {
       timeout: timeout.toString(),
       submit: '1'
     });
-    
+
     if (vocId !== '') {
       params.set('voc', vocId);
     }
-    
+
     if (qual) {
       params.set('qual', '1');
     }
-    
+
     return `${location.protocol}//klavogonki.ru/create/?${params.toString()}`;
   }
 
@@ -643,15 +701,15 @@ class RecentGamesManager {
       e.preventDefault();
       this.isDragging = true;
       this.draggedElement = element;
-      
+
       const rect = element.getBoundingClientRect();
       this.dragOffset = {
         x: e.clientX - rect.left,
         y: e.clientY - rect.top
       };
-      
+
       element.classList.add('dragging');
-      
+
       document.addEventListener('mousemove', this.handleDragMove.bind(this));
       document.addEventListener('mouseup', this.handleDragEnd.bind(this));
     });
@@ -659,24 +717,24 @@ class RecentGamesManager {
 
   handleDragMove(e) {
     if (!this.isDragging || !this.draggedElement) return;
-    
+
     e.preventDefault();
-    
+
     const gamesList = document.getElementById('recent-games');
     const pinnedGames = Array.from(gamesList.querySelectorAll('.pin-game:not(.dragging)'));
-    
+
     let insertAfter = null;
-    
+
     for (const pinnedGame of pinnedGames) {
       const rect = pinnedGame.getBoundingClientRect();
       const middle = rect.top + rect.height / 2;
-      
+
       if (e.clientY < middle) {
         break;
       }
       insertAfter = pinnedGame;
     }
-    
+
     if (insertAfter) {
       insertAfter.parentNode.insertBefore(this.draggedElement, insertAfter.nextSibling);
     } else {
@@ -689,14 +747,14 @@ class RecentGamesManager {
 
   handleDragEnd(e) {
     if (!this.isDragging || !this.draggedElement) return;
-    
+
     this.isDragging = false;
     this.draggedElement.classList.remove('dragging');
-    
+
     this.updateGameOrderFromDOM();
-    
+
     this.draggedElement = null;
-    
+
     document.removeEventListener('mousemove', this.handleDragMove.bind(this));
     document.removeEventListener('mouseup', this.handleDragEnd.bind(this));
   }
@@ -704,7 +762,7 @@ class RecentGamesManager {
   updateGameOrderFromDOM() {
     const gameElements = Array.from(document.querySelectorAll('#recent-games .recent-game'));
     const newGameData = [];
-    
+
     gameElements.forEach(element => {
       const id = parseInt(element.id.replace('recent-game-', ''), 10);
       const game = this.gameData.find(g => g.id === id);
@@ -712,7 +770,7 @@ class RecentGamesManager {
         newGameData.push(game);
       }
     });
-    
+
     this.gameData = newGameData;
     this.assignGameIds();
     this.saveGameData();
@@ -755,7 +813,7 @@ class RecentGamesManager {
       clearTimeout(this.hoverTimeout);
       this.hoverTimeout = null;
     }
-    
+
     const container = document.getElementById('recent-games-container');
     if (container) {
       container.classList.add('visible');
@@ -764,11 +822,11 @@ class RecentGamesManager {
 
   hideContainerWithDelay() {
     this.isHovered = false;
-    
+
     if (this.hoverTimeout) {
       clearTimeout(this.hoverTimeout);
     }
-    
+
     this.hoverTimeout = setTimeout(() => {
       if (!this.isHovered) {
         const container = document.getElementById('recent-games-container');
@@ -815,7 +873,7 @@ class RecentGamesManager {
     }
 
     this.gameData[gameIndex].pin = 1;
-    
+
     if (gameIndex !== insertIndex) {
       const gameObject = this.gameData.splice(gameIndex, 1)[0];
       this.gameData.splice(insertIndex, 0, gameObject);
@@ -875,7 +933,7 @@ class RecentGamesManager {
   parseGameParams(span, descText) {
     const gameType = span.className.split('-').pop();
     const vocName = gameType === 'voc' ? span.textContent.replace(/[«»]/g, '') : '';
-    
+
     let vocId = '';
     if (gameType === 'voc') {
       const vocLink = span.querySelector('a');
@@ -901,7 +959,7 @@ class RecentGamesManager {
     }
 
     const timeoutMatches = descText.match(/таймаут\s(\d+)\s(сек|мин)/);
-    const timeout = timeoutMatches 
+    const timeout = timeoutMatches
       ? (timeoutMatches[2] === 'сек' ? parseInt(timeoutMatches[1], 10) : parseInt(timeoutMatches[1], 10) * 60)
       : 60;
 

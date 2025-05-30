@@ -12,87 +12,87 @@
 const THEME_COLORS = {
   light: {
     // Main colors
-    '--rg-bg-primary': '#fff',
-    '--rg-bg-secondary': '#fafafa',
-    '--rg-bg-card': '#fafafa',
-    '--rg-bg-card-pinned': '#f0f8f0',
-    '--rg-bg-hover': '#f4f4f4',
+    '--rg-bg-primary': 'hsl(0, 0%, 100%)',
+    '--rg-bg-secondary': 'hsl(0, 0%, 98%)',
+    '--rg-bg-card': 'hsl(0, 0%, 98%)',
+    '--rg-bg-card-pinned': 'hsl(120, 50%, 96%)',
+    '--rg-bg-hover': 'hsl(0, 0%, 96%)',
 
     // Border colors
-    '--rg-border-primary': '#e0e0e0',
-    '--rg-border-hover': '#bdbdbd',
-    '--rg-border-pinned': '#4CAF50',
+    '--rg-border-primary': 'hsl(0, 0%, 88%)',
+    '--rg-border-hover': 'hsl(0, 0%, 74%)',
+    '--rg-border-pinned': 'hsl(122, 39%, 49%)',
 
     // Text colors
-    '--rg-text-primary': '#212121',
-    '--rg-text-secondary': '#666',
-    '--rg-text-tertiary': '#888',
-    '--rg-text-options': '#444',
-    '--rg-text-count': '#222',
-    '--rg-gametype-voc': '#1976D2', // ...
-    '--rg-gametype-normal': '#388E3C', // ...
-    '--rg-gametype-abra': '#3D4856', // ...
-    '--rg-gametype-referats': '#698725', // ...
-    '--rg-gametype-noerror': '#4692AA', // ...
-    '--rg-gametype-marathon': '#D43E68', // ...
-    '--rg-gametype-chars': '#B55900', // ...
-    '--rg-gametype-digits': '#777777', // ...
-    '--rg-gametype-sprint': '#833F3A', // ...
+    '--rg-text-primary': 'hsl(0, 0%, 13%)',
+    '--rg-text-secondary': 'hsl(0, 0%, 40%)',
+    '--rg-text-tertiary': 'hsl(0, 0%, 53%)',
+    '--rg-text-options': 'hsl(0, 0%, 27%)',
+    '--rg-text-count': 'hsl(0, 0%, 13%)',
+    '--rg-gametype-voc': 'hsl(213, 77%, 46%)',
+    '--rg-gametype-normal': 'hsl(131, 49%, 39%)',
+    '--rg-gametype-abra': 'hsl(215, 20%, 27%)',
+    '--rg-gametype-referats': 'hsl(80, 56%, 28%)',
+    '--rg-gametype-noerror': 'hsl(197, 43%, 47%)',
+    '--rg-gametype-marathon': 'hsl(340, 65%, 54%)',
+    '--rg-gametype-chars': 'hsl(33, 100%, 36%)',
+    '--rg-gametype-digits': 'hsl(0, 0%, 47%)',
+    '--rg-gametype-sprint': 'hsl(6, 38%, 37%)',
 
     // Icon colors
     '--rg-icon-primary': 'currentColor',
-    '--rg-icon-pin': '#4CAF50',
-    '--rg-icon-pin-fill': '#4CAF50',
-    '--rg-icon-delete': '#F44336',
-    '--rg-icon-theme-sun': '#CEAD00',
-    '--rg-icon-theme-moon': '#90CAF9',
+    '--rg-icon-pin': 'hsl(122, 39%, 49%)',
+    '--rg-icon-pin-fill': 'hsl(122, 39%, 49%)',
+    '--rg-icon-delete': 'hsl(4, 90%, 58%)',
+    '--rg-icon-theme-sun': 'hsl(48, 100%, 41%)',
+    '--rg-icon-theme-moon': 'hsl(207, 89%, 76%)',
 
     // Interactive colors
-    '--rg-hover-pin': 'rgba(76, 175, 80, 0.2)',
-    '--rg-hover-delete': 'rgba(244, 67, 54, 0.2)',
-    '--rg-hover-control': '#e0e0e0'
+    '--rg-hover-pin': 'hsla(122, 39%, 49%, 0.2)',
+    '--rg-hover-delete': 'hsla(4, 90%, 58%, 0.2)',
+    '--rg-hover-control': 'hsl(0, 0%, 88%)'
   },
   dark: {
     // Main colors
-    '--rg-bg-primary': '#181A1B',
-    '--rg-bg-secondary': '#23272A',
-    '--rg-bg-card': '#23272A',
-    '--rg-bg-card-pinned': '#1e2b22',
-    '--rg-bg-hover': '#23272A',
+    '--rg-bg-primary': 'hsl(210, 10%, 11%)',
+    '--rg-bg-secondary': 'hsl(220, 10%, 15%)',
+    '--rg-bg-card': 'hsl(220, 10%, 15%)',
+    '--rg-bg-card-pinned': 'hsl(140, 20%, 15%)',
+    '--rg-bg-hover': 'hsl(220, 10%, 15%)',
 
     // Border colors
-    '--rg-border-primary': '#23272A',
-    '--rg-border-hover': '#616161',
-    '--rg-border-pinned': '#43A047',
+    '--rg-border-primary': 'hsl(220, 10%, 15%)',
+    '--rg-border-hover': 'hsl(0, 0%, 38%)',
+    '--rg-border-pinned': 'hsl(133, 43%, 47%)',
 
     // Text colors
-    '--rg-text-primary': '#e0e0e0',
-    '--rg-text-secondary': '#e0e0e0',
-    '--rg-text-tertiary': '#e0e0e0',
-    '--rg-text-options': '#e0e0e0',
-    '--rg-text-count': '#FFD600',
-    '--rg-gametype-voc': '#90CAF9',
-    '--rg-gametype-normal': '#81C784',
-    '--rg-gametype-abra': '#CE93D8',
-    '--rg-gametype-referats': '#FFB74D',
-    '--rg-gametype-noerror': '#FF8A80',
-    '--rg-gametype-marathon': '#90CAF9',
-    '--rg-gametype-chars': '#F06292',
-    '--rg-gametype-digits': '#4FC3F7',
-    '--rg-gametype-sprint': '#FFF176',
+    '--rg-text-primary': 'hsl(0, 0%, 88%)',
+    '--rg-text-secondary': 'hsl(0, 0%, 88%)',
+    '--rg-text-tertiary': 'hsl(0, 0%, 88%)',
+    '--rg-text-options': 'hsl(0, 0%, 88%)',
+    '--rg-text-count': 'hsl(48, 100%, 50%)',
+    '--rg-gametype-voc': 'hsl(207, 89%, 76%)',
+    '--rg-gametype-normal': 'hsl(131, 49%, 70%)',
+    '--rg-gametype-abra': 'hsl(289, 47%, 75%)',
+    '--rg-gametype-referats': 'hsl(32, 100%, 65%)',
+    '--rg-gametype-noerror': 'hsl(4, 100%, 75%)',
+    '--rg-gametype-marathon': 'hsl(207, 89%, 76%)',
+    '--rg-gametype-chars': 'hsl(330, 90%, 68%)',
+    '--rg-gametype-digits': 'hsl(197, 89%, 63%)',
+    '--rg-gametype-sprint': 'hsl(54, 100%, 73%)',
 
     // Icon colors
-    '--rg-icon-primary': '#90CAF9',
-    '--rg-icon-pin': '#43A047',
-    '--rg-icon-pin-fill': '#43A047',
-    '--rg-icon-delete': '#FF8A80',
-    '--rg-icon-theme-sun': '#FFD600',
-    '--rg-icon-theme-moon': '#90CAF9',
+    '--rg-icon-primary': 'hsl(207, 89%, 76%)',
+    '--rg-icon-pin': 'hsl(133, 43%, 47%)',
+    '--rg-icon-pin-fill': 'hsl(133, 43%, 47%)',
+    '--rg-icon-delete': 'hsl(4, 100%, 75%)',
+    '--rg-icon-theme-sun': 'hsl(48, 100%, 50%)',
+    '--rg-icon-theme-moon': 'hsl(207, 89%, 76%)',
 
     // Interactive colors
-    '--rg-hover-pin': 'rgba(67, 160, 71, 0.2)',
-    '--rg-hover-delete': 'rgba(255, 138, 128, 0.2)',
-    '--rg-hover-control': '#616161'
+    '--rg-hover-pin': 'hsla(133, 43%, 47%, 0.2)',
+    '--rg-hover-delete': 'hsla(4, 100%, 75%, 0.2)',
+    '--rg-hover-control': 'hsl(0, 0%, 38%)'
   }
 };
 

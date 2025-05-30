@@ -593,7 +593,7 @@ class LatestGamesManager {
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: '0 10px',
-        marginTop: '10px'
+        marginTop: '10px',
       },
       '#latest-games-options': {
         display: 'flex',
@@ -616,7 +616,6 @@ class LatestGamesManager {
         width: '24px',
         cursor: 'pointer',
         fontSize: '16px',
-        padding: '2px 6px',
         borderRadius: '3px !important',
         transition: 'background 0.15s',
         userSelect: 'none',
@@ -1209,6 +1208,17 @@ class LatestGamesManager {
     window.latestGamesManager = this;
   }
 }
+
+// Add Montserrat font import
+(function addMontserratFont() {
+  if (!document.getElementById('kg-latest-games-montserrat-font')) {
+    const link = document.createElement('link');
+    link.id = 'kg-latest-games-montserrat-font';
+    link.rel = 'stylesheet';
+    link.href = 'https://fonts.googleapis.com/css2?family=Montserrat&display=swap';
+    document.head.appendChild(link);
+  }
+})();
 
 function initializeLatestGames() {
   if (!document.getElementById('KG_LatestGames')) {

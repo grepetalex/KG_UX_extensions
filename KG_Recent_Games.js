@@ -74,11 +74,20 @@ class RecentGamesManager {
     }
   }
 
-  updateThemeToggle() {
-    const svg = document.querySelector('#recent-games-container .theme-toggle svg');
-    if (svg) {
-      if (this.currentTheme === 'light') {
-        svg.innerHTML = `<circle cx="12" cy="12" r="5"></circle>
+  // Updated method that works with any SVG element
+  updateThemeIcon(svg) {
+    if (this.currentTheme === 'light') {
+      svg.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg"
+        width="24" height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="feather feather-sun">
+          <circle cx="12" cy="12" r="5"></circle>
           <line x1="12" y1="1" x2="12" y2="3"></line>
           <line x1="12" y1="21" x2="12" y2="23"></line>
           <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
@@ -86,26 +95,31 @@ class RecentGamesManager {
           <line x1="1" y1="12" x2="3" y2="12"></line>
           <line x1="21" y1="12" x2="23" y2="12"></line>
           <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>`;
-        svg.setAttribute('viewBox', '0 0 24 24');
-        svg.setAttribute('fill', 'none');
-        svg.setAttribute('stroke', '#FFB300'); // Material yellow for sun (light)
-        svg.setAttribute('stroke-width', '2');
-        svg.setAttribute('stroke-linecap', 'round');
-        svg.setAttribute('stroke-linejoin', 'round');
-        svg.classList.add('feather-sun');
-        svg.classList.remove('feather-moon');
-      } else {
-        svg.innerHTML = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
-        svg.setAttribute('viewBox', '0 0 24 24');
-        svg.setAttribute('fill', 'none');
-        svg.setAttribute('stroke', '#90CAF9'); // Material blue for moon (dark)
-        svg.setAttribute('stroke-width', '2');
-        svg.setAttribute('stroke-linecap', 'round');
-        svg.setAttribute('stroke-linejoin', 'round');
-        svg.classList.add('feather-moon');
-        svg.classList.remove('feather-sun');
-      }
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+      `;
+    } else {
+      svg.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg"
+        width="24" height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="feather feather-moon">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+      `;
+    }
+  }
+
+  // Updates the theme toggle icon based on the current theme
+  updateThemeToggle() {
+    const svg = document.querySelector('#recent-games-container .theme-toggle svg');
+    if (svg) {
+      this.updateThemeIcon(svg);
     }
   }
 
@@ -116,6 +130,7 @@ class RecentGamesManager {
     this.updateThemeToggle();
   }
 
+  // Creates the theme toggle button with an SVG icon
   createThemeToggle() {
     const toggleButton = this.createElement('div', {
       className: 'theme-toggle',
@@ -128,13 +143,14 @@ class RecentGamesManager {
       height: '16'
     });
 
+    // Set initial icon
+    this.updateThemeIcon(svg);
+
     toggleButton.appendChild(svg);
 
     toggleButton.addEventListener('click', () => {
       this.toggleTheme();
     });
-
-    this.updateThemeToggle(); // Set initial icon
 
     return toggleButton;
   }
@@ -696,7 +712,7 @@ class RecentGamesManager {
     return `${location.protocol}//klavogonki.ru/create/?${params.toString()}`;
   }
 
-  addDragFunctionality(element, handle, _id) {
+  addDragFunctionality(element, handle) {
     handle.addEventListener('mousedown', (e) => {
       e.preventDefault();
       this.isDragging = true;
@@ -745,7 +761,7 @@ class RecentGamesManager {
     }
   }
 
-  handleDragEnd(_e) {
+  handleDragEnd() {
     if (!this.isDragging || !this.draggedElement) return;
 
     this.isDragging = false;
@@ -834,7 +850,7 @@ class RecentGamesManager {
           container.classList.remove('visible');
         }
       }
-    }, 250);
+    }, 2500000);
   }
 
   refreshContainer() {

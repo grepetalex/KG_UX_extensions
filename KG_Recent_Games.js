@@ -470,6 +470,9 @@ class RecentGamesManager {
         color: '#444',
         userSelect: 'none'
       },
+      '.dark-theme #recent-games-options': {
+        color: '#e0e0e0',
+      },
       '#recent-games-count': {
         margin: '0 6px',
         fontWeight: 'bold',
@@ -477,6 +480,9 @@ class RecentGamesManager {
         minWidth: '18px',
         textAlign: 'center',
         color: '#222'
+      },
+      '.dark-theme #recent-games-count': {
+        color: '#FFD600',
       },
       '#recent-games-count-inc, #recent-games-count-dec': {
         cursor: 'pointer',
@@ -514,20 +520,43 @@ class RecentGamesManager {
         fill: 'none',
         transition: 'stroke 0.2s, fill 0.2s',
       },
-      '.dark-theme .theme-toggle svg': {
-        stroke: '#FFD600', // Sun/Moon icon accent for dark
-      },
-      '.theme-toggle svg.feather-sun': {
-        stroke: '#FFB300', // Sun accent for light
-      },
       '.theme-toggle svg.feather-moon': {
         stroke: '#90CAF9', // Moon accent for light
       },
-      '.dark-theme .theme-toggle svg.feather-sun': {
+      '.theme-toggle svg.feather-sun': {
         stroke: '#FFD600', // Sun accent for dark
       },
-      '.dark-theme .theme-toggle svg.feather-moon': {
-        stroke: '#90CAF9', // Moon accent for dark
+      '.recent-game-handle svg, .recent-game-pin svg, .recent-game-delete svg, #recent-games-count-dec svg, #recent-games-count-inc svg': {
+        stroke: 'currentColor',
+        fill: 'none',
+        'stroke-width': '2',
+        'stroke-linecap': 'round',
+        'stroke-linejoin': 'round',
+        display: 'block',
+      },
+      '.recent-game-handle svg, .recent-game-pin svg, .recent-game-delete svg': {
+        width: '10px',
+        height: '10px',
+        opacity: '0.6',
+      },
+      '#recent-games-count-dec svg, #recent-games-count-inc svg': {
+        width: '16px',
+        height: '16px',
+      },
+      '.dark-theme .recent-game-handle svg, .dark-theme .recent-game-pin svg, .dark-theme .recent-game-delete svg, .dark-theme #recent-games-count-dec svg, .dark-theme #recent-games-count-inc svg': {
+        stroke: '#90CAF9',
+      },
+      '.recent-game-pin svg': {
+        stroke: '#4CAF50',
+      },
+      '.dark-theme .recent-game-pin svg': {
+        stroke: '#43A047',
+      },
+      '.recent-game-delete svg': {
+        stroke: '#F44336',
+      },
+      '.dark-theme .recent-game-delete svg': {
+        stroke: '#FF8A80',
       }
     };
 

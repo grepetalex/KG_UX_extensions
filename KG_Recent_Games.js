@@ -12,69 +12,71 @@
 const THEME_COLORS = {
   light: {
     // Main colors
-    '--bg-primary': '#fff',
-    '--bg-secondary': '#fafafa',
-    '--bg-card': '#fafafa',
-    '--bg-card-pinned': '#f0f8f0',
-    '--bg-hover': '#f4f4f4',
+    '--rg-bg-primary': '#fff',
+    '--rg-bg-secondary': '#fafafa',
+    '--rg-bg-card': '#fafafa',
+    '--rg-bg-card-pinned': '#f0f8f0',
+    '--rg-bg-hover': '#f4f4f4',
 
     // Border colors
-    '--border-primary': '#e0e0e0',
-    '--border-hover': '#bdbdbd',
-    '--border-pinned': '#4CAF50',
+    '--rg-border-primary': '#e0e0e0',
+    '--rg-border-hover': '#bdbdbd',
+    '--rg-border-pinned': '#4CAF50',
 
     // Text colors
-    '--text-primary': '#212121',
-    '--text-secondary': '#666',
-    '--text-tertiary': '#888',
-    '--text-options': '#444',
-    '--text-count': '#222',
+    '--rg-text-primary': '#212121',
+    '--rg-text-secondary': '#666',
+    '--rg-text-tertiary': '#888',
+    '--rg-text-options': '#444',
+    '--rg-text-count': '#222',
+    '--rg-gametype-voc': '#1976D2t',
 
     // Icon colors
-    '--icon-primary': 'currentColor',
-    '--icon-pin': '#4CAF50',
-    '--icon-pin-fill': '#4CAF50',
-    '--icon-delete': '#F44336',
-    '--icon-theme-sun': '#CEAD00',
-    '--icon-theme-moon': '#90CAF9',
+    '--rg-icon-primary': 'currentColor',
+    '--rg-icon-pin': '#4CAF50',
+    '--rg-icon-pin-fill': '#4CAF50',
+    '--rg-icon-delete': '#F44336',
+    '--rg-icon-theme-sun': '#CEAD00',
+    '--rg-icon-theme-moon': '#90CAF9',
 
     // Interactive colors
-    '--hover-pin': 'rgba(76, 175, 80, 0.2)',
-    '--hover-delete': 'rgba(244, 67, 54, 0.2)',
-    '--hover-control': '#e0e0e0'
+    '--rg-hover-pin': 'rgba(76, 175, 80, 0.2)',
+    '--rg-hover-delete': 'rgba(244, 67, 54, 0.2)',
+    '--rg-hover-control': '#e0e0e0'
   },
   dark: {
     // Main colors
-    '--bg-primary': '#181A1B',
-    '--bg-secondary': '#23272A',
-    '--bg-card': '#23272A',
-    '--bg-card-pinned': '#1e2b22',
-    '--bg-hover': '#23272A',
+    '--rg-bg-primary': '#181A1B',
+    '--rg-bg-secondary': '#23272A',
+    '--rg-bg-card': '#23272A',
+    '--rg-bg-card-pinned': '#1e2b22',
+    '--rg-bg-hover': '#23272A',
 
     // Border colors
-    '--border-primary': '#23272A',
-    '--border-hover': '#616161',
-    '--border-pinned': '#43A047',
+    '--rg-border-primary': '#23272A',
+    '--rg-border-hover': '#616161',
+    '--rg-border-pinned': '#43A047',
 
     // Text colors
-    '--text-primary': '#e0e0e0',
-    '--text-secondary': '#e0e0e0',
-    '--text-tertiary': '#e0e0e0',
-    '--text-options': '#e0e0e0',
-    '--text-count': '#FFD600',
+    '--rg-text-primary': '#e0e0e0',
+    '--rg-text-secondary': '#e0e0e0',
+    '--rg-text-tertiary': '#e0e0e0',
+    '--rg-text-options': '#e0e0e0',
+    '--rg-text-count': '#FFD600',
+    '--rg-gametype-voc': '#90CAF9',
 
     // Icon colors
-    '--icon-primary': '#90CAF9',
-    '--icon-pin': '#43A047',
-    '--icon-pin-fill': '#43A047',
-    '--icon-delete': '#FF8A80',
-    '--icon-theme-sun': '#FFD600',
-    '--icon-theme-moon': '#90CAF9',
+    '--rg-icon-primary': '#90CAF9',
+    '--rg-icon-pin': '#43A047',
+    '--rg-icon-pin-fill': '#43A047',
+    '--rg-icon-delete': '#FF8A80',
+    '--rg-icon-theme-sun': '#FFD600',
+    '--rg-icon-theme-moon': '#90CAF9',
 
     // Interactive colors
-    '--hover-pin': 'rgba(67, 160, 71, 0.2)',
-    '--hover-delete': 'rgba(255, 138, 128, 0.2)',
-    '--hover-control': '#616161'
+    '--rg-hover-pin': 'rgba(67, 160, 71, 0.2)',
+    '--rg-hover-delete': 'rgba(255, 138, 128, 0.2)',
+    '--rg-hover-control': '#616161'
   }
 };
 
@@ -386,8 +388,8 @@ class RecentGamesManager {
         minWidth: '200px',
         maxWidth: '250px',
         maxHeight: 'calc(100vh - 200px)',
-        backgroundColor: 'var(--bg-primary)',
-        border: '1px solid var(--border-primary)',
+        backgroundColor: 'var(--rg-bg-primary)',
+        border: '1px solid var(--rg-border-primary)',
         borderLeft: 'none',
         borderRadius: '0 8px 8px 0',
         boxShadow: '2px 0 10px rgba(0,0,0,0.1)',
@@ -397,7 +399,7 @@ class RecentGamesManager {
         overflowY: 'auto',
         overflowX: 'hidden',
         scrollbarWidth: 'none',
-        color: 'var(--text-primary)'
+        color: 'var(--rg-text-primary)'
       },
       '#recent-games-container.visible': {
         left: '0'
@@ -413,18 +415,18 @@ class RecentGamesManager {
       '.recent-game': {
         position: 'relative',
         margin: '0 10px',
-        border: '1px solid var(--border-primary)',
+        border: '1px solid var(--rg-border-primary)',
         borderRadius: '4px',
-        backgroundColor: 'var(--bg-card)',
+        backgroundColor: 'var(--rg-bg-card)',
         transition: 'all 0.2s ease'
       },
       '.recent-game.pin-game': {
-        border: '2px solid var(--border-pinned)',
-        backgroundColor: 'var(--bg-card-pinned)'
+        border: '2px solid var(--rg-border-pinned)',
+        backgroundColor: 'var(--rg-bg-card-pinned)'
       },
       '.recent-game:hover': {
-        borderColor: 'var(--border-hover)',
-        backgroundColor: 'var(--bg-hover)',
+        borderColor: 'var(--rg-border-hover)',
+        backgroundColor: 'var(--rg-bg-hover)',
         transform: 'translateX(2px)'
       },
       '.recent-game.dragging': {
@@ -445,10 +447,13 @@ class RecentGamesManager {
         fontSize: '12px',
         marginBottom: '2px'
       },
+      '.recent-game-name.gametype-voc': {
+        color: 'var(--rg-gametype-voc) !important'
+      },
       '.recent-game-description': {
         display: 'block',
         fontSize: '10px',
-        color: 'var(--text-secondary)',
+        color: 'var(--rg-text-secondary)',
         lineHeight: '1.2'
       },
       '.recent-game-qual': {
@@ -458,7 +463,7 @@ class RecentGamesManager {
       '.recent-game-levels': {
         display: 'block',
         fontSize: '9px',
-        color: 'var(--text-tertiary)',
+        color: 'var(--rg-text-tertiary)',
         marginTop: '1px'
       },
       '.recent-game-handle': {
@@ -472,7 +477,7 @@ class RecentGamesManager {
         opacity: '0.5',
       },
       '.recent-game-handle path': {
-        fill: 'var(--icon-primary)',
+        fill: 'var(--rg-icon-primary)',
       },
       '.pin-game .recent-game-handle': {
         display: 'block'
@@ -500,22 +505,22 @@ class RecentGamesManager {
         transition: 'background-color 0.2s ease'
       },
       '.recent-game-pin:hover': {
-        backgroundColor: 'var(--hover-pin)'
+        backgroundColor: 'var(--rg-hover-pin)'
       },
       '.recent-game-delete:hover': {
-        backgroundColor: 'var(--hover-delete)'
+        backgroundColor: 'var(--rg-hover-delete)'
       },
       '.recent-game-pin svg': {
         width: '10px',
         height: '10px',
         opacity: '0.6',
-        stroke: 'var(--icon-pin-fill)',
+        stroke: 'var(--rg-icon-pin-fill)',
       },
       '.recent-game-delete svg': {
         width: '10px',
         height: '10px',
         opacity: '0.6',
-        stroke: 'var(--icon-delete)',
+        stroke: 'var(--rg-icon-delete)',
         fill: 'none'
       },
       '.recent-game-pin:hover svg, .recent-game-delete:hover svg': {
@@ -537,7 +542,7 @@ class RecentGamesManager {
         alignItems: 'center',
         fontSize: '13px',
         gap: '6px',
-        color: 'var(--text-options)',
+        color: 'var(--rg-text-options)',
         userSelect: 'none'
       },
       '#recent-games-count': {
@@ -546,7 +551,7 @@ class RecentGamesManager {
         fontSize: '14px',
         minWidth: '18px',
         textAlign: 'center',
-        color: 'var(--text-count)'
+        color: 'var(--rg-text-count)'
       },
       '#recent-games-count-inc, #recent-games-count-dec': {
         cursor: 'pointer',
@@ -558,10 +563,10 @@ class RecentGamesManager {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        color: 'var(--icon-primary)'
+        color: 'var(--rg-icon-primary)'
       },
       '#recent-games-count-inc:hover, #recent-games-count-dec:hover': {
-        background: 'var(--hover-control)'
+        background: 'var(--rg-hover-control)'
       },
       '.theme-toggle': {
         cursor: 'pointer',
@@ -578,14 +583,14 @@ class RecentGamesManager {
         transition: 'stroke 0.2s, fill 0.2s'
       },
       '.theme-toggle svg.feather-sun': {
-        stroke: 'var(--icon-theme-sun)',
+        stroke: 'var(--rg-icon-theme-sun)',
         fill: 'none',
         strokeWidth: '2',
         strokeLinecap: 'round',
         strokeLinejoin: 'round'
       },
       '.theme-toggle svg.feather-moon': {
-        stroke: 'var(--icon-theme-moon)',
+        stroke: 'var(--rg-icon-theme-moon)',
         fill: 'none',
         strokeWidth: '2',
         strokeLinecap: 'round',

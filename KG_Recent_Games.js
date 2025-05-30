@@ -50,7 +50,8 @@ const THEME_COLORS = {
     // Interactive colors
     '--rg-hover-pin': 'hsla(122, 39%, 49%, 0.2)',
     '--rg-hover-delete': 'hsla(4, 90%, 58%, 0.2)',
-    '--rg-hover-control': 'hsl(0, 0%, 88%)'
+    '--rg-hover-control': 'hsl(0, 0%, 92%)', // lighter for light theme
+    '--rg-hover-control-btn': 'hsl(213, 77%, 96%)', // nice blueish for light theme
   },
   dark: {
     // Main colors
@@ -92,7 +93,8 @@ const THEME_COLORS = {
     // Interactive colors
     '--rg-hover-pin': 'hsla(133, 43%, 47%, 0.2)',
     '--rg-hover-delete': 'hsla(4, 100%, 75%, 0.2)',
-    '--rg-hover-control': 'hsl(0, 0%, 38%)'
+    '--rg-hover-control': 'hsl(0, 0%, 38%)',
+    '--rg-hover-control-btn': 'hsl(213, 81.60%, 29.80%)', // nice blueish for dark theme
   }
 };
 
@@ -594,6 +596,8 @@ class RecentGamesManager {
         color: 'var(--rg-text-count)'
       },
       '#recent-games-count-inc, #recent-games-count-dec': {
+        height: '24px',
+        width: '24px',
         cursor: 'pointer',
         fontSize: '16px',
         padding: '2px 6px',
@@ -606,7 +610,7 @@ class RecentGamesManager {
         color: 'var(--rg-icon-primary)'
       },
       '#recent-games-count-inc:hover, #recent-games-count-dec:hover': {
-        background: 'var(--rg-hover-control)'
+        background: 'var(--rg-hover-control-btn)'
       },
       '.theme-toggle': {
         cursor: 'pointer',

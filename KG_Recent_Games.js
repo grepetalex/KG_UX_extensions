@@ -526,14 +526,6 @@ class RecentGamesManager {
       '.theme-toggle svg.feather-sun': {
         stroke: '#FFD600', // Sun accent for dark
       },
-      '.recent-game-handle svg, .recent-game-pin svg, .recent-game-delete svg, #recent-games-count-dec svg, #recent-games-count-inc svg': {
-        stroke: 'currentColor',
-        fill: 'none',
-        'stroke-width': '2',
-        'stroke-linecap': 'round',
-        'stroke-linejoin': 'round',
-        display: 'block',
-      },
       '.recent-game-handle svg, .recent-game-pin svg, .recent-game-delete svg': {
         width: '10px',
         height: '10px',

@@ -415,6 +415,7 @@ class LatestGamesManager {
         pointerEvents: 'auto'
       },
       '#latest-games-container': {
+        fontFamily: '"Montserrat", sans-serif',
         position: 'fixed',
         left: '-250px',
         top: '50px',
@@ -595,7 +596,6 @@ class LatestGamesManager {
         marginTop: '10px'
       },
       '#latest-games-options': {
-        fontFamily: 'sans-serif',
         display: 'flex',
         alignItems: 'center',
         fontSize: '13px',

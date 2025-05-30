@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          KG_Recent_Games
 // @namespace     klavogonki
-// @version       1.0.0
+// @version       1.0.1
 // @description   Fast game creation buttons on main and gamelist page
 // @match         *://klavogonki.ru/*
 // @author        Patcher
@@ -12,9 +12,11 @@ class RecentGamesManager {
   constructor() {
     this.maxGameCount = 5;
     this.gameData = [];
-    this.sortableInstance = null;
     this.hoverTimeout = null;
     this.isHovered = false;
+    this.isDragging = false;
+    this.draggedElement = null;
+    this.dragOffset = { x: 0, y: 0 };
     
     this.gameTypes = {
       normal: 'Oбычный',
@@ -229,9 +231,11 @@ class RecentGamesManager {
     });
 
     const handle = this.createElement('div', {
-      className: 'recent-game-handle'
+      className: 'recent-game-handle',
+      innerHTML: `<svg viewBox="0 0 24 24" width="12" height="12">
+        <path d="M9 3h2v2H9V3zm4 0h2v2h-2V3zM9 7h2v2H9V7zm4 0h2v2h-2V7zm-4 4h2v2H9v-2zm4 0h2v2h-2v-2zm-4 4h2v2H9v-2zm4 0h2v2h-2v-2zm-4 4h2v2H9v-2zm4 0h2v2h-2v-2z" fill="#666"/>
+      </svg>`
     });
-    handle.appendChild(this.createElement('img', { src: '/img/blank.gif' }));
 
     const buttons = this.createElement('div', {
       className: 'recent-game-buttons'
@@ -239,16 +243,20 @@ class RecentGamesManager {
 
     const pinButton = this.createElement('div', {
       className: 'recent-game-pin',
-      title: 'Зафиксировать'
+      title: 'Зафиксировать',
+      innerHTML: `<svg viewBox="0 0 24 24" width="10" height="10">
+        <path d="M16,12V4H17V2H7V4H8V12L6,14V16H11.2V22H12.8V16H18V14L16,12Z" fill="#666"/>
+      </svg>`
     });
-    pinButton.appendChild(this.createElement('img', { src: '/img/pin.png' }));
     pinButton.addEventListener('click', () => this.pinGame(id));
 
     const deleteButton = this.createElement('div', {
       className: 'recent-game-delete',
-      title: 'Удалить'
+      title: 'Удалить',
+      innerHTML: `<svg viewBox="0 0 24 24" width="10" height="10">
+        <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" fill="#666"/>
+      </svg>`
     });
-    deleteButton.appendChild(this.createElement('img', { src: '/img/cross_small.png' }));
     deleteButton.addEventListener('click', () => this.deleteGame(id));
 
     buttons.appendChild(pinButton);
@@ -263,7 +271,94 @@ class RecentGamesManager {
     li.appendChild(buttons);
     li.appendChild(link);
 
+    // Add drag and drop functionality for pinned games
+    if (game.pin) {
+      this.addDragFunctionality(li, handle, id);
+    }
+
     return li;
+  }
+
+  addDragFunctionality(element, handle, id) {
+    handle.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      this.isDragging = true;
+      this.draggedElement = element;
+      
+      const rect = element.getBoundingClientRect();
+      this.dragOffset = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      };
+      
+      element.classList.add('dragging');
+      
+      document.addEventListener('mousemove', this.handleDragMove.bind(this));
+      document.addEventListener('mouseup', this.handleDragEnd.bind(this));
+    });
+  }
+
+  handleDragMove(e) {
+    if (!this.isDragging || !this.draggedElement) return;
+    
+    e.preventDefault();
+    
+    const gamesList = document.getElementById('recent-games');
+    const pinnedGames = Array.from(gamesList.querySelectorAll('.pin-game:not(.dragging)'));
+    
+    let insertAfter = null;
+    
+    for (const pinnedGame of pinnedGames) {
+      const rect = pinnedGame.getBoundingClientRect();
+      const middle = rect.top + rect.height / 2;
+      
+      if (e.clientY < middle) {
+        break;
+      }
+      insertAfter = pinnedGame;
+    }
+    
+    if (insertAfter) {
+      insertAfter.parentNode.insertBefore(this.draggedElement, insertAfter.nextSibling);
+    } else {
+      // Insert at the beginning of pinned games
+      const firstPinned = gamesList.querySelector('.pin-game:not(.dragging)');
+      if (firstPinned) {
+        gamesList.insertBefore(this.draggedElement, firstPinned);
+      }
+    }
+  }
+
+  handleDragEnd(e) {
+    if (!this.isDragging || !this.draggedElement) return;
+    
+    this.isDragging = false;
+    this.draggedElement.classList.remove('dragging');
+    
+    // Update game data order based on DOM order
+    this.updateGameOrderFromDOM();
+    
+    this.draggedElement = null;
+    
+    document.removeEventListener('mousemove', this.handleDragMove.bind(this));
+    document.removeEventListener('mouseup', this.handleDragEnd.bind(this));
+  }
+
+  updateGameOrderFromDOM() {
+    const gameElements = Array.from(document.querySelectorAll('#recent-games .recent-game'));
+    const newGameData = [];
+    
+    gameElements.forEach(element => {
+      const id = parseInt(element.id.replace('recent-game-', ''), 10);
+      const game = this.gameData.find(g => g.id === id);
+      if (game) {
+        newGameData.push(game);
+      }
+    });
+    
+    this.gameData = newGameData;
+    this.assignGameIds();
+    this.saveGameData();
   }
 
   getPinnedGameCount() {
@@ -311,7 +406,6 @@ class RecentGamesManager {
     });
 
     document.body.appendChild(container);
-    this.initSortable();
   }
 
   populateGamesList(gamesList) {
@@ -359,7 +453,6 @@ class RecentGamesManager {
     const gamesList = document.getElementById('recent-games');
     if (gamesList) {
       this.populateGamesList(gamesList);
-      this.initSortable();
     }
   }
 
@@ -508,7 +601,9 @@ class RecentGamesManager {
 
     const decreaseBtn = this.createElement('span', {
       id: 'recent-games-count-dec',
-      innerHTML: '&#9668;'
+      innerHTML: `<svg viewBox="0 0 24 24" width="16" height="16">
+        <path d="M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z" fill="#666"/>
+      </svg>`
     });
 
     const countDisplay = this.createElement('span', {
@@ -518,7 +613,9 @@ class RecentGamesManager {
 
     const increaseBtn = this.createElement('span', {
       id: 'recent-games-count-inc',
-      innerHTML: '&#9658;'
+      innerHTML: `<svg viewBox="0 0 24 24" width="16" height="16">
+        <path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" fill="#666"/>
+      </svg>`
     });
 
     decreaseBtn.addEventListener('click', () => this.changeGameCount(-1));
@@ -545,41 +642,6 @@ class RecentGamesManager {
 
     this.saveSettings();
     this.refreshContainer();
-  }
-
-  initSortable() {
-    if (typeof Sortable !== 'undefined' && Sortable.create) {
-      try {
-        if (this.sortableInstance) {
-          this.sortableInstance.destroy();
-        }
-        
-        this.sortableInstance = Sortable.create('recent-games', {
-          direction: 'vertical',
-          only: 'pin-game',
-          handle: 'recent-game-handle',
-          onChange: (element) => this.handleSortableChange(element)
-        });
-      } catch (error) {
-        console.warn('Could not initialize sortable:', error);
-      }
-    }
-  }
-
-  handleSortableChange(element) {
-    const idMatch = element.id.match(/\d+$/);
-    if (!idMatch) return;
-
-    const id = parseInt(idMatch[0], 10);
-    const oldIndex = this.findGameIndex(id);
-    const newIndex = Array.from(document.querySelectorAll('#recent-games .recent-game')).indexOf(element);
-
-    if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
-      const movedGame = this.gameData.splice(oldIndex, 1)[0];
-      this.gameData.splice(newIndex, 0, movedGame);
-      this.assignGameIds();
-      this.saveGameData();
-    }
   }
 
   injectStyles() {
@@ -645,6 +707,11 @@ class RecentGamesManager {
       '.recent-game.pin-game:hover': {
         borderColor: '#45a049'
       },
+      '.recent-game.dragging': {
+        opacity: '0.7',
+        transform: 'rotate(2deg)',
+        zIndex: '10000'
+      },
       '.recent-game a': {
         display: 'block',
         padding: '8px 12px',
@@ -681,10 +748,11 @@ class RecentGamesManager {
         width: '12px',
         height: '12px',
         cursor: 'move',
-        backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%23666\'%3E%3Cpath d=\'M9 3h2v2H9V3zm4 0h2v2h-2V3zM9 7h2v2H9V7zm4 0h2v2h-2V7zm-4 4h2v2H9v-2zm4 0h2v2h-2v-2zm-4 4h2v2H9v-2zm4 0h2v2h-2v-2zm-4 4h2v2H9v-2zm4 0h2v2h-2v-2z\'/%3E%3C/svg%3E")',
-        backgroundSize: 'contain',
-        backgroundRepeat: 'no-repeat',
         opacity: '0.5'
+      },
+      '.recent-game-handle svg': {
+        width: '100%',
+        height: '100%'
       },
       '.pin-game .recent-game-handle': {
         display: 'block'
@@ -717,12 +785,12 @@ class RecentGamesManager {
       '.recent-game-delete:hover': {
         backgroundColor: 'rgba(244, 67, 54, 0.2)'
       },
-      '.recent-game-pin img, .recent-game-delete img': {
+      '.recent-game-pin svg, .recent-game-delete svg': {
         width: '10px',
         height: '10px',
         opacity: '0.6'
       },
-      '.recent-game-pin:hover img, .recent-game-delete:hover img': {
+      '.recent-game-pin:hover svg, .recent-game-delete:hover svg': {
         opacity: '1'
       },
       '.pin-game .recent-game-pin': {
@@ -754,10 +822,19 @@ class RecentGamesManager {
         borderRadius: '3px',
         transition: 'background 0.15s',
         userSelect: 'none',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
       },
       '#recent-games-count-inc:hover, #recent-games-count-dec:hover': {
         background: '#e0e0e0',
       },
+      '#recent-games-count-inc svg, #recent-games-count-dec svg': {
+        transition: 'fill 0.15s'
+      },
+      '#recent-games-count-inc:hover svg, #recent-games-count-dec:hover svg': {
+        fill: '#333'
+      }
     };
 
     const styleElement = this.createElement('style');
@@ -799,7 +876,7 @@ class RecentGamesManager {
     // Game list page - show counter controls in original location
     if (/https?:\/\/klavogonki\.ru\/gamelist\//.test(href)) {
       const controls = this.createCounterControls();
-      
+
       const gamelistCreate = document.querySelector('.gamelist-create');
       if (gamelistCreate) {
         const form = gamelistCreate.querySelector('form');
@@ -820,7 +897,7 @@ class RecentGamesManager {
 function initializeRecentGames() {
   if (!document.getElementById('KTS_RecentGames')) {
     new RecentGamesManager();
-    
+
     // Mark as initialized
     const marker = document.createElement('div');
     marker.id = 'KTS_RecentGames';

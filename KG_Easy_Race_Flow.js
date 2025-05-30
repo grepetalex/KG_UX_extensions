@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         KG_Easy_Race_Flow
 // @namespace    http://tampermonkey.net/
-// @version      0.2
+// @version      1.0.0
 // @description  No more hotkeys & Limitless error correction & Lost focuses - Optimized
 // @author       Patcher
 // @match        *://klavogonki.ru/g/?gmid=*
@@ -220,6 +220,8 @@
       // Set up key event listeners
       window.addEventListener('keydown', CORE.handleKeyDown);
 
+      // Add class to body to indicate Ctrl+Enter hotkey is attached
+      document.body.classList.add('next-race-hotkey-exist');
       // Apply initial color to input field based on saved state
       if (ELEMENTS.inputElement) {
         const color = STATE.checkerInterrupted ? '60' : '140'; // Yellow or Green
@@ -299,13 +301,13 @@
             STATE.lastCursorPosition = selectionEnd;
           }
         } else {
-            // Do not restore focus if clicking these specified elements
-            const allowedToFocus = ['input.text', '.userpanel .user-block .user-dropdown'];
-            for (let sel of allowedToFocus) {
+          // Do not restore focus if clicking these specified elements
+          const allowedToFocus = ['input.text', '.userpanel .user-block .user-dropdown'];
+          for (let sel of allowedToFocus) {
             if (event.target.closest(sel)) {
               return;
             }
-            }
+          }
           ELEMENTS.inputElement.focus();
           ELEMENTS.inputElement.style.outline = 'none';
           ELEMENTS.inputElement.setSelectionRange(ELEMENTS.inputElement.value.length, ELEMENTS.inputElement.value.length);

@@ -87,6 +87,8 @@ class RecentGamesManager {
     this.isDragging = false;
     this.draggedElement = null;
     this.dragOffset = { x: 0, y: 0 };
+    this.dragDirection = 0;
+    this.lastDragY = 0;
 
     this.gameTypes = {
       normal: 'Oбычный',
@@ -249,7 +251,7 @@ class RecentGamesManager {
       className: 'recent-game-pin',
       title: 'Зафиксировать',
       innerHTML:
-      `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-anchor"><circle cx="12" cy="5" r="3"></circle><line x1="12" y1="22" x2="12" y2="8"></line><path d="M5 12H2a10 10 0 0 0 20 0h-3"></path></svg>`
+        `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-anchor"><circle cx="12" cy="5" r="3"></circle><line x1="12" y1="22" x2="12" y2="8"></line><path d="M5 12H2a10 10 0 0 0 20 0h-3"></path></svg>`
     });
     pinButton.addEventListener('click', () => this.pinGame(id));
 
@@ -257,7 +259,7 @@ class RecentGamesManager {
       className: 'recent-game-delete',
       title: 'Удалить',
       innerHTML:
-      `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`
+        `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`
     });
     deleteButton.addEventListener('click', () => this.deleteGame(id));
 
@@ -413,7 +415,8 @@ class RecentGamesManager {
       '.recent-game.dragging': {
         opacity: '0.7',
         transform: 'rotate(2deg)',
-        zIndex: '10000'
+        zIndex: '2000',
+        transition: 'transform 0.1s ease'
       },
       '.recent-game a': {
         display: 'block',
@@ -783,6 +786,7 @@ class RecentGamesManager {
       e.preventDefault();
       this.isDragging = true;
       this.draggedElement = element;
+      this.lastDragY = e.clientY; // Initialize the Y position
 
       const rect = element.getBoundingClientRect();
       this.dragOffset = {
@@ -801,6 +805,21 @@ class RecentGamesManager {
     if (!this.isDragging || !this.draggedElement) return;
 
     e.preventDefault();
+
+    // Calculate drag direction
+    const currentY = e.clientY;
+    if (this.lastDragY !== 0) {
+      if (currentY < this.lastDragY) {
+        this.dragDirection = 1; // dragging up: positive rotation
+      } else if (currentY > this.lastDragY) {
+        this.dragDirection = -1; // dragging down: negative rotation
+      }
+    }
+    this.lastDragY = currentY;
+
+    // Apply rotation based on direction
+    const rotation = this.dragDirection * 5; // 5deg positive for up, -5deg for down
+    this.draggedElement.style.transform = `rotate(${rotation}deg)`;
 
     const gamesList = document.getElementById('recent-games');
     const pinnedGames = Array.from(gamesList.querySelectorAll('.pin-game:not(.dragging)'));
@@ -832,10 +851,14 @@ class RecentGamesManager {
 
     this.isDragging = false;
     this.draggedElement.classList.remove('dragging');
+    this.draggedElement.style.transform = ''; // Reset rotation
 
     this.updateGameOrderFromDOM();
 
+    // Reset drag tracking variables
     this.draggedElement = null;
+    this.dragDirection = 0;
+    this.lastDragY = 0;
 
     document.removeEventListener('mousemove', this.handleDragMove.bind(this));
     document.removeEventListener('mouseup', this.handleDragEnd.bind(this));

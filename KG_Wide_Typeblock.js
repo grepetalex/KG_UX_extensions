@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_Wide_Typeblock
 // @namespace    http://tampermonkey.net/
-// @version      1.1.9
+// @version      1.2.0
 // @description  try to take over the world!
 // @author       Patcher
 // @match        *://klavogonki.ru/g/?gmid=*
@@ -750,6 +750,26 @@
       globalKeydownHandler = null;
     }
   }
+
+  // Global Ctrl+Enter hotkey for replay navigation (define once, always active)
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && (e.key === 'Enter' || e.code === 'Enter')) {
+      if (!document.body.classList.contains('next-race-hotkey-exist')) {
+        const waiting = document.getElementById('waiting');
+        const racing = document.getElementById('racing');
+        if (
+          (waiting && waiting.style.display !== 'none') ||
+          (racing && racing.style.display !== 'none')
+        ) {
+          const match = location.href.match(/[?&]gmid=(\d+)/);
+          const gmid = match?.[1];
+          if (gmid) {
+            location.href = `https://klavogonki.ru/g/${gmid}.replay`;
+          }
+        }
+      }
+    }
+  });
 
   // Visibility Check
   function checkTypeblockVisibility() {

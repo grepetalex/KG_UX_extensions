@@ -248,18 +248,16 @@ class RecentGamesManager {
     const pinButton = this.createElement('div', {
       className: 'recent-game-pin',
       title: 'Зафиксировать',
-      innerHTML: `<svg viewBox="0 0 24 24" width="10" height="10">
-        <path d="M16,12V4H17V2H7V4H8V12L6,14V16H11.2V22H12.8V16H18V14L16,12Z" fill="currentColor"/>
-      </svg>`
+      innerHTML:
+      `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-anchor"><circle cx="12" cy="5" r="3"></circle><line x1="12" y1="22" x2="12" y2="8"></line><path d="M5 12H2a10 10 0 0 0 20 0h-3"></path></svg>`
     });
     pinButton.addEventListener('click', () => this.pinGame(id));
 
     const deleteButton = this.createElement('div', {
       className: 'recent-game-delete',
       title: 'Удалить',
-      innerHTML: `<svg viewBox="0 0 24 24" width="10" height="10">
-        <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" fill="currentColor"/>
-      </svg>`
+      innerHTML:
+      `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`
     });
     deleteButton.addEventListener('click', () => this.deleteGame(id));
 
@@ -454,7 +452,9 @@ class RecentGamesManager {
         height: '12px',
         cursor: 'move',
         opacity: '0.5',
-        color: 'var(--icon-primary)'
+      },
+      '.recent-game-handle path': {
+        fill: 'var(--icon-primary)',
       },
       '.pin-game .recent-game-handle': {
         display: 'block'
@@ -491,8 +491,7 @@ class RecentGamesManager {
         width: '10px',
         height: '10px',
         opacity: '0.6',
-        fill: 'var(--icon-pin-fill)', // Pin icon uses fill instead of stroke
-        stroke: 'none'
+        stroke: 'var(--icon-pin-fill)',
       },
       '.recent-game-delete svg': {
         width: '10px',
@@ -578,12 +577,10 @@ class RecentGamesManager {
       '.recent-game-handle svg': {
         width: '12px',
         height: '12px',
-        fill: 'currentColor'
       },
       '#recent-games-count-dec svg, #recent-games-count-inc svg': {
         width: '16px',
         height: '16px',
-        fill: 'currentColor'
       }
     };
 

@@ -29,7 +29,15 @@ const THEME_COLORS = {
     '--rg-text-tertiary': '#888',
     '--rg-text-options': '#444',
     '--rg-text-count': '#222',
-    '--rg-gametype-voc': '#1976D2t',
+    '--rg-gametype-voc': '#1976D2', // ...
+    '--rg-gametype-normal': '#388E3C', // ...
+    '--rg-gametype-abra': '#3D4856', // ...
+    '--rg-gametype-referats': '#698725', // ...
+    '--rg-gametype-noerror': '#4692AA', // ...
+    '--rg-gametype-marathon': '#D43E68', // ...
+    '--rg-gametype-chars': '#B55900', // ...
+    '--rg-gametype-digits': '#777777', // ...
+    '--rg-gametype-sprint': '#833F3A', // ...
 
     // Icon colors
     '--rg-icon-primary': 'currentColor',
@@ -64,6 +72,14 @@ const THEME_COLORS = {
     '--rg-text-options': '#e0e0e0',
     '--rg-text-count': '#FFD600',
     '--rg-gametype-voc': '#90CAF9',
+    '--rg-gametype-normal': '#81C784',
+    '--rg-gametype-abra': '#CE93D8',
+    '--rg-gametype-referats': '#FFB74D',
+    '--rg-gametype-noerror': '#FF8A80',
+    '--rg-gametype-marathon': '#90CAF9',
+    '--rg-gametype-chars': '#F06292',
+    '--rg-gametype-digits': '#4FC3F7',
+    '--rg-gametype-sprint': '#FFF176',
 
     // Icon colors
     '--rg-icon-primary': '#90CAF9',
@@ -449,6 +465,30 @@ class RecentGamesManager {
       },
       '.recent-game-name.gametype-voc': {
         color: 'var(--rg-gametype-voc) !important'
+      },
+      '.recent-game-name.gametype-normal': {
+        color: 'var(--rg-gametype-normal) !important'
+      },
+      '.recent-game-name.gametype-abra': {
+        color: 'var(--rg-gametype-abra) !important'
+      },
+      '.recent-game-name.gametype-referats': {
+        color: 'var(--rg-gametype-referats) !important'
+      },
+      '.recent-game-name.gametype-noerror': {
+        color: 'var(--rg-gametype-noerror) !important'
+      },
+      '.recent-game-name.gametype-marathon': {
+        color: 'var(--rg-gametype-marathon) !important'
+      },
+      '.recent-game-name.gametype-chars': {
+        color: 'var(--rg-gametype-chars) !important'
+      },
+      '.recent-game-name.gametype-digits': {
+        color: 'var(--rg-gametype-digits) !important'
+      },
+      '.recent-game-name.gametype-sprint': {
+        color: 'var(--rg-gametype-sprint) !important'
       },
       '.recent-game-description': {
         display: 'block',
@@ -959,7 +999,7 @@ class RecentGamesManager {
           container.classList.remove('visible');
         }
       }
-    }, 2500000);
+    }, 250);
   }
 
   refreshContainer() {

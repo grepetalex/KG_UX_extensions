@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KG_Wide_Typeblock
 // @namespace    http://tampermonkey.net/
-// @version      1.1.8
+// @version      1.1.9
 // @description  try to take over the world!
 // @author       Patcher
 // @match        *://klavogonki.ru/g/?gmid=*
@@ -904,6 +904,7 @@
       updateStyles();
       updateSavedIndicator();
       updatePartialModeIndicator();
+      showFontSizeIndicator(true); // Only update if present
       const inputtext = document.getElementById('inputtext');
       if (inputtext) {
         setInputColorState(inputtext);
@@ -999,6 +1000,8 @@
     span.style.width = '28px';
     span.style.height = '28px';
     span.style.backgroundColor = themes[currentTheme].input.background;
+    span.style.color = themes[currentTheme].input.text;
+    span.style.stroke = themes[currentTheme].input.text;
     span.style.setProperty('border-radius', '0.2em', 'important');
     span.style.setProperty('box-shadow', '0 2px 4px rgba(0,0,0,0.2)', 'important');
   }
@@ -1021,7 +1024,7 @@
             width="20" height="20"
             viewBox="0 0 24 24"
             fill="none"
-            stroke="${themes[currentTheme].input.text}"
+            stroke="currentColor"
             stroke-width="2"
             stroke-linecap="round"
             stroke-linejoin="round">
@@ -1033,8 +1036,6 @@
         container.appendChild(span);
       } else {
         applyIndicatorBaseStyles(span);
-        const svg = span.querySelector('svg');
-        if (svg) svg.setAttribute('stroke', themes[currentTheme].input.text);
       }
     } else {
       if (span) span.remove();
@@ -1056,7 +1057,7 @@
             width="20" height="20"
             viewBox="0 0 24 24"
             fill="none"
-            stroke="${themes[currentTheme].input.text}"
+            stroke="currentColor"
             stroke-width="2"
             stroke-linecap="round"
             stroke-linejoin="round"
@@ -1070,8 +1071,6 @@
         container.appendChild(span);
       } else {
         applyIndicatorBaseStyles(span);
-        const svg = span.querySelector('svg');
-        if (svg) svg.setAttribute('stroke', themes[currentTheme].input.text);
       }
     } else {
       if (span) span.remove();
@@ -1090,11 +1089,12 @@
   }
 
   let fontSizeIndicatorTimeout = null;
-  function showFontSizeIndicator() {
+  function showFontSizeIndicator(updateOnly = false) {
     ensureFontImport();
     const container = updateIndicatorContainer();
     if (!container) return;
     let span = document.getElementById('kg-fontsize-indicator');
+    if (!span && updateOnly) return; // Only update if already present
     const size = getFontSize();
     if (!span) {
       span = document.createElement('span');
@@ -1110,10 +1110,12 @@
       applyIndicatorBaseStyles(span);
       span.innerText = size;
     }
-    if (fontSizeIndicatorTimeout) clearTimeout(fontSizeIndicatorTimeout);
-    fontSizeIndicatorTimeout = setTimeout(() => {
-      if (span && span.parentNode) span.parentNode.removeChild(span);
-    }, 3000);
+    if (!updateOnly) {
+      if (fontSizeIndicatorTimeout) clearTimeout(fontSizeIndicatorTimeout);
+      fontSizeIndicatorTimeout = setTimeout(() => {
+        if (span && span.parentNode) span.parentNode.removeChild(span);
+      }, 3000);
+    }
   }
 
 })();

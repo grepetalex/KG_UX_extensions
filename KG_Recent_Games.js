@@ -1203,18 +1203,6 @@ class LatestGamesManager {
         this.saveCurrentGameParams();
       }
     }
-
-    if (/https?:\/\/klavogonki\.ru\/gamelist\//.test(href)) {
-      const controls = this.createControls();
-
-      const gamelistCreate = document.querySelector('.gamelist-create');
-      if (gamelistCreate) {
-        const form = gamelistCreate.querySelector('form');
-        if (form) {
-          form.appendChild(controls);
-        }
-      }
-    }
   }
 
   exposeGlobalFunctions() {

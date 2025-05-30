@@ -352,7 +352,7 @@ class RecentGamesManager {
           container.classList.remove('visible');
         }
       }
-    }, 2000);
+    }, 250);
   }
 
   refreshContainer() {
@@ -597,11 +597,11 @@ class RecentGamesManager {
       '#recent-games-container': {
         position: 'fixed',
         left: '-250px',
-        top: '20px',
+        top: '100px',
         width: 'auto',
         minWidth: '200px',
-        maxWidth: '300px',
-        maxHeight: 'calc(100vh - 40px)',
+        maxWidth: '250px',
+        maxHeight: 'calc(100vh - 200px)',
         backgroundColor: '#fff',
         border: '1px solid #ccc',
         borderLeft: 'none',
@@ -611,7 +611,8 @@ class RecentGamesManager {
         padding: '10px 0',
         transition: 'left 0.3s ease-in-out',
         overflowY: 'auto',
-        overflowX: 'hidden'
+        overflowX: 'hidden',
+        scrollbarWidth: 'none',
       },
       '#recent-games-container.visible': {
         left: '0'

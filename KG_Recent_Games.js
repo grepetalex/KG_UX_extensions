@@ -35,7 +35,7 @@ const THEME_COLORS = {
     '--icon-pin': '#4CAF50',
     '--icon-pin-fill': '#4CAF50',
     '--icon-delete': '#F44336',
-    '--icon-theme-sun': '#FFD600',
+    '--icon-theme-sun': '#CEAD00',
     '--icon-theme-moon': '#90CAF9',
 
     // Interactive colors
@@ -250,16 +250,31 @@ class RecentGamesManager {
     const pinButton = this.createElement('div', {
       className: 'recent-game-pin',
       title: 'Зафиксировать',
-      innerHTML:
-        `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-anchor"><circle cx="12" cy="5" r="3"></circle><line x1="12" y1="22" x2="12" y2="8"></line><path d="M5 12H2a10 10 0 0 0 20 0h-3"></path></svg>`
+      innerHTML: `
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+             viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"
+             class="feather feather-anchor">
+          <circle cx="12" cy="5" r="3"></circle>
+          <line x1="12" y1="22" x2="12" y2="8"></line>
+          <path d="M5 12H2a10 10 0 0 0 20 0h-3"></path>
+        </svg>
+      `
     });
     pinButton.addEventListener('click', () => this.pinGame(id));
 
     const deleteButton = this.createElement('div', {
       className: 'recent-game-delete',
       title: 'Удалить',
-      innerHTML:
-        `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`
+      innerHTML: `
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+             viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"
+             class="feather feather-x">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      `
     });
     deleteButton.addEventListener('click', () => this.deleteGame(id));
 

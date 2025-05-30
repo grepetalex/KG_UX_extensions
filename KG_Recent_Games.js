@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name          KG_Recent_Games
+// @name          KG_Latest_Games
 // @namespace     klavogonki
-// @version       1.0.2
-// @description   Fast game creation buttons on main and gamelist page with theme switcher
+// @version       1.0.3
+// @description   Fast game creation buttons on all the pages
 // @match         *://klavogonki.ru/*
 // @author        Patcher
 // @icon          https://www.google.com/s2/favicons?sz=64&domain=klavogonki.ru
@@ -98,7 +98,7 @@ const THEME_COLORS = {
   }
 };
 
-class RecentGamesManager {
+class LatestGamesManager {
   constructor() {
     this.maxGameCount = 5;
     this.gameData = [];
@@ -140,7 +140,7 @@ class RecentGamesManager {
     };
 
     // Load theme from localStorage, default to light
-    this.currentTheme = localStorage.getItem('recent_games_theme') || 'light';
+    this.currentTheme = localStorage.getItem('latest_games_theme') || 'light';
 
     this.init();
   }
@@ -160,7 +160,7 @@ class RecentGamesManager {
 
   // Applies the current theme to the container
   applyTheme() {
-    const container = document.getElementById('recent-games-container');
+    const container = document.getElementById('latest-games-container');
     if (container) {
       container.classList.remove('light-theme', 'dark-theme');
       container.classList.add(`${this.currentTheme}-theme`);
@@ -210,7 +210,7 @@ class RecentGamesManager {
 
   // Updates the theme toggle icon based on the current theme
   updateThemeToggle() {
-    const svg = document.querySelector('#recent-games-container .theme-toggle svg');
+    const svg = document.querySelector('#latest-games-container .theme-toggle svg');
     if (svg) {
       this.updateThemeIcon(svg);
     }
@@ -218,7 +218,7 @@ class RecentGamesManager {
 
   toggleTheme() {
     this.currentTheme = this.currentTheme === 'light' ? 'dark' : 'light';
-    localStorage.setItem('recent_games_theme', this.currentTheme);
+    localStorage.setItem('latest_games_theme', this.currentTheme);
     this.applyTheme();
     this.updateThemeToggle();
   }
@@ -252,23 +252,23 @@ class RecentGamesManager {
 
   createGameElement(game, id) {
     const li = this.createElement('li', {
-      className: `recent-game${game.pin ? ' pin-game' : ''}`,
-      id: `recent-game-${id}`
+      className: `latest-game${game.pin ? ' pin-game' : ''}`,
+      id: `latest-game-${id}`
     });
 
     const handle = this.createElement('div', {
-      className: 'recent-game-handle',
+      className: 'latest-game-handle',
       innerHTML: `<svg viewBox="0 0 24 24" width="12" height="12">
         <path d="M9 3h2v2H9V3zm4 0h2v2h-2V3zM9 7h2v2H9V7zm4 0h2v2h-2V7zm-4 4h2v2H9v-2zm4 0h2v2h-2v-2zm-4 4h2v2H9v-2zm4 0h2v2h-2v-2zm-4 4h2v2H9v-2zm4 0h2v2h-2v-2z" fill="currentColor"/>
       </svg>`
     });
 
     const buttons = this.createElement('div', {
-      className: 'recent-game-buttons'
+      className: 'latest-game-buttons'
     });
 
     const pinButton = this.createElement('div', {
-      className: 'recent-game-pin',
+      className: 'latest-game-pin',
       title: 'Зафиксировать',
       innerHTML: `
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
@@ -284,7 +284,7 @@ class RecentGamesManager {
     pinButton.addEventListener('click', () => this.pinGame(id));
 
     const deleteButton = this.createElement('div', {
-      className: 'recent-game-delete',
+      className: 'latest-game-delete',
       title: 'Удалить',
       innerHTML: `
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
@@ -319,28 +319,28 @@ class RecentGamesManager {
 
   createControls() {
     const controlsContainer = this.createElement('div', {
-      className: 'recent-games-controls'
+      className: 'latest-games-controls'
     });
 
     const options = this.createElement('span', {
-      id: 'recent-games-options',
+      id: 'latest-games-options',
       textContent: 'История: '
     });
 
     const decreaseBtn = this.createElement('span', {
-      id: 'recent-games-count-dec',
+      id: 'latest-games-count-dec',
       innerHTML: `<svg viewBox="0 0 24 24" width="16" height="16">
         <path d="M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z" fill="currentColor"/>
       </svg>`
     });
 
     const countDisplay = this.createElement('span', {
-      id: 'recent-games-count',
+      id: 'latest-games-count',
       textContent: this.maxGameCount.toString()
     });
 
     const increaseBtn = this.createElement('span', {
-      id: 'recent-games-count-inc',
+      id: 'latest-games-count-inc',
       innerHTML: `<svg viewBox="0 0 24 24" width="16" height="16">
         <path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" fill="currentColor"/>
       </svg>`
@@ -361,11 +361,11 @@ class RecentGamesManager {
 
   createContainer() {
     const container = this.createElement('div', {
-      id: 'recent-games-container'
+      id: 'latest-games-container'
     });
 
     const gamesList = this.createElement('ul', {
-      id: 'recent-games'
+      id: 'latest-games'
     });
 
     this.populateGamesList(gamesList);
@@ -375,20 +375,20 @@ class RecentGamesManager {
     container.appendChild(controls);
 
     // Restore scroll position if available
-    const savedScroll = localStorage.getItem('recent_games_scroll');
+    const savedScroll = localStorage.getItem('latest_games_scroll');
     if (savedScroll) {
       container.scrollTop = parseInt(savedScroll, 10);
     }
 
     // Save scroll position on scroll
     container.addEventListener('scroll', () => {
-      localStorage.setItem('recent_games_scroll', container.scrollTop.toString());
+      localStorage.setItem('latest_games_scroll', container.scrollTop.toString());
     });
 
     container.addEventListener('mouseenter', () => {
       this.showContainer();
       // Restore scroll position again in case container was re-created
-      const savedScroll = localStorage.getItem('recent_games_scroll');
+      const savedScroll = localStorage.getItem('latest_games_scroll');
       if (savedScroll) {
         container.scrollTop = parseInt(savedScroll, 10);
       }
@@ -404,7 +404,7 @@ class RecentGamesManager {
   // Injects styles based on the current theme
   injectStyles() {
     const baseStyles = {
-      '#recent-games-hover-area': {
+      '#latest-games-hover-area': {
         position: 'fixed',
         left: '0',
         top: '0',
@@ -414,7 +414,7 @@ class RecentGamesManager {
         backgroundColor: 'transparent',
         pointerEvents: 'auto'
       },
-      '#recent-games-container': {
+      '#latest-games-container': {
         position: 'fixed',
         left: '-250px',
         top: '50px',
@@ -435,10 +435,10 @@ class RecentGamesManager {
         scrollbarWidth: 'none',
         color: 'var(--rg-text-primary)'
       },
-      '#recent-games-container.visible': {
+      '#latest-games-container.visible': {
         left: '0'
       },
-      '#recent-games': {
+      '#latest-games': {
         margin: '0',
         padding: '0',
         listStyle: 'none',
@@ -446,7 +446,7 @@ class RecentGamesManager {
         flexDirection: 'column',
         gap: '5px'
       },
-      '.recent-game': {
+      '.latest-game': {
         position: 'relative',
         margin: '0 10px',
         border: '1px solid var(--rg-border-primary)',
@@ -454,77 +454,77 @@ class RecentGamesManager {
         backgroundColor: 'var(--rg-bg-card)',
         transition: 'all 0.2s ease'
       },
-      '.recent-game.pin-game': {
+      '.latest-game.pin-game': {
         border: '2px solid var(--rg-border-pinned)',
         backgroundColor: 'var(--rg-bg-card-pinned)'
       },
-      '.recent-game:hover': {
+      '.latest-game:hover': {
         borderColor: 'var(--rg-border-hover)',
         backgroundColor: 'var(--rg-bg-hover)',
         transform: 'translateX(2px)'
       },
-      '.recent-game.dragging': {
+      '.latest-game.dragging': {
         opacity: '0.7',
         transform: 'rotate(2deg)',
         zIndex: '2000',
         transition: 'transform 0.1s ease'
       },
-      '.recent-game a': {
+      '.latest-game a': {
         display: 'block',
         padding: '8px 12px',
         textDecoration: 'none',
         color: 'inherit'
       },
-      '.recent-game-name': {
+      '.latest-game-name': {
         display: 'block',
         fontWeight: 'bold',
         fontSize: '12px',
         marginBottom: '2px'
       },
-      '.recent-game-name.gametype-voc': {
+      '.latest-game-name.gametype-voc': {
         color: 'var(--rg-gametype-voc) !important'
       },
-      '.recent-game-name.gametype-normal': {
+      '.latest-game-name.gametype-normal': {
         color: 'var(--rg-gametype-normal) !important'
       },
-      '.recent-game-name.gametype-abra': {
+      '.latest-game-name.gametype-abra': {
         color: 'var(--rg-gametype-abra) !important'
       },
-      '.recent-game-name.gametype-referats': {
+      '.latest-game-name.gametype-referats': {
         color: 'var(--rg-gametype-referats) !important'
       },
-      '.recent-game-name.gametype-noerror': {
+      '.latest-game-name.gametype-noerror': {
         color: 'var(--rg-gametype-noerror) !important'
       },
-      '.recent-game-name.gametype-marathon': {
+      '.latest-game-name.gametype-marathon': {
         color: 'var(--rg-gametype-marathon) !important'
       },
-      '.recent-game-name.gametype-chars': {
+      '.latest-game-name.gametype-chars': {
         color: 'var(--rg-gametype-chars) !important'
       },
-      '.recent-game-name.gametype-digits': {
+      '.latest-game-name.gametype-digits': {
         color: 'var(--rg-gametype-digits) !important'
       },
-      '.recent-game-name.gametype-sprint': {
+      '.latest-game-name.gametype-sprint': {
         color: 'var(--rg-gametype-sprint) !important'
       },
-      '.recent-game-description': {
+      '.latest-game-description': {
         display: 'block',
         fontSize: '10px',
         color: 'var(--rg-text-secondary)',
         lineHeight: '1.2'
       },
-      '.recent-game-qual': {
+      '.latest-game-qual': {
         color: '#f00',
         fontWeight: 'bold'
       },
-      '.recent-game-levels': {
+      '.latest-game-levels': {
         display: 'block',
         fontSize: '9px',
         color: 'var(--rg-text-tertiary)',
         marginTop: '1px'
       },
-      '.recent-game-handle': {
+      '.latest-game-handle': {
         display: 'none',
         position: 'absolute',
         left: '2px',
@@ -534,13 +534,13 @@ class RecentGamesManager {
         cursor: 'move',
         opacity: '0.5',
       },
-      '.recent-game-handle path': {
+      '.latest-game-handle path': {
         fill: 'var(--rg-icon-primary)',
       },
-      '.pin-game .recent-game-handle': {
+      '.pin-game .latest-game-handle': {
         display: 'block'
       },
-      '.recent-game-buttons': {
+      '.latest-game-buttons': {
         position: 'absolute',
         right: '4px',
         top: '4px',
@@ -549,10 +549,10 @@ class RecentGamesManager {
         opacity: '0',
         transition: 'opacity 0.2s ease'
       },
-      '.recent-game:hover .recent-game-buttons': {
+      '.latest-game:hover .latest-game-buttons': {
         opacity: '1'
       },
-      '.recent-game-pin, .recent-game-delete': {
+      '.latest-game-pin, .latest-game-delete': {
         width: '16px',
         height: '16px',
         cursor: 'pointer',
@@ -562,39 +562,39 @@ class RecentGamesManager {
         justifyContent: 'center',
         transition: 'background-color 0.2s ease'
       },
-      '.recent-game-pin:hover': {
+      '.latest-game-pin:hover': {
         backgroundColor: 'var(--rg-hover-pin)'
       },
-      '.recent-game-delete:hover': {
+      '.latest-game-delete:hover': {
         backgroundColor: 'var(--rg-hover-delete)'
       },
-      '.recent-game-pin svg': {
+      '.latest-game-pin svg': {
         width: '10px',
         height: '10px',
         opacity: '0.6',
         stroke: 'var(--rg-icon-pin-fill)',
       },
-      '.recent-game-delete svg': {
+      '.latest-game-delete svg': {
         width: '10px',
         height: '10px',
         opacity: '0.6',
         stroke: 'var(--rg-icon-delete)',
         fill: 'none'
       },
-      '.recent-game-pin:hover svg, .recent-game-delete:hover svg': {
+      '.latest-game-pin:hover svg, .latest-game-delete:hover svg': {
         opacity: '1'
       },
-      '.pin-game .recent-game-pin': {
+      '.pin-game .latest-game-pin': {
         display: 'none'
       },
-      '.recent-games-controls': {
+      '.latest-games-controls': {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: '0 10px',
         marginTop: '10px'
       },
-      '#recent-games-options': {
+      '#latest-games-options': {
         fontFamily: 'sans-serif',
         display: 'flex',
         alignItems: 'center',
@@ -603,7 +603,7 @@ class RecentGamesManager {
         color: 'var(--rg-text-options)',
         userSelect: 'none'
       },
-      '#recent-games-count': {
+      '#latest-games-count': {
         margin: '0 6px',
         fontWeight: 'bold',
         fontSize: '14px',
@@ -611,7 +611,7 @@ class RecentGamesManager {
         textAlign: 'center',
         color: 'var(--rg-text-count)'
       },
-      '#recent-games-count-inc, #recent-games-count-dec': {
+      '#latest-games-count-inc, #latest-games-count-dec': {
         height: '24px',
         width: '24px',
         cursor: 'pointer',
@@ -625,7 +625,7 @@ class RecentGamesManager {
         justifyContent: 'center',
         color: 'var(--rg-icon-primary)'
       },
-      '#recent-games-count-inc:hover, #recent-games-count-dec:hover': {
+      '#latest-games-count-inc:hover, #latest-games-count-dec:hover': {
         background: 'var(--rg-hover-control-btn)'
       },
       '.theme-toggle': {
@@ -657,11 +657,11 @@ class RecentGamesManager {
         strokeLinejoin: 'round'
       },
       // Generic SVG styling
-      '.recent-game-handle svg': {
+      '.latest-game-handle svg': {
         width: '12px',
         height: '12px',
       },
-      '#recent-games-count-dec svg, #recent-games-count-inc svg': {
+      '#latest-games-count-dec svg, #latest-games-count-inc svg': {
         width: '16px',
         height: '16px',
       }
@@ -677,7 +677,7 @@ class RecentGamesManager {
 
     // Add CSS custom properties for each theme
     Object.entries(THEME_COLORS).forEach(([themeName, colors]) => {
-      cssText += `#recent-games-container.${themeName}-theme { `;
+      cssText += `#latest-games-container.${themeName}-theme { `;
       Object.entries(colors).forEach(([property, value]) => {
         cssText += `${property}: ${value}; `;
       });
@@ -699,7 +699,7 @@ class RecentGamesManager {
 
   loadSettings() {
     try {
-      const savedLimit = localStorage.getItem('recent_games_limit');
+      const savedLimit = localStorage.getItem('latest_games_limit');
       if (savedLimit) {
         this.maxGameCount = Math.max(0, parseInt(savedLimit, 10));
       }
@@ -710,7 +710,7 @@ class RecentGamesManager {
 
   loadGameData() {
     try {
-      const savedGames = localStorage.getItem('recent_games');
+      const savedGames = localStorage.getItem('latest_games');
       if (savedGames) {
         this.gameData = JSON.parse(savedGames);
         this.migrateOldGameData();
@@ -737,7 +737,7 @@ class RecentGamesManager {
 
   saveGameData() {
     try {
-      localStorage.setItem('recent_games', JSON.stringify(this.gameData));
+      localStorage.setItem('latest_games', JSON.stringify(this.gameData));
     } catch (error) {
       console.warn('Could not save game data to localStorage:', error);
     }
@@ -745,7 +745,7 @@ class RecentGamesManager {
 
   saveSettings() {
     try {
-      localStorage.setItem('recent_games_limit', this.maxGameCount.toString());
+      localStorage.setItem('latest_games_limit', this.maxGameCount.toString());
     } catch (error) {
       console.warn('Could not save settings to localStorage:', error);
     }
@@ -800,16 +800,16 @@ class RecentGamesManager {
     const { vocName, timeout, type: visibility, level_from, level_to, qual } = game.params;
 
     const nameSpan = this.createElement('span', {
-      className: `recent-game-name gametype-${game.params.gametype}`,
+      className: `latest-game-name gametype-${game.params.gametype}`,
       textContent: vocName === '' ? gameType : `«${vocName}»`
     });
 
     const descSpan = this.createElement('span', {
-      className: 'recent-game-description'
+      className: 'latest-game-description'
     });
 
     const qualSpan = this.createElement('span', {
-      className: 'recent-game-qual',
+      className: 'latest-game-qual',
       textContent: qual ? ' (к)' : ''
     });
 
@@ -821,7 +821,7 @@ class RecentGamesManager {
     }
 
     const levelsSpan = this.createElement('span', {
-      className: 'recent-game-levels',
+      className: 'latest-game-levels',
       textContent: levelText
     });
 
@@ -901,7 +901,7 @@ class RecentGamesManager {
     const rotation = this.dragDirection * 5; // 5deg positive for up, -5deg for down
     this.draggedElement.style.transform = `rotate(${rotation}deg)`;
 
-    const gamesList = document.getElementById('recent-games');
+    const gamesList = document.getElementById('latest-games');
     const pinnedGames = Array.from(gamesList.querySelectorAll('.pin-game:not(.dragging)'));
 
     let insertAfter = null;
@@ -945,11 +945,11 @@ class RecentGamesManager {
   }
 
   updateGameOrderFromDOM() {
-    const gameElements = Array.from(document.querySelectorAll('#recent-games .recent-game'));
+    const gameElements = Array.from(document.querySelectorAll('#latest-games .latest-game'));
     const newGameData = [];
 
     gameElements.forEach(element => {
-      const id = parseInt(element.id.replace('recent-game-', ''), 10);
+      const id = parseInt(element.id.replace('latest-game-', ''), 10);
       const game = this.gameData.find(g => g.id === id);
       if (game) {
         newGameData.push(game);
@@ -967,7 +967,7 @@ class RecentGamesManager {
 
   createHoverArea() {
     const hoverArea = this.createElement('div', {
-      id: 'recent-games-hover-area'
+      id: 'latest-games-hover-area'
     });
 
     hoverArea.addEventListener('mouseenter', () => {
@@ -999,11 +999,11 @@ class RecentGamesManager {
       this.hoverTimeout = null;
     }
 
-    const container = document.getElementById('recent-games-container');
+    const container = document.getElementById('latest-games-container');
     if (container) {
       container.classList.add('visible');
       // Restore scroll position on show (in case container was re-rendered)
-      const savedScroll = localStorage.getItem('recent_games_scroll');
+      const savedScroll = localStorage.getItem('latest_games_scroll');
       if (savedScroll !== null) {
         container.scrollTop = parseInt(savedScroll, 10) || 0;
       }
@@ -1019,7 +1019,7 @@ class RecentGamesManager {
 
     this.hoverTimeout = setTimeout(() => {
       if (!this.isHovered) {
-        const container = document.getElementById('recent-games-container');
+        const container = document.getElementById('latest-games-container');
         if (container) {
           container.classList.remove('visible');
         }
@@ -1028,7 +1028,7 @@ class RecentGamesManager {
   }
 
   refreshContainer() {
-    const gamesList = document.getElementById('recent-games');
+    const gamesList = document.getElementById('latest-games');
     if (gamesList) {
       this.populateGamesList(gamesList);
     }
@@ -1175,7 +1175,7 @@ class RecentGamesManager {
       this.maxGameCount++;
     }
 
-    const countDisplay = document.getElementById('recent-games-count');
+    const countDisplay = document.getElementById('latest-games-count');
     if (countDisplay) {
       countDisplay.textContent = this.maxGameCount.toString();
     }
@@ -1218,19 +1218,19 @@ class RecentGamesManager {
   }
 
   exposeGlobalFunctions() {
-    window.recentGamesManager = this;
+    window.latestGamesManager = this;
   }
 }
 
-function initializeRecentGames() {
-  if (!document.getElementById('KTS_RecentGames')) {
-    new RecentGamesManager();
+function initializeLatestGames() {
+  if (!document.getElementById('KG_LatestGames')) {
+    new LatestGamesManager();
 
     const marker = document.createElement('div');
-    marker.id = 'KTS_RecentGames';
+    marker.id = 'KTS_LatestGames';
     marker.style.display = 'none';
     document.body.appendChild(marker);
   }
 }
 
-initializeRecentGames();
+initializeLatestGames();

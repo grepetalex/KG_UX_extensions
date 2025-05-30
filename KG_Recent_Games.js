@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          KG_Recent_Games
 // @namespace     klavogonki
-// @version       1.4.0
+// @version       1.4.1
 // @description   Fast game creation buttons on main and gamelist page
 // @match         *://klavogonki.ru/
 // @match         *://klavogonki.ru/gamelist/
@@ -318,6 +318,8 @@ function deleteRecentGame(id) {
   const index = indexOfRecentGameId(id);
   const deletedGame = recentGames.splice(index, 1);
   localStorage.recent_games = JSON.stringify(recentGames);
+  const li = document.getElementById(`recent-game-${id}`);
+  li && li.parentNode && li.parentNode.removeChild(li);
   return deletedGame[0];
 }
 

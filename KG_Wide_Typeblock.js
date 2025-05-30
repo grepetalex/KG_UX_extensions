@@ -869,6 +869,7 @@
     size = Math.max(12, Math.min(48, size));
     setSetting('fontSize', size);
     applyFontSize();
+    showFontSizeIndicator();
   }
 
   function applyFontSize() {
@@ -1075,6 +1076,44 @@
     } else {
       if (span) span.remove();
     }
+  }
+
+  // Add Montserrat font import to the document head if not already present
+  function ensureFontImport() {
+    if (!document.getElementById('kg-font-import')) {
+      const link = document.createElement('link');
+      link.id = 'kg-font-import';
+      link.rel = 'stylesheet';
+      link.href = "https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap";
+      document.head.appendChild(link);
+    }
+  }
+
+  let fontSizeIndicatorTimeout = null;
+  function showFontSizeIndicator() {
+    ensureFontImport();
+    const container = updateIndicatorContainer();
+    if (!container) return;
+    let span = document.getElementById('kg-fontsize-indicator');
+    const size = getFontSize();
+    if (!span) {
+      span = document.createElement('span');
+      span.id = 'kg-fontsize-indicator';
+      span.title = 'Текущий размер шрифта';
+      applyIndicatorBaseStyles(span);
+      span.style.fontFamily = '"Quicksand", sans-serif';
+      span.style.fontWeight = '600';
+      span.style.fontSize = '1.1em';
+      span.innerText = size;
+      container.appendChild(span);
+    } else {
+      applyIndicatorBaseStyles(span);
+      span.innerText = size;
+    }
+    if (fontSizeIndicatorTimeout) clearTimeout(fontSizeIndicatorTimeout);
+    fontSizeIndicatorTimeout = setTimeout(() => {
+      if (span && span.parentNode) span.parentNode.removeChild(span);
+    }, 3000);
   }
 
 })();

@@ -548,6 +548,8 @@ class LatestGamesManager {
         pointerEvents: 'auto'
       },
       '#latest-games-container': {
+        display: 'flex',
+        flexDirection: 'column',
         fontFamily: '"Montserrat", sans-serif',
         position: 'fixed',
         top: '50px',

@@ -178,6 +178,7 @@ class LatestGamesManager {
     this.dragDirection = 0;
     this.lastDragY = 0;
     this.hidePanelDelay = 500;
+    this.globalEvents = {};
 
     this.gameTypes = {
       normal: 'Oбычный',
@@ -1221,8 +1222,10 @@ class LatestGamesManager {
         element.style.width = `${rect.width}px`; // Maintain width during drag
       }
 
-      document.addEventListener('mousemove', this.handleDragMove.bind(this));
-      document.addEventListener('mouseup', this.handleDragEnd.bind(this));
+      this.globalEvents.handleDragMove = this.handleDragMove.bind(this);
+      this.globalEvents.handleDragEnd = this.handleDragEnd.bind(this);
+      document.addEventListener('mousemove', this.globalEvents.handleDragMove);
+      document.addEventListener('mouseup', this.globalEvents.handleDragEnd);
     });
   }
 
@@ -1329,8 +1332,10 @@ class LatestGamesManager {
     this.dragDirection = 0;
     this.lastDragY = 0;
 
-    document.removeEventListener('mousemove', this.handleDragMove.bind(this));
-    document.removeEventListener('mouseup', this.handleDragEnd.bind(this));
+    if (this.globalEvents) {
+      document.removeEventListener('mousemove', this.globalEvents.handleDragMove);
+      document.removeEventListener('mouseup', this.globalEvents.handleDragEnd);
+    }
   }
 
   updateGameOrderFromDOM() {

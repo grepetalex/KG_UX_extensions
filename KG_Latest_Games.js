@@ -177,6 +177,7 @@ class LatestGamesManager {
     this.dragOffset = { x: 0, y: 0 };
     this.dragDirection = 0;
     this.lastDragY = 0;
+    this.hidePanelDelay = 1000;
 
     this.gameTypes = {
       normal: 'Oбычный',
@@ -368,13 +369,12 @@ class LatestGamesManager {
   updateContainerLeftOffset() {
     const container = document.getElementById('latest-games-container');
     if (!container) return;
-    // Temporarily show to measure width
-    const wasVisible = container.classList.contains('visible');
-    if (!wasVisible) container.classList.add('visible');
-    // Use getBoundingClientRect for accurate width
-    const width = container.getBoundingClientRect().width;
-    if (!wasVisible) container.classList.remove('visible');
-    container.style.left = `-${Math.ceil(width)}px`;
+    const mode = this.getDisplayMode();
+    if (mode === 'wrap') {
+      container.style.left = 'calc(-1 * (100vw - 100px))';
+    } else {
+      container.style.left = '-220px';
+    }
   }
 
   // --- Existing Methods with Modifications ---
@@ -543,7 +543,7 @@ class LatestGamesManager {
         top: '0',
         width: '1px',
         height: '100vh',
-        zIndex: '9998',
+        zIndex: '3100',
         backgroundColor: 'transparent',
         pointerEvents: 'auto'
       },
@@ -555,23 +555,30 @@ class LatestGamesManager {
         top: '50px',
         width: 'auto',
         minWidth: '200px',
-        maxWidth: '250px',
+        maxWidth: '220px', // changed from 250px to 220px for scroll mode
         maxHeight: 'calc(100vh - 100px)',
         backgroundColor: 'var(--rg-bg-primary)',
         border: '1px solid var(--rg-border-primary)',
         borderLeft: 'none',
         borderRadius: '0 8px 8px 0 !important',
         boxShadow: '2px 0 10px rgba(0,0,0,0.1)',
-        zIndex: '9999',
+        zIndex: '3000',
         padding: '10px 0',
-        transition: 'left 0.3s ease-in-out',
+        opacity: '0',
+        pointerEvents: 'none',
+        userSelect: 'none',
+        transition: 'left 0.3s ease, opacity 0.3s ease',
         overflowY: 'auto',
         overflowX: 'hidden',
         scrollbarWidth: 'none',
-        color: 'var(--rg-text-primary)'
+        color: 'var(--rg-text-primary)',
+        left: '-220px', // default for scroll mode
       },
       '#latest-games-container.visible': {
-        left: '0 !important'
+        left: '0 !important',
+        opacity: '1',
+        pointerEvents: 'auto',
+        userSelect: 'auto'
       },
       '#latest-games': {
         margin: '0',
@@ -834,6 +841,7 @@ class LatestGamesManager {
       '#latest-games-container.display-mode-wrap': {
         maxWidth: 'none',
         width: 'calc(100vw - 100px)',
+        left: 'calc(-1 * (100vw - 100px))', // fixed left offset for wrap mode
         display: 'flex',
         flexDirection: 'row',
         flexWrap: 'wrap',
@@ -1230,7 +1238,7 @@ class LatestGamesManager {
           this.updateContainerLeftOffset();
         }
       }
-    }, 1000);
+    }, this.hidePanelDelay);
   }
 
   refreshContainer() {

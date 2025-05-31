@@ -296,7 +296,7 @@ class LatestGamesManager {
   createThemeToggle() {
     const toggleButton = this.createElement('div', {
       className: 'theme-toggle',
-      title: 'Switch theme'
+      title: 'Изменить тему (Светлая/Темная)'
     });
 
     const svg = this.createElement('svg', {
@@ -322,7 +322,7 @@ class LatestGamesManager {
     const displayMode = this.getDisplayMode();
     const toggleButton = this.createElement('div', {
       className: 'display-mode-toggle',
-      title: 'Переключить режим отображения (скролл/колонки)'
+      title: 'Переключить режим отображения (Верттикальный/Горизонтальный)'
     });
     const svg = this.createElement('svg', {
       viewBox: '0 0 24 24',

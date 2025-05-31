@@ -373,7 +373,7 @@ class LatestGamesManager {
     if (mode === 'wrap') {
       container.style.left = 'calc(-1 * (100vw - 100px))';
     } else {
-      container.style.left = '-220px';
+      container.style.left = '-250px';
     }
   }
 
@@ -530,8 +530,6 @@ class LatestGamesManager {
 
     document.body.appendChild(container);
     this.updateDisplayModeClass();
-    this.updateContainerLeftOffset();
-    window.addEventListener('resize', () => this.updateContainerLeftOffset());
   }
 
   // Injects styles based on the current theme
@@ -555,7 +553,7 @@ class LatestGamesManager {
         top: '50px',
         width: 'auto',
         minWidth: '200px',
-        maxWidth: '220px', // changed from 250px to 220px for scroll mode
+        maxWidth: '250px',
         maxHeight: 'calc(100vh - 100px)',
         backgroundColor: 'var(--rg-bg-primary)',
         border: '1px solid var(--rg-border-primary)',
@@ -572,7 +570,6 @@ class LatestGamesManager {
         overflowX: 'hidden',
         scrollbarWidth: 'none',
         color: 'var(--rg-text-primary)',
-        left: '-220px', // default for scroll mode
       },
       '#latest-games-container.visible': {
         left: '0 !important',
@@ -841,7 +838,6 @@ class LatestGamesManager {
       '#latest-games-container.display-mode-wrap': {
         maxWidth: 'none',
         width: 'calc(100vw - 100px)',
-        left: 'calc(-1 * (100vw - 100px))', // fixed left offset for wrap mode
         display: 'flex',
         flexDirection: 'row',
         flexWrap: 'wrap',

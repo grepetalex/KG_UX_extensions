@@ -454,7 +454,6 @@ class LatestGamesManager {
       title: 'Закрепить все',
       innerHTML: `<svg class="control-button-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`
     });
-    pinAllBtn.style.cursor = 'pointer';
     pinAllBtn.onclick = () => {
       this.gameData.forEach(g => g.pin = 1);
       this.saveGameData();
@@ -467,11 +466,75 @@ class LatestGamesManager {
       title: 'Открепить все',
       innerHTML: `<svg class="control-button-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>`
     });
-    unpinAllBtn.style.cursor = 'pointer';
     unpinAllBtn.onclick = () => {
       this.gameData.forEach(g => g.pin = 0);
       this.saveGameData();
       this.refreshContainer();
+    };
+
+    // Import settings button
+    const importBtn = this.createElement('span', {
+      className: 'latest-games-import control-button',
+      title: 'Импортировать настройки из JSON файла',
+      innerHTML: `<svg class="control-button-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>`
+    });
+    importBtn.onclick = () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json,application/json';
+      input.style.display = 'none';
+      input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        try {
+          const text = await file.text();
+          const data = JSON.parse(text);
+          if (typeof data === 'object' && data !== null) {
+            if (data.latest_games) localStorage.setItem('latest_games', JSON.stringify(data.latest_games));
+            if (data.latest_games_limit) localStorage.setItem('latest_games_limit', data.latest_games_limit);
+            if (data.latest_games_theme) localStorage.setItem('latest_games_theme', data.latest_games_theme);
+            if (data.latest_games_display_mode) localStorage.setItem('latest_games_display_mode', data.latest_games_display_mode);
+            if (data.latest_games_scroll) localStorage.setItem('latest_games_scroll', data.latest_games_scroll);
+            this.loadSettings();
+            this.loadGameData();
+            this.refreshContainer();
+          } else {
+            alert('Файл не содержит валидный JSON настроек.');
+          }
+        } catch (err) {
+          alert('Ошибка при импорте: ' + err);
+        }
+      };
+      document.body.appendChild(input);
+      input.click();
+      setTimeout(() => input.remove(), 1000);
+    };
+
+    // Export settings button
+    const exportBtn = this.createElement('span', {
+      className: 'latest-games-export control-button',
+      title: 'Экспортировать все настройки в JSON файл',
+      innerHTML: `<svg class="control-button-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>`
+    });
+    exportBtn.onclick = () => {
+      const all = {
+        latest_games: JSON.parse(localStorage.getItem('latest_games') || '[]'),
+        latest_games_limit: localStorage.getItem('latest_games_limit'),
+        latest_games_theme: localStorage.getItem('latest_games_theme'),
+        latest_games_display_mode: localStorage.getItem('latest_games_display_mode'),
+        latest_games_scroll: localStorage.getItem('latest_games_scroll')
+      };
+      const blob = new Blob([JSON.stringify(all, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'kg-latest-games-settings.json';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+        a.remove();
+      }, 1000);
     };
 
     // Remove all settings button
@@ -480,7 +543,6 @@ class LatestGamesManager {
       title: 'Удалить все настройки',
       innerHTML: `<svg class="control-button-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`
     });
-    removeAllBtn.style.cursor = 'pointer';
     removeAllBtn.onclick = () => {
       localStorage.removeItem('latest_games');
       localStorage.removeItem('latest_games_limit');
@@ -525,6 +587,8 @@ class LatestGamesManager {
     controlsContainer.appendChild(this.createDisplayModeToggle());
     controlsContainer.appendChild(pinAllBtn);
     controlsContainer.appendChild(unpinAllBtn);
+    controlsContainer.appendChild(importBtn);
+    controlsContainer.appendChild(exportBtn);
     controlsContainer.appendChild(removeAllBtn);
 
     return controlsContainer;

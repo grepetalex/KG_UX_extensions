@@ -1202,7 +1202,7 @@ class LatestGamesManager {
       e.preventDefault();
       this.isDragging = true;
       this.draggedElement = element;
-      this.lastDragY = e.clientY; // Initialize the Y position
+      this.lastDragY = e.clientY;
 
       const rect = element.getBoundingClientRect();
       this.dragOffset = {
@@ -1211,6 +1211,15 @@ class LatestGamesManager {
       };
 
       element.classList.add('dragging');
+
+      const displayMode = this.getDisplayMode();
+      if (displayMode === 'wrap') {
+        // Prepare for absolute positioning in wrap mode
+        element.style.position = 'absolute';
+        element.style.left = `${rect.left - element.parentElement.getBoundingClientRect().left}px`;
+        element.style.top = `${rect.top - element.parentElement.getBoundingClientRect().top}px`;
+        element.style.width = `${rect.width}px`; // Maintain width during drag
+      }
 
       document.addEventListener('mousemove', this.handleDragMove.bind(this));
       document.addEventListener('mouseup', this.handleDragEnd.bind(this));
@@ -1222,44 +1231,79 @@ class LatestGamesManager {
 
     e.preventDefault();
 
-    // Calculate drag direction
+    const displayMode = this.getDisplayMode();
+    const gamesList = document.getElementById('latest-games');
+
+    if (displayMode === 'scroll') {
+      // Scroll mode: Vertical reordering only
+      const pinnedGames = Array.from(gamesList.querySelectorAll('.pin-game:not(.dragging)'));
+      let insertAfter = null;
+
+      for (const pinnedGame of pinnedGames) {
+        const rect = pinnedGame.getBoundingClientRect();
+        const middle = rect.top + rect.height / 2;
+        if (e.clientY < middle) break;
+        insertAfter = pinnedGame;
+      }
+
+      if (insertAfter) {
+        gamesList.insertBefore(this.draggedElement, insertAfter.nextSibling);
+      } else {
+        const firstPinned = gamesList.querySelector('.pin-game:not(.dragging)');
+        if (firstPinned) {
+          gamesList.insertBefore(this.draggedElement, firstPinned);
+        }
+      }
+    } else {
+      // Wrap mode: Free movement by x and y
+      const containerRect = gamesList.getBoundingClientRect();
+      let newLeft = e.clientX - this.dragOffset.x - containerRect.left;
+      let newTop = e.clientY - this.dragOffset.y - containerRect.top;
+
+      // Constrain within container bounds
+      newLeft = Math.max(0, Math.min(newLeft, gamesList.offsetWidth - this.draggedElement.offsetWidth));
+      newTop = Math.max(0, Math.min(newTop, gamesList.offsetHeight - this.draggedElement.offsetHeight));
+
+      this.draggedElement.style.left = `${newLeft}px`;
+      this.draggedElement.style.top = `${newTop}px`;
+
+      // Determine insertion point for reordering
+      const pinnedGames = Array.from(gamesList.querySelectorAll('.pin-game:not(.dragging)'));
+      let closestElement = null;
+      let minDistance = Infinity;
+      const cursorX = e.clientX;
+      const cursorY = e.clientY;
+
+      pinnedGames.forEach(game => {
+        const rect = game.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const distance = Math.sqrt((cursorX - centerX) ** 2 + (cursorY - centerY) ** 2);
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestElement = game;
+        }
+      });
+
+      if (closestElement) {
+        const rect = closestElement.getBoundingClientRect();
+        const isLeftHalf = cursorX < rect.left + rect.width / 2;
+        if (isLeftHalf) {
+          gamesList.insertBefore(this.draggedElement, closestElement);
+        } else {
+          gamesList.insertBefore(this.draggedElement, closestElement.nextSibling);
+        }
+      }
+    }
+
+    // Rotation logic (consistent for both modes)
     const currentY = e.clientY;
     if (this.lastDragY !== 0) {
-      if (currentY < this.lastDragY) {
-        this.dragDirection = 1; // dragging up: positive rotation
-      } else if (currentY > this.lastDragY) {
-        this.dragDirection = -1; // dragging down: negative rotation
-      }
+      this.dragDirection = currentY < this.lastDragY ? 1 : currentY > this.lastDragY ? -1 : this.dragDirection;
     }
     this.lastDragY = currentY;
-
-    // Apply rotation based on direction
-    const rotation = this.dragDirection * 5; // 5deg positive for up, -5deg for down
+    const rotation = this.dragDirection * 5;
     this.draggedElement.style.transform = `rotate(${rotation}deg)`;
-
-    const gamesList = document.getElementById('latest-games');
-    const pinnedGames = Array.from(gamesList.querySelectorAll('.pin-game:not(.dragging)'));
-
-    let insertAfter = null;
-
-    for (const pinnedGame of pinnedGames) {
-      const rect = pinnedGame.getBoundingClientRect();
-      const middle = rect.top + rect.height / 2;
-
-      if (e.clientY < middle) {
-        break;
-      }
-      insertAfter = pinnedGame;
-    }
-
-    if (insertAfter) {
-      insertAfter.parentNode.insertBefore(this.draggedElement, insertAfter.nextSibling);
-    } else {
-      const firstPinned = gamesList.querySelector('.pin-game:not(.dragging)');
-      if (firstPinned) {
-        gamesList.insertBefore(this.draggedElement, firstPinned);
-      }
-    }
   }
 
   handleDragEnd() {
@@ -1267,7 +1311,16 @@ class LatestGamesManager {
 
     this.isDragging = false;
     this.draggedElement.classList.remove('dragging');
-    this.draggedElement.style.transform = ''; // Reset rotation
+
+    const displayMode = this.getDisplayMode();
+    if (displayMode === 'wrap') {
+      // Reset absolute positioning
+      this.draggedElement.style.position = '';
+      this.draggedElement.style.left = '';
+      this.draggedElement.style.top = '';
+      this.draggedElement.style.width = '';
+    }
+    this.draggedElement.style.transform = '';
 
     this.updateGameOrderFromDOM();
 

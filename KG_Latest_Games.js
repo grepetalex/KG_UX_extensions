@@ -177,7 +177,7 @@ class LatestGamesManager {
     this.dragOffset = { x: 0, y: 0 };
     this.dragDirection = 0;
     this.lastDragY = 0;
-    this.hidePanelDelay = 1000;
+    this.hidePanelDelay = 500;
 
     this.gameTypes = {
       normal: 'Oбычный',
@@ -696,6 +696,7 @@ class LatestGamesManager {
         borderRadius: '4px !important',
         backgroundColor: 'var(--rg-bg-card)',
         transition: 'all 0.2s ease',
+        display: 'inline-flex',
         flex: 'fit-content',
         maxWidth: '300px',
       },
@@ -819,13 +820,17 @@ class LatestGamesManager {
         display: 'block'
       },
       '.latest-game-buttons': {
-        position: 'absolute',
-        right: '4px',
-        top: '4px',
+        position: 'relative',
+        justifyContent: 'center',
+        alignItems: 'end',
+        flex: '1',
         display: 'flex',
+        flexDirection: 'column',
         gap: '2px',
+        marginRight: '5px',
         opacity: '0',
-        transition: 'opacity 0.2s ease'
+        transition: 'opacity 0.2s ease',
+        order: '1',
       },
       '.latest-game:hover .latest-game-buttons': {
         opacity: '1'

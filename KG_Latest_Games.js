@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          KG_Latest_Games
 // @namespace     klavogonki
-// @version       1.0.3
+// @version       1.0.4
 // @description   Fast game creation buttons on all the pages
 // @match         *://klavogonki.ru/*
 // @author        Patcher
@@ -24,20 +24,22 @@ const THEME_COLORS = {
     '--rg-border-pinned': 'hsl(122, 39%, 49%)',
 
     // Text colors
-    '--rg-text-primary': 'hsl(0, 0%, 13%)',
+    '--rg-text-primary': 'hsl(0, 0%, 15%)',
     '--rg-text-secondary': 'hsl(0, 0%, 40%)',
-    '--rg-text-tertiary': 'hsl(0, 0%, 53%)',
-    '--rg-text-options': 'hsl(0, 0%, 27%)',
-    '--rg-text-count': 'hsl(0, 0%, 13%)',
-    '--rg-gametype-voc': 'hsl(213, 77%, 46%)',
-    '--rg-gametype-normal': 'hsl(131, 49%, 39%)',
-    '--rg-gametype-abra': 'hsl(215, 20%, 27%)',
-    '--rg-gametype-referats': 'hsl(80, 56%, 28%)',
-    '--rg-gametype-noerror': 'hsl(197, 43%, 47%)',
-    '--rg-gametype-marathon': 'hsl(340, 65%, 54%)',
-    '--rg-gametype-chars': 'hsl(33, 100%, 36%)',
-    '--rg-gametype-digits': 'hsl(0, 0%, 47%)',
-    '--rg-gametype-sprint': 'hsl(6, 38%, 37%)',
+    '--rg-text-tertiary': 'hsl(0, 0%, 55%)',
+    '--rg-text-options': 'hsl(0, 0%, 30%)',
+    '--rg-text-count': 'hsl(0, 0%, 15%)',
+
+    // Game type colors
+    '--rg-gametype-voc': 'hsl(215, 75%, 50%)',
+    '--rg-gametype-normal': 'hsl(130, 50%, 30%)',
+    '--rg-gametype-abra': 'hsl(215, 20%, 40%)',
+    '--rg-gametype-referats': 'hsl(80, 55%, 30%)',
+    '--rg-gametype-noerror': 'hsl(200, 45%, 35%)',
+    '--rg-gametype-marathon': 'hsl(340, 65%, 45%)',
+    '--rg-gametype-chars': 'hsl(35, 100%, 30%)',
+    '--rg-gametype-digits': 'hsl(0, 0%, 50%)',
+    '--rg-gametype-sprint': 'hsl(5, 40%, 40%)',
 
     // Icon colors
     '--rg-icon-primary': 'currentColor',
@@ -52,6 +54,34 @@ const THEME_COLORS = {
     '--rg-hover-delete': 'hsla(4, 90%, 58%, 0.2)',
     '--rg-hover-control': 'hsl(0, 0%, 92%)',
     '--rg-hover-control-btn': 'hsl(213, 77%, 96%)',
+
+    // Pinned card backgrounds and borders by gameType
+    '--rg-bg-card-pinned-voc': 'hsl(215, 80%, 95%)',
+    '--rg-border-pinned-voc': 'hsl(215, 80%, 80%)',
+
+    '--rg-bg-card-pinned-normal': 'hsl(130, 50%, 90%)',
+    '--rg-border-pinned-normal': 'hsl(130, 50%, 70%)',
+
+    '--rg-bg-card-pinned-abra': 'hsl(215, 20%, 90%)',
+    '--rg-border-pinned-abra': 'hsl(215, 20%, 70%)',
+
+    '--rg-bg-card-pinned-referats': 'hsl(80, 55%, 90%)',
+    '--rg-border-pinned-referats': 'hsl(80, 55%, 70%)',
+
+    '--rg-bg-card-pinned-noerror': 'hsl(200, 45%, 90%)',
+    '--rg-border-pinned-noerror': 'hsl(200, 45%, 70%)',
+
+    '--rg-bg-card-pinned-marathon': 'hsl(340, 65%, 90%)',
+    '--rg-border-pinned-marathon': 'hsl(340, 65%, 70%)',
+
+    '--rg-bg-card-pinned-chars': 'hsl(35, 100%, 90%)',
+    '--rg-border-pinned-chars': 'hsl(35, 100%, 70%)',
+
+    '--rg-bg-card-pinned-digits': 'hsl(0, 0%, 90%)',
+    '--rg-border-pinned-digits': 'hsl(0, 0%, 70%)',
+
+    '--rg-bg-card-pinned-sprint': 'hsl(5, 40%, 90%)',
+    '--rg-border-pinned-sprint': 'hsl(5, 40%, 70%)',
   },
   dark: {
     // Main colors
@@ -72,15 +102,17 @@ const THEME_COLORS = {
     '--rg-text-tertiary': 'hsl(0, 0%, 88%)',
     '--rg-text-options': 'hsl(0, 0%, 88%)',
     '--rg-text-count': 'hsl(48, 100%, 50%)',
-    '--rg-gametype-voc': 'hsl(207, 89%, 76%)',
-    '--rg-gametype-normal': 'hsl(131, 49%, 70%)',
-    '--rg-gametype-abra': 'hsl(289, 47%, 75%)',
-    '--rg-gametype-referats': 'hsl(32, 100%, 65%)',
-    '--rg-gametype-noerror': 'hsl(4, 100%, 75%)',
-    '--rg-gametype-marathon': 'hsl(207, 89%, 76%)',
-    '--rg-gametype-chars': 'hsl(330, 90%, 68%)',
-    '--rg-gametype-digits': 'hsl(197, 89%, 63%)',
-    '--rg-gametype-sprint': 'hsl(54, 100%, 73%)',
+
+    // Game type colors
+    '--rg-gametype-voc': 'hsl(215, 80%, 65%)',
+    '--rg-gametype-normal': 'hsl(130, 50%, 60%)',
+    '--rg-gametype-abra': 'hsl(215, 20%, 60%)',
+    '--rg-gametype-referats': 'hsl(80, 55%, 40%)',
+    '--rg-gametype-noerror': 'hsl(200, 45%, 65%)',
+    '--rg-gametype-marathon': 'hsl(340, 70%, 55%)',
+    '--rg-gametype-chars': 'hsl(35, 100%, 45%)',
+    '--rg-gametype-digits': 'hsl(0, 0%, 50%)',
+    '--rg-gametype-sprint': 'hsl(5, 40%, 60%)',
 
     // Icon colors
     '--rg-icon-primary': 'hsl(207, 89%, 76%)',
@@ -95,6 +127,34 @@ const THEME_COLORS = {
     '--rg-hover-delete': 'hsla(4, 100%, 75%, 0.2)',
     '--rg-hover-control': 'hsl(0, 0%, 38%)',
     '--rg-hover-control-btn': 'hsl(213, 81.60%, 29.80%)',
+
+    // Pinned card backgrounds and borders by gameType
+    '--rg-bg-card-pinned-voc': 'hsl(215, 80%, 10%)',
+    '--rg-border-pinned-voc': 'hsl(215, 80%, 30%)',
+
+    '--rg-bg-card-pinned-normal': 'hsl(130, 50%, 10%)',
+    '--rg-border-pinned-normal': 'hsl(130, 50%, 30%)',
+
+    '--rg-bg-card-pinned-abra': 'hsl(215, 20%, 10%)',
+    '--rg-border-pinned-abra': 'hsl(215, 20%, 30%)',
+
+    '--rg-bg-card-pinned-referats': 'hsl(80, 55%, 10%)',
+    '--rg-border-pinned-referats': 'hsl(80, 55%, 30%)',
+
+    '--rg-bg-card-pinned-noerror': 'hsl(200, 45%, 10%)',
+    '--rg-border-pinned-noerror': 'hsl(200, 45%, 30%)',
+
+    '--rg-bg-card-pinned-marathon': 'hsl(340, 65%, 10%)',
+    '--rg-border-pinned-marathon': 'hsl(340, 65%, 30%)',
+
+    '--rg-bg-card-pinned-chars': 'hsl(40, 100%, 10%)',
+    '--rg-border-pinned-chars': 'hsl(40, 100%, 30%)',
+
+    '--rg-bg-card-pinned-digits': 'hsl(0, 0%, 10%)',
+    '--rg-border-pinned-digits': 'hsl(0, 0%, 30%)',
+
+    '--rg-bg-card-pinned-sprint': 'hsl(5, 40%, 10%)',
+    '--rg-border-pinned-sprint': 'hsl(5, 40%, 30%)',
   }
 };
 
@@ -251,8 +311,9 @@ class LatestGamesManager {
   // --- Existing Methods with Modifications ---
 
   createGameElement(game, id) {
+    const gametypeClass = game.pin ? ` pin-gametype-${game.params.gametype}` : '';
     const li = this.createElement('li', {
-      className: `latest-game${game.pin ? ' pin-game' : ''}`,
+      className: `latest-game${game.pin ? ' pin-game' : ''}${gametypeClass}`,
       id: `latest-game-${id}`
     });
 
@@ -455,9 +516,42 @@ class LatestGamesManager {
         backgroundColor: 'var(--rg-bg-card)',
         transition: 'all 0.2s ease'
       },
-      '.latest-game.pin-game': {
-        border: '2px solid var(--rg-border-pinned)',
-        backgroundColor: 'var(--rg-bg-card-pinned)'
+      // Per-gametype pinned styles
+      '.latest-game.pin-game.pin-gametype-voc': {
+        border: '2px solid var(--rg-border-pinned-voc)',
+        backgroundColor: 'var(--rg-bg-card-pinned-voc)'
+      },
+      '.latest-game.pin-game.pin-gametype-normal': {
+        border: '2px solid var(--rg-border-pinned-normal)',
+        backgroundColor: 'var(--rg-bg-card-pinned-normal)'
+      },
+      '.latest-game.pin-game.pin-gametype-abra': {
+        border: '2px solid var(--rg-border-pinned-abra)',
+        backgroundColor: 'var(--rg-bg-card-pinned-abra)'
+      },
+      '.latest-game.pin-game.pin-gametype-referats': {
+        border: '2px solid var(--rg-border-pinned-referats)',
+        backgroundColor: 'var(--rg-bg-card-pinned-referats)'
+      },
+      '.latest-game.pin-game.pin-gametype-noerror': {
+        border: '2px solid var(--rg-border-pinned-noerror)',
+        backgroundColor: 'var(--rg-bg-card-pinned-noerror)'
+      },
+      '.latest-game.pin-game.pin-gametype-marathon': {
+        border: '2px solid var(--rg-border-pinned-marathon)',
+        backgroundColor: 'var(--rg-bg-card-pinned-marathon)'
+      },
+      '.latest-game.pin-game.pin-gametype-chars': {
+        border: '2px solid var(--rg-border-pinned-chars)',
+        backgroundColor: 'var(--rg-bg-card-pinned-chars)'
+      },
+      '.latest-game.pin-game.pin-gametype-digits': {
+        border: '2px solid var(--rg-border-pinned-digits)',
+        backgroundColor: 'var(--rg-bg-card-pinned-digits)'
+      },
+      '.latest-game.pin-game.pin-gametype-sprint': {
+        border: '2px solid var(--rg-border-pinned-sprint)',
+        backgroundColor: 'var(--rg-bg-card-pinned-sprint)'
       },
       '.latest-game:hover': {
         borderColor: 'var(--rg-border-hover)',
@@ -1023,7 +1117,7 @@ class LatestGamesManager {
           container.classList.remove('visible');
         }
       }
-    }, 1000);
+    }, 10000000);
   }
 
   refreshContainer() {

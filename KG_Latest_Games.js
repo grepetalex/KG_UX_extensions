@@ -1117,7 +1117,7 @@ class LatestGamesManager {
           container.classList.remove('visible');
         }
       }
-    }, 10000000);
+    }, 1000);
   }
 
   refreshContainer() {

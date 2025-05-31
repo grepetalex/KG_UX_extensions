@@ -362,6 +362,19 @@ class LatestGamesManager {
     const mode = this.getDisplayMode();
     container.classList.toggle('display-mode-wrap', mode === 'wrap');
     gamesList.classList.toggle('display-mode-wrap', mode === 'wrap');
+    this.updateContainerLeftOffset();
+  }
+
+  updateContainerLeftOffset() {
+    const container = document.getElementById('latest-games-container');
+    if (!container) return;
+    // Temporarily show to measure width
+    const wasVisible = container.classList.contains('visible');
+    if (!wasVisible) container.classList.add('visible');
+    // Use getBoundingClientRect for accurate width
+    const width = container.getBoundingClientRect().width;
+    if (!wasVisible) container.classList.remove('visible');
+    container.style.left = `-${Math.ceil(width)}px`;
   }
 
   // --- Existing Methods with Modifications ---
@@ -516,8 +529,9 @@ class LatestGamesManager {
     });
 
     document.body.appendChild(container);
-    // Apply display mode class after DOM is ready
     this.updateDisplayModeClass();
+    this.updateContainerLeftOffset();
+    window.addEventListener('resize', () => this.updateContainerLeftOffset());
   }
 
   // Injects styles based on the current theme
@@ -536,7 +550,6 @@ class LatestGamesManager {
       '#latest-games-container': {
         fontFamily: '"Montserrat", sans-serif',
         position: 'fixed',
-        left: '-250px',
         top: '50px',
         width: 'auto',
         minWidth: '200px',
@@ -556,7 +569,7 @@ class LatestGamesManager {
         color: 'var(--rg-text-primary)'
       },
       '#latest-games-container.visible': {
-        left: '0'
+        left: '0 !important'
       },
       '#latest-games': {
         margin: '0',
@@ -1191,11 +1204,10 @@ class LatestGamesManager {
       clearTimeout(this.hoverTimeout);
       this.hoverTimeout = null;
     }
-
     const container = document.getElementById('latest-games-container');
     if (container) {
       container.classList.add('visible');
-      // Restore scroll position on show (in case container was re-rendered)
+      container.style.left = '0';
       const savedScroll = localStorage.getItem('latest_games_scroll');
       if (savedScroll !== null) {
         container.scrollTop = parseInt(savedScroll, 10) || 0;
@@ -1205,19 +1217,18 @@ class LatestGamesManager {
 
   hideContainerWithDelay() {
     this.isHovered = false;
-
     if (this.hoverTimeout) {
       clearTimeout(this.hoverTimeout);
     }
-
     this.hoverTimeout = setTimeout(() => {
       if (!this.isHovered) {
         const container = document.getElementById('latest-games-container');
         if (container) {
           container.classList.remove('visible');
+          this.updateContainerLeftOffset();
         }
       }
-    }, 1000000);
+    }, 1000);
   }
 
   refreshContainer() {

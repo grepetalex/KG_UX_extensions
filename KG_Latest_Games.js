@@ -520,12 +520,12 @@ class LatestGamesManager {
     options.appendChild(countDisplay);
     options.appendChild(increaseBtn);
 
-    controlsContainer.appendChild(pinAllBtn);
-    controlsContainer.appendChild(unpinAllBtn);
-    controlsContainer.appendChild(removeAllBtn);
     controlsContainer.appendChild(options);
     controlsContainer.appendChild(this.createThemeToggle());
     controlsContainer.appendChild(this.createDisplayModeToggle());
+    controlsContainer.appendChild(pinAllBtn);
+    controlsContainer.appendChild(unpinAllBtn);
+    controlsContainer.appendChild(removeAllBtn);
 
     return controlsContainer;
   }

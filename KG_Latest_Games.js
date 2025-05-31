@@ -295,14 +295,12 @@ class LatestGamesManager {
   // Creates the theme toggle button with an SVG icon
   createThemeToggle() {
     const toggleButton = this.createElement('div', {
-      className: 'theme-toggle',
+      className: 'theme-toggle control-button',
       title: 'Изменить тему (Светлая/Темная)'
     });
 
     const svg = this.createElement('svg', {
-      viewBox: '0 0 24 24',
-      width: '16',
-      height: '16'
+      viewBox: '0 0 24 24'
     });
 
     // Set initial icon
@@ -325,9 +323,7 @@ class LatestGamesManager {
       title: 'Переключить режим отображения (Верттикальный/Горизонтальный)'
     });
     const svg = this.createElement('svg', {
-      viewBox: '0 0 24 24',
-      width: '16',
-      height: '16'
+      viewBox: '0 0 24 24'
     });
     this.updateDisplayModeIcon(svg, displayMode);
     toggleButton.appendChild(svg);
@@ -501,6 +497,7 @@ class LatestGamesManager {
     const decreaseBtn = this.createElement('span', {
       id: 'latest-games-count-dec',
       className: 'control-button',
+      title: 'Уменьшить количество сохраняемых игр',
       innerHTML: `<svg class="control-button-svg" viewBox="0 0 24 24"><path d="M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z" fill="currentColor"/></svg>`
     });
 
@@ -512,6 +509,7 @@ class LatestGamesManager {
     const increaseBtn = this.createElement('span', {
       id: 'latest-games-count-inc',
       className: 'control-button',
+      title: 'Увеличить количество сохраняемых игр',
       innerHTML: `<svg class="control-button-svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" fill="currentColor"/></svg>`
     });
 

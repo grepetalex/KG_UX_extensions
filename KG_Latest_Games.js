@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          KG_Latest_Games
 // @namespace     klavogonki
-// @version       1.0.5
+// @version       1.0.6
 // @description   Fast game creation buttons on all the pages
 // @match         *://klavogonki.ru/*
 // @author        Patcher
@@ -316,6 +316,54 @@ class LatestGamesManager {
     return toggleButton;
   }
 
+  // Add display mode toggle button
+  createDisplayModeToggle() {
+    const displayMode = this.getDisplayMode();
+    const toggleButton = this.createElement('div', {
+      className: 'display-mode-toggle',
+      title: 'Переключить режим отображения (скролл/колонки)'
+    });
+    const svg = this.createElement('svg', {
+      viewBox: '0 0 24 24',
+      width: '16',
+      height: '16'
+    });
+    this.updateDisplayModeIcon(svg, displayMode);
+    toggleButton.appendChild(svg);
+    toggleButton.addEventListener('click', () => {
+      const newMode = this.getDisplayMode() === 'scroll' ? 'wrap' : 'scroll';
+      this.setDisplayMode(newMode);
+      this.updateDisplayModeIcon(svg, newMode);
+      this.updateDisplayModeClass();
+    });
+    return toggleButton;
+  }
+
+  getDisplayMode() {
+    return localStorage.getItem('latest_games_display_mode') || 'scroll';
+  }
+
+  setDisplayMode(mode) {
+    localStorage.setItem('latest_games_display_mode', mode);
+  }
+
+  updateDisplayModeIcon(svg, mode) {
+    if (mode === 'wrap') {
+      svg.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>`;
+    } else {
+      svg.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/></svg>`;
+    }
+  }
+
+  updateDisplayModeClass() {
+    const container = document.getElementById('latest-games-container');
+    const gamesList = document.getElementById('latest-games');
+    if (!container || !gamesList) return;
+    const mode = this.getDisplayMode();
+    container.classList.toggle('display-mode-wrap', mode === 'wrap');
+    gamesList.classList.toggle('display-mode-wrap', mode === 'wrap');
+  }
+
   // --- Existing Methods with Modifications ---
 
   createGameElement(game, id) {
@@ -424,6 +472,7 @@ class LatestGamesManager {
 
     controlsContainer.appendChild(options);
     controlsContainer.appendChild(this.createThemeToggle());
+    controlsContainer.appendChild(this.createDisplayModeToggle());
 
     return controlsContainer;
   }
@@ -439,7 +488,6 @@ class LatestGamesManager {
 
     this.populateGamesList(gamesList);
     container.appendChild(gamesList);
-
     const controls = this.createControls();
     container.appendChild(controls);
 
@@ -468,6 +516,8 @@ class LatestGamesManager {
     });
 
     document.body.appendChild(container);
+    // Apply display mode class after DOM is ready
+    this.updateDisplayModeClass();
   }
 
   // Injects styles based on the current theme
@@ -765,7 +815,42 @@ class LatestGamesManager {
       '#latest-games-count-dec svg, #latest-games-count-inc svg': {
         width: '16px',
         height: '16px',
-      }
+      },
+      '#latest-games-container.display-mode-wrap': {
+        maxWidth: 'none',
+        width: 'calc(100vw - 100px)',
+        display: 'flex',
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        alignItems: 'flex-start',
+      },
+      '#latest-games.display-mode-wrap': {
+        display: 'flex',
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        width: '100%',
+        maxHeight: 'none',
+        overflowY: 'visible',
+        margin: '0 10px',
+      },
+      '.display-mode-wrap .latest-game': {
+        margin: '0',
+      },
+      '.display-mode-toggle': {
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '24px',
+        height: '24px',
+        marginLeft: '6px',
+      },
+      '.display-mode-toggle svg': {
+        width: '16px',
+        height: '16px',
+        display: 'flex',
+        transition: 'stroke 0.2s, fill 0.2s',
+      },
     };
 
     this.createStyleSheet(baseStyles);
@@ -1132,13 +1217,14 @@ class LatestGamesManager {
           container.classList.remove('visible');
         }
       }
-    }, 1000);
+    }, 1000000);
   }
 
   refreshContainer() {
     const gamesList = document.getElementById('latest-games');
     if (gamesList) {
       this.populateGamesList(gamesList);
+      this.updateDisplayModeClass();
     }
   }
 

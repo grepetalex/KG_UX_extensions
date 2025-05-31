@@ -177,7 +177,7 @@ class LatestGamesManager {
     this.dragOffset = { x: 0, y: 0 };
     this.dragDirection = 0;
     this.lastDragY = 0;
-    this.hidePanelDelay = 1000;
+    this.hidePanelDelay = 500;
     this.globalEvents = {};
 
     this.gameTypes = {

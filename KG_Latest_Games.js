@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          KG_Latest_Games
 // @namespace     klavogonki
-// @version       1.0.4
+// @version       1.0.5
 // @description   Fast game creation buttons on all the pages
 // @match         *://klavogonki.ru/*
 // @author        Patcher
@@ -157,6 +157,14 @@ const THEME_COLORS = {
     '--rg-border-pinned-sprint': 'hsl(5, 40%, 30%)',
   }
 };
+
+// Utility to generate a unique random string id
+function generateRandomId() {
+  // 12-char alphanumeric, URL-safe
+  return Array.from(crypto.getRandomValues(new Uint8Array(9)))
+    .map(b => (b % 36).toString(36))
+    .join('');
+}
 
 class LatestGamesManager {
   constructor() {
@@ -314,7 +322,7 @@ class LatestGamesManager {
     const gametypeClass = game.pin ? ` pin-gametype-${game.params.gametype}` : '';
     const li = this.createElement('li', {
       className: `latest-game${game.pin ? ' pin-game' : ''}${gametypeClass}`,
-      id: `latest-game-${id}`
+      id: `latest-game-${id}` // Use string id
     });
 
     const handle = this.createElement('div', {
@@ -825,7 +833,13 @@ class LatestGamesManager {
   }
 
   assignGameIds() {
-    this.gameData = this.gameData.map((game, index) => ({ ...game, id: index }));
+    // Only assign an id if missing, never overwrite existing ids
+    this.gameData = this.gameData.map(game => {
+      if (!('id' in game) || game.id === -1 || game.id === undefined || game.id === null) {
+        return { ...game, id: generateRandomId() };
+      }
+      return game;
+    });
   }
 
   saveGameData() {
@@ -1042,7 +1056,7 @@ class LatestGamesManager {
     const newGameData = [];
 
     gameElements.forEach(element => {
-      const id = parseInt(element.id.replace('latest-game-', ''), 10);
+      const id = element.id.replace('latest-game-', ''); // Use string id
       const game = this.gameData.find(g => g.id === id);
       if (game) {
         newGameData.push(game);
@@ -1080,7 +1094,8 @@ class LatestGamesManager {
     const maxGamesToShow = Math.min(this.gameData.length, this.maxGameCount + pinnedCount);
 
     for (let i = 0; i < maxGamesToShow; i++) {
-      const gameElement = this.createGameElement(this.gameData[i], i);
+      const game = this.gameData[i];
+      const gameElement = this.createGameElement(game, game.id); // Use string id
       gamesList.appendChild(gameElement);
     }
   }
@@ -1204,7 +1219,7 @@ class LatestGamesManager {
 
     const newGame = {
       params: gameParams,
-      id: -1,
+      id: generateRandomId(),
       pin: 0
     };
 

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          KG_Latest_Games
 // @namespace     klavogonki
-// @version       1.0.6
+// @version       1.0.7
 // @description   Fast game creation buttons on all the pages
 // @match         *://klavogonki.ru/*
 // @author        Patcher
@@ -369,7 +369,7 @@ class LatestGamesManager {
     if (mode === 'wrap') {
       container.style.left = 'calc(-1 * (100vw - 100px))';
     } else {
-      container.style.left = '-250px';
+      container.style.left = '-350px';
     }
   }
 
@@ -657,7 +657,7 @@ class LatestGamesManager {
         top: '50px',
         width: 'auto',
         minWidth: '200px',
-        maxWidth: '250px',
+        maxWidth: '350px',
         maxHeight: 'calc(100vh - 100px)',
         backgroundColor: 'var(--rg-bg-primary)',
         border: '1px solid var(--rg-border-primary)',
@@ -695,7 +695,9 @@ class LatestGamesManager {
         border: '1px solid var(--rg-border-primary)',
         borderRadius: '4px !important',
         backgroundColor: 'var(--rg-bg-card)',
-        transition: 'all 0.2s ease'
+        transition: 'all 0.2s ease',
+        flex: 'fit-content',
+        maxWidth: '300px',
       },
       // Per-gametype pinned styles
       '.latest-game.pin-game.pin-gametype-voc': {

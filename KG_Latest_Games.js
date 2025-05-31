@@ -177,7 +177,7 @@ class LatestGamesManager {
     this.dragOffset = { x: 0, y: 0 };
     this.dragDirection = 0;
     this.lastDragY = 0;
-    this.hidePanelDelay = 1000;
+    this.hidePanelDelay = 5000000;
     this.globalEvents = {};
 
     this.gameTypes = {
@@ -751,6 +751,7 @@ class LatestGamesManager {
       },
       '.latest-game a': {
         display: 'block',
+        width: '100%',
         padding: '8px 12px',
         textDecoration: 'none',
         color: 'inherit'
@@ -823,8 +824,6 @@ class LatestGamesManager {
       '.latest-game-buttons': {
         position: 'relative',
         justifyContent: 'center',
-        alignItems: 'end',
-        flex: '1',
         display: 'flex',
         flexDirection: 'column',
         gap: '2px',

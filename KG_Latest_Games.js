@@ -321,7 +321,7 @@ class LatestGamesManager {
   createDisplayModeToggle() {
     const displayMode = this.getDisplayMode();
     const toggleButton = this.createElement('div', {
-      className: 'display-mode-toggle',
+      className: 'display-mode-toggle control-button',
       title: 'Переключить режим отображения (Верттикальный/Горизонтальный)'
     });
     const svg = this.createElement('svg', {
@@ -454,9 +454,9 @@ class LatestGamesManager {
 
     // Pin all button
     const pinAllBtn = this.createElement('span', {
-      className: 'latest-games-pinall',
+      className: 'latest-games-pinall control-button',
       title: 'Закрепить все',
-      innerHTML: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-pin-all"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`
+      innerHTML: `<svg class="control-button-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`
     });
     pinAllBtn.style.cursor = 'pointer';
     pinAllBtn.onclick = () => {
@@ -467,9 +467,9 @@ class LatestGamesManager {
 
     // Unpin all button
     const unpinAllBtn = this.createElement('span', {
-      className: 'latest-games-unpinall',
+      className: 'latest-games-unpinall control-button',
       title: 'Открепить все',
-      innerHTML: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-unpin-all"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>`
+      innerHTML: `<svg class="control-button-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>`
     });
     unpinAllBtn.style.cursor = 'pointer';
     unpinAllBtn.onclick = () => {
@@ -480,9 +480,9 @@ class LatestGamesManager {
 
     // Remove all settings button
     const removeAllBtn = this.createElement('span', {
-      className: 'latest-games-removeall',
+      className: 'latest-games-removeall control-button',
       title: 'Удалить все настройки',
-      innerHTML: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-trash"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`
+      innerHTML: `<svg class="control-button-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`
     });
     removeAllBtn.style.cursor = 'pointer';
     removeAllBtn.onclick = () => {
@@ -500,7 +500,8 @@ class LatestGamesManager {
 
     const decreaseBtn = this.createElement('span', {
       id: 'latest-games-count-dec',
-      innerHTML: `<svg viewBox="0 0 24 24" width="16" height="16"><path d="M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z" fill="currentColor"/></svg>`
+      className: 'control-button',
+      innerHTML: `<svg class="control-button-svg" viewBox="0 0 24 24"><path d="M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z" fill="currentColor"/></svg>`
     });
 
     const countDisplay = this.createElement('span', {
@@ -510,7 +511,8 @@ class LatestGamesManager {
 
     const increaseBtn = this.createElement('span', {
       id: 'latest-games-count-inc',
-      innerHTML: `<svg viewBox="0 0 24 24" width="16" height="16"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" fill="currentColor"/></svg>`
+      className: 'control-button',
+      innerHTML: `<svg class="control-button-svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" fill="currentColor"/></svg>`
     });
 
     decreaseBtn.addEventListener('click', () => this.changeGameCount(-1));
@@ -904,11 +906,25 @@ class LatestGamesManager {
         height: '24px',
         marginLeft: '6px',
       },
-      '.display-mode-toggle svg': {
+      '.control-button': {
+        width: '24px',
+        height: '24px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: 'pointer',
+        borderRadius: '4px',
+        transition: 'background 0.15s',
+        userSelect: 'none',
+        margin: '0 2px',
+        padding: '0',
+        boxSizing: 'border-box',
+      },
+      '.control-button-svg': {
         width: '16px',
         height: '16px',
         display: 'flex',
-        transition: 'stroke 0.2s, fill 0.2s',
+        pointerEvents: 'none',
       },
     };
 

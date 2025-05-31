@@ -452,16 +452,55 @@ class LatestGamesManager {
       className: 'latest-games-controls'
     });
 
+    // Pin all button
+    const pinAllBtn = this.createElement('span', {
+      className: 'latest-games-pinall',
+      title: 'Закрепить все',
+      innerHTML: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-pin-all"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`
+    });
+    pinAllBtn.style.cursor = 'pointer';
+    pinAllBtn.onclick = () => {
+      this.gameData.forEach(g => g.pin = 1);
+      this.saveGameData();
+      this.refreshContainer();
+    };
+
+    // Unpin all button
+    const unpinAllBtn = this.createElement('span', {
+      className: 'latest-games-unpinall',
+      title: 'Открепить все',
+      innerHTML: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-unpin-all"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>`
+    });
+    unpinAllBtn.style.cursor = 'pointer';
+    unpinAllBtn.onclick = () => {
+      this.gameData.forEach(g => g.pin = 0);
+      this.saveGameData();
+      this.refreshContainer();
+    };
+
+    // Remove all settings button
+    const removeAllBtn = this.createElement('span', {
+      className: 'latest-games-removeall',
+      title: 'Удалить все настройки',
+      innerHTML: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-trash"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`
+    });
+    removeAllBtn.style.cursor = 'pointer';
+    removeAllBtn.onclick = () => {
+      localStorage.removeItem('latest_games');
+      localStorage.removeItem('latest_games_limit');
+      localStorage.removeItem('latest_games_scroll');
+      this.gameData = [];
+      this.saveGameData();
+      this.refreshContainer();
+    };
+
     const options = this.createElement('span', {
-      id: 'latest-games-options',
-      textContent: 'История: '
+      id: 'latest-games-options'
     });
 
     const decreaseBtn = this.createElement('span', {
       id: 'latest-games-count-dec',
-      innerHTML: `<svg viewBox="0 0 24 24" width="16" height="16">
-        <path d="M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z" fill="currentColor"/>
-      </svg>`
+      innerHTML: `<svg viewBox="0 0 24 24" width="16" height="16"><path d="M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z" fill="currentColor"/></svg>`
     });
 
     const countDisplay = this.createElement('span', {
@@ -471,9 +510,7 @@ class LatestGamesManager {
 
     const increaseBtn = this.createElement('span', {
       id: 'latest-games-count-inc',
-      innerHTML: `<svg viewBox="0 0 24 24" width="16" height="16">
-        <path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" fill="currentColor"/>
-      </svg>`
+      innerHTML: `<svg viewBox="0 0 24 24" width="16" height="16"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" fill="currentColor"/></svg>`
     });
 
     decreaseBtn.addEventListener('click', () => this.changeGameCount(-1));
@@ -483,6 +520,9 @@ class LatestGamesManager {
     options.appendChild(countDisplay);
     options.appendChild(increaseBtn);
 
+    controlsContainer.appendChild(pinAllBtn);
+    controlsContainer.appendChild(unpinAllBtn);
+    controlsContainer.appendChild(removeAllBtn);
     controlsContainer.appendChild(options);
     controlsContainer.appendChild(this.createThemeToggle());
     controlsContainer.appendChild(this.createDisplayModeToggle());

@@ -179,6 +179,8 @@ class LatestGamesManager {
     this.dragOffset = { x: 0, y: 0 };
     this.dragDirection = 0;
     this.lastDragDirection = 0;
+    this.rotationAccumulator = 0;
+    this.rotationDegreeLimit = 5;
     this.lastDragY = 0;
     this.hidePanelDelay = 500;
     this.globalEvents = {};
@@ -1219,7 +1221,7 @@ class LatestGamesManager {
   handleDragMove(e) {
     if (!this.isDragging || !this.draggedElement) return;
 
-    // If not already marked as dragging, check the threshold
+    // If not already marked as dragging, check the threshold to start dragging
     if (!this.wasDragging) {
       if (Math.abs(e.clientX - this.initialX) > this.dragThreshold ||
         Math.abs(e.clientY - this.initialY) > this.dragThreshold) {
@@ -1253,7 +1255,7 @@ class LatestGamesManager {
         }
       }
     } else {
-      // Wrap mode: free movement by x and y with proper constraints
+      // Wrap mode: free movement by x and y with constraints
       const containerRect = gamesList.getBoundingClientRect();
       let newLeft = e.clientX - this.dragOffset.x - containerRect.left;
       let newTop = e.clientY - this.dragOffset.y - containerRect.top;
@@ -1294,17 +1296,20 @@ class LatestGamesManager {
       }
     }
 
-    // Rotation logic (consistent for both modes)
+    // Smooth continuous rotation logic (limited to ±5 degrees)
     const currentY = e.clientY;
     const deltaY = currentY - this.lastDragY;
     this.lastDragY = currentY;
-    if (deltaY !== 0) { // Avoid updates when there’s no movement
-      const dragDirection = deltaY > 0 ? 1 : -1;
-      if (dragDirection !== this.lastDragDirection) {
-        const rotation = (this.isRightHalf ? dragDirection : -dragDirection) * 5;
-        this.draggedElement.style.transform = `rotate(${rotation}deg)`;
-        this.lastDragDirection = dragDirection;
+    if (deltaY !== 0) {
+      const sensitivity = 0.2;
+      this.rotationAccumulator = (this.rotationAccumulator || 0) + (this.isRightHalf ? deltaY : -deltaY) * sensitivity;
+      // Clamp to (rotattionDegreeLimit)
+      if (this.rotationAccumulator > this.rotationDegreeLimit) {
+        this.rotationAccumulator = this.rotationDegreeLimit;
+      } else if (this.rotationAccumulator < -this.rotationDegreeLimit) {
+        this.rotationAccumulator = -this.rotationDegreeLimit;
       }
+      this.draggedElement.style.transform = `rotate(${this.rotationAccumulator}deg)`;
     }
   }
 

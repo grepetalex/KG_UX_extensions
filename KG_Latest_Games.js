@@ -174,6 +174,7 @@ class LatestGamesManager {
     this.isHovered = false;
     this.isDragging = false;
     this.wasDragging = false;
+    this.dragThreshold = 50;
     this.draggedElement = null;
     this.dragOffset = { x: 0, y: 0 };
     this.dragDirection = 0;
@@ -1180,17 +1181,10 @@ class LatestGamesManager {
 
   addDragFunctionality(element) {
     element.addEventListener('mousedown', (e) => {
-      // Prevent dragging if clicking on buttons
-      if (e.target.closest('.latest-game-buttons')) {
-        return;
-      }
-      e.preventDefault();
-
-      // Set wasDragging true if moved more than a few pixels (e.g., 5px)
-      if (Math.abs(e.clientX - this.dragOffset.x) > 5 ||
-        Math.abs(e.clientY - this.dragOffset.y) > 5) {
-        this.wasDragging = true;
-      }
+      // Reset drag flag and store initial position
+      this.wasDragging = false;
+      this.initialX = e.clientX;
+      this.initialY = e.clientY;
 
       this.isDragging = true;
       this.draggedElement = element;
@@ -1214,6 +1208,7 @@ class LatestGamesManager {
         element.style.width = `${rect.width}px`; // Maintain width during drag
       }
 
+      // Save the bound functions in globalEvents so we can remove them later
       this.globalEvents.handleDragMove = this.handleDragMove.bind(this);
       this.globalEvents.handleDragEnd = this.handleDragEnd.bind(this);
       document.addEventListener('mousemove', this.globalEvents.handleDragMove);
@@ -1223,14 +1218,22 @@ class LatestGamesManager {
 
   handleDragMove(e) {
     if (!this.isDragging || !this.draggedElement) return;
-
+    
+    // If not already marked as dragging, check the threshold
+    if (!this.wasDragging) {
+      if (Math.abs(e.clientX - this.initialX) > this.dragThreshold ||
+          Math.abs(e.clientY - this.initialY) > this.dragThreshold) {
+        this.wasDragging = true;
+      }
+    }
+    
     e.preventDefault();
 
     const displayMode = this.getDisplayMode();
     const gamesList = document.getElementById('latest-games');
 
     if (displayMode === 'scroll') {
-      // Scroll mode: Vertical reordering only
+      // Vertical reordering only
       const pinnedGames = Array.from(gamesList.querySelectorAll('.pin-game:not(.dragging)'));
       let insertAfter = null;
 
@@ -1250,7 +1253,7 @@ class LatestGamesManager {
         }
       }
     } else {
-      // Wrap mode: Free movement by x and y
+      // Wrap mode: free movement by x and y with proper constraints
       const containerRect = gamesList.getBoundingClientRect();
       let newLeft = e.clientX - this.dragOffset.x - containerRect.left;
       let newTop = e.clientY - this.dragOffset.y - containerRect.top;
@@ -1262,7 +1265,7 @@ class LatestGamesManager {
       this.draggedElement.style.left = `${newLeft}px`;
       this.draggedElement.style.top = `${newTop}px`;
 
-      // Determine insertion point for reordering
+      // Determine insertion point based on distance to other items
       const pinnedGames = Array.from(gamesList.querySelectorAll('.pin-game:not(.dragging)'));
       let closestElement = null;
       let minDistance = Infinity;
@@ -1273,7 +1276,7 @@ class LatestGamesManager {
         const rect = game.getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
-        const distance = Math.sqrt((cursorX - centerX) ** 2 + (cursorY - centerY) ** 2);
+        const distance = Math.hypot(cursorX - centerX, cursorY - centerY);
         if (distance < minDistance) {
           minDistance = distance;
           closestElement = game;
@@ -1295,7 +1298,7 @@ class LatestGamesManager {
     const currentY = e.clientY;
     const deltaY = currentY - this.lastDragY;
     this.lastDragY = currentY;
-    const dragDirection = deltaY > 0 ? 1 : -1; // 1 for down, -1 for up
+    const dragDirection = deltaY > 0 ? 1 : -1;
     const rotation = (this.isRightHalf ? dragDirection : -dragDirection) * 5;
     this.draggedElement.style.transform = `rotate(${rotation}deg)`;
   }

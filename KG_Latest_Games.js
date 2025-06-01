@@ -390,7 +390,7 @@ class LatestGamesManager {
 
     const pinButton = this.createElement('div', {
       className: 'latest-game-pin',
-      title: 'Зафиксировать',
+      title: game.pin ? 'Открепить' : 'Закрепить',
       innerHTML: `
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
              viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -1442,7 +1442,7 @@ class LatestGamesManager {
     const game = this.gameData[gameIndex];
     game.pin = game.pin ? 0 : 1;
 
-    const insertIndex = game.pin ? 
+    const insertIndex = game.pin ?
       this.gameData.findIndex(g => !g.pin || g === game) :
       this.gameData.findIndex(g => !g.pin && g !== game);
 

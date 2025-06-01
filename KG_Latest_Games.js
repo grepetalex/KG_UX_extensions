@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          KG_Latest_Games
 // @namespace     klavogonki
-// @version       1.0.7
+// @version       1.0.8
 // @description   Fast game creation buttons on all the pages
 // @match         *://klavogonki.ru/*
 // @author        Patcher
@@ -173,6 +173,7 @@ class LatestGamesManager {
     this.hoverTimeout = null;
     this.isHovered = false;
     this.isDragging = false;
+    this.wasDragging = false;
     this.draggedElement = null;
     this.dragOffset = { x: 0, y: 0 };
     this.dragDirection = 0;
@@ -383,13 +384,6 @@ class LatestGamesManager {
       id: `latest-game-${id}` // Use string id
     });
 
-    const handle = this.createElement('div', {
-      className: 'latest-game-handle',
-      innerHTML: `<svg viewBox="0 0 24 24" width="12" height="12">
-        <path d="M9 3h2v2H9V3zm4 0h2v2h-2V3zM9 7h2v2H9V7zm4 0h2v2h-2V7zm-4 4h2v2H9v-2zm4 0h2v2h-2v-2zm-4 4h2v2H9v-2zm4 0h2v2h-2v-2zm-4 4h2v2H9v-2zm4 0h2v2h-2v-2z" fill="currentColor"/>
-      </svg>`
-    });
-
     const buttons = this.createElement('div', {
       className: 'latest-game-buttons'
     });
@@ -433,12 +427,19 @@ class LatestGamesManager {
       innerHTML: this.generateGameName(game)
     });
 
-    li.appendChild(handle);
+    link.addEventListener('click', (e) => {
+      if (this.wasDragging) {
+        e.preventDefault();
+        // Reset flag so next click works normally
+        this.wasDragging = false;
+      }
+    });
+
     li.appendChild(buttons);
     li.appendChild(link);
 
     if (game.pin) {
-      this.addDragFunctionality(li, handle, id);
+      this.addDragFunctionality(li, id);
     }
 
     return li;
@@ -690,6 +691,9 @@ class LatestGamesManager {
         flexDirection: 'column',
         gap: '5px'
       },
+      '.pin-game': {
+        cursor: 'move' // Indicate that pinned games are draggable
+      },
       '.latest-game': {
         position: 'relative',
         margin: '0 10px',
@@ -805,22 +809,6 @@ class LatestGamesManager {
         color: 'var(--rg-text-tertiary)',
         marginTop: '1px'
       },
-      '.latest-game-handle': {
-        display: 'none',
-        position: 'absolute',
-        left: '2px',
-        top: '2px',
-        width: '12px',
-        height: '12px',
-        cursor: 'move',
-        opacity: '0.5',
-      },
-      '.latest-game-handle path': {
-        fill: 'var(--rg-icon-primary)',
-      },
-      '.pin-game .latest-game-handle': {
-        display: 'block'
-      },
       '.latest-game-buttons': {
         position: 'relative',
         justifyContent: 'center',
@@ -866,9 +854,6 @@ class LatestGamesManager {
       },
       '.latest-game-pin:hover svg, .latest-game-delete:hover svg': {
         opacity: '1'
-      },
-      '.pin-game .latest-game-pin': {
-        display: 'none'
       },
       '.latest-games-controls': {
         display: 'flex',
@@ -938,10 +923,6 @@ class LatestGamesManager {
         strokeLinejoin: 'round'
       },
       // Generic SVG styling
-      '.latest-game-handle svg': {
-        width: '12px',
-        height: '12px',
-      },
       '#latest-games-count-dec svg, #latest-games-count-inc svg': {
         width: '16px',
         height: '16px',
@@ -1197,14 +1178,26 @@ class LatestGamesManager {
     return `${location.protocol}//klavogonki.ru/create/?${params.toString()}`;
   }
 
-  addDragFunctionality(element, handle) {
-    handle.addEventListener('mousedown', (e) => {
+  addDragFunctionality(element) {
+    element.addEventListener('mousedown', (e) => {
+      // Prevent dragging if clicking on buttons
+      if (e.target.closest('.latest-game-buttons')) {
+        return;
+      }
       e.preventDefault();
+
+      // Set wasDragging true if moved more than a few pixels (e.g., 5px)
+      if (Math.abs(e.clientX - this.dragOffset.x) > 5 ||
+        Math.abs(e.clientY - this.dragOffset.y) > 5) {
+        this.wasDragging = true;
+      }
+
       this.isDragging = true;
       this.draggedElement = element;
-      this.lastDragY = e.clientY;
-
       const rect = element.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      this.isRightHalf = clickX > rect.width / 2; // Determine if click is on right half
+      this.lastDragY = e.clientY;
       this.dragOffset = {
         x: e.clientX - rect.left,
         y: e.clientY - rect.top
@@ -1300,11 +1293,10 @@ class LatestGamesManager {
 
     // Rotation logic (consistent for both modes)
     const currentY = e.clientY;
-    if (this.lastDragY !== 0) {
-      this.dragDirection = currentY < this.lastDragY ? 1 : currentY > this.lastDragY ? -1 : this.dragDirection;
-    }
+    const deltaY = currentY - this.lastDragY;
     this.lastDragY = currentY;
-    const rotation = this.dragDirection * 5;
+    const dragDirection = deltaY > 0 ? 1 : -1; // 1 for down, -1 for up
+    const rotation = (this.isRightHalf ? dragDirection : -dragDirection) * 5;
     this.draggedElement.style.transform = `rotate(${rotation}deg)`;
   }
 
@@ -1322,7 +1314,7 @@ class LatestGamesManager {
       this.draggedElement.style.top = '';
       this.draggedElement.style.width = '';
     }
-    this.draggedElement.style.transform = '';
+    this.draggedElement.style.transform = ''; // Reset rotation
 
     this.updateGameOrderFromDOM();
 

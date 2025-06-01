@@ -1439,18 +1439,15 @@ class LatestGamesManager {
     const gameIndex = this.findGameIndex(id);
     if (gameIndex === -1) return;
 
-    let insertIndex = 0;
-    for (let i = 0; i < this.gameData.length; i++) {
-      if (!this.gameData[i].pin) {
-        insertIndex = i;
-        break;
-      }
-    }
+    const game = this.gameData[gameIndex];
+    game.pin = game.pin ? 0 : 1;
 
-    this.gameData[gameIndex].pin = 1;
+    const insertIndex = game.pin ? 
+      this.gameData.findIndex(g => !g.pin || g === game) :
+      this.gameData.findIndex(g => !g.pin && g !== game);
 
     if (gameIndex !== insertIndex) {
-      const gameObject = this.gameData.splice(gameIndex, 1)[0];
+      const [gameObject] = this.gameData.splice(gameIndex, 1);
       this.gameData.splice(insertIndex, 0, gameObject);
     }
 

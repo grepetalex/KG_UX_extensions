@@ -178,6 +178,7 @@ class LatestGamesManager {
     this.draggedElement = null;
     this.dragOffset = { x: 0, y: 0 };
     this.dragDirection = 0;
+    this.lastDragDirection = 0;
     this.lastDragY = 0;
     this.hidePanelDelay = 500;
     this.globalEvents = {};
@@ -1297,9 +1298,14 @@ class LatestGamesManager {
     const currentY = e.clientY;
     const deltaY = currentY - this.lastDragY;
     this.lastDragY = currentY;
-    const dragDirection = deltaY > 0 ? 1 : -1;
-    const rotation = (this.isRightHalf ? dragDirection : -dragDirection) * 5;
-    this.draggedElement.style.transform = `rotate(${rotation}deg)`;
+    if (deltaY !== 0) { // Avoid updates when there’s no movement
+      const dragDirection = deltaY > 0 ? 1 : -1;
+      if (dragDirection !== this.lastDragDirection) {
+        const rotation = (this.isRightHalf ? dragDirection : -dragDirection) * 5;
+        this.draggedElement.style.transform = `rotate(${rotation}deg)`;
+        this.lastDragDirection = dragDirection;
+      }
+    }
   }
 
   handleDragEnd() {

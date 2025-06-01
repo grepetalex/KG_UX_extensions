@@ -1218,15 +1218,15 @@ class LatestGamesManager {
 
   handleDragMove(e) {
     if (!this.isDragging || !this.draggedElement) return;
-    
+
     // If not already marked as dragging, check the threshold
     if (!this.wasDragging) {
       if (Math.abs(e.clientX - this.initialX) > this.dragThreshold ||
-          Math.abs(e.clientY - this.initialY) > this.dragThreshold) {
+        Math.abs(e.clientY - this.initialY) > this.dragThreshold) {
         this.wasDragging = true;
       }
     }
-    
+
     e.preventDefault();
 
     const displayMode = this.getDisplayMode();

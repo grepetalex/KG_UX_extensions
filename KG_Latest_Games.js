@@ -750,7 +750,6 @@ class LatestGamesManager {
       },
       '.latest-game.dragging': {
         opacity: '0.7',
-        transform: 'rotate(2deg)',
         zIndex: '2000',
         transition: 'transform 0.1s ease'
       },

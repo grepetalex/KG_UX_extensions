@@ -182,7 +182,7 @@ class LatestGamesManager {
     this.rotationAccumulator = 0;
     this.rotationDegreeLimit = 5;
     this.lastDragY = 0;
-    this.hidePanelDelay = 500;
+    this.hidePanelDelay = 1000;
     this.globalEvents = {};
 
     this.gameTypes = {

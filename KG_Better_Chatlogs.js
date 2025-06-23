@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         KG_Better_Chatlogs
 // @namespace    https://klavogonki.ru
-// @version      1.1.2
-// @description  Restyle chatlogs: remove brackets, convert font to span.username, remove unwanted timezone elements, group messages into .message-item wrapped in .chatlogs-messages-wrapper, wrap links, wrap time/username in an .info container, add smooth hover transitions with responsive design, and filter out messages from ignored users.
+// @version      1.1.3
+// @description  Restyle chatlogs: remove brackets, convert font to span.username, remove unwanted timezone elements, group messages into .message-item wrapped in .chatlogs-messages-wrapper, wrap links, wrap time/username in an .info container, add smooth hover transitions with responsive design, filter out messages from ignored users, and scroll to time-based hash fragments.
 // @author       Patcher
 // @match        *://klavogonki.ru/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=klavogonki.ru
@@ -392,6 +392,7 @@
         const newTime = document.createElement('time');
         newTime.className = 'time';
         newTime.textContent = timeText;
+        newTime.setAttribute('data-time', timeText); // Add data attribute for hash navigation
         infoDiv.appendChild(newTime);
 
         // Second pass - collect all message parts
@@ -443,6 +444,37 @@
       container.appendChild(messagesWrapper);
     };
 
+    // New function to handle hash navigation and highlighting
+    const handleHashNavigation = () => {
+      const hash = window.location.hash;
+      if (!hash || !hash.startsWith('#')) return;
+
+      const targetTime = hash.substring(1); // Remove the '#'
+      
+      // Use requestAnimationFrame to ensure DOM is fully processed
+      requestAnimationFrame(() => {
+        // Find the message with matching time
+        const timeElement = document.querySelector(`time[data-time="${targetTime}"]`);
+        if (timeElement) {
+          const messageItem = timeElement.closest('.message-item');
+          if (messageItem) {
+            // Add highlighted class for styling
+            messageItem.classList.add('highlighted-message');
+            
+            // Scroll to the message and center it
+            messageItem.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center'
+            });
+            
+            console.log(`Scrolled to and highlighted message at ${targetTime}`);
+          }
+        } else {
+          console.log(`Message with time ${targetTime} not found`);
+        }
+      });
+    };
+
     const injectCustomStyles = () => {
       // Check and insert meta viewport if not already present, but only on chatlogs page
       if (IS_CHAT && !document.querySelector('meta[name="viewport"]')) {
@@ -488,7 +520,18 @@
           margin-bottom: 10px !important;
           display: flex !important;
           flex-direction: row !important;
+          transition: background-color 0.3s ease !important;
         }
+
+        .chatlogs-messages-wrapper .message-item.highlighted-message {
+          background-color: rgba(130, 179, 42, 0.2) !important;
+          border-left: 4px solid #82B32A !important;
+          padding: 4px 8px !important;
+          border-radius: 3px !important;
+        }
+
+        .chatlogs-messages-wrapper .message-item.highlighted-message .time { color: #a2b87a !important; }
+        .chatlogs-messages-wrapper .message-item.highlighted-message .message { color: #b9ca9b !important; }
 
         .chatlogs-messages-wrapper {
           display: flex !important;
@@ -516,6 +559,12 @@
       removeElements();
       restructureMessages();
       preventFutureNavigation();
+      
+      // Handle hash navigation after DOM processing
+      handleHashNavigation();
+      
+      // Also listen for hash changes
+      window.addEventListener('hashchange', handleHashNavigation);
     };
 
     const init = () => {

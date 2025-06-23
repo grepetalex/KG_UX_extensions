@@ -3991,6 +3991,11 @@
         justify-content: center !important;
     }
 
+    /* add voc button */
+    #profile-block.vocview-block .user-title .btn_fav {
+        filter: invert(100%) !important;
+    }
+
     /* remove voc btn */
     #profile-block.vocview-block .user-title .remove {
         color: var(--darkgray) !important;
@@ -7673,11 +7678,10 @@
         color: var(--white) !important;
         border-bottom: none !important;
         border: 1px solid var(--middlegray) !important;
+        padding: 12px !important;
         display: flex !important;
-        height: 45px !important;
         background: transparent !important;
         text-align: center !important;
-        width: 150px !important;
         align-items: center !important;
         justify-content: center !important;
     }

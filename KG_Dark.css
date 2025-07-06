@@ -5674,9 +5674,7 @@
 
     /* is mention time for me */
     .chat .messages .time[style*='background-color: yellow'] {
-        padding: 2px !important;
-        font-weight: bold !important;
-        background: var(--red) !important;
+        background: transparent !important;
     }
 
     .chat .messages .time[style*='background-color: yellow'] .clickable {

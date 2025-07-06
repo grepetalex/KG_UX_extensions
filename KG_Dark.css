@@ -71,8 +71,8 @@
         --score10: url('https://i.imgur.com/DsZrRpc.png') no-repeat;
         --score11: url('https://i.imgur.com/5u1rABS.png') no-repeat;
         /* race img icons */
-        --achievement: url('https://i.imgur.com/fQgqxO6.png') no-repeat;
-        --race: url('https://i.imgur.com/K6F8pOd.png') no-repeat;
+        --competition: url('https://i.imgur.com/frkfTfs.png') no-repeat;
+        --race: url('https://i.imgur.com/eLWiOMr.png') no-repeat;
         --abra: url('https://i.imgur.com/cd0sddn.png') no-repeat;
         --crash: url('https://i.imgur.com/WhsWge1.png') no-repeat;
         --dictionary: url('https://i.imgur.com/ouZ0KPI.png') no-repeat;
@@ -5169,6 +5169,10 @@
         padding: 0 !important;
         margin: 0 !important;
     }
+    
+    #gamelist td.sign {
+        padding: 0 4px 0 8px !important;
+    }
 
     #gamelist td.enter div.enter {
         padding: 0 !important;
@@ -5181,9 +5185,9 @@
         box-sizing: border-box !important;
         width: 63px !important;
         height: 63px !important;
-        background: var(--achievement) !important;
+        background: var(--competition) !important;
+        background-size: contain !important;
         padding-left: 63px !important;
-        image-rendering: crisp-edges !important;
     }
 
     #gamelist td.enter a.competition:hover {
@@ -5191,7 +5195,6 @@
         box-sizing: border-box !important;
         width: 63px !important;
         height: 63px !important;
-        background: var(--deepgray) var(--achievement) !important;
         padding-left: 63px !important;
         filter: brightness(.8) !important;
     }
@@ -5203,9 +5206,9 @@
         width: 63px !important;
         height: 63px !important;
         background: var(--race) !important;
+        background-size: contain !important;
         padding-left: 63px !important;
         filter: brightness(.8) !important;
-        image-rendering: crisp-edges !important;
     }
 
     #gamelist td.enter a:hover {
@@ -5213,7 +5216,6 @@
         box-sizing: border-box !important;
         width: 63px !important;
         height: 63px !important;
-        background: var(--deepgray) var(--race) !important;
         padding-left: 63px !important;
     }
 

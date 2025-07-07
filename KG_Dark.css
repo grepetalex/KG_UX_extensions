@@ -4335,6 +4335,7 @@
     .index-icon-container img,
     /* remove news block, , what is this, about people on this site */
     #index .col1,
+    #index .col2,
     /* remove block count registered humans on main page */
     .indexstats-block,
     /* remove feedback button */

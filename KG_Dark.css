@@ -73,15 +73,15 @@
         /* race img icons */
         --competition: url('https://i.imgur.com/SBiVd3b.png') no-repeat;
         --race: url('https://i.imgur.com/3cCOjvW.png') no-repeat;
-        --abra: url('https://i.imgur.com/cd0sddn.png') no-repeat;
-        --crash: url('https://i.imgur.com/WhsWge1.png') no-repeat;
-        --dictionary: url('https://i.imgur.com/ouZ0KPI.png') no-repeat;
-        --digits: url('https://i.imgur.com/P6JpXJR.png') no-repeat;
-        --infinity: url('https://i.imgur.com/mr5GEgf.png') no-repeat;
-        --letters: url('https://i.imgur.com/xTsMZvM.png') no-repeat;
-        --marathone: url('https://i.imgur.com/gHuBZ9f.png') no-repeat;
-        --usual: url('https://i.imgur.com/2oEH6TO.png') no-repeat;
-        --yandex: url('https://i.imgur.com/HZBVsLM.png') no-repeat;
+        --abra: url('https://i.imgur.com/GSgcQHr.png') no-repeat;
+        --crash: url('https://i.imgur.com/Jtc0hbl.png') no-repeat;
+        --dictionary: url('https://i.imgur.com/1D7IS4z.png') no-repeat;
+        --digits: url('https://i.imgur.com/4wGQAmB.png') no-repeat;
+        --infinity: url('https://i.imgur.com/nv8KiwH.png') no-repeat;
+        --letters: url('https://i.imgur.com/h9gIqII.png') no-repeat;
+        --marathone: url('https://i.imgur.com/FrbMx1S.png') no-repeat;
+        --usual: url('https://i.imgur.com/bc1qtjV.png') no-repeat;
+        --yandex: url('https://i.imgur.com/2UotZ43.png') no-repeat;
         /* textarea forum and comments vocs bbcode buttons */
         --background: url('https://i.imgur.com/ehrkyDk.png') no-repeat;
         --bold: url('https://i.imgur.com/9OK8lhQ.png') no-repeat;
@@ -5169,7 +5169,7 @@
         padding: 0 !important;
         margin: 0 !important;
     }
-    
+
     #gamelist td.sign {
         padding: 0 4px 0 8px !important;
     }
@@ -6312,6 +6312,12 @@
     .quoteleft,
     .quoteright {
         filter: brightness(.3) !important;
+    }
+
+    .gametypes .gametype-sign,
+    #gamelist .gametype-sign {
+        background-size: contain !important;
+        margin: 0 0 0 6px !important;
     }
 
     /* signs img replacement */

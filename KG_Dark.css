@@ -8355,6 +8355,13 @@
         }
     }
 
+    /* max width 1355px */
+    @media only screen and (max-width: 1355px){
+        body {
+            overflow-x: hidden;
+        }
+    }
+
     /* max width 1300px */
     @media only screen and (max-width: 1300px) {
         body #play-right {

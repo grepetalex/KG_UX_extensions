@@ -6315,8 +6315,8 @@
     }
 
     .gametypes .gametype-sign,
-    #gamelist .gametype-sign,
-    #status .gametype-sign {
+    #gamelist .gametype-sign:not(.qual),
+    #status .gametype-sign:not(.qual) {
         background-size: contain !important;
         margin: 0 0 0 6px !important;
     }

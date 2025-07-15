@@ -1882,6 +1882,7 @@
 
     .userpanel #change_theme {
         border-right: 1px solid var(--middlegray) !important;
+	display: none !important;
     }
 
     /* daily not done img */

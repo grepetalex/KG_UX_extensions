@@ -477,7 +477,7 @@
           width: 100% !important;
           height: auto !important;
           border-radius: 14px !important;
-          filter: ${currentTheme === 'dark' ? 'invert(93.3%) grayscale(1)' : 'none'} !important;
+          filter: ${currentTheme === 'dark' ? 'invert(93.3%) grayscale(1)' : 'none'};
       }
 
       #typetext #beforefocus {
@@ -531,7 +531,7 @@
       }
 
       #keyboard {
-          filter: ${currentTheme === 'dark' ? 'invert(1) sepia(0) hue-rotate(40deg) grayscale(0.3)' : 'none'} !important;
+          filter: ${currentTheme === 'dark' ? 'invert(1) sepia(0) hue-rotate(40deg) grayscale(0.3)' : 'none'};
       }
 
       #keyboard_cont {
